@@ -208,6 +208,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Like or pass (no undo). A mutual like creates exactly one match */
+        post: operations["decide_v1_interactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/likes/received": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People who liked me and are waiting for my decision */
+        get: operations["likes_received_v1_likes_received_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My open matches */
+        get: operations["matches_v1_matches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -489,6 +540,67 @@ export interface components {
          * @enum {string}
          */
         Intent: "marriage" | "long_term" | "figuring_out";
+        /** InteractionIn */
+        InteractionIn: {
+            /** Comment */
+            comment?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "like" | "pass";
+            /** Photo Id */
+            photo_id?: string | null;
+            /** Prompt Key */
+            prompt_key?: string | null;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+        };
+        /** InteractionOut */
+        InteractionOut: {
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "like" | "pass";
+            /** Likes Left Today */
+            likes_left_today: number;
+            match: components["schemas"]["MatchOut"] | null;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+        };
+        /** LikeAbout */
+        LikeAbout: {
+            /** Photo Id */
+            photo_id: string | null;
+            /** Prompt Key */
+            prompt_key: string | null;
+            /** Prompt Text */
+            prompt_text: string | null;
+        };
+        /** LikeReceivedOut */
+        LikeReceivedOut: {
+            about: components["schemas"]["LikeAbout"] | null;
+            /** Comment */
+            comment: string | null;
+            /**
+             * Liked At
+             * Format: date-time
+             */
+            liked_at: string;
+            person: components["schemas"]["PublicProfileOut"];
+        };
         /** LoginIn */
         LoginIn: {
             /**
@@ -498,6 +610,20 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MatchOut */
+        MatchOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Matched At
+             * Format: date-time
+             */
+            matched_at: string;
+            person: components["schemas"]["PersonBrief"];
         };
         /** MeOut */
         MeOut: {
@@ -569,6 +695,19 @@ export interface components {
             email: string;
             /** New Password */
             new_password: string;
+        };
+        /** PersonBrief */
+        PersonBrief: {
+            /** Age */
+            age: number;
+            /** Display Name */
+            display_name: string;
+            photo: components["schemas"]["PhotoOut"] | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** PhotoOrderIn */
         PhotoOrderIn: {
@@ -1458,6 +1597,160 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    decide_v1_interactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionIn"];
+            };
+        };
+        responses: {
+            /** @description The same decision again: the original result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionOut"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    likes_received_v1_likes_received_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LikeReceivedOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    matches_v1_matches_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
                 };
             };
         };

@@ -173,3 +173,32 @@ export function useSavePreferences() {
     onSuccess: (prefs) => qc.setQueryData(discoveryKeys.preferences, prefs),
   });
 }
+
+export type MatchItem = Schemas["MatchOut"];
+export type LikeReceived = Schemas["LikeReceivedOut"];
+export type Decision = Schemas["InteractionOut"];
+
+export const matchingKeys = { likes: ["likes", "received"] as const, matches: ["matches"] as const };
+
+export function useLikesReceived() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: matchingKeys.likes, queryFn: () => unwrap(api.GET("/v1/likes/received")) });
+}
+
+export function useMatches() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: matchingKeys.matches, queryFn: () => unwrap(api.GET("/v1/matches")) });
+}
+
+export function useDecide() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["InteractionIn"]) => unwrap(api.POST("/v1/interactions", { body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: discoveryKeys.today });
+      void qc.invalidateQueries({ queryKey: matchingKeys.likes });
+      void qc.invalidateQueries({ queryKey: matchingKeys.matches });
+    },
+  });
+}

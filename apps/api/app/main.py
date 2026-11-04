@@ -23,6 +23,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.auth.service import AuthContext
 from app.modules.discovery.router import router as discovery_router
 from app.modules.health.router import router as health_router
+from app.modules.matching.router import router as matching_router
 from app.modules.media.router import router as media_router
 from app.modules.profiles.router import router as profiles_router
 from app.openapi import install_openapi
@@ -104,5 +105,6 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(profiles_router)
     app.include_router(media_router)
     app.include_router(discovery_router)
+    app.include_router(matching_router)
     install_openapi(app)
     return app

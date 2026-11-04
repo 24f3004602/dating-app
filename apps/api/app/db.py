@@ -24,6 +24,12 @@ NAMING_CONVENTION = {
 }
 
 
+# Row locks on referenced rows (users, profiles) use FOR NO KEY UPDATE: it
+# serialises changes to the row but does not block foreign-key checks from
+# other transactions (FOR KEY SHARE), which FOR UPDATE would, causing the
+# deadlock the matching concurrency test found (D071).
+
+
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
     type_annotation_map: ClassVar[dict[Any, Any]] = {datetime: DateTime(timezone=True)}

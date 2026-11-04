@@ -97,6 +97,8 @@ class Settings(BaseSettings):
 
     # Discovery (stage 8): the size of the finite daily set (D014).
     discovery_set_size: int = Field(default=15, ge=1, le=50)
+    # The same for every member, never sold (D015, fixes.md differentiator 3).
+    daily_like_limit: int = Field(default=10, ge=1, le=50)
     # Upload requests may exceed the general body limit (multipart overhead included).
     max_upload_body_bytes: int = Field(default=11 * 1024 * 1024, ge=1024)
 

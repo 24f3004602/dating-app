@@ -33,7 +33,7 @@ AREA_CHANGE_INTERVAL = timedelta(hours=24)
 async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool = False) -> Profile | None:
     stmt = select(Profile).where(Profile.user_id == user_id)
     if lock:
-        stmt = stmt.with_for_update()
+        stmt = stmt.with_for_update(key_share=True)
     return (await session.execute(stmt)).scalar_one_or_none()
 
 

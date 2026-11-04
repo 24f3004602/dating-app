@@ -13,11 +13,11 @@ City-level location with distance buckets only,privacy,must,no,partial,"Never sh
 Discovery preferences (age range; distance; genders; intent),discovery,must,yes,partial,"Stage 8a: API done and tested (age, distance bucket; genders from the profile; intent matched by rule D065); Stage 8b: screen built; screen tests and the web e2e pass; native device pass pending (NAT-1)"
 Reciprocal eligibility filtering before ranking,discovery,must,no,partial,"Adult; both fit each other's preferences; blocks; visibility; pause; prior interactions; Stage 8a: every filter in SQL before ranking, tested one rule at a time (DSC-F1, DSC-F2); Stage 8b: screen built; screen tests and the web e2e pass; native device pass pending (NAT-1)"
 Finite daily set with deterministic ranking,discovery,must,no,partial,"About 15 a day; explainable ordering (differentiator 2; H3); Stage 8a: about 15 a day, built once, explainable score, stable tie-break (DSC-H2); Stage 8b: screen built; screen tests and the web e2e pass; native device pass pending (NAT-1)"
-Like and pass,matching,must,yes,no,
-Equal daily like limit for everyone (never sold),matching,must,no,no,Differentiator 3; H4; P3
-Like with an optional comment on a photo or prompt,matching,should,yes,no,Hinge [10][13]; more ways to start a conversation [8]
+Like and pass,matching,must,yes,partial,"Stage 9: API and screens done; API, screen and web e2e tests pass; native device pass pending; no undo"
+Equal daily like limit for everyone (never sold),matching,must,no,partial,"Differentiator 3; H4; P3; Stage 9: 10 a day for everyone, counted in PostgreSQL, tested; Stage 9: API and screens done; API, screen and web e2e tests pass; native device pass pending"
+Like with an optional comment on a photo or prompt,matching,should,yes,partial,Hinge [10][13]; more ways to start a conversation [8]; Stage 9: API supports photo or prompt plus a note; the app sends a note (choosing a photo or prompt in the app comes later)
 Undo a pass,matching,could,yes,no,Paid on Tinder and Bumble [5][6]; not in MVP
-Atomic mutual match with no duplicates,matching,must,yes,no,Transaction plus unique constraint
+Atomic mutual match with no duplicates,matching,must,yes,partial,"Transaction plus unique constraint; Stage 9: proven by a 50-round concurrency test and a mutation run (MAT-C1); Stage 9: API and screens done; API, screen and web e2e tests pass; native device pass pending"
 Cap on chats awaiting your reply,messaging,should,yes,no,Hinge Your Turn Limits [11]; H6
 Persistent one-to-one text messaging for matches,messaging,must,yes,no,
 Real-time delivery; unread counts; history pagination,messaging,must,yes,no,

@@ -43,7 +43,7 @@ _REJECTION_TEXT = {
 
 async def _lock_user(session: AsyncSession, user_id: uuid.UUID) -> None:
     """Serialise one member's photo changes (uploads, reorders, deletes)."""
-    await session.execute(select(User.id).where(User.id == user_id).with_for_update())
+    await session.execute(select(User.id).where(User.id == user_id).with_for_update(key_share=True))
 
 
 async def list_photos(session: AsyncSession, user_id: uuid.UUID) -> list[Photo]:

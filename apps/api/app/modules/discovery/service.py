@@ -73,14 +73,17 @@ def _approved_photos(user_id: Any) -> ColumnElement[int]:
     )
 
 
-def available_to(viewer_id: uuid.UUID) -> list[ColumnElement[bool]]:
-    """The hard rules for a candidate row (User joined with Profile)."""
+async def approved_photo_count(session: AsyncSession, user_id: uuid.UUID) -> int:
+    return int((await session.execute(select(_approved_photos(user_id)))).scalar_one())
+
+
+def base_available_to(viewer_id: uuid.UUID) -> list[ColumnElement[bool]]:
+    """Rules for showing a member (the User row) to `viewer_id` anywhere:
+    not the viewer, active, not leaving, 2+ approved photos, no block either way."""
     return [
         User.id != viewer_id,
         User.status == UserStatus.active,
         User.deletion_requested_at.is_(None),
-        Profile.visibility == Visibility.everyone,
-        Profile.discovery_paused.is_(False),
         _approved_photos(User.id) >= MIN_APPROVED_FOR_DISCOVERY,
         ~exists().where(
             or_(
@@ -88,6 +91,15 @@ def available_to(viewer_id: uuid.UUID) -> list[ColumnElement[bool]]:
                 and_(Block.blocker_id == User.id, Block.blocked_id == viewer_id),
             )
         ),
+    ]
+
+
+def available_to(viewer_id: uuid.UUID) -> list[ColumnElement[bool]]:
+    """The hard rules for a discovery candidate row (User joined with Profile)."""
+    return [
+        *base_available_to(viewer_id),
+        Profile.visibility == Visibility.everyone,
+        Profile.discovery_paused.is_(False),
         ~exists().where(Interaction.actor_id == viewer_id, Interaction.target_id == User.id),
         ~exists().where(
             Interaction.actor_id == User.id,
@@ -111,7 +123,7 @@ async def _viewer(session: AsyncSession, settings: Settings, user: User, today: 
     profile = await session.get(Profile, user.id)
     if profile is None:
         raise ApiError(409, "profile_incomplete", "Finish your profile to see introductions.")
-    approved = (await session.execute(select(_approved_photos(user.id)))).scalar_one()
+    approved = await approved_photo_count(session, user.id)
     if approved < MIN_APPROVED_FOR_DISCOVERY:
         raise ApiError(
             409,
@@ -222,7 +234,7 @@ async def today(
     day = local_today(settings, now)
     viewer = await _viewer(session, settings, user, day)
     # One generation per viewer and day, even with concurrent requests.
-    await session.execute(select(User.id).where(User.id == user.id).with_for_update())
+    await session.execute(select(User.id).where(User.id == user.id).with_for_update(key_share=True))
     picks = await _stored(session, user.id, day)
     if not picks:
         picks = await _build(session, settings, viewer, day, now)

@@ -86,6 +86,42 @@ class Interaction(CreatedAtMixin, Base):
         )
     )
     comment: Mapped[str | None] = mapped_column(String(150))
+    # What a like was about (optional): one of the target's photos, or a prompt.
+    target_photo_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("photos.id", ondelete="SET NULL"))
+    target_prompt_key: Mapped[str | None] = mapped_column(String(32))
+
+
+class MatchCloseReason(enum.StrEnum):
+    unmatched = "unmatched"
+    blocked = "blocked"
+    deleted = "deleted"
+    moderation = "moderation"
+
+
+class Match(CreatedAtMixin, Base):
+    """A mutual like. The pair is stored ordered (a < b) and unique (D024)."""
+
+    __tablename__ = "matches"
+    __table_args__ = (
+        UniqueConstraint("user_a_id", "user_b_id"),
+        CheckConstraint("user_a_id < user_b_id", name="ordered_pair"),
+        CheckConstraint("(closed_at IS NULL) = (closed_reason IS NULL)", name="closed_consistent"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    user_a_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_b_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    closed_at: Mapped[datetime | None]
+    closed_reason: Mapped[MatchCloseReason | None] = mapped_column(
+        Enum(
+            MatchCloseReason,
+            native_enum=False,
+            create_constraint=True,
+            length=16,
+            name="closed_reason",
+            values_callable=lambda e: [m.value for m in e],
+        )
+    )
 
 
 class Block(CreatedAtMixin, Base):

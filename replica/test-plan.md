@@ -70,6 +70,12 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | MOB-5 | mobile | screen | today's cards with bucket labels and no exact km; empty set with the next set time (India); not-ready and paused states; person view and gone state; preferences validation and saved shape | as listed | jest + RNTL | pass |
 | E2E-2 | slice | e2e | continuing E2E-1: second photo, ready state, today's introductions (labelled fixtures, bucket in each card's label, at most 15), a fixture's profile, preferences saved | each step works; axe clean on discover, person, preferences | Playwright | pass |
 | NAT-1 | native | manual | Android and iOS: keystore survives a restart; photo library permission and picker; keyboard and safe areas; TalkBack and VoiceOver read every control and state | works on a real device | manual | **planned**: needs a device or emulator with Expo Go or a dev build |
+| MAT-C1 | match | concurrency | 50 pairs like each other at the same moment over real connections; then the same without the pair lock | exactly one match per pair and exactly one response reports it; without the lock a match is missed | concurrency + mutation | pass |
+| MAT-H2 | match | happy | likes received lists the liker (outside the set), profile visible; a match lists both ways; a retry is idempotent; no undo | as listed | api | pass |
+| MAT-N2 | match | negative | block either way, suspension or pause after a like; then like back | 404; no match; gone from likes received and profile 404 | api | pass |
+| MAT-E1 | match | edge | like notes and items: someone else's photo, a pending photo, an unanswered prompt, both, over 150, a pass with a note; a valid prompt like | 422 each; the note and prompt shown in likes received | api | pass |
+| MAT-A1 | access | edge | match keeps profiles and photos visible after the day; a block hides the match and both profiles; `liked_only` seen only after liking | as listed | api | pass |
+| MOB-6 | mobile | screen | like with note, pass without, match state, like limit and already-decided messages, likes received, matches | as listed | jest + RNTL | pass |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
@@ -83,10 +89,10 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | DSC-A1 | access | negative | profile and photos of someone in the set; pending photo; a non-match; the reverse direction | 200 and 302; 404; 404; 404 | api | pass |
 | DSC-V1 | discovery | negative | viewer without a profile, with 1 approved photo, paused | 409 `profile_incomplete` or `discovery_paused` | api | pass |
 | DSC-R1 | discovery | negative | preferences defaults, invalid ranges and buckets, unknown fields; rate limit; 7-day retention | defaults; 422; 429; old picks deleted | api | pass |
-| F04-H1 | match | happy | A likes B, then B likes A | exactly one match | api | planned |
-| F04-E1 | match | edge | A and B like each other simultaneously (parallel, 50 rounds) | exactly one match every round | concurrency | planned |
-| F04-N1 | match | negative | like yourself, or a blocked, paused, ineligible or deleted user | rejected; no match | api | planned |
-| F04-N2 | match | negative | exceed the daily like limit | 429 with code `like_limit` | api | planned |
+| F04-H1 | match | happy | A likes B, then B likes A | exactly one match | api | pass |
+| F04-E1 | match | edge | A and B like each other simultaneously (parallel, 50 rounds) | exactly one match every round | concurrency | pass (MAT-C1) |
+| F04-N1 | match | negative | like yourself, or a blocked, paused, ineligible or deleted user | rejected; no match | api | pass |
+| F04-N2 | match | negative | exceed the daily like limit | 429 with code `like_limit` | api | pass |
 | F05-H1 | chat | happy | send, receive, paginate, read | ordered history; unread counts correct | api | planned |
 | F05-E1 | chat | edge | resend with the same `client_message_id`; double tap | one stored message | api | planned |
 | F05-E2 | chat | edge | drop the WebSocket, send meanwhile, reconnect | REST catch-up; nothing lost or duplicated | api + ws | planned |
@@ -144,3 +150,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | GitHub Actions api run 41859135328 and mobile run 41859135467 on `48c159b` (stage 8a) | both workflows | 230 passed; mobile checks and e2e passed |
 | 2026-11-04 | owner's laptop | `npm test` in `apps/mobile`; e2e (3 runs) | 42 passed; e2e passed every run, after making web scroll containers keyboard-focusable (axe) |
 | 2026-11-04 | GitHub Actions mobile run 41861396400 on `3c506de` (stage 8b) | `mobile.yml` | checks passed; e2e (through discovery) passed in Chrome on Ubuntu |
+| 2026-11-04 | owner's laptop | `uv run pytest` (stage 9); matching tests 3 runs; mutation without the pair lock | 244 passed; 14/14 each run; the mutation run missed a match (as expected) |
+| 2026-11-04 | same | `npm test` in `apps/mobile`; e2e (2 runs) | 49 passed; e2e passed (like with a note, matches and likes empty states) |

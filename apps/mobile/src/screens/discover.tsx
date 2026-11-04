@@ -12,6 +12,7 @@ import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, radius, size, space } from "@/theme/tokens";
+import { DecisionBar } from "@/screens/matching";
 import { FormField } from "@/ui/FormField";
 import { Body, Button, ChoiceGroup, Heading, Loading, Notice, Screen, Title } from "@/ui/primitives";
 
@@ -109,6 +110,7 @@ export function PersonScreen({ id }: { id: string }) {
 function PersonView({ person }: { person: Person }) {
   return (
     <Screen>
+      <DecisionBar targetId={person.user_id} />
       <Title>{`${person.display_name}, ${person.age}`}</Title>
       <Body>{t.intent[person.intent]}</Body>
       <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>

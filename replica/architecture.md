@@ -107,7 +107,7 @@ migrations run as a separate role.
 | `preferences` | `user_id` primary key; age min and max (18-99, min ≤ max); `max_distance_km` (5, 15, 50 or any). Genders come from `profiles.interested_in` (D066) | 8 |
 | `daily_picks` | (`viewer_id`, `pick_date`, `candidate_id`) primary key; `rank`. Kept 7 days | 8 |
 | `interactions` | `actor_id`, `target_id`, `kind` (like, pass), optional `comment` (≤ 150) and target item; **unique (`actor_id`, `target_id`)**; check actor ≠ target. Table from stage 8 (D064), API in 9 | 8 (API 9) |
-| `matches` | `user_a_id` < `user_b_id` (check); **unique (`user_a_id`, `user_b_id`)**; `closed_at`, `closed_reason` (unmatched, blocked, deleted, moderation) | 9 |
+| `matches` | `user_a_id` < `user_b_id` (check); **unique (`user_a_id`, `user_b_id`)**; `closed_at`, `closed_reason` (unmatched, blocked, deleted, moderation), set together (check). Interactions gained `target_photo_id` and `target_prompt_key` | 9 |
 | `messages` | `match_id`, `sender_id`, `body` (1-2000), `client_message_id`; **unique (`match_id`, `sender_id`, `client_message_id`)**; `keyword_flag`; `removed_at`; index (`match_id`, `created_at`, `id`) | 10 |
 | `match_reads` | (`match_id`, `user_id`) primary key; `last_read_message_id` | 10 |
 | `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked. Table from stage 8 (D064), API in 11 | 8 (API 11) |

@@ -4,12 +4,9 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 8 (discovery) **done for the API and the web build**:
-- 8a's API passed CI (api run 41859135328; mobile run 41859135467).
-- 8b added the discovery, person and preferences screens: 42 mobile tests, and the e2e journey now reaches discovery.
-- 8b passed CI too (mobile run 41861396400: checks and e2e). A native device pass (NAT-1) is still to do.
-
-Next: stage 9 (matching).
+Stage 9 (matching) **implemented and tested locally**: 244 API tests,
+including 50 rounds of simultaneous reciprocal likes, plus 49 mobile tests
+and the web e2e. CI is pending. Next: stage 10 (messaging).
 
 ## Done
 
@@ -21,11 +18,24 @@ Next: stage 9 (matching).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 9 | Likes and passes (no undo, idempotent retries), the equal daily like limit, notes on likes, atomic mutual matches, likes received, matches, access through likes and matches; Like and Pass on profiles, likes and matches screens; migration 0006 | `app/modules/matching/`, `apps/mobile/src/screens/matching.tsx` |
 | 8b | Screens: today's introductions (empty, not-ready, paused and error states), a person's profile, preferences; e2e extended through discovery with axe | `apps/mobile/src/screens/discover.tsx`, `e2e/` |
 | 8a | Discovery API: preferences, eligibility filters before ranking, the deterministic daily set (built once, availability re-checked on read), distance buckets, access to profiles and photos in today's set, rate limits, labelled fixtures; tables for interactions and blocks (D064); migration 0005 | `app/modules/discovery/`, `app/fixtures.py` |
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 9 status
+
+- **Implemented and tested:** cases F04-*, MAT-* and MOB-6.
+  - Two simultaneous reciprocal likes create exactly one match, over 50 rounds on real connections.
+  - Ineligible people (blocked, suspended, paused, unreachable) cannot be liked or matched.
+- **Found and fixed:** the concurrency test found a deadlock. `FOR UPDATE` on a user row blocked other transactions' foreign-key checks; referenced rows are now locked with `FOR NO KEY UPDATE` everywhere (D071).
+- **Mutation check:** removing the pair lock makes a match go missing.
+- **Partial, by design:**
+  - The your-turn cap needs messages (stage 10).
+  - Unmatch and the block API come in stage 11; matches already hide on a block.
+  - In the app a like can carry a note, but not yet a chosen photo or prompt.
 
 ## Stage 8b build log
 
@@ -136,9 +146,10 @@ Next: stage 9 (matching).
 
 ## Next
 
-Stage 9: matching. Likes, with an optional comment on a photo or prompt, and passes, with no undo. Then:
-- **Atomic mutual matches:** an advisory lock on the pair plus a unique pair constraint, inside one transaction.
-- **Limits:** the equal daily like limit for everyone, and the cap on chats awaiting your reply.
-- **Visibility:** likes received, matches, and `liked_only` visibility.
-- **Tests:** concurrency tests that two reciprocal likes create exactly one match (50 rounds), and that ineligible users cannot match.
-- **App:** like and pass on the person screen, and the likes and matches lists.
+Stage 10: messaging. Covers:
+- **Sending:** authenticated sends in open matches only (the shared match-row lock against blocks), idempotent by `client_message_id`.
+- **Reading:** cursor pagination, read pointers and unread counts.
+- **Realtime:** single-use WebSocket tickets, Redis pub/sub fan-out, REST catch-up on reconnect.
+- **Behaviour:** the pre-send nudge word list, and the your-turn cap.
+- **Tests:** unauthorized access, stale matches, blocked users, persistence and reconnection.
+- **App:** the chat screens.

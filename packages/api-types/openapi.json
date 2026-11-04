@@ -219,6 +219,201 @@
         "title": "Intent",
         "type": "string"
       },
+      "InteractionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "kind": {
+            "enum": [
+              "like",
+              "pass"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "photo_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Id"
+          },
+          "prompt_key": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Key"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_id",
+          "kind"
+        ],
+        "title": "InteractionIn",
+        "type": "object"
+      },
+      "InteractionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "like",
+              "pass"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "likes_left_today": {
+            "title": "Likes Left Today",
+            "type": "integer"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_id",
+          "kind",
+          "decided_at",
+          "match",
+          "likes_left_today"
+        ],
+        "title": "InteractionOut",
+        "type": "object"
+      },
+      "LikeAbout": {
+        "additionalProperties": false,
+        "properties": {
+          "photo_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Id"
+          },
+          "prompt_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Key"
+          },
+          "prompt_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Text"
+          }
+        },
+        "required": [
+          "photo_id",
+          "prompt_key",
+          "prompt_text"
+        ],
+        "title": "LikeAbout",
+        "type": "object"
+      },
+      "LikeReceivedOut": {
+        "additionalProperties": false,
+        "properties": {
+          "about": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LikeAbout"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "liked_at": {
+            "format": "date-time",
+            "title": "Liked At",
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PublicProfileOut"
+          }
+        },
+        "required": [
+          "liked_at",
+          "comment",
+          "about",
+          "person"
+        ],
+        "title": "LikeReceivedOut",
+        "type": "object"
+      },
       "LoginIn": {
         "additionalProperties": false,
         "properties": {
@@ -240,6 +435,31 @@
           "password"
         ],
         "title": "LoginIn",
+        "type": "object"
+      },
+      "MatchOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "matched_at": {
+            "format": "date-time",
+            "title": "Matched At",
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonBrief"
+          }
+        },
+        "required": [
+          "id",
+          "matched_at",
+          "person"
+        ],
+        "title": "MatchOut",
         "type": "object"
       },
       "MeOut": {
@@ -415,6 +635,42 @@
           "new_password"
         ],
         "title": "PasswordResetConfirmIn",
+        "type": "object"
+      },
+      "PersonBrief": {
+        "additionalProperties": false,
+        "properties": {
+          "age": {
+            "title": "Age",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "age",
+          "photo"
+        ],
+        "title": "PersonBrief",
         "type": "object"
       },
       "PhotoOrderIn": {
@@ -1829,6 +2085,187 @@
         "summary": "Today's finite set: built once a day, filtered before ranking, distance as a bucket only",
         "tags": [
           "discovery"
+        ]
+      }
+    },
+    "/v1/interactions": {
+      "post": {
+        "operationId": "decide_v1_interactions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InteractionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            },
+            "description": "The same decision again: the original result"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Like or pass (no undo). A mutual like creates exactly one match",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/v1/likes/received": {
+      "get": {
+        "operationId": "likes_received_v1_likes_received_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LikeReceivedOut"
+                  },
+                  "title": "Response Likes Received V1 Likes Received Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "People who liked me and are waiting for my decision",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/v1/matches": {
+      "get": {
+        "operationId": "matches_v1_matches_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchOut"
+                  },
+                  "title": "Response Matches V1 Matches Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "My open matches",
+        "tags": [
+          "matching"
         ]
       }
     },

@@ -76,6 +76,8 @@ export function ProfileScreen() {
       {p ? (
         <>
           <Button label={t.discover.open} onPress={() => router.push("/discover")} />
+          <Button label={t.likes.open} variant="secondary" onPress={() => router.push("/likes")} />
+          <Button label={t.matches.open} variant="secondary" onPress={() => router.push("/matches")} />
           <Button label={t.preferences.open} variant="secondary" onPress={() => router.push("/preferences")} />
           <Button label={t.profile.edit} variant="secondary" onPress={() => router.push("/profile/edit")} />
           <Button label={t.profile.photos} variant="secondary" onPress={() => router.push("/photos")} />

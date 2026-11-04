@@ -138,8 +138,23 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await expect(page.locator('[role="img"][aria-label^="Photo 1 of 2 of Fixture"]')).toBeVisible();
   await checkA11y(page, "person");
 
-  // Preferences apply from the next set.
+  // Like them, with a note (fixtures never like back, so no match here).
+  await page.getByLabel("Add a note (optional)", { exact: true }).fill("Holi is my favourite too.");
+  await page.getByRole("button", { name: "Like", exact: true }).click();
+  await expect(page.getByText(/^Liked\. \d+ likes left today\.$/)).toBeVisible();
+
+  // Matches and likes: honest empty states.
   await page.goBack();
+  await page.goBack();
+  await page.getByRole("button", { name: "Matches", exact: true }).click();
+  await expect(page.getByText("No matches yet. When you both like each other, they appear here.")).toBeVisible();
+  await checkA11y(page, "matches");
+  await page.goBack();
+  await page.getByRole("button", { name: "Likes", exact: true }).click();
+  await expect(page.getByText("No new likes yet. Likes appear here until you decide.")).toBeVisible();
+  await checkA11y(page, "likes");
+
+  // Preferences apply from the next set.
   await page.goBack();
   await page.getByRole("button", { name: "Preferences" }).click();
   await page.getByRole("radio", { name: "Within 15 km", exact: true }).click();

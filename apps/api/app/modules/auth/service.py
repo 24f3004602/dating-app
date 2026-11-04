@@ -147,7 +147,7 @@ def _invalid_credentials() -> ApiError:
 async def _user_by_email(session: AsyncSession, email: str, *, lock: bool = False) -> User | None:
     stmt = select(User).where(User.email_normalized == email)
     if lock:
-        stmt = stmt.with_for_update()
+        stmt = stmt.with_for_update(key_share=True)
     return (await session.execute(stmt)).scalar_one_or_none()
 
 
@@ -475,7 +475,9 @@ async def issue_code(
     The plaintext code exists only here and in the email. Returns it so tests
     can use it; callers in production ignore it.
     """
-    user = (await session.execute(select(User).where(User.id == user_id).with_for_update())).scalar_one_or_none()
+    user = (
+        await session.execute(select(User).where(User.id == user_id).with_for_update(key_share=True))
+    ).scalar_one_or_none()
     wanted = UserStatus.pending if purpose is CodePurpose.verify_email else UserStatus.active
     if user is None or user.status is not wanted:
         return None
