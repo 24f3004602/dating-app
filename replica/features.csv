@@ -1,0 +1,27 @@
+feature,area,priority,original,clone,notes
+Adult age gate (18+) at sign-up,onboarding,must,yes,no,Self-declared birthdate check only; this is NOT age verification
+Email registration with one-time verification code,onboarding,must,yes,no,Short-lived single-use code; provider behind an abstraction
+Secure login with server-side sessions and logout,auth,must,yes,no,
+Account recovery by email,auth,must,yes,no,
+Create and edit profile,profile,must,yes,no,
+Photo upload reorder and delete with safe processing,profile,must,yes,no,Re-encode and strip metadata; private storage
+Profile visibility setting,privacy,must,yes,no,
+Discovery preferences (age range distance genders),discovery,must,yes,no,
+Eligible recommendations feed (deterministic ranking),discovery,must,yes,no,Filters before ranking: adult eligibility reciprocal preferences blocks visibility prior interactions
+Like and pass,matching,must,yes,no,
+Atomic mutual match with no duplicates,matching,must,yes,no,Enforced by transaction and unique constraint
+Persistent one-to-one messaging for matches,messaging,must,yes,no,
+Block,safety,must,yes,no,Enforced across discovery and messaging on the server
+Unmatch,safety,must,yes,no,
+Report profile or message,safety,must,yes,no,
+Moderation queue with audit trail,admin,must,yes,no,
+Coarse location only (no precise location shown),privacy,must,yes,no,
+Discovery pause,privacy,must,yes,no,
+Account deletion,privacy,must,yes,no,
+Protected admin and moderation console,admin,must,yes,no,Server-side authorization
+Landing page,web,should,yes,no,
+Advanced AI matching,discovery,could,yes,no,Deferred until the core journey works
+Video calling,messaging,could,yes,no,Deferred
+Boosts,monetization,could,yes,no,Deferred
+Premium subscriptions,monetization,could,yes,no,Deferred; sandbox only when started
+Sophisticated analytics,analytics,could,yes,no,Deferred
