@@ -4,9 +4,11 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 9 (matching) **implemented and tested locally**: 244 API tests,
-including 50 rounds of simultaneous reciprocal likes, plus 49 mobile tests
-and the web e2e. CI is pending. Next: stage 10 (messaging).
+Stage 9 (matching) **done for the API and the web build**: 244 API tests,
+including 50 rounds of simultaneous reciprocal likes, 49 mobile tests and the
+web e2e all pass locally and in CI (api run 41872861914, mobile run
+41872861907). A native device pass is still pending. Next: stage 10
+(messaging).
 
 ## Done
 

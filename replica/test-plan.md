@@ -152,3 +152,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | GitHub Actions mobile run 41861396400 on `3c506de` (stage 8b) | `mobile.yml` | checks passed; e2e (through discovery) passed in Chrome on Ubuntu |
 | 2026-11-04 | owner's laptop | `uv run pytest` (stage 9); matching tests 3 runs; mutation without the pair lock | 244 passed; 14/14 each run; the mutation run missed a match (as expected) |
 | 2026-11-04 | same | `npm test` in `apps/mobile`; e2e (2 runs) | 49 passed; e2e passed (like with a note, matches and likes empty states) |
+| 2026-11-04 | GitHub Actions api run 41872861914 and mobile run 41872861907 on `c3b5da9` (stage 9) | both workflows | 244 passed (incl. MAT-C1 on Ubuntu); mobile checks and e2e passed |
