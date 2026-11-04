@@ -4,10 +4,11 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 7 (profiles, media, first screens) **implemented and tested**: the API
-(200 tests), the Expo app (36 tests) and a browser end-to-end run of the whole
-slice. The CI run for 7b is pending. A native device pass (NAT-1) is still to
-do. Next: stage 8 (discovery).
+Stage 7 (profiles, media, first screens) **done for the API and the web build**:
+the API (200 tests), the Expo app (36 tests) and a browser end-to-end run of the
+whole slice pass locally and in CI (api run 41854231637; mobile run 41855746033,
+e2e job included). A native device pass (NAT-1) is still to do. Next: stage 8
+(discovery).
 
 ## Done
 

@@ -127,3 +127,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | owner's laptop | `uv run pytest` (API after CORS) | 200 passed |
 | 2026-11-04 | same | `npm run typecheck` and `npm test` in `apps/mobile` | clean; 36 passed |
 | 2026-11-04 | same | `npm test -w @datingapp/e2e` (Playwright, Chrome, axe) | 1 passed (E2E-1); after fixing the web accessibility state (D059) |
+| 2026-11-04 | GitHub Actions api run 41854231637 on `36dc93f` | `api.yml` | 200 passed; pip-audit clean |
+| 2026-11-04 | GitHub Actions mobile run 41855746033 on `79b0bd1` | `mobile.yml` | audit (high) clean; contract unchanged; typecheck clean; 36 passed; web export; e2e 1 passed in Chrome on Ubuntu |
