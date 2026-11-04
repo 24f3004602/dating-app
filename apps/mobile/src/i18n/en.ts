@@ -117,6 +117,7 @@ export const en = {
     rejected: "Not approved",
     limit: "You can have up to 6 photos.",
     alt: "Your photo {n} of {total}",
+    coverAlt: "Your main photo",
     permission: "Allow photo access to choose a picture.",
   },
   errors: {

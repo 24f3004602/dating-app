@@ -101,12 +101,15 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   const chooser = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: "Add a photo" }).click();
   await (await chooser).setFiles(PHOTO);
-  await expect(page.getByRole("img", { name: "Your photo 1 of 1" })).toBeVisible();
+  // React Native Web renders a role="img" element around a hidden <img> with the same
+  // name (children of role=img are presentational, so screen readers hear it once).
+  const thumb = page.locator('[role="img"][aria-label="Your photo 1 of 1"]');
+  await expect(thumb).toBeVisible();
   await expect(page.getByText("Under review")).toBeVisible();
   await checkA11y(page, "photos");
 
   // The stored image came back through a signed URL, stripped of metadata.
-  const src = await page.getByRole("img", { name: "Your photo 1 of 1" }).locator("img").first().getAttribute("src");
+  const src = await thumb.locator("img").first().getAttribute("src");
   expect(src).toContain("/v1/media/blob/");
   const image = await page.request.get(src!);
   expect(image.status()).toBe(200);

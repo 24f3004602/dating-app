@@ -91,7 +91,7 @@ function ProfileSummary({ profile }: { profile: MyProfile }) {
   return (
     <View style={styles.summary}>
       {cover ? (
-        <Image source={{ uri: absoluteUrl(API_URL, cover.urls.small) }} style={styles.thumb} role="img" aria-label={fill(t.photos.alt, { n: 1, total: profile.photos.length })} />
+        <Image source={{ uri: absoluteUrl(API_URL, cover.urls.small) }} style={styles.thumb} role="img" aria-label={t.photos.coverAlt} />
       ) : null}
       <Heading>{`${profile.display_name}, ${profile.age}`}</Heading>
       <Body>{t.intent[profile.intent]}</Body>

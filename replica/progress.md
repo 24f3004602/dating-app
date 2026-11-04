@@ -41,6 +41,7 @@ do. Next: stage 8 (discovery).
   - React Native Web ignored `accessibilityState`, so checkboxes had no checked state for screen readers on web. The axe scan caught it; the app now uses `role` and `aria-*` (D059).
   - TanStack Query's GC timers kept Jest alive for 5 minutes.
   - RNTL 14 needs `await` on `render` and events.
+  - Flaky e2e locator in CI: the profile screen (still mounted under the photos screen) used the same image label as the photo list. The cover now has its own label, and the run is stable (4 local passes in a row).
 - **Not done:**
   - A native device run (NAT-1: keystore, photo library, TalkBack and VoiceOver). Needs a device or an emulator with Expo Go or a dev build; the Android SDK exists on this laptop but isn't on PATH.
   - ESLint for the TypeScript code (typecheck only so far).
