@@ -1,7 +1,7 @@
 feature,area,priority,original,clone,notes
 Adult age gate (18+) at sign-up,onboarding,must,yes,no,Declared birthdate only; labelled 'age declared'; NOT age verification
-Email registration with one-time verification code,onboarding,must,yes,no,Short-lived single-use code; email provider behind an abstraction
-Secure login with server-side sessions and logout,auth,must,yes,no,
+Email registration with one-time verification code,onboarding,must,yes,no,"Short-lived single-use code; email provider behind an abstraction; Stage 5: `one_time_codes` table (HMAC-only, one live code per purpose; tested). No API yet"
+Secure login with server-side sessions and logout,auth,must,yes,no,"Stage 5: `sessions` table (SHA-256 token hash, unique; tested). No API yet"
 Account recovery by email,auth,must,yes,no,
 Phone sign-up with SMS code,auth,should,yes,no,Deferred; SMS provider abstraction in MVP; India DLT registration needed (A4)
 Create and edit profile (name; age from birthdate; gender; interested in; bio),profile,must,yes,no,
@@ -26,14 +26,14 @@ Images in chat,messaging,could,yes,no,Deferred; needs blur and moderation [7]
 Block (enforced on every server path),safety,must,yes,no,
 Unmatch,safety,must,yes,no,
 Report profile or message with reasons and visible status,safety,must,yes,no,
-Moderation queue with roles and audit trail,admin,must,yes,no,
+Moderation queue with roles and audit trail,admin,must,yes,no,Stage 5: `users.role` and an append-only `audit_log` (runtime role cannot UPDATE or DELETE; tested). No queue yet
 Honest verification labels (only checks actually run),trust,must,no,no,Differentiator 6
 Liveness or photo verification via a vendor,trust,should,yes,no,Post-MVP; Tinder mandatory in India [3]; biometric data needs DPDP review
 ID or age verification via a provider,trust,could,yes,no,Bumble ID verification [7]; options to research
 Hide from contacts or a known-people block list,privacy,could,yes,no,Tinder [2]; Hinge India [14]; contact data needs explicit consent
 Discovery pause,privacy,must,yes,no,Bumble Snooze [7]
 Discreet notifications (no names or message text by default),privacy,should,no,no,Default behaviour; competitors not checked; ships with push (stage 16)
-Account deletion under a documented retention policy,privacy,must,yes,no,
+Account deletion under a documented retention policy,privacy,must,yes,no,Stage 5: sessions and codes cascade on user delete (tested). No deletion flow yet
 Safety center (static guidance),safety,should,yes,no,
 Protected admin and moderation console,admin,must,yes,no,Server-side authorization
 Landing page,web,should,yes,no,
@@ -48,3 +48,4 @@ Paid visibility boosts and priority placement,monetization,could,yes,skip,Not at
 Events and group hangouts,social,could,yes,skip,Out of MVP scope; offline operations
 Partner integrations (music; language apps),integrations,could,yes,skip,Their partner deals; not part of the product
 Attribute-based personalized pricing,monetization,could,yes,skip,Will not copy [20]
+API foundation (settings; RFC 9457 errors; request IDs; privacy-safe logs; health and readiness; migrations; CI),platform,must,no,yes,Stage 5 (2026-11-04); tests FND-* in test-plan.md

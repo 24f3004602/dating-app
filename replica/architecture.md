@@ -24,7 +24,7 @@ functions, never over HTTP.
  +--------+------------------+------------------+--------------------+
           | SQL              | pub/sub, limits  | S3 API
           v                  v                  v
-     PostgreSQL 16         Redis 7        object storage (private)
+     PostgreSQL 17         Redis 7        object storage (private)
           ^
           | job table (Postgres)
      worker (same code): emails, purges, retention sweeps
@@ -42,9 +42,9 @@ Exact versions are pinned in lockfiles when each part is created.
 | API | Python 3.13, FastAPI 0.162, Pydantic 2.14, pydantic-settings 2.16, uvicorn 0.54 | owner spec; typed validation; OpenAPI generated from code |
 | ORM / DB access | SQLAlchemy 2.1 (async) with psycopg 3.3, one driver for app and migrations | owner spec; psycopg supports both sync (Alembic) and async |
 | migrations | Alembic 1.20 | owner spec; reviewed, versioned DDL |
-| database | PostgreSQL 16 | owner spec; installed here. **No PostGIS**: location uses known area centroids (D020) |
+| database | PostgreSQL 17 (D033) | owner spec; installed locally and in CI. **No PostGIS**: location uses known area centroids (D020), a privacy choice |
 | cache / realtime fan-out / rate limits | Redis 7, redis-py 8.1 | justified by WebSocket fan-out across workers and rate-limit counters; never the source of truth |
-| background jobs | procrastinate 3.10 (PostgreSQL-backed) | jobs are enqueued in the same transaction as the data change; no extra broker. Python 3.13 support to confirm in stage 5 |
+| background jobs | procrastinate 3.10 (PostgreSQL-backed) | jobs are enqueued in the same transaction as the data change; no extra broker. Verified on Python 3.13 with PostgreSQL 17 (D035); added in stage 6 |
 | passwords | argon2-cffi 25.1 (Argon2id) | memory-hard; current best practice |
 | images | Pillow 13 | decode, check, strip metadata, re-encode |
 | uploads | python-multipart 0.0.33 | FastAPI form uploads |
@@ -54,8 +54,8 @@ Exact versions are pinned in lockfiles when each part is created.
 | web | Next.js 16.4 (App Router), React 19, TypeScript | owner spec; landing page and admin console |
 | shared types | openapi-typescript 7.13, generating TS types from the API's OpenAPI | one contract; no hand-written duplicate types |
 | JS workspace | npm workspaces (`apps/mobile`, `apps/web`, `packages/api-types`) | hoisted layout is the safest for Metro. To verify against Expo's monorepo guide in stage 7 |
-| e2e tests | Playwright with the installed Chrome; axe accessibility scans | the browser download is blocked here; the installed Chrome works (tested) |
-| CI | GitHub Actions, with PostgreSQL and Redis as service containers | Docker is unavailable in this workspace, so container builds are verified in CI |
+| e2e tests | Playwright with the installed Chrome; axe accessibility scans | Playwright not yet installed on the owner's laptop (Chrome 156 and Edge 156 are); install when the first web or e2e stage starts |
+| CI | GitHub Actions, with PostgreSQL and Redis as service containers | workflow `.github/workflows/api.yml` (D040). Docker Desktop is installed locally but its daemon is off, so container builds are verified in CI |
 | hosting (later) | not chosen. Constraints: India region (Mumbai) for data and latency; managed PostgreSQL and Redis; S3-compatible storage | nothing is deployed without owner authorization |
 
 Compatibility risk found: the latest TypeScript is 7.0.2, but

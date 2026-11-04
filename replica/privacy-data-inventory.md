@@ -1,7 +1,10 @@
 # Privacy data inventory
 
-Date: 2026-11-04. Status: **planned**. Nothing is collected yet. This is
-the design that stage 12 implements and tests. Regulatory frame: India's DPDP
+Date: 2026-11-04. Status: **planned**. Stage 5 created the `users`,
+`sessions`, `one_time_codes` and `audit_log` tables, but no sign-up API exists,
+so nothing is collected from real people yet; the development database holds
+labelled fixtures only (`fixture-*@fixture.invalid`). This is the design that
+stage 12 implements and tests. Regulatory frame: India's DPDP
 Act and Rules; core obligations apply from 2027-05-13 [recon 22]. This is not
 legal advice: retention periods marked **(R)** need a lawyer's confirmation.
 
@@ -26,13 +29,13 @@ Principles:
 | read pointers | unread counts | system | `match_reads` | participants (read receipts are not shown in the MVP) | the life of the match | deleted |
 | blocks | safety | member | `blocks` | the blocker only | while both accounts exist | deleted with the blocker's account |
 | reports | safety | member | `reports` | the reporter (status only); staff | 2 years after resolution; the reporter's identity is pseudonymised once the report is resolved **(R)** | kept under the retention exception (safety and legal claims) |
-| moderation actions, audit log | accountability | staff, system | `moderation_actions`, `audit_log` | admins | 3 years **(R)** | kept under the exception. The user ID is kept for bans so they can be enforced |
+| moderation actions, audit log (actor and target IDs, action, request ID; `metadata` must hold no personal data) | accountability | staff, system | `moderation_actions`, `audit_log` | admins | 3 years **(R)** | kept under the exception. The user ID is kept for bans so they can be enforced |
 | consent records | proof of notice and consent (DPDP) | member | `consents` | the member; admins | the life of the account plus 1 year **(R)** | kept 1 year, then deleted |
 | sessions | authentication | system | `sessions` (token hash, client type, timestamps, shortened user agent) | the member (device list, later) | expiry plus 30 days | deleted |
 | one-time codes | verification | system | `one_time_codes` (HMAC only) | nobody | 24 hours after expiry | deleted |
 | daily picks | discovery | system | `daily_picks` | the viewer | 7 days | deleted |
 | rate-limit counters | abuse prevention | system | Redis | nobody | minutes to hours (TTL) | expire |
-| security logs (truncated IP, route, status, user ID) | security, breach detection | system | log store | restricted engineers | 1 year (DPDP minimum for such logs), then deleted | kept under the exception, then deleted |
+| security logs (truncated IP, route template, method, status, duration, request ID; user ID from stage 6) | security, breach detection | system | log store | restricted engineers | 1 year (DPDP minimum for such logs), then deleted | kept under the exception, then deleted |
 | backups | disaster recovery | system | provider backups | restricted engineers | 30-day rolling **(R)** | deleted data disappears when the backups age out; disclosed to members |
 
 ## External processors (planned; none connected yet)

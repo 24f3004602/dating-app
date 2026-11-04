@@ -1,0 +1,76 @@
+name: api
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/api/**", ".github/workflows/api.yml"]
+  pull_request:
+    paths: ["apps/api/**", ".github/workflows/api.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Ephemeral CI container only. No credential is stored in the repo:
+          # the app roles get random passwords below.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      APP_ENV: test
+      DB_RUNTIME_ROLE: app_runtime
+      REDIS_URL: redis://localhost:6379/0
+      BOOTSTRAP_ADMIN_URL: postgresql://postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.25"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Generate per-run database role passwords
+        run: |
+          owner=$(openssl rand -hex 24); runtime=$(openssl rand -hex 24)
+          echo "::add-mask::$owner"; echo "::add-mask::$runtime"
+          echo "DATABASE_URL=postgresql+psycopg://app_runtime:${runtime}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+          echo "MIGRATIONS_DATABASE_URL=postgresql+psycopg://app_owner:${owner}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+
+      - run: uv sync --locked
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy
+      - run: uv run python scripts/bootstrap_db.py
+      - name: Migrations apply to a fresh database as the owner role
+        run: uv run alembic upgrade head && uv run alembic check
+      - run: uv run pytest
+      - name: Dependency audit (pip-audit)
+        run: |
+          uv export --frozen --format requirements-txt --no-emit-project --all-groups -o "$RUNNER_TEMP/requirements.txt"
+          uv run pip-audit --disable-pip --require-hashes -r "$RUNNER_TEMP/requirements.txt" --progress-spinner off
