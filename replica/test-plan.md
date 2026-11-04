@@ -103,3 +103,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | owner's laptop | `uv run pytest` (stage 6) | 141 passed, 0 failed |
 | 2026-11-04 | same | `ruff`, `mypy` (strict), `pip-audit`, `alembic check` | clean; no known vulnerabilities; no drift |
 | 2026-11-04 | same | dev server and worker, console mail, curl: register → code from the worker → verify → `/me` → logout → `/me` | 202, code printed, 201 with labels age `declared` / email `verified` / identity `not_checked`, 200, 204, 401; 0 server log lines held the email, code or token |
+| 2026-11-04 | GitHub Actions run 41828807895 on `7af98c9` | `.github/workflows/api.yml` | ruff and mypy clean; migrations applied, no drift; 141 passed; pip-audit clean |

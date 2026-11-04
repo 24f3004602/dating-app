@@ -4,8 +4,9 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 6 (auth API) **implemented and tested locally** (141 tests); CI run
-pending. Next: stage 7 (profiles, media, first Expo screens).
+Stage 6 (auth API) **done for the API**: implemented, tested locally and in
+CI (run 41828807895, 141 passed). Next: stage 7 (profiles, media, first Expo
+screens).
 
 ## Done
 
@@ -31,6 +32,7 @@ pending. Next: stage 7 (profiles, media, first Expo screens).
   - SMS and identity checks are interfaces only.
   - Parity is 6.9/100, with 0 of 20 must-haves done (`parity.py`).
 - **Residual:** enumeration timing is equalised by construction, not measured.
+- **Deploy note (stage 17):** keep PostgreSQL's `log_parameter_max_length_on_error = 0` (the default) and `log_statement = none`. Failed statements are logged with placeholders only, as CI showed; parameter values would include emails.
 - **Fixed during the stage:**
   - procrastinate renamed tasks when a second app was built (D046).
   - The model-level whitespace stripping would have trimmed passwords; password fields now keep spaces.
