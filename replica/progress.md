@@ -7,7 +7,7 @@ Updated: 2026-11-04
 Stage 8 (discovery) **done for the API and the web build**:
 - 8a's API passed CI (api run 41859135328; mobile run 41859135467).
 - 8b added the discovery, person and preferences screens: 42 mobile tests, and the e2e journey now reaches discovery.
-- 8b's CI run is pending, and a native device pass (NAT-1) is still to do.
+- 8b passed CI too (mobile run 41861396400: checks and e2e). A native device pass (NAT-1) is still to do.
 
 Next: stage 9 (matching).
 

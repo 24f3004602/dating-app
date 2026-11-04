@@ -143,3 +143,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | same | dev server and worker, seeded fixtures, a real sign-up with 2 auto-approved photos (`PHOTO_REVIEW_REQUIRED=false` for the run), `GET /v1/discovery/today` | 5 ranked fixture cards with buckets; no coordinates; profile 200; photo 302; same set twice |
 | 2026-11-04 | GitHub Actions api run 41859135328 and mobile run 41859135467 on `48c159b` (stage 8a) | both workflows | 230 passed; mobile checks and e2e passed |
 | 2026-11-04 | owner's laptop | `npm test` in `apps/mobile`; e2e (3 runs) | 42 passed; e2e passed every run, after making web scroll containers keyboard-focusable (axe) |
+| 2026-11-04 | GitHub Actions mobile run 41861396400 on `3c506de` (stage 8b) | `mobile.yml` | checks passed; e2e (through discovery) passed in Chrome on Ubuntu |
