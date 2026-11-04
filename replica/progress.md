@@ -4,9 +4,12 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 8 (discovery) in progress. **8a (API) is implemented and tested
-locally** (230 API tests, with mutation checks on the block filter); its CI
-run is pending. Next: 8b, the discovery and preferences screens.
+Stage 8 (discovery) **done for the API and the web build**:
+- 8a's API passed CI (api run 41859135328; mobile run 41859135467).
+- 8b added the discovery, person and preferences screens: 42 mobile tests, and the e2e journey now reaches discovery.
+- 8b's CI run is pending, and a native device pass (NAT-1) is still to do.
+
+Next: stage 9 (matching).
 
 ## Done
 
@@ -18,10 +21,23 @@ run is pending. Next: 8b, the discovery and preferences screens.
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 8b | Screens: today's introductions (empty, not-ready, paused and error states), a person's profile, preferences; e2e extended through discovery with axe | `apps/mobile/src/screens/discover.tsx`, `e2e/` |
 | 8a | Discovery API: preferences, eligibility filters before ranking, the deterministic daily set (built once, availability re-checked on read), distance buckets, access to profiles and photos in today's set, rate limits, labelled fixtures; tables for interactions and blocks (D064); migration 0005 | `app/modules/discovery/`, `app/fixtures.py` |
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 8b build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| today's introductions | done | bucket labels only; empty set shows the next set time in India; e2e and axe |
+| person | done | approved photos, prompts, bio; "no longer available" state; e2e and axe |
+| preferences | done | age range and distance bucket; "applies from your next set"; e2e and axe |
+
+- **Found and fixed:**
+  - Screens without controls could not be scrolled by keyboard on web (axe, WCAG 2.1.1); the scroll container is now focusable on web (D069).
+  - An un-awaited RNTL `unmount()` broke the next test.
 
 ## Stage 8a status
 
@@ -120,6 +136,9 @@ run is pending. Next: 8b, the discovery and preferences screens.
 
 ## Next
 
-Stage 8b: the discovery screen (today's cards, with distance buckets and empty, paused and not-ready states), profile detail, and the preferences screen; screen tests; extend the web e2e.
-
-Earlier plan for stage 8, done in 8a: preferences (age range, distance bucket, genders) and the eligibility filters before ranking: adult, reciprocal preferences, intent compatibility, visibility and pause, prior interactions, at least 2 approved photos, and no block (blocks arrive in stage 11, behind the same policy). It also builds a deterministic daily set of about 15, with distance buckets from area centroids. `policies/access.py` opens a profile and its approved photos to viewers who have it in today's set. Then the discovery screen.
+Stage 9: matching. Likes, with an optional comment on a photo or prompt, and passes, with no undo. Then:
+- **Atomic mutual matches:** an advisory lock on the pair plus a unique pair constraint, inside one transaction.
+- **Limits:** the equal daily like limit for everyone, and the cap on chats awaiting your reply.
+- **Visibility:** likes received, matches, and `liked_only` visibility.
+- **Tests:** concurrency tests that two reciprocal likes create exactly one match (50 rounds), and that ineligible users cannot match.
+- **App:** like and pass on the person screen, and the likes and matches lists.

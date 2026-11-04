@@ -67,6 +67,8 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | MOB-3 | mobile | screen | sign-up (under-18 stopped before any request; normalised body), verify (code plus remembered password; keystore), sign-in, reset, errors | as listed | jest + RNTL | pass |
 | MOB-4 | mobile | screen | profile empty/loaded/error states and honest labels; edit validation and saved shape; area limit; photos list, pick, upload, reorder, delete, refusal; privacy | as listed | jest + RNTL | pass |
 | E2E-1 | slice | e2e | Chrome: welcome, sign-up (under-18 refused), mailed code, verify, empty profile, create profile, upload a GPS-tagged photo, signed URL without metadata, privacy, sign out | each step works; axe: no serious or critical issue on 8 screens; no console errors or 5xx | Playwright | pass |
+| MOB-5 | mobile | screen | today's cards with bucket labels and no exact km; empty set with the next set time (India); not-ready and paused states; person view and gone state; preferences validation and saved shape | as listed | jest + RNTL | pass |
+| E2E-2 | slice | e2e | continuing E2E-1: second photo, ready state, today's introductions (labelled fixtures, bucket in each card's label, at most 15), a fixture's profile, preferences saved | each step works; axe clean on discover, person, preferences | Playwright | pass |
 | NAT-1 | native | manual | Android and iOS: keystore survives a restart; photo library permission and picker; keyboard and safe areas; TalkBack and VoiceOver read every control and state | works on a real device | manual | **planned**: needs a device or emulator with Expo Go or a dev build |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
@@ -139,3 +141,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | GitHub Actions mobile run 41855746033 on `79b0bd1` | `mobile.yml` | audit (high) clean; contract unchanged; typecheck clean; 36 passed; web export; e2e 1 passed in Chrome on Ubuntu |
 | 2026-11-04 | owner's laptop | `uv run pytest` (stage 8a) | 230 passed |
 | 2026-11-04 | same | dev server and worker, seeded fixtures, a real sign-up with 2 auto-approved photos (`PHOTO_REVIEW_REQUIRED=false` for the run), `GET /v1/discovery/today` | 5 ranked fixture cards with buckets; no coordinates; profile 200; photo 302; same set twice |
+| 2026-11-04 | GitHub Actions api run 41859135328 and mobile run 41859135467 on `48c159b` (stage 8a) | both workflows | 230 passed; mobile checks and e2e passed |
+| 2026-11-04 | owner's laptop | `npm test` in `apps/mobile`; e2e (3 runs) | 42 passed; e2e passed every run, after making web scroll containers keyboard-focusable (axe) |

@@ -18,5 +18,7 @@ export function apiEnv(runId: string): Record<string, string> {
     STORAGE_BACKEND: "local",
     MEDIA_DIR: "var/media-e2e",
     LOG_JSON: "false",
+    // No moderation queue until stage 11: approve uploads so the member can browse.
+    PHOTO_REVIEW_REQUIRED: "false",
   };
 }

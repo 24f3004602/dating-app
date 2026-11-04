@@ -134,3 +134,42 @@ export function useReorderPhotos() {
 export function absoluteUrl(baseUrl: string, path: string): string {
   return path.startsWith("http") ? path : `${baseUrl.replace(/\/$/, "")}${path}`;
 }
+
+export type Today = Schemas["TodayOut"];
+export type Card = Schemas["DiscoveryCard"];
+export type Person = Schemas["PublicProfileOut"];
+export type Prefs = Schemas["PreferencesOut"];
+
+export const discoveryKeys = {
+  today: ["discovery", "today"] as const,
+  person: (id: string) => ["profiles", id] as const,
+  preferences: ["me", "preferences"] as const,
+};
+
+export function useToday() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: discoveryKeys.today, queryFn: () => unwrap(api.GET("/v1/discovery/today")), retry: false });
+}
+
+export function usePerson(id: string) {
+  const { api } = useAuth();
+  return useQuery({
+    queryKey: discoveryKeys.person(id),
+    queryFn: () => unwrap(api.GET("/v1/profiles/{user_id}", { params: { path: { user_id: id } } })),
+    retry: false,
+  });
+}
+
+export function usePreferences() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: discoveryKeys.preferences, queryFn: () => unwrap(api.GET("/v1/me/preferences")) });
+}
+
+export function useSavePreferences() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["PreferencesIn"]) => unwrap(api.PUT("/v1/me/preferences", { body })),
+    onSuccess: (prefs) => qc.setQueryData(discoveryKeys.preferences, prefs),
+  });
+}

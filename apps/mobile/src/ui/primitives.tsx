@@ -5,6 +5,7 @@
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,7 +21,8 @@ import { color, font, radius, size, space, touch } from "@/theme/tokens";
 export function Screen({ children }: { children: ReactNode }) {
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
+      {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
+      <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled" focusable={Platform.OS === "web"}>
         {children}
       </ScrollView>
     </SafeAreaView>

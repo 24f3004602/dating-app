@@ -105,7 +105,7 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   // name (children of role=img are presentational, so screen readers hear it once).
   const thumb = page.locator('[role="img"][aria-label="Your photo 1 of 1"]');
   await expect(thumb).toBeVisible();
-  await expect(page.getByText("Under review")).toBeVisible();
+  await expect(page.getByText("Approved", { exact: true })).toBeVisible(); // review is off for this run (no queue until stage 11)
   await checkA11y(page, "photos");
 
   // The stored image came back through a signed URL, stripped of metadata.
@@ -114,6 +114,38 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   const image = await page.request.get(src!);
   expect(image.status()).toBe(200);
   expect((await image.body()).includes(Buffer.from("SecretPhone"))).toBe(false);
+
+  // A second photo makes the profile ready for introductions.
+  const second = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Add a photo" }).click();
+  await (await second).setFiles(PHOTO);
+  await expect(page.locator('[role="img"][aria-label="Your photo 2 of 2"]')).toBeVisible();
+
+  // Today's introductions: labelled fixtures, distance as a bucket only.
+  await page.goBack();
+  await expect(page.getByText("Ready to be introduced")).toBeVisible();
+  await page.getByRole("button", { name: "Today's introductions" }).click();
+  await expect(page.getByRole("heading", { name: "Today's introductions" })).toBeVisible();
+  const cards = page.getByRole("button", { name: /^View profile: Fixture / });
+  await expect(cards.first()).toBeVisible();
+  expect(await cards.count()).toBeGreaterThan(0);
+  expect(await cards.count()).toBeLessThanOrEqual(15);
+  const firstLabel = (await cards.first().getAttribute("aria-label")) ?? "";
+  expect(firstLabel).toMatch(/(under 5 km|5 to 15 km|15 to 50 km|more than 50 km) away\.$/);
+  await checkA11y(page, "discover");
+  await cards.first().click();
+  await expect(page.getByText("Development fixture: not a real person.")).toBeVisible();
+  await expect(page.locator('[role="img"][aria-label^="Photo 1 of 2 of Fixture"]')).toBeVisible();
+  await checkA11y(page, "person");
+
+  // Preferences apply from the next set.
+  await page.goBack();
+  await page.goBack();
+  await page.getByRole("button", { name: "Preferences" }).click();
+  await page.getByRole("radio", { name: "Within 15 km", exact: true }).click();
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Saved. Your next daily set will use these preferences.")).toBeVisible();
+  await checkA11y(page, "preferences");
 
   // Privacy.
   await page.goBack();
