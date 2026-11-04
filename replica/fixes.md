@@ -2,8 +2,8 @@
 
 Date: 2026-11-04. Method: replica-entrepreneur steps 3-5, adapted (decision
 D004). H1-H7 refer to `feedback.md`; [n] refers to the sources in `recon.md`.
-**Every A-item is an assumption to validate**; nothing here is final until the
-owner agrees (status `provisional` in `decision-log.md`).
+**Every A-item is an assumption to validate.** The owner agreed this plan on
+2026-11-04 (D009-D018 are `active`); the assumptions still need market evidence.
 
 ## Target audience (A1)
 

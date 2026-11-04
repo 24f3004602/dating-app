@@ -4,8 +4,8 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Planning complete (stages 1-4). **Waiting for owner agreement** before stage 5,
-the first code. No application code exists.
+Stage 5: API foundation (D029 scope), in progress. The owner agreed the plan
+on 2026-11-04 (D009-D029 are active).
 
 ## Done
 
@@ -15,31 +15,26 @@ the first code. No application code exists.
 | 2 | Competitor recon of Tinder, Bumble and Hinge; 22 dated public sources | `recon.md`, `feedback.md` |
 | 3 | Audience, market, positioning, differentiation, MVP, pricing hypotheses, success criteria, provisional names | `fixes.md`, `brand.md`, `launch/pricing.md`, `features.csv` |
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
+| — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 
-## Proposal (provisional)
+## Agreed plan (summary)
 
-- **Product:** serious daters aged 22-34 in India, launching in Delhi NCR. Intent-first: a finite daily set, an equal like limit, a cap on chats awaiting your reply. Safety is free and the default; pricing is fair. Names: Haanji (working), Vaada, Kinaara.
-- **Architecture:**
-  - Mobile: Expo SDK 58.
-  - Web: Next.js 16 (landing page and admin console).
-  - API: FastAPI modular monolith with SQLAlchemy 2.1 and Alembic.
-  - Data: PostgreSQL 16; Redis for rate limits and realtime fan-out.
-  - Storage and jobs: private object storage; a PostgreSQL-backed job queue.
-- **Privacy and auth:** area-level location without GPS, opaque sessions.
+- **Product:** serious daters aged 22-34 in India, launching in Delhi NCR. Intent-first: a finite daily set, an equal like limit, a cap on chats awaiting your reply. Safety is free and the default; pricing is fair. Names: Haanji (working), Vaada, Kinaara; trademark checks still to run.
+- **Architecture:** Expo SDK 58; Next.js 16; FastAPI modular monolith with SQLAlchemy 2.1 and Alembic; PostgreSQL; Redis for rate limits and realtime fan-out; private object storage; PostgreSQL-backed jobs. Area-level location without GPS; opaque sessions.
 
-## Environment (verified 2026-11-04)
+## Environment (owner's Windows 11 laptop, verified 2026-11-04)
 
-- **Installed:** Node 22.23.4, Python 3.13.18, uv, PostgreSQL 16.15 and Redis 7.0.15 (installed, stopped), JDK 21, and Chrome 153 with Playwright (headless launch passed).
-- **Not usable here:** Docker, PostGIS, an Android emulator, Expo cloud, and Playwright's browser download.
-- **Tooling:** Replica is followed from its official repo (D003). REA is not used (D005).
-- **Git:** 4 local commits on top of the owner's 2. **Nothing pushed**; the repo is public (D006).
+- **Installed:** Node 22.23.4, npm 11.19, Python 3.13.7 (`py` launcher), uv 0.11.25, git 2.51, gh 2.81 (signed in, admin on the repo), JDK 25, Chrome 156, Edge 156.
+- **PostgreSQL:** 17.5 (port 5432, PostGIS present) and 18 (port 5433) run as Windows services with password auth; their credentials are not used.
+- **Redis:** 7.0.15 inside WSL2 Ubuntu only.
+- **Not running / not installed:** Docker Desktop is installed but its daemon is off; Playwright is not installed; the Android SDK and emulator exist but are not on PATH.
+- **Tools:** Replica vendored in `.claude/skills/` (D031). REA (`rea-agents` 6.8.0) is installed and connected; used only on our own builds (D005).
+- **Git:** `main` pushed to the public GitHub repo (D032).
 
 ## Blockers / decisions needed
 
-1. Agree or adjust the product and architecture proposals (decisions marked `provisional`).
-2. Repo visibility before the first push.
-3. Vendor the Replica skills into `.claude/skills/`? (D003)
+None for stage 5.
 
 ## Next
 
-Stage 5: API foundation (D029 scope), once item 1 is agreed.
+Stage 5: API foundation (D029 scope).

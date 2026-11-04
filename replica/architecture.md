@@ -1,6 +1,6 @@
 # Architecture: working title Haanji (an original dating app)
 
-Status: **provisional**, needs owner agreement before stage 5. Date:
+Status: **agreed** by the owner on 2026-11-04 (D020-D029 active). Date:
 2026-11-04. Inputs: `recon.md`, `features.csv`, `fixes.md`. Method:
 replica-architect, using the stack the owner specified rather than Replica's
 defaults (Supabase, Drizzle, Vercel).
