@@ -1,2 +1,63 @@
+# --- secrets and local config (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+credentials*.json
+service-account*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+
+# --- Node / Expo / Next.js ---
+node_modules/
+.expo/
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- tests ---
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# --- local media and data written by dev servers ---
+var/
+*.sqlite3
+*.log
+
+# --- Replica reference material: screenshots of other apps are research only
+#     and must never be committed or shipped ---
+replica/screens/
+replica/clone-screens/
+replica/diffs/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- owner handoff files (local only) ---
 claude-code-handoff.md
 dating-app.bundle
