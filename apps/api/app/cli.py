@@ -17,8 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
 from app.db import create_engine, create_session_factory
+from app.fixtures import PROFILES, seed_discovery_fixtures
 from app.modules.accounts.models import UNUSABLE_PASSWORD, User, UserRole, UserStatus
 from app.modules.audit.models import AuditLog
+from app.modules.auth.crypto import derive_key
+from app.providers.storage import ObjectStorage, create_storage
 
 # RFC 2606 reserves `.invalid`: these addresses can never receive mail.
 FIXTURE_EMAIL_DOMAIN = "fixture.invalid"
@@ -52,8 +55,8 @@ class SeedRefusedError(RuntimeError):
     pass
 
 
-async def seed_dev(session: AsyncSession, settings: Settings) -> int:
-    """Create the labelled fixtures. Idempotent. Returns how many were new."""
+async def seed_dev(session: AsyncSession, settings: Settings, storage: ObjectStorage) -> int:
+    """Create the labelled fixtures. Idempotent. Returns how many accounts were new."""
     if settings.is_production:
         raise SeedRefusedError("refusing to seed fixtures in production")
     now = datetime.now(UTC)
@@ -74,8 +77,11 @@ async def seed_dev(session: AsyncSession, settings: Settings) -> int:
         )
         if (await session.execute(stmt)).scalar_one_or_none() is not None:
             created += 1
+    created += await seed_discovery_fixtures(session, storage, now)
     await session.execute(
-        insert(AuditLog).values(action="dev.seed", details={"created": created, "fixtures": len(FIXTURES)})
+        insert(AuditLog).values(
+            action="dev.seed", details={"created": created, "fixtures": len(FIXTURES) + len(PROFILES)}
+        )
     )
     await session.commit()
     return created
@@ -97,9 +103,10 @@ def _seed_command(_: argparse.Namespace) -> int:
 
     async def go() -> int:
         engine = create_engine(settings)
+        storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
         try:
             async with create_session_factory(engine)() as session:
-                return await seed_dev(session, settings)
+                return await seed_dev(session, settings, storage)
         finally:
             await engine.dispose()
 
@@ -108,7 +115,8 @@ def _seed_command(_: argparse.Namespace) -> int:
     except SeedRefusedError as exc:
         print(f"seed-dev: {exc}", file=sys.stderr)
         return 2
-    print(f"seed-dev: {created} new fixture account(s); {len(FIXTURES)} defined (all @{FIXTURE_EMAIL_DOMAIN}).")
+    total = len(FIXTURES) + len(PROFILES)
+    print(f"seed-dev: {created} new fixture account(s); {total} defined (all @{FIXTURE_EMAIL_DOMAIN}).")
     return 0
 
 

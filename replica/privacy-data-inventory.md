@@ -34,7 +34,8 @@ Principles:
 | session token on the device (*stage 7b*) | staying signed in | system | native keystore; memory only on web (D058) | the member's device | until sign-out or expiry | cleared at sign-out |
 | sessions (*stage 6*) | authentication | system | `sessions` (SHA-256 of the token, client type, timestamps, the first user-agent product token only, e.g. `okhttp/4.12`) | the member (device list, later) | expiry plus 30 days | deleted |
 | one-time codes (*stage 6*) | verification | system | `one_time_codes` (HMAC only, plus attempts); the plaintext exists only in worker memory and the email | nobody | 24 hours after expiry | deleted |
-| daily picks | discovery | system | `daily_picks` | the viewer | 7 days | deleted |
+| daily picks (*stage 8*: candidate, rank, distance bucket) | discovery | system | `daily_picks` | the viewer | 7 days (old rows deleted when a new set is built) | deleted |
+| discovery preferences (*stage 8*: age range, distance bucket) | discovery | member | `preferences` | the member | while the account exists | deleted |
 | rate-limit counters (*stage 6*) | abuse prevention | system | Redis, keyed by an HMAC of the email, IP or user ID (no plain values) | nobody | 1 minute to 24 hours (TTL) | expire |
 | job queue rows (*stage 6*) | sending codes and notices | system | `procrastinate_jobs` (user ID, purpose or notice kind; no email, no code) | engineers | deleted when the job succeeds; failed jobs kept for diagnosis **(R: define a sweep)** | expire with the sweep |
 | security logs (truncated IP, route template, method, status, duration, request ID; user ID from stage 6) | security, breach detection | system | log store | restricted engineers | 1 year (DPDP minimum for such logs), then deleted | kept under the exception, then deleted |

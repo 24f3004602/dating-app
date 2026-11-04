@@ -69,10 +69,18 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | E2E-1 | slice | e2e | Chrome: welcome, sign-up (under-18 refused), mailed code, verify, empty profile, create profile, upload a GPS-tagged photo, signed URL without metadata, privacy, sign out | each step works; axe: no serious or critical issue on 8 screens; no console errors or 5xx | Playwright | pass |
 | NAT-1 | native | manual | Android and iOS: keystore survives a restart; photo library permission and picker; keyboard and safe areas; TalkBack and VoiceOver read every control and state | works on a real device | manual | **planned**: needs a device or emulator with Expo Go or a dev build |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
-| F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | planned |
-| F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | planned |
-| F03-N1 | discovery | negative | inspect every discovery and profile response | no coordinates, exact distance, email or birthdate | api (schema) | planned |
-| F03-N2 | discovery | negative | open a profile outside the set, matches or likes received | 404 | api | planned |
+| F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
+| F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
+| F03-N1 | discovery | negative | inspect every discovery and profile response | no coordinates, exact distance, email or birthdate | api (schema) | pass |
+| F03-N2 | discovery | negative | open a profile outside the set, matches or likes received | 404 | api | pass for outside the set (matches and likes: stage 9) |
+| DSC-F1 | discovery | negative | 13 single-rule variants next to an eligible member: wrong gender either way, incompatible intent, age outside either side's range, distance beyond either side's limit, `liked_only`, paused, under 2 approved photos, suspended, leaving, no profile | only the eligible one appears | api | pass |
+| DSC-F2 | discovery | negative | block by viewer, block by candidate, viewer liked, viewer passed, candidate passed; someone who liked the viewer | excluded; the fan still appears | api + mutation check | pass |
+| DSC-H2 | discovery | happy | 20 eligible: size and ranks; best candidate first; second call; a newcomer the same day; the next day | 15, ranks 1-15; best first; identical; waits; appears | api | pass |
+| DSC-M1 | discovery | edge | block and pause after the set is built | removed at once; profile 404; others unaffected | api | pass |
+| DSC-P1 | location | negative | card content | bucket only (`5_to_15_km`); no coordinates, km, email, birthdate, preferences | api | pass |
+| DSC-A1 | access | negative | profile and photos of someone in the set; pending photo; a non-match; the reverse direction | 200 and 302; 404; 404; 404 | api | pass |
+| DSC-V1 | discovery | negative | viewer without a profile, with 1 approved photo, paused | 409 `profile_incomplete` or `discovery_paused` | api | pass |
+| DSC-R1 | discovery | negative | preferences defaults, invalid ranges and buckets, unknown fields; rate limit; 7-day retention | defaults; 422; 429; old picks deleted | api | pass |
 | F04-H1 | match | happy | A likes B, then B likes A | exactly one match | api | planned |
 | F04-E1 | match | edge | A and B like each other simultaneously (parallel, 50 rounds) | exactly one match every round | concurrency | planned |
 | F04-N1 | match | negative | like yourself, or a blocked, paused, ineligible or deleted user | rejected; no match | api | planned |
@@ -129,3 +137,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | same | `npm test -w @datingapp/e2e` (Playwright, Chrome, axe) | 1 passed (E2E-1); after fixing the web accessibility state (D059) |
 | 2026-11-04 | GitHub Actions api run 41854231637 on `36dc93f` | `api.yml` | 200 passed; pip-audit clean |
 | 2026-11-04 | GitHub Actions mobile run 41855746033 on `79b0bd1` | `mobile.yml` | audit (high) clean; contract unchanged; typecheck clean; 36 passed; web export; e2e 1 passed in Chrome on Ubuntu |
+| 2026-11-04 | owner's laptop | `uv run pytest` (stage 8a) | 230 passed |
+| 2026-11-04 | same | dev server and worker, seeded fixtures, a real sign-up with 2 auto-approved photos (`PHOTO_REVIEW_REQUIRED=false` for the run), `GET /v1/discovery/today` | 5 ranked fixture cards with buckets; no coordinates; profile 200; photo 302; same set twice |

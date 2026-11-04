@@ -63,6 +63,88 @@
         "title": "ConsentsIn",
         "type": "object"
       },
+      "DiscoveryCard": {
+        "additionalProperties": false,
+        "description": "A profile in today's set: a distance bucket, never coordinates or km.",
+        "properties": {
+          "age": {
+            "title": "Age",
+            "type": "integer"
+          },
+          "area": {
+            "$ref": "#/components/schemas/AreaOut"
+          },
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "distance": {
+            "enum": [
+              "under_5_km",
+              "5_to_15_km",
+              "15_to_50_km",
+              "over_50_km"
+            ],
+            "title": "Distance",
+            "type": "string"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/Intent"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "prompts": {
+            "items": {
+              "$ref": "#/components/schemas/PromptAnswerOut"
+            },
+            "title": "Prompts",
+            "type": "array"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "age",
+          "gender",
+          "intent",
+          "bio",
+          "area",
+          "prompts",
+          "photos",
+          "distance",
+          "rank"
+        ],
+        "title": "DiscoveryCard",
+        "type": "object"
+      },
       "EmailIn": {
         "additionalProperties": false,
         "properties": {
@@ -434,6 +516,87 @@
         "title": "PhotoUrls",
         "type": "object"
       },
+      "PreferencesIn": {
+        "additionalProperties": false,
+        "properties": {
+          "age_max": {
+            "maximum": 99.0,
+            "minimum": 18.0,
+            "title": "Age Max",
+            "type": "integer"
+          },
+          "age_min": {
+            "maximum": 99.0,
+            "minimum": 18.0,
+            "title": "Age Min",
+            "type": "integer"
+          },
+          "max_distance_km": {
+            "anyOf": [
+              {
+                "enum": [
+                  5,
+                  15,
+                  50
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Distance Km"
+          }
+        },
+        "required": [
+          "age_min",
+          "age_max"
+        ],
+        "title": "PreferencesIn",
+        "type": "object"
+      },
+      "PreferencesOut": {
+        "additionalProperties": false,
+        "properties": {
+          "age_max": {
+            "title": "Age Max",
+            "type": "integer"
+          },
+          "age_min": {
+            "title": "Age Min",
+            "type": "integer"
+          },
+          "applies_from": {
+            "const": "next_set",
+            "default": "next_set",
+            "title": "Applies From",
+            "type": "string"
+          },
+          "max_distance_km": {
+            "anyOf": [
+              {
+                "enum": [
+                  5,
+                  15,
+                  50
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Distance Km"
+          }
+        },
+        "required": [
+          "age_min",
+          "age_max",
+          "max_distance_km"
+        ],
+        "title": "PreferencesOut",
+        "type": "object"
+      },
       "PrivacyIn": {
         "additionalProperties": false,
         "properties": {
@@ -766,6 +929,40 @@
           "user"
         ],
         "title": "SessionOut",
+        "type": "object"
+      },
+      "TodayOut": {
+        "additionalProperties": false,
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/DiscoveryCard"
+            },
+            "title": "Cards",
+            "type": "array"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "next_set_at": {
+            "format": "date-time",
+            "title": "Next Set At",
+            "type": "string"
+          },
+          "size_limit": {
+            "title": "Size Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "cards",
+          "size_limit",
+          "next_set_at"
+        ],
+        "title": "TodayOut",
         "type": "object"
       },
       "ValidationProblem": {
@@ -1574,6 +1771,67 @@
         ]
       }
     },
+    "/v1/discovery/today": {
+      "get": {
+        "operationId": "today_v1_discovery_today_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Today's finite set: built once a day, filtered before ranking, distance as a bucket only",
+        "tags": [
+          "discovery"
+        ]
+      }
+    },
     "/v1/me": {
       "get": {
         "operationId": "me_v1_me_get",
@@ -1837,6 +2095,96 @@
         "summary": "Delete a photo",
         "tags": [
           "photos"
+        ]
+      }
+    },
+    "/v1/me/preferences": {
+      "get": {
+        "operationId": "get_preferences_v1_me_preferences_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "My discovery preferences (defaults if never set)",
+        "tags": [
+          "discovery"
+        ]
+      },
+      "put": {
+        "operationId": "put_preferences_v1_me_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Set my preferences; they apply from the next daily set",
+        "tags": [
+          "discovery"
         ]
       }
     },

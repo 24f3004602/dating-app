@@ -9,10 +9,10 @@ Required relationship intent shown on profile,profile,must,yes,partial,Bumble in
 Text prompts on profile (up to 3),profile,should,yes,partial,Hinge prompts [12]; Stage 7a: our own 12-prompt catalogue; up to 3 answers; API tested; Stage 7b: screens built; screen tests and the web e2e pass; native device pass pending (NAT-1)
 Photo upload reorder and delete (2-6 photos) with safe processing,profile,must,yes,partial,"Re-encode; strip metadata; private storage; moderation state; Stage 7a: safe pipeline, reorder, delete, signed URLs, pre-moderation; API tested. Needs a private bucket (owner) and app screens; Stage 7b: screens built; screen tests and the web e2e pass; native device pass pending (NAT-1); private bucket still needed"
 Profile visibility setting,privacy,must,yes,partial,Stage 7a: `everyone` or `liked_only` stored and tested; applied in discovery (stage 8); Stage 7b: screens built; screen tests and the web e2e pass; native device pass pending (NAT-1); applied in discovery (stage 8)
-City-level location with distance buckets only,privacy,must,no,partial,"Never show precise location or exact distance (differentiator 7); Stage 7a: area picker data, no coordinates in responses, one change per 24 h. Buckets in stage 8"
-Discovery preferences (age range; distance; genders; intent),discovery,must,yes,no,
-Reciprocal eligibility filtering before ranking,discovery,must,no,no,Adult; both fit each other's preferences; blocks; visibility; pause; prior interactions
-Finite daily set with deterministic ranking,discovery,must,no,no,About 15 a day; explainable ordering (differentiator 2; H3)
+City-level location with distance buckets only,privacy,must,no,partial,"Never show precise location or exact distance (differentiator 7); Stage 7a: area picker data, no coordinates in responses, one change per 24 h. Buckets in stage 8; Stage 8a: buckets from area centroids in cards"
+Discovery preferences (age range; distance; genders; intent),discovery,must,yes,partial,"Stage 8a: API done and tested (age, distance bucket; genders from the profile; intent matched by rule D065). Screen in 8b"
+Reciprocal eligibility filtering before ranking,discovery,must,no,partial,"Adult; both fit each other's preferences; blocks; visibility; pause; prior interactions; Stage 8a: every filter in SQL before ranking, tested one rule at a time (DSC-F1, DSC-F2). Screen in 8b"
+Finite daily set with deterministic ranking,discovery,must,no,partial,"About 15 a day; explainable ordering (differentiator 2; H3); Stage 8a: about 15 a day, built once, explainable score, stable tie-break (DSC-H2). Screen in 8b"
 Like and pass,matching,must,yes,no,
 Equal daily like limit for everyone (never sold),matching,must,no,no,Differentiator 3; H4; P3
 Like with an optional comment on a photo or prompt,matching,should,yes,no,Hinge [10][13]; more ways to start a conversation [8]

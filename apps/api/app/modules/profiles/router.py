@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request
 
 from app.errors import ApiError
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
+from app.modules.discovery.service import PROFILE_VIEW_LIMIT
 from app.modules.profiles import service
 from app.modules.profiles.catalogue import PROMPTS
 from app.modules.profiles.schemas import AreaOut, MyProfileOut, PrivacyIn, ProfileIn, PromptOut, PublicProfileOut
@@ -69,7 +70,9 @@ async def patch_privacy(
 async def get_profile(
     user_id: uuid.UUID, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession
 ) -> PublicProfileOut:
-    if not await can_view_profile(db, auth.user.id, user_id):
+    if auth.user.id != user_id:
+        await ctx.limiter.hit(PROFILE_VIEW_LIMIT, str(auth.user.id))
+    if not await can_view_profile(db, auth.user.id, user_id, settings=ctx.settings, now=ctx.clock()):
         raise ApiError(404, "not_found")
     out = await service.public_profile(db, ctx.settings, _storage(request), user_id, ctx.clock())
     if out is None:

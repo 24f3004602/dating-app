@@ -78,7 +78,7 @@ async def media(
     size: Annotated[Literal["large", "small"], Query()] = "large",
 ) -> RedirectResponse:
     photo = await service.get_photo(db, photo_id)
-    if photo is None or not await can_view_photo(db, auth.user.id, photo):
+    if photo is None or not await can_view_photo(db, auth.user.id, photo, settings=ctx.settings, now=ctx.clock()):
         raise ApiError(404, "not_found")
     url, _ = _storage(request).signed_url(photo_keys(photo.storage_key)[size], ctx.clock())
     return RedirectResponse(url, status_code=status.HTTP_302_FOUND, headers={"Cache-Control": "no-store"})

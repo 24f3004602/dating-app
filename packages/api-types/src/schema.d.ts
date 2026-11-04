@@ -191,6 +191,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/discovery/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's finite set: built once a day, filtered before ranking, distance as a bucket only */
+        get: operations["today_v1_discovery_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -255,6 +272,24 @@ export interface paths {
         post?: never;
         /** Delete a photo */
         delete: operations["delete_v1_me_photos__photo_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My discovery preferences (defaults if never set) */
+        get: operations["get_preferences_v1_me_preferences_get"];
+        /** Set my preferences; they apply from the next daily set */
+        put: operations["put_preferences_v1_me_preferences_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -386,6 +421,37 @@ export interface components {
              * @description Version of the terms the member accepted
              */
             terms: string;
+        };
+        /**
+         * DiscoveryCard
+         * @description A profile in today's set: a distance bucket, never coordinates or km.
+         */
+        DiscoveryCard: {
+            /** Age */
+            age: number;
+            area: components["schemas"]["AreaOut"];
+            /** Bio */
+            bio: string | null;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Distance
+             * @enum {string}
+             */
+            distance: "under_5_km" | "5_to_15_km" | "15_to_50_km" | "over_50_km";
+            gender: components["schemas"]["Gender"];
+            intent: components["schemas"]["Intent"];
+            /** Photos */
+            photos: components["schemas"]["PhotoOut"][];
+            /** Prompts */
+            prompts: components["schemas"]["PromptAnswerOut"][];
+            /** Rank */
+            rank: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** EmailIn */
         EmailIn: {
@@ -545,6 +611,30 @@ export interface components {
             /** Small */
             small: string;
         };
+        /** PreferencesIn */
+        PreferencesIn: {
+            /** Age Max */
+            age_max: number;
+            /** Age Min */
+            age_min: number;
+            /** Max Distance Km */
+            max_distance_km?: (5 | 15 | 50) | null;
+        };
+        /** PreferencesOut */
+        PreferencesOut: {
+            /** Age Max */
+            age_max: number;
+            /** Age Min */
+            age_min: number;
+            /**
+             * Applies From
+             * @default next_set
+             * @constant
+             */
+            applies_from: "next_set";
+            /** Max Distance Km */
+            max_distance_km: (5 | 15 | 50) | null;
+        };
         /** PrivacyIn */
         PrivacyIn: {
             /** Discovery Paused */
@@ -668,6 +758,23 @@ export interface components {
              */
             token_type: "bearer";
             user: components["schemas"]["MeOut"];
+        };
+        /** TodayOut */
+        TodayOut: {
+            /** Cards */
+            cards: components["schemas"]["DiscoveryCard"][];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Next Set At
+             * Format: date-time
+             */
+            next_set_at: string;
+            /** Size Limit */
+            size_limit: number;
         };
         /** ValidationProblem */
         ValidationProblem: {
@@ -1299,6 +1406,62 @@ export interface operations {
             };
         };
     };
+    today_v1_discovery_today_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     me_v1_me_get: {
         parameters: {
             query?: never;
@@ -1506,6 +1669,86 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    get_preferences_v1_me_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    put_preferences_v1_me_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

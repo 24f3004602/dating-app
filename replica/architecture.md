@@ -104,13 +104,13 @@ migrations run as a separate role.
 | `profiles` | `user_id` primary key; `display_name` (1-40); `gender`; `interested_in` (array); `intent` (required); `bio` (≤ 500); `area_id`; `area_changed_at`; `visibility`; `discovery_paused` (vocabularies: D050) | 7 |
 | `profile_prompts` | `user_id`, `prompt_key` (our own prompt catalogue), `answer` (≤ 200), `position`; unique (`user_id`, `position`) | 7 |
 | `photos` | `user_id`; `position` 0-5, unique per user (deferrable, for reorders); random `storage_key`; dimensions; `sha256` of the original; `moderation_state` (pending, approved, rejected); `reviewed_at` | 7 |
-| `preferences` | `user_id` primary key; age min and max (18-99, min ≤ max); `max_distance_km`; `genders` | 8 |
+| `preferences` | `user_id` primary key; age min and max (18-99, min ≤ max); `max_distance_km` (5, 15, 50 or any). Genders come from `profiles.interested_in` (D066) | 8 |
 | `daily_picks` | (`viewer_id`, `pick_date`, `candidate_id`) primary key; `rank`. Kept 7 days | 8 |
-| `interactions` | `actor_id`, `target_id`, `kind` (like, pass), optional `comment` (≤ 150) and target item; **unique (`actor_id`, `target_id`)**; check actor ≠ target | 9 |
+| `interactions` | `actor_id`, `target_id`, `kind` (like, pass), optional `comment` (≤ 150) and target item; **unique (`actor_id`, `target_id`)**; check actor ≠ target. Table from stage 8 (D064), API in 9 | 8 (API 9) |
 | `matches` | `user_a_id` < `user_b_id` (check); **unique (`user_a_id`, `user_b_id`)**; `closed_at`, `closed_reason` (unmatched, blocked, deleted, moderation) | 9 |
 | `messages` | `match_id`, `sender_id`, `body` (1-2000), `client_message_id`; **unique (`match_id`, `sender_id`, `client_message_id`)**; `keyword_flag`; `removed_at`; index (`match_id`, `created_at`, `id`) | 10 |
 | `match_reads` | (`match_id`, `user_id`) primary key; `last_read_message_id` | 10 |
-| `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked | 11 |
+| `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked. Table from stage 8 (D064), API in 11 | 8 (API 11) |
 | `reports` | reporter, subject user, optional message or photo; `reason` (fake, harassment, explicit, scam, underage, hate, other); `details` (≤ 1000); `status` (open, in_review, actioned, dismissed); assignee | 11 |
 | `moderation_actions` | append-only: moderator, target, report, `action` (dismiss, warn, remove_photo, remove_message, suspend, ban, reinstate), reason | 11 |
 

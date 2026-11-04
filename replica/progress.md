@@ -4,11 +4,9 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 7 (profiles, media, first screens) **done for the API and the web build**:
-the API (200 tests), the Expo app (36 tests) and a browser end-to-end run of the
-whole slice pass locally and in CI (api run 41854231637; mobile run 41855746033,
-e2e job included). A native device pass (NAT-1) is still to do. Next: stage 8
-(discovery).
+Stage 8 (discovery) in progress. **8a (API) is implemented and tested
+locally** (230 API tests, with mutation checks on the block filter); its CI
+run is pending. Next: 8b, the discovery and preferences screens.
 
 ## Done
 
@@ -20,9 +18,29 @@ e2e job included). A native device pass (NAT-1) is still to do. Next: stage 8
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 8a | Discovery API: preferences, eligibility filters before ranking, the deterministic daily set (built once, availability re-checked on read), distance buckets, access to profiles and photos in today's set, rate limits, labelled fixtures; tables for interactions and blocks (D064); migration 0005 | `app/modules/discovery/`, `app/fixtures.py` |
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 8a status
+
+- **Implemented and tested** (cases F03-*, DSC-* in `test-plan.md`): every filter in the brief is in SQL before ranking, tested one rule at a time:
+  - adult, reciprocal gender, age and distance;
+  - intent compatibility;
+  - visibility and pause;
+  - blocks both ways;
+  - prior interactions.
+- **Also covered:** the set is finite (15), deterministic and stable all day; people who become unavailable leave at once; responses carry only distance buckets.
+- **Smoke run:** the real dev server with seeded, labelled fixtures returned 5 ranked cards.
+- **Partial, by design:**
+  - Likes and passes have no API until stage 9, and the block API waits for stage 11 (both tables exist and are filtered on).
+  - `liked_only` members stay out of discovery until likes exist.
+  - Own photos stay pending until moderation (stage 11), so a real member can't browse without `PHOTO_REVIEW_REQUIRED=false` in development.
+- **Found and fixed:**
+  - SQLAlchemy 2.1 deprecates `ARRAY.any()`; warnings-as-errors turned it into a 500 in tests.
+  - The `distance_bucket` column was too short; caught before the migration left the laptop.
+- **Residual:** exposure fairness (D067); no popularity cap yet.
 
 ## Stage 7b status and build log
 
@@ -102,4 +120,6 @@ e2e job included). A native device pass (NAT-1) is still to do. Next: stage 8
 
 ## Next
 
-Stage 8: discovery. Covers preferences (age range, distance bucket, genders) and the eligibility filters before ranking: adult, reciprocal preferences, intent compatibility, visibility and pause, prior interactions, at least 2 approved photos, and no block (blocks arrive in stage 11, behind the same policy). It also builds a deterministic daily set of about 15, with distance buckets from area centroids. `policies/access.py` opens a profile and its approved photos to viewers who have it in today's set. Then the discovery screen.
+Stage 8b: the discovery screen (today's cards, with distance buckets and empty, paused and not-ready states), profile detail, and the preferences screen; screen tests; extend the web e2e.
+
+Earlier plan for stage 8, done in 8a: preferences (age range, distance bucket, genders) and the eligibility filters before ranking: adult, reciprocal preferences, intent compatibility, visibility and pause, prior interactions, at least 2 approved photos, and no block (blocks arrive in stage 11, behind the same policy). It also builds a deterministic daily set of about 15, with distance buckets from area centroids. `policies/access.py` opens a profile and its approved photos to viewers who have it in today's set. Then the discovery screen.

@@ -19,6 +19,7 @@ from tests.conftest import alembic_config, drop_database, recreate_database, wit
 
 APP_TABLES = {
     "users", "sessions", "one_time_codes", "audit_log", "consents", "areas", "profiles", "profile_prompts", "photos",
+    "preferences", "daily_picks", "interactions", "blocks",
 }  # fmt: skip
 JOB_TABLES = {"procrastinate_jobs", "procrastinate_events", "procrastinate_periodic_defers", "procrastinate_workers"}
 HEAD = APP_TABLES | JOB_TABLES | {"alembic_version"}
@@ -62,7 +63,7 @@ def test_upgrade_downgrade_upgrade(scratch: tuple[str, Engine], base_settings: S
     command.upgrade(cfg, "head")
     assert tables(engine) == HEAD
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0004"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0005"
 
 
 def test_migrated_schema_matches_the_models(scratch: tuple[str, Engine], base_settings: Settings) -> None:
@@ -80,7 +81,10 @@ def test_runtime_role_grants(scratch: tuple[str, Engine], base_settings: Setting
     command.upgrade(alembic_config(url, role), "head")
     check = text("SELECT has_table_privilege(:role, :table, :priv)")
     with engine.connect() as conn:
-        dml_tables = ("users", "sessions", "one_time_codes", "consents", "profiles", "profile_prompts", "photos")
+        dml_tables = (
+            "users", "sessions", "one_time_codes", "consents", "profiles", "profile_prompts", "photos",
+            "preferences", "daily_picks", "interactions", "blocks",
+        )  # fmt: skip
         for table in (*dml_tables, *sorted(JOB_TABLES)):
             for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):
                 assert conn.execute(check, {"role": role, "table": table, "priv": priv}).scalar_one(), (table, priv)

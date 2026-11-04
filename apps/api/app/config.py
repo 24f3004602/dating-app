@@ -94,6 +94,9 @@ class Settings(BaseSettings):
     photo_max_pixels: int = Field(default=40_000_000, ge=1_000_000)
     photo_min_side: int = Field(default=300, ge=100)
     photo_max_count: int = Field(default=6, ge=1, le=6)
+
+    # Discovery (stage 8): the size of the finite daily set (D014).
+    discovery_set_size: int = Field(default=15, ge=1, le=50)
     # Upload requests may exceed the general body limit (multipart overhead included).
     max_upload_body_bytes: int = Field(default=11 * 1024 * 1024, ge=1024)
 
