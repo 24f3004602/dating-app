@@ -1,27 +1,50 @@
 feature,area,priority,original,clone,notes
-Adult age gate (18+) at sign-up,onboarding,must,yes,no,Self-declared birthdate check only; this is NOT age verification
-Email registration with one-time verification code,onboarding,must,yes,no,Short-lived single-use code; provider behind an abstraction
+Adult age gate (18+) at sign-up,onboarding,must,yes,no,Declared birthdate only; labelled 'age declared'; NOT age verification
+Email registration with one-time verification code,onboarding,must,yes,no,Short-lived single-use code; email provider behind an abstraction
 Secure login with server-side sessions and logout,auth,must,yes,no,
 Account recovery by email,auth,must,yes,no,
-Create and edit profile,profile,must,yes,no,
-Photo upload reorder and delete with safe processing,profile,must,yes,no,Re-encode and strip metadata; private storage
+Phone sign-up with SMS code,auth,should,yes,no,Deferred; SMS provider abstraction in MVP; India DLT registration needed (A4)
+Create and edit profile (name; age from birthdate; gender; interested in; bio),profile,must,yes,no,
+Required relationship intent shown on profile,profile,must,yes,no,Bumble intention badges [8]; we require it and match on it (differentiator 1)
+Text prompts on profile (up to 3),profile,should,yes,no,Hinge prompts [12]
+Photo upload reorder and delete (2-6 photos) with safe processing,profile,must,yes,no,Re-encode; strip metadata; private storage; moderation state
 Profile visibility setting,privacy,must,yes,no,
-Discovery preferences (age range distance genders),discovery,must,yes,no,
-Eligible recommendations feed (deterministic ranking),discovery,must,yes,no,Filters before ranking: adult eligibility reciprocal preferences blocks visibility prior interactions
+City-level location with distance buckets only,privacy,must,no,no,Never show precise location or exact distance (differentiator 7)
+Discovery preferences (age range; distance; genders; intent),discovery,must,yes,no,
+Reciprocal eligibility filtering before ranking,discovery,must,no,no,Adult; both fit each other's preferences; blocks; visibility; pause; prior interactions
+Finite daily set with deterministic ranking,discovery,must,no,no,About 15 a day; explainable ordering (differentiator 2; H3)
 Like and pass,matching,must,yes,no,
-Atomic mutual match with no duplicates,matching,must,yes,no,Enforced by transaction and unique constraint
-Persistent one-to-one messaging for matches,messaging,must,yes,no,
-Block,safety,must,yes,no,Enforced across discovery and messaging on the server
+Equal daily like limit for everyone (never sold),matching,must,no,no,Differentiator 3; H4; P3
+Like with an optional comment on a photo or prompt,matching,should,yes,no,Hinge [10][13]; more ways to start a conversation [8]
+Undo a pass,matching,could,yes,no,Paid on Tinder and Bumble [5][6]; not in MVP
+Atomic mutual match with no duplicates,matching,must,yes,no,Transaction plus unique constraint
+Cap on chats awaiting your reply,messaging,should,yes,no,Hinge Your Turn Limits [11]; H6
+Persistent one-to-one text messaging for matches,messaging,must,yes,no,
+Real-time delivery; unread counts; history pagination,messaging,must,yes,no,
+Keyword nudge before sending a harmful message,safety,should,yes,no,Tinder [2][4]; MVP uses a word list and no LLM
+Images in chat,messaging,could,yes,no,Deferred; needs blur and moderation [7]
+Block (enforced on every server path),safety,must,yes,no,
 Unmatch,safety,must,yes,no,
-Report profile or message,safety,must,yes,no,
-Moderation queue with audit trail,admin,must,yes,no,
-Coarse location only (no precise location shown),privacy,must,yes,no,
-Discovery pause,privacy,must,yes,no,
-Account deletion,privacy,must,yes,no,
+Report profile or message with reasons and visible status,safety,must,yes,no,
+Moderation queue with roles and audit trail,admin,must,yes,no,
+Honest verification labels (only checks actually run),trust,must,no,no,Differentiator 6
+Liveness or photo verification via a vendor,trust,should,yes,no,Post-MVP; Tinder mandatory in India [3]; biometric data needs DPDP review
+ID or age verification via a provider,trust,could,yes,no,Bumble ID verification [7]; options to research
+Hide from contacts or a known-people block list,privacy,could,yes,no,Tinder [2]; Hinge India [14]; contact data needs explicit consent
+Discovery pause,privacy,must,yes,no,Bumble Snooze [7]
+Discreet notifications (no names or message text by default),privacy,should,no,no,Default behaviour; competitors not checked; ships with push (stage 16)
+Account deletion under a documented retention policy,privacy,must,yes,no,
+Safety center (static guidance),safety,should,yes,no,
 Protected admin and moderation console,admin,must,yes,no,Server-side authorization
 Landing page,web,should,yes,no,
-Advanced AI matching,discovery,could,yes,no,Deferred until the core journey works
-Video calling,messaging,could,yes,no,Deferred
-Boosts,monetization,could,yes,no,Deferred
-Premium subscriptions,monetization,could,yes,no,Deferred; sandbox only when started
-Sophisticated analytics,analytics,could,yes,no,Deferred
+English and Hindi UI,i18n,should,no,no,Strings externalized in MVP; Hindi before public launch
+Push notifications with user preferences,notifications,should,yes,no,Stage 16
+Single paid plan (sandbox first),monetization,could,yes,no,Stage 16; P1-P2
+Travel mode,discovery,could,yes,no,Paid elsewhere [5][6]
+Advanced AI matching,discovery,could,yes,no,Deferred
+Video and voice calls,messaging,could,yes,no,Deferred; Bumble has calls [7]
+Sophisticated analytics,analytics,could,yes,no,Deferred; aggregates only
+Paid visibility boosts and priority placement,monetization,could,yes,skip,Not at launch (pricing principle 3); revisit with data
+Events and group hangouts,social,could,yes,skip,Out of MVP scope; offline operations
+Partner integrations (music; language apps),integrations,could,yes,skip,Their partner deals; not part of the product
+Attribute-based personalized pricing,monetization,could,yes,skip,Will not copy [20]
