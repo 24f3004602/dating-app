@@ -88,5 +88,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | same | `alembic upgrade head`, `alembic check` on the dev database | applied; no drift |
 | 2026-11-04 | same | dev server (`datingapp-api serve`) probed with curl | `/healthz` 200, `/readyz` 200, `/v1/openapi.json` 200, `/v1/docs` 200, unknown route 404 problem |
 | 2026-11-04 | same | procrastinate 3.10.0 smoke test (scratch venv and database) | schema applied; a deferred job ran to `succeeded` (D035) |
-
-CI results are recorded in `progress.md` once the workflow has run on GitHub.
+| 2026-11-04 | GitHub Actions run 41823765056 (Ubuntu 24.04, Python 3.13, `postgres:17`, `redis:7`) on `1fec2cc` | `.github/workflows/api.yml` | ruff and mypy clean; migrations applied, no drift; 69 passed; pip-audit clean |

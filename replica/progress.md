@@ -4,8 +4,8 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 5 (API foundation) **implemented and tested locally**. CI: first run
-pending. Next: stage 6 (auth).
+Stage 5 (API foundation) **done**: implemented, tested locally and in CI
+(run 41823765056, 69 passed). Next: stage 6 (auth).
 
 ## Done
 
@@ -21,7 +21,7 @@ pending. Next: stage 6 (auth).
 ## Stage 5 status
 
 - **Implemented and tested:** everything in the stage 5 brief (cases FND-* in `test-plan.md`); procrastinate confirmed on Python 3.13 (D035).
-- **Not yet verified:** the CI workflow on GitHub.
+- **CI verified:** GitHub Actions run 41823765056 on `1fec2cc`: ruff, mypy, bootstrap, migrate and drift check, 69 tests passed, pip-audit clean.
 - **Not in scope yet:** any user-facing feature. Parity is 0 of 20 must-haves (`parity.py`).
 - **Known gap:** OpenAPI still documents FastAPI's default 422 schema rather than our problem format. Fix with the first body route (stage 6).
 
