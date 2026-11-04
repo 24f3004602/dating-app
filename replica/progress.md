@@ -4,9 +4,10 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 7 in progress. **7a (profiles and media API) is implemented and tested
-locally** (196 tests); its CI run is pending. Next: 7b, the Expo app scaffold
-with auth and profile screens.
+Stage 7 (profiles, media, first screens) **implemented and tested**: the API
+(200 tests), the Expo app (36 tests) and a browser end-to-end run of the whole
+slice. The CI run for 7b is pending. A native device pass (NAT-1) is still to
+do. Next: stage 8 (discovery).
 
 ## Done
 
@@ -18,8 +19,32 @@ with auth and profile screens.
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 7b status and build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| welcome | done | e2e and axe |
+| sign-up | done | age gate on the India date before any request; consents; e2e |
+| verify | done | code plus the remembered password (D045); resend; e2e |
+| sign-in | done | screen tests |
+| reset | partial | screen tests; no e2e yet; needs a real email provider |
+| profile | done | empty, loading, error and filled states; honest labels; e2e |
+| edit profile | done | the area picker is a long chip list (searchable picker later) |
+| photos | done | picker, upload, reorder with buttons (no drag yet), delete; e2e upload |
+| privacy | done | e2e |
+
+- **Found and fixed:**
+  - React Native Web ignored `accessibilityState`, so checkboxes had no checked state for screen readers on web. The axe scan caught it; the app now uses `role` and `aria-*` (D059).
+  - TanStack Query's GC timers kept Jest alive for 5 minutes.
+  - RNTL 14 needs `await` on `render` and events.
+- **Not done:**
+  - A native device run (NAT-1: keystore, photo library, TalkBack and VoiceOver). Needs a device or an emulator with Expo Go or a dev build; the Android SDK exists on this laptop but isn't on PATH.
+  - ESLint for the TypeScript code (typecheck only so far).
+  - Hindi strings.
 
 ## Stage 7a status
 
@@ -75,4 +100,4 @@ with auth and profile screens.
 
 ## Next
 
-Stage 7b: the Expo SDK 58 app (`apps/mobile`): Expo Router, TanStack Query, React Hook Form and Zod, with types generated from the OpenAPI spec. Screens: sign-up with the age gate and consents, verify, sign-in, password reset, profile create and edit, photos, and privacy. Unit tests, plus an Expo web run against the local API.
+Stage 8: discovery. Covers preferences (age range, distance bucket, genders) and the eligibility filters before ranking: adult, reciprocal preferences, intent compatibility, visibility and pause, prior interactions, at least 2 approved photos, and no block (blocks arrive in stage 11, behind the same policy). It also builds a deterministic daily set of about 15, with distance buckets from area centroids. `policies/access.py` opens a profile and its approved photos to viewers who have it in today's set. Then the discovery screen.

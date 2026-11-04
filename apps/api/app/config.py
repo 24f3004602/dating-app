@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     log_json: bool = True
 
+    # Browser origins allowed to call the API (the Expo web build, later the
+    # admin console). Exact origins only; empty means no CORS at all. The
+    # mobile app is not a browser and needs none.
+    cors_origins: list[str] = Field(default_factory=list)
+
     # Server secret for keyed hashes (one-time codes, rate-limit keys). At
     # least 32 characters; rotating it invalidates live codes only.
     app_secret_key: SecretStr = Field(min_length=32)
@@ -97,6 +102,14 @@ class Settings(BaseSettings):
     def _role_is_identifier(cls, v: str) -> str:
         if not _ROLE_NAME.fullmatch(v):
             raise ValueError("must be a lowercase PostgreSQL identifier")
+        return v
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _exact_origins(cls, v: list[str]) -> list[str]:
+        for origin in v:
+            if origin == "*" or not origin.startswith(("http://", "https://")) or origin.rstrip("/") != origin:
+                raise ValueError("CORS origins must be exact http(s) origins, never '*'")
         return v
 
     @field_validator("app_timezone")

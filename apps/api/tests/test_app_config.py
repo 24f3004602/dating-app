@@ -14,7 +14,7 @@ from app.schemas import ApiModel
 from tests.conftest import MigratedDatabase, close_app
 
 
-def settings_from(env: dict[str, str]) -> Settings:
+def settings_from(env: dict[str, object]) -> Settings:
     """Build Settings from explicit values only (no process env, no .env)."""
     base = {
         "DATABASE_URL": "postgresql+psycopg://u:p@h/d",
@@ -92,3 +92,29 @@ async def test_openapi_schemas_forbid_additional_properties(client: AsyncClient)
     for name, schema in ours.items():
         if schema.get("type") == "object":
             assert schema.get("additionalProperties") is False, name
+
+
+async def test_cors_is_off_by_default_and_exact_when_on(test_db: MigratedDatabase) -> None:
+    for origins, origin, allowed in (
+        ([], "http://localhost:8081", False),
+        (["http://localhost:8081"], "http://localhost:8081", True),
+        (["http://localhost:8081"], "http://evil.example", False),
+    ):
+        application = create_app(test_db.settings.model_copy(update={"cors_origins": origins}), configure_logs=False)
+        try:
+            async with AsyncClient(transport=ASGITransport(app=application), base_url="http://testserver") as c:
+                r = await c.options(
+                    "/v1/auth/login",
+                    headers={"origin": origin, "access-control-request-method": "POST",
+                             "access-control-request-headers": "content-type"},
+                )  # fmt: skip
+                assert (r.headers.get("access-control-allow-origin") == origin) is allowed, (origins, origin)
+                assert "access-control-allow-credentials" not in r.headers
+        finally:
+            await close_app(application)
+
+
+@pytest.mark.parametrize("origin", ["*", "localhost:8081", "http://localhost:8081/"])
+def test_cors_origins_must_be_exact(origin: str) -> None:
+    with pytest.raises(ValidationError, match="exact"):
+        settings_from({"CORS_ORIGINS": [origin]})

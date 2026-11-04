@@ -31,6 +31,7 @@ Principles:
 | reports | safety | member | `reports` | the reporter (status only); staff | 2 years after resolution; the reporter's identity is pseudonymised once the report is resolved **(R)** | kept under the retention exception (safety and legal claims) |
 | moderation actions, audit log (actor and target IDs, action, request ID; `metadata` must hold no personal data) | accountability | staff, system | `moderation_actions`, `audit_log` | admins | 3 years **(R)** | kept under the exception. The user ID is kept for bans so they can be enforced |
 | consent records (*stage 6*: kind, document version, time) | proof of notice and consent (DPDP) | member | `consents` | the member; admins | the life of the account plus 1 year **(R)** | kept 1 year, then deleted |
+| session token on the device (*stage 7b*) | staying signed in | system | native keystore; memory only on web (D058) | the member's device | until sign-out or expiry | cleared at sign-out |
 | sessions (*stage 6*) | authentication | system | `sessions` (SHA-256 of the token, client type, timestamps, the first user-agent product token only, e.g. `okhttp/4.12`) | the member (device list, later) | expiry plus 30 days | deleted |
 | one-time codes (*stage 6*) | verification | system | `one_time_codes` (HMAC only, plus attempts); the plaintext exists only in worker memory and the email | nobody | 24 hours after expiry | deleted |
 | daily picks | discovery | system | `daily_picks` | the viewer | 7 days | deleted |

@@ -1,0 +1,103 @@
+name: mobile
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/mobile/**", "apps/api/**", "packages/**", "e2e/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
+  pull_request:
+    paths: ["apps/mobile/**", "apps/api/**", "packages/**", "e2e/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.25"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: npm ci
+      - name: Dependency audit (fail on high or critical; moderate build-tool advisories are recorded in D061)
+        run: npm audit --audit-level=high
+      - name: API contract (generated types match the API's OpenAPI document)
+        run: |
+          (cd apps/api && uv sync --locked && uv run python scripts/export_openapi.py ../../packages/api-types/openapi.json)
+          npm run generate -w @datingapp/api-types
+          git diff --exit-code -- packages/api-types
+      - run: npm run typecheck -w @datingapp/mobile
+      - run: npm test -w @datingapp/mobile -- --ci
+      - run: npm run export:web -w @datingapp/mobile
+
+  e2e:
+    needs: checks
+    runs-on: ubuntu-24.04 # Google Chrome is preinstalled on GitHub's Ubuntu images
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust # ephemeral CI container; app roles get random passwords
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      APP_ENV: development
+      DB_RUNTIME_ROLE: app_runtime
+      REDIS_URL: redis://localhost:6379/0
+      BOOTSTRAP_ADMIN_URL: postgresql://postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.25"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - name: Generate per-run secrets
+        run: |
+          owner=$(openssl rand -hex 24); runtime=$(openssl rand -hex 24); app_secret=$(openssl rand -hex 32)
+          echo "::add-mask::$owner"; echo "::add-mask::$runtime"; echo "::add-mask::$app_secret"
+          echo "APP_SECRET_KEY=${app_secret}" >> "$GITHUB_ENV"
+          echo "DATABASE_URL=postgresql+psycopg://app_runtime:${runtime}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+          echo "MIGRATIONS_DATABASE_URL=postgresql+psycopg://app_owner:${owner}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+      - run: npm ci
+      - name: Database
+        working-directory: apps/api
+        run: uv sync --locked && uv run python scripts/bootstrap_db.py && uv run alembic upgrade head
+      - name: End-to-end (Expo web build, real API, worker, installed Chrome)
+        run: npm test -w @datingapp/e2e
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-traces
+          path: e2e/test-results/
+          retention-days: 7

@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 from app.clock import system_clock
@@ -77,6 +78,18 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     )
 
     install_error_handlers(app)
+    if settings.cors_origins:
+        # Added before the request middleware so it runs inside it: preflights
+        # still get request IDs and access logs.
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origins,
+            allow_credentials=False,  # bearer tokens, never cookies, from browsers
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+            expose_headers=["Retry-After", "X-Request-ID"],
+            max_age=600,
+        )
     app.add_middleware(
         RequestContextMiddleware,
         max_body_bytes=settings.max_request_body_bytes,

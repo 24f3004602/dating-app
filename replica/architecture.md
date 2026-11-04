@@ -50,11 +50,11 @@ Exact versions are pinned in lockfiles when each part is created.
 | uploads | python-multipart 0.0.33 | FastAPI form uploads |
 | API tests | pytest 9.2, pytest-asyncio 1.4, httpx 0.28 against a real PostgreSQL | tests constraints and transactions for real |
 | quality | ruff 0.17, mypy 2.4, pip-audit 2.10 | lint, types, dependency vulnerabilities |
-| mobile | Expo SDK 58 (React Native 0.88, React 19.3; Node ≥ 22.13), Expo Router, TanStack Query 5.105, React Hook Form 7.91, Zod 4.6, expo-secure-store, expo-image-picker | owner spec; SDK 58 requirements checked in Expo's docs (iOS 16.4+, Android 7+) |
+| mobile | Expo SDK 58 (React Native 0.88.1, React 19.3.0; Node ≥ 22.13), Expo Router 58, TanStack Query 5.105, React Hook Form 7.91, Zod 4.6, openapi-fetch 0.17, expo-secure-store, expo-image-picker; TypeScript 6.0 (Expo's pin) (D057) | owner spec; SDK 58 requirements checked in Expo's docs (iOS 16.4+, Android 7+) |
 | web | Next.js 16.4 (App Router), React 19, TypeScript | owner spec; landing page and admin console |
-| shared types | openapi-typescript 7.13, generating TS types from the API's OpenAPI | one contract; no hand-written duplicate types |
+| shared types | openapi-typescript 7.13 (with its own TypeScript 5.9) in `packages/api-types`, generated from `scripts/export_openapi.py`; CI fails if they drift | one contract; no hand-written duplicate types |
 | JS workspace | npm workspaces (`apps/mobile`, `apps/web`, `packages/api-types`) | hoisted layout is the safest for Metro. To verify against Expo's monorepo guide in stage 7 |
-| e2e tests | Playwright with the installed Chrome; axe accessibility scans | Playwright not yet installed on the owner's laptop (Chrome 156 and Edge 156 are); install when the first web or e2e stage starts |
+| e2e tests | Playwright 1.64 with the installed Chrome, axe-core 4.14 scans, against the Expo web build and a real API (D062) | Playwright not yet installed on the owner's laptop (Chrome 156 and Edge 156 are); install when the first web or e2e stage starts |
 | CI | GitHub Actions, with PostgreSQL and Redis as service containers | workflow `.github/workflows/api.yml` (D040). Docker Desktop is installed locally but its daemon is off, so container builds are verified in CI |
 | hosting (later) | not chosen. Constraints: India region (Mumbai) for data and latency; managed PostgreSQL and Redis; S3-compatible storage | nothing is deployed without owner authorization |
 

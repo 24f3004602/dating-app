@@ -1,6 +1,6 @@
 # Test plan
 
-Build: `apps/api` stages 5-7a (foundation, auth, profiles and media API)  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
+Build: `apps/api` stages 5-7 and `apps/mobile` stage 7b (first screens)  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
 
 ## Strategy
 
@@ -48,7 +48,7 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | F01-N8 | validation | negative | bad email, date, empty password, unknown fields (`role`), stale consent versions | 422; password never echoed | api | pass |
 | F01-H3 | recovery | happy | request reset → code → confirm | new password works, old fails, all sessions revoked, "password changed" notice, code single use | api | pass |
 | JOB-1 | jobs | edge | defer then roll back; defer then commit; one job app per process | no row; one row; task names stable | api | pass |
-| F02-H1 | profile | happy | create and edit a profile without an intent, then with one | without: validation error; with: saved | api + e2e | api pass (stage 7a); e2e with the app (7b) |
+| F02-H1 | profile | happy | create and edit a profile without an intent, then with one | without: validation error; with: saved | api + e2e | pass: API (7a), screen tests and the web e2e (7b) |
 | F02-N1 | photos | negative | upload a non-image, a polyglot, > 10 MB, > 40 MP, an animated image | each rejected with a clear problem code | api | pass: polyglots are accepted as images but their payload is discarded by re-encoding (IMG-*) |
 | F02-E1 | photos | edge | upload a JPEG with GPS metadata | stored copies contain no metadata | api | pass (unit, API and real dev server) |
 | F02-N2 | photos | negative | another member fetches a pending photo | 404 | api | pass (also approved photos without a relation) |
@@ -62,6 +62,12 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | PHO-H1 | photos | happy | upload, fetch through the signed URL, reorder, delete | 201 pending; 200 JPEG without EXIF; compact positions; objects deleted by the queued job | api + real dev server | pass |
 | PHO-E1 | photos | edge | expired URL; forged expiry; wrong signature; path traversal | 404 each | api | pass |
 | PHO-N1 | photos | negative | 7th photo; unknown form field; no file; 12 MB request; rate limit | 409; 422; 422; 413; 429 | api | pass |
+| MOB-1 | mobile | unit | age gate on the India date; impossible dates; consents; email normalisation; password length in code points; names refuse contact details | as the API | jest | pass |
+| MOB-2 | mobile | unit | typed client: bearer header, problem parsing (`code`, `Retry-After`, field errors), 401 forgets the session, network failure, app wording for codes | as listed | jest | pass |
+| MOB-3 | mobile | screen | sign-up (under-18 stopped before any request; normalised body), verify (code plus remembered password; keystore), sign-in, reset, errors | as listed | jest + RNTL | pass |
+| MOB-4 | mobile | screen | profile empty/loaded/error states and honest labels; edit validation and saved shape; area limit; photos list, pick, upload, reorder, delete, refusal; privacy | as listed | jest + RNTL | pass |
+| E2E-1 | slice | e2e | Chrome: welcome, sign-up (under-18 refused), mailed code, verify, empty profile, create profile, upload a GPS-tagged photo, signed URL without metadata, privacy, sign out | each step works; axe: no serious or critical issue on 8 screens; no console errors or 5xx | Playwright | pass |
+| NAT-1 | native | manual | Android and iOS: keystore survives a restart; photo library permission and picker; keyboard and safe areas; TalkBack and VoiceOver read every control and state | works on a real device | manual | **planned**: needs a device or emulator with Expo Go or a dev build |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | planned |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | planned |
@@ -117,3 +123,7 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | GitHub Actions run 41828807895 on `7af98c9` | `.github/workflows/api.yml` | ruff and mypy clean; migrations applied, no drift; 141 passed; pip-audit clean |
 | 2026-11-04 | owner's laptop | `uv run pytest` (stage 7a) | 196 passed, 0 failed |
 | 2026-11-04 | same | dev server, worker and local storage: sign up, profile, upload a GPS-tagged 2400x1600 JPEG, fetch, redirect, delete | 201 pending 1080x720; 0 EXIF tags; 302; 204; both files removed by `media:delete_objects` |
+| 2026-11-04 | GitHub Actions run 41832032460 on `d227489` (stage 7a) | `api.yml` | 196 passed; pip-audit clean |
+| 2026-11-04 | owner's laptop | `uv run pytest` (API after CORS) | 200 passed |
+| 2026-11-04 | same | `npm run typecheck` and `npm test` in `apps/mobile` | clean; 36 passed |
+| 2026-11-04 | same | `npm test -w @datingapp/e2e` (Playwright, Chrome, axe) | 1 passed (E2E-1); after fixing the web accessibility state (D059) |

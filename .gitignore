@@ -61,3 +61,6 @@ Thumbs.db
 # --- owner handoff files (local only) ---
 claude-code-handoff.md
 dating-app.bundle
+
+# --- e2e run artefacts ---
+e2e/.run/

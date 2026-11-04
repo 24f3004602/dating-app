@@ -47,6 +47,18 @@ uv run pytest                           # creates and drops <database>_test
 uv run ruff check . && uv run mypy
 ```
 
+## Development: mobile (`apps/mobile`) and end-to-end tests
+
+```bash
+npm install                                  # at the repo root (npm workspaces)
+npm run typecheck -w @datingapp/mobile && npm test -w @datingapp/mobile
+npm run web -w @datingapp/mobile             # Expo web; set CORS_ORIGINS in apps/api/.env
+npm test -w @datingapp/e2e                   # web build + API + worker in Chrome (needs the dev DB and Redis)
+```
+
+After an API change, regenerate the client types: `uv run python scripts/export_openapi.py
+../../packages/api-types/openapi.json` (in `apps/api`), then `npm run generate -w @datingapp/api-types`.
+
 `DATABASE_URL` is the runtime role (DML only) and `MIGRATIONS_DATABASE_URL`
 the schema owner (D036). On Windows, Redis runs in WSL2: use `127.0.0.1`, not
 `localhost` (D034). CI: `.github/workflows/api.yml`.

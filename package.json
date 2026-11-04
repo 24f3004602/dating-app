@@ -1,0 +1,15 @@
+{
+  "name": "datingapp",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "packages/api-types",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "allowScripts": {
+    "@parcel/watcher": false
+  }
+}

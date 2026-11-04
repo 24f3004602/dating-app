@@ -1,0 +1,13 @@
+{
+  "name": "@datingapp/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end tests: the Expo web build against a real local API, in the installed Chrome.",
+  "scripts": {
+    "test": "node build-web.mjs && playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1"
+  }
+}
