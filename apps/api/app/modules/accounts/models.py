@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Enum, String, func, text
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, SmallInteger, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base, CreatedAtMixin
@@ -66,4 +66,36 @@ class User(CreatedAtMixin, Base):
     email_verified_at: Mapped[datetime | None]
     last_active_at: Mapped[datetime | None]
     deletion_requested_at: Mapped[datetime | None] = mapped_column(index=True)
+    # Consecutive failed password logins; reset on success or password reset.
+    # At the lockout threshold password sign-in stops until a reset (NIST
+    # SP 800-63B-4: at most 100 consecutive failures).
+    failed_login_count: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+
+class ConsentKind(enum.StrEnum):
+    terms = "terms"
+    privacy = "privacy"
+
+
+class Consent(Base):
+    """Proof of notice and consent (DPDP): which document version, and when."""
+
+    __tablename__ = "consents"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "version"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[ConsentKind] = mapped_column(
+        Enum(
+            ConsentKind,
+            native_enum=False,
+            create_constraint=True,
+            length=16,
+            name="kind",
+            values_callable=lambda e: [m.value for m in e],
+        ),
+    )
+    version: Mapped[str] = mapped_column(String(32))
+    granted_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    withdrawn_at: Mapped[datetime | None]

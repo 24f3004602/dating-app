@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.errors import problem_response
+from app.openapi import problems
 from app.schemas import ApiModel
 
 logger = logging.getLogger("app.health")
@@ -60,7 +61,7 @@ async def healthz() -> Health:
 @router.get(
     "/readyz",
     response_model=Readiness,
-    responses={503: {"description": "A dependency is unreachable", "content": {"application/problem+json": {}}}},
+    responses=problems(503),
 )
 async def readyz(request: Request) -> Readiness | JSONResponse:
     timeout = request.app.state.settings.readiness_timeout_s

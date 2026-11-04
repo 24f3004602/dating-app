@@ -42,6 +42,7 @@ uv run python scripts/bootstrap_db.py   # roles + dev database (needs BOOTSTRAP_
 uv run alembic upgrade head
 uv run datingapp-api seed-dev           # labelled fixtures only, never in production
 uv run datingapp-api serve              # http://127.0.0.1:8000/healthz, /v1/docs
+uv run datingapp-api worker             # background jobs (emails); dev mail prints here
 uv run pytest                           # creates and drops <database>_test
 uv run ruff check . && uv run mypy
 ```

@@ -14,9 +14,12 @@ from sqlalchemy.pool import NullPool
 
 from app.config import Settings
 from app.models import Base
+from migrations.helpers import include_name
 from tests.conftest import alembic_config, drop_database, recreate_database, with_database
 
-APP_TABLES = {"users", "sessions", "one_time_codes", "audit_log"}
+APP_TABLES = {"users", "sessions", "one_time_codes", "audit_log", "consents"}
+JOB_TABLES = {"procrastinate_jobs", "procrastinate_events", "procrastinate_periodic_defers", "procrastinate_workers"}
+HEAD = APP_TABLES | JOB_TABLES | {"alembic_version"}
 
 
 @pytest.fixture
@@ -43,22 +46,29 @@ def test_upgrade_downgrade_upgrade(scratch: tuple[str, Engine], base_settings: S
     cfg = alembic_config(url, base_settings.db_runtime_role)
 
     command.upgrade(cfg, "head")
-    assert tables(engine) == APP_TABLES | {"alembic_version"}
+    assert tables(engine) == HEAD
 
     command.downgrade(cfg, "base")
     assert tables(engine) == {"alembic_version"}
+    with engine.connect() as conn:
+        leftovers = (
+            conn.execute(text("SELECT count(*) FROM pg_proc WHERE proname LIKE 'procrastinate%'")).scalar_one()
+            + conn.execute(text("SELECT count(*) FROM pg_type WHERE typname LIKE 'procrastinate%'")).scalar_one()
+        )
+    assert leftovers == 0
 
     command.upgrade(cfg, "head")
-    assert tables(engine) == APP_TABLES | {"alembic_version"}
+    assert tables(engine) == HEAD
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0003"
 
 
 def test_migrated_schema_matches_the_models(scratch: tuple[str, Engine], base_settings: Settings) -> None:
     url, engine = scratch
     command.upgrade(alembic_config(url, base_settings.db_runtime_role), "head")
     with engine.connect() as conn:
-        diff = compare_metadata(MigrationContext.configure(conn, opts={"compare_type": True}), Base.metadata)
+        ctx = MigrationContext.configure(conn, opts={"compare_type": True, "include_name": include_name})
+        diff = compare_metadata(ctx, Base.metadata)
     assert diff == []
 
 
@@ -68,7 +78,7 @@ def test_runtime_role_grants(scratch: tuple[str, Engine], base_settings: Setting
     command.upgrade(alembic_config(url, role), "head")
     check = text("SELECT has_table_privilege(:role, :table, :priv)")
     with engine.connect() as conn:
-        for table in ("users", "sessions", "one_time_codes"):
+        for table in ("users", "sessions", "one_time_codes", "consents", *sorted(JOB_TABLES)):
             for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):
                 assert conn.execute(check, {"role": role, "table": table, "priv": priv}).scalar_one(), (table, priv)
             assert not conn.execute(check, {"role": role, "table": table, "priv": "TRUNCATE"}).scalar_one()

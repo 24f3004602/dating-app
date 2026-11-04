@@ -4,8 +4,8 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 5 (API foundation) **done**: implemented, tested locally and in CI
-(run 41823765056, 69 passed). Next: stage 6 (auth).
+Stage 6 (auth API) **implemented and tested locally** (141 tests); CI run
+pending. Next: stage 7 (profiles, media, first Expo screens).
 
 ## Done
 
@@ -16,14 +16,24 @@ Stage 5 (API foundation) **done**: implemented, tested locally and in CI
 | 3 | Audience, market, positioning, differentiation, MVP, pricing hypotheses, success criteria, provisional names | `fixes.md`, `brand.md`, `launch/pricing.md`, `features.csv` |
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
-| 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests | `apps/api/`, `.github/workflows/api.yml` |
+| 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
 
-## Stage 5 status
+## Stage 6 status
 
-- **Implemented and tested:** everything in the stage 5 brief (cases FND-* in `test-plan.md`); procrastinate confirmed on Python 3.13 (D035).
-- **CI verified:** GitHub Actions run 41823765056 on `1fec2cc`: ruff, mypy, bootstrap, migrate and drift check, 69 tests passed, pip-audit clean.
-- **Not in scope yet:** any user-facing feature. Parity is 0 of 20 must-haves (`parity.py`).
-- **Known gap:** OpenAPI still documents FastAPI's default 422 schema rather than our problem format. Fix with the first body route (stage 6).
+- **Implemented and tested** (cases F01-* and JOB-1 in `test-plan.md`): every flow in the stage 6 brief, via the API.
+  - Authorization, rate limits (per email and per IP), validation and failure cases are tested.
+  - The real worker runs end to end, and two concurrent verifications produce exactly one session.
+- **Fixed from stage 5:** OpenAPI now documents errors as `application/problem+json`.
+- **Partial, by design:**
+  - No app screens yet (stage 7).
+  - Email goes to the worker console in development; no real provider is connected.
+  - SMS and identity checks are interfaces only.
+  - Parity is 6.9/100, with 0 of 20 must-haves done (`parity.py`).
+- **Residual:** enumeration timing is equalised by construction, not measured.
+- **Fixed during the stage:**
+  - procrastinate renamed tasks when a second app was built (D046).
+  - The model-level whitespace stripping would have trimmed passwords; password fields now keep spaces.
 
 ## Environment (owner's Windows 11 laptop, verified 2026-11-04)
 
@@ -39,8 +49,14 @@ Stage 5 (API foundation) **done**: implemented, tested locally and in CI
 ## Blockers / owner actions
 
 1. Turn on Dependabot alerts and security updates (repo Settings → Code security).
-2. Before stage 6 can send real email: an email provider account plus SPF, DKIM and DMARC. Not blocking: stage 6 starts with the console and in-memory fakes.
+2. **Email provider** (needed before any real sign-up; not blocking development):
+   - choose one, for example Amazon SES in ap-south-1, Postmark or Resend;
+   - verify a sending domain with SPF, DKIM and DMARC;
+   - put the API key in `.env` or a secret manager.
+   I then add and test the adapter.
+3. **Legal documents:** terms and privacy notice, with legal review. Production refuses the current `draft-2026-11` versions (D044).
+4. SMS stays off until India DLT registration (entity, sender ID, templates) and an SMS provider exist (D012).
 
 ## Next
 
-Stage 6: auth. Age gate ("age declared"), email registration with a code, login, sessions, logout, recovery, `consents`, Redis rate limits, `EmailSender` and `SmsSender` abstractions, procrastinate schema and `send_email`.
+Stage 7: profiles and media API (areas, profiles, prompts, photos with safe processing and pre-moderation), then the Expo scaffold with auth and profile screens (first vertical slice).

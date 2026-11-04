@@ -16,7 +16,11 @@ from tests.conftest import MigratedDatabase, close_app
 
 def settings_from(env: dict[str, str]) -> Settings:
     """Build Settings from explicit values only (no process env, no .env)."""
-    base = {"DATABASE_URL": "postgresql+psycopg://u:p@h/d", "REDIS_URL": "redis://h"}
+    base = {
+        "DATABASE_URL": "postgresql+psycopg://u:p@h/d",
+        "REDIS_URL": "redis://h",
+        "APP_SECRET_KEY": "x" * 32,
+    }
     return Settings.model_validate({**base, **env})
 
 
@@ -66,9 +70,13 @@ def _all_subclasses(cls: type) -> set[type]:
 
 def test_every_app_model_forbids_unknown_fields() -> None:
     assert app.main  # imports every router and its models
-    # Settings classes read the environment and must ignore unrelated variables.
+    # Settings classes read the environment and must ignore unrelated variables;
+    # app.openapi models only document error responses (RFC 9457 allows
+    # extension members) and never parse input.
     models = [
-        m for m in _all_subclasses(BaseModel) if m.__module__.startswith("app.") and not issubclass(m, BaseSettings)
+        m
+        for m in _all_subclasses(BaseModel)
+        if m.__module__.startswith("app.") and m.__module__ != "app.openapi" and not issubclass(m, BaseSettings)
     ]
     assert models, "expected the app to define request/response models"
     for model in models:
@@ -78,7 +86,8 @@ def test_every_app_model_forbids_unknown_fields() -> None:
 
 async def test_openapi_schemas_forbid_additional_properties(client: AsyncClient) -> None:
     schemas = (await client.get("/v1/openapi.json")).json().get("components", {}).get("schemas", {})
-    ours = {k: v for k, v in schemas.items() if k not in {"HTTPValidationError", "ValidationError"}}
+    assert "HTTPValidationError" not in schemas  # replaced by our problem documents
+    ours = {k: v for k, v in schemas.items() if k not in {"Problem", "ValidationProblem"}}
     assert ours
     for name, schema in ours.items():
         if schema.get("type") == "object":

@@ -10,9 +10,11 @@ with every test wrapped in a transaction that is rolled back.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import io
 import logging
 import sys
+import uuid
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +28,7 @@ from httpx import ASGITransport, AsyncClient
 from psycopg import sql
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from redis.exceptions import RedisError
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
@@ -34,6 +37,7 @@ from app.config import Settings
 from app.logs import QUIET_LOGGERS, JsonFormatter, quiet_library_loggers
 from app.main import create_app
 from tests.probes import router as probe_router
+from tests.support import FrozenClock, JobRunner
 
 API_DIR = Path(__file__).resolve().parents[1]
 
@@ -113,6 +117,8 @@ def test_db(base_settings: Settings) -> Iterator[MigratedDatabase]:
             "app_env": "test",
             "database_url": SecretStr(runtime_url),
             "migrations_database_url": SecretStr(owner_url),
+            "password_hash_profile": "test",
+            "email_backend": "memory",
         }
     )
     yield MigratedDatabase(name=name, settings=settings, owner_url=owner_url, runtime_url=runtime_url)
@@ -146,15 +152,40 @@ async def close_app(app: FastAPI) -> None:
 
 
 @pytest.fixture
-async def app(test_db: MigratedDatabase, db_conn: AsyncConnection) -> AsyncIterator[FastAPI]:
-    application = create_app(test_db.settings, configure_logs=False)
+def clock() -> FrozenClock:
+    return FrozenClock()
+
+
+@pytest.fixture
+def db(db_conn: AsyncConnection) -> async_sessionmaker[AsyncSession]:
+    """Short-lived sessions on the test transaction (open one per check)."""
+    return async_sessionmaker(bind=db_conn, expire_on_commit=False, join_transaction_mode="create_savepoint")
+
+
+@pytest.fixture
+async def app(
+    test_db: MigratedDatabase, db: async_sessionmaker[AsyncSession], clock: FrozenClock
+) -> AsyncIterator[FastAPI]:
+    # A rate-limit namespace per test, deleted afterwards.
+    prefix = f"rl-test-{uuid.uuid4().hex[:12]}"
+    application = create_app(test_db.settings.model_copy(update={"rate_limit_prefix": prefix}), configure_logs=False)
     # Request sessions join the per-test transaction: commits become
     # savepoint releases and everything is rolled back afterwards.
-    application.state.session_factory = async_sessionmaker(
-        bind=db_conn, expire_on_commit=False, join_transaction_mode="create_savepoint"
-    )
+    application.state.session_factory = db
+    application.state.auth = dataclasses.replace(application.state.auth, clock=clock)
     yield application
+    try:
+        keys = [k async for k in application.state.redis.scan_iter(match=f"{prefix}:*")]
+        if keys:
+            await application.state.redis.delete(*keys)
+    except RedisError:
+        pass  # tests that point at a dead Redis have nothing to clean
     await close_app(application)
+
+
+@pytest.fixture
+def jobs(app: FastAPI, db: async_sessionmaker[AsyncSession], clock: FrozenClock) -> JobRunner:
+    return JobRunner(db, app.state.settings, clock)
 
 
 @pytest.fixture

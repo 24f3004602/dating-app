@@ -8,12 +8,22 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from redis.asyncio import Redis
 
+from app.clock import system_clock
 from app.config import Settings, get_settings
 from app.db import create_engine, create_session_factory
 from app.errors import install_error_handlers
+from app.jobs import JobQueue, get_job_app
 from app.logs import configure_logging
 from app.middleware import RequestContextMiddleware
+from app.modules.accounts.router import router as accounts_router
+from app.modules.auth.crypto import derive_key
+from app.modules.auth.passwords import Passwords
+from app.modules.auth.router import router as auth_router
+from app.modules.auth.service import AuthContext
 from app.modules.health.router import router as health_router
+from app.openapi import install_openapi
+from app.providers.identity import NoIdentityVerifier
+from app.ratelimit import RateLimiter
 
 API_PREFIX = "/v1"
 
@@ -51,10 +61,22 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
     app.state.redis = redis
+    app.state.identity = NoIdentityVerifier()
+    app.state.auth = AuthContext(
+        settings=settings,
+        passwords=Passwords(settings.password_hash_profile),
+        limiter=RateLimiter(
+            redis, derive_key(settings.app_secret_key.get_secret_value(), "rate-limit"), settings.rate_limit_prefix
+        ),
+        jobs=JobQueue(get_job_app()),
+        clock=system_clock,
+    )
 
     install_error_handlers(app)
     app.add_middleware(RequestContextMiddleware, max_body_bytes=settings.max_request_body_bytes)
 
     app.include_router(health_router)
-    # Feature routers mount under API_PREFIX from stage 6 on.
+    app.include_router(auth_router)
+    app.include_router(accounts_router)
+    install_openapi(app)
     return app

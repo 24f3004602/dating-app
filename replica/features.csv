@@ -1,9 +1,9 @@
 feature,area,priority,original,clone,notes
-Adult age gate (18+) at sign-up,onboarding,must,yes,no,Declared birthdate only; labelled 'age declared'; NOT age verification
-Email registration with one-time verification code,onboarding,must,yes,no,"Short-lived single-use code; email provider behind an abstraction; Stage 5: `one_time_codes` table (HMAC-only, one live code per purpose; tested). No API yet"
-Secure login with server-side sessions and logout,auth,must,yes,no,"Stage 5: `sessions` table (SHA-256 token hash, unique; tested). No API yet"
-Account recovery by email,auth,must,yes,no,
-Phone sign-up with SMS code,auth,should,yes,no,Deferred; SMS provider abstraction in MVP; India DLT registration needed (A4)
+Adult age gate (18+) at sign-up,onboarding,must,yes,partial,Declared birthdate only; labelled 'age declared'; NOT age verification; Stage 6: API done and tested (IST date; nothing stored for under-18s; label 'age declared'). App screen in stage 7
+Email registration with one-time verification code,onboarding,must,yes,partial,"Short-lived single-use code; email provider behind an abstraction; Stage 6: API, codes and worker done and tested. Needs a real email provider (owner) and app screens (stage 7)"
+Secure login with server-side sessions and logout,auth,must,yes,partial,Stage 6: API done and tested (opaque hashed tokens; logout; logout-all; lockout). App screens in stage 7
+Account recovery by email,auth,must,yes,partial,Stage 6: reset by emailed code done and tested; revokes all sessions. Needs the email provider and app screens
+Phone sign-up with SMS code,auth,should,yes,no,Deferred; SMS provider abstraction in MVP; India DLT registration needed (A4); Stage 6: `SmsSender` interface only (unavailable by default)
 Create and edit profile (name; age from birthdate; gender; interested in; bio),profile,must,yes,no,
 Required relationship intent shown on profile,profile,must,yes,no,Bumble intention badges [8]; we require it and match on it (differentiator 1)
 Text prompts on profile (up to 3),profile,should,yes,no,Hinge prompts [12]
@@ -27,7 +27,7 @@ Block (enforced on every server path),safety,must,yes,no,
 Unmatch,safety,must,yes,no,
 Report profile or message with reasons and visible status,safety,must,yes,no,
 Moderation queue with roles and audit trail,admin,must,yes,no,Stage 5: `users.role` and an append-only `audit_log` (runtime role cannot UPDATE or DELETE; tested). No queue yet
-Honest verification labels (only checks actually run),trust,must,no,no,Differentiator 6
+Honest verification labels (only checks actually run),trust,must,no,partial,Differentiator 6; Stage 6: `/v1/me` labels are typed so age can only be 'declared' and identity defaults to 'not_checked'. UI in stage 7
 Liveness or photo verification via a vendor,trust,should,yes,no,Post-MVP; Tinder mandatory in India [3]; biometric data needs DPDP review
 ID or age verification via a provider,trust,could,yes,no,Bumble ID verification [7]; options to research
 Hide from contacts or a known-people block list,privacy,could,yes,no,Tinder [2]; Hinge India [14]; contact data needs explicit consent

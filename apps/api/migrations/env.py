@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, pool
 
 from app.config import get_settings
 from app.models import Base
+from migrations.helpers import include_name
 
 config = context.config
 target_metadata = Base.metadata
@@ -32,7 +33,9 @@ def _url_and_role() -> tuple[str, str]:
 
 def run_migrations_offline() -> None:
     url, _ = _url_and_role()
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True)
+    context.configure(
+        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True, include_name=include_name
+    )
     with context.begin_transaction():
         context.run_migrations()
 
@@ -41,7 +44,9 @@ def run_migrations_online() -> None:
     url, _ = _url_and_role()
     engine = create_engine(url, poolclass=pool.NullPool)
     with engine.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        context.configure(
+            connection=connection, target_metadata=target_metadata, compare_type=True, include_name=include_name
+        )
         with context.begin_transaction():
             context.run_migrations()
     engine.dispose()

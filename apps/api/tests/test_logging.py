@@ -91,6 +91,9 @@ def test_formatter_drops_non_allowlisted_extra_fields() -> None:
         ),
         ("postgresql+psycopg://app:pa55word@db:5432/x", "postgresql+psycopg://app:***@db:5432/x"),
         ("opaque 3q2-7wEAAAAAAAAAbWFkZSB1cCB0b2tlbiB2YWx1ZQ", "opaque <token>"),
+        # Record IDs (UUIDs) survive; a token glued to a UUID does not.
+        ("user_id='75615d73-85ef-4e19-982f-37bdb50ba502'", "user_id='75615d73-85ef-4e19-982f-37bdb50ba502'"),
+        ("75615d73-85ef-4e19-982f-37bdb50ba502abcdef0123", "<token>"),
         # Long code identifiers without digits survive, so tracebacks stay readable.
         ("in test_unknown_fields_are_rejected_everywhere", "in test_unknown_fields_are_rejected_everywhere"),
     ],

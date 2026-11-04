@@ -1,4 +1,4 @@
-"""Command line: `datingapp-api serve` and `datingapp-api seed-dev`."""
+"""Command line: `datingapp-api serve | worker | seed-dev`."""
 
 from __future__ import annotations
 
@@ -112,6 +112,42 @@ def _seed_command(_: argparse.Namespace) -> int:
     return 0
 
 
+def _worker_command(_: argparse.Namespace) -> int:
+    from app.clock import system_clock  # noqa: PLC0415 - worker-only imports
+    from app.jobs import WorkerContext, get_job_app, open_worker_pool, set_worker_context  # noqa: PLC0415
+    from app.logs import configure_logging  # noqa: PLC0415
+    from app.providers.email import create_email_sender  # noqa: PLC0415
+
+    settings = get_settings()
+    configure_logging(settings.log_level, settings.log_json)
+
+    async def go() -> None:
+        engine = create_engine(settings)
+        set_worker_context(
+            WorkerContext(
+                settings=settings,
+                session_factory=create_session_factory(engine),
+                email_sender=create_email_sender(settings),
+                clock=system_clock,
+            )
+        )
+        job_app = get_job_app()
+        pool = await open_worker_pool(settings)
+        try:
+            async with job_app.open_async(pool=pool):
+                # Signal handlers need loop.add_signal_handler, which Windows lacks.
+                await job_app.run_worker_async(
+                    install_signal_handlers=sys.platform != "win32", delete_jobs="successful"
+                )
+        finally:
+            set_worker_context(None)
+            await pool.close()
+            await engine.dispose()
+
+    run_async(go)
+    return 0
+
+
 def _serve_command(args: argparse.Namespace) -> int:
     config = uvicorn.Config(
         "app.main:create_app",
@@ -133,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.set_defaults(func=_serve_command)
+    worker = sub.add_parser("worker", help="run the background job worker")
+    worker.set_defaults(func=_worker_command)
     seed = sub.add_parser("seed-dev", help="create labelled development fixtures")
     seed.set_defaults(func=_seed_command)
     args = parser.parse_args(argv)

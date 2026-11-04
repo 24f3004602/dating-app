@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -46,6 +47,37 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     log_json: bool = True
 
+    # Server secret for keyed hashes (one-time codes, rate-limit keys). At
+    # least 32 characters; rotating it invalidates live codes only.
+    app_secret_key: SecretStr = Field(min_length=32)
+    # "Today" for age checks and daily limits (D014, architecture).
+    app_timezone: str = "Asia/Kolkata"
+
+    # Auth (stage 6). Password rules follow NIST SP 800-63B-4 (D042).
+    password_min_length: int = Field(default=15, ge=15, le=64)
+    password_max_length: int = Field(default=128, ge=64, le=1024)
+    # "test" uses cheap Argon2 parameters so the suite runs fast. Never in production.
+    password_hash_profile: Literal["rfc9106_low_memory", "test"] = "rfc9106_low_memory"  # noqa: S105 - a profile name
+    code_ttl_s: int = Field(default=600, ge=60, le=900)
+    code_max_attempts: int = Field(default=5, ge=1, le=10)
+    session_ttl_days: int = Field(default=30, ge=1, le=90)
+    # A session's sliding expiry is refreshed at most this often.
+    session_touch_interval_s: int = Field(default=900, ge=60)
+    # Consecutive failed logins before password sign-in is locked until a reset.
+    login_lockout_threshold: int = Field(default=100, ge=10, le=100)
+    rate_limit_prefix: str = Field(default="rl", pattern=r"^[a-z0-9:_-]{1,40}$")
+
+    # Versions of the documents a member accepts at sign-up. "draft-" versions
+    # mark documents that have not had legal review; production refuses them.
+    terms_version: str = Field(default="draft-2026-11", max_length=32)
+    privacy_version: str = Field(default="draft-2026-11", max_length=32)
+
+    # Providers (D044). "console" prints mail to stdout (development only);
+    # "memory" keeps it in process (tests). A real adapter arrives with the
+    # owner's provider account.
+    email_backend: Literal["console", "memory"] = "console"
+    email_from: str = Field(default="no-reply@example.invalid", max_length=254)
+
     @field_validator("db_runtime_role")
     @classmethod
     def _role_is_identifier(cls, v: str) -> str:
@@ -53,11 +85,35 @@ class Settings(BaseSettings):
             raise ValueError("must be a lowercase PostgreSQL identifier")
         return v
 
+    @field_validator("app_timezone")
+    @classmethod
+    def _known_timezone(cls, v: str) -> str:
+        try:
+            ZoneInfo(v)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError("unknown time zone") from exc
+        return v
+
     @model_validator(mode="after")
     def _production_rules(self) -> Settings:
-        if self.app_env == "production" and self.log_level == "DEBUG":
-            raise ValueError("DEBUG logging is not allowed in production")
+        if self.app_env != "production":
+            return self
+        problems = []
+        if self.log_level == "DEBUG":
+            problems.append("DEBUG logging is not allowed in production")
+        if self.password_hash_profile == "test":  # noqa: S105 - a profile name
+            problems.append("the test password-hash profile is not allowed in production")
+        if self.email_backend in {"console", "memory"}:
+            problems.append("a real email backend is required in production")
+        if self.terms_version.startswith("draft-") or self.privacy_version.startswith("draft-"):
+            problems.append("terms and privacy documents need final (non-draft) versions in production")
+        if problems:
+            raise ValueError("; ".join(problems))
         return self
+
+    @property
+    def tz(self) -> ZoneInfo:
+        return ZoneInfo(self.app_timezone)
 
     @property
     def is_production(self) -> bool:

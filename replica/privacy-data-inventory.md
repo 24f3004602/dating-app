@@ -1,10 +1,10 @@
 # Privacy data inventory
 
-Date: 2026-11-04. Status: **planned**. Stage 5 created the `users`,
-`sessions`, `one_time_codes` and `audit_log` tables, but no sign-up API exists,
-so nothing is collected from real people yet; the development database holds
-labelled fixtures only (`fixture-*@fixture.invalid`). This is the design that
-stage 12 implements and tests. Regulatory frame: India's DPDP
+Date: 2026-11-04. Status: **partly implemented**. Stage 6 added the sign-up
+API, so the rows for email, password, birthdate, consents, sessions, codes and
+rate-limit counters are now real (marked *stage 6*); nothing is collected from
+real people yet (no deployment, and no real mail provider). Retention jobs and
+deletion are stage 12, which implements and tests the rest of this design. Regulatory frame: India's DPDP
 Act and Rules; core obligations apply from 2027-05-13 [recon 22]. This is not
 legal advice: retention periods marked **(R)** need a lawyer's confirmation.
 
@@ -30,11 +30,12 @@ Principles:
 | blocks | safety | member | `blocks` | the blocker only | while both accounts exist | deleted with the blocker's account |
 | reports | safety | member | `reports` | the reporter (status only); staff | 2 years after resolution; the reporter's identity is pseudonymised once the report is resolved **(R)** | kept under the retention exception (safety and legal claims) |
 | moderation actions, audit log (actor and target IDs, action, request ID; `metadata` must hold no personal data) | accountability | staff, system | `moderation_actions`, `audit_log` | admins | 3 years **(R)** | kept under the exception. The user ID is kept for bans so they can be enforced |
-| consent records | proof of notice and consent (DPDP) | member | `consents` | the member; admins | the life of the account plus 1 year **(R)** | kept 1 year, then deleted |
-| sessions | authentication | system | `sessions` (token hash, client type, timestamps, shortened user agent) | the member (device list, later) | expiry plus 30 days | deleted |
-| one-time codes | verification | system | `one_time_codes` (HMAC only) | nobody | 24 hours after expiry | deleted |
+| consent records (*stage 6*: kind, document version, time) | proof of notice and consent (DPDP) | member | `consents` | the member; admins | the life of the account plus 1 year **(R)** | kept 1 year, then deleted |
+| sessions (*stage 6*) | authentication | system | `sessions` (SHA-256 of the token, client type, timestamps, the first user-agent product token only, e.g. `okhttp/4.12`) | the member (device list, later) | expiry plus 30 days | deleted |
+| one-time codes (*stage 6*) | verification | system | `one_time_codes` (HMAC only, plus attempts); the plaintext exists only in worker memory and the email | nobody | 24 hours after expiry | deleted |
 | daily picks | discovery | system | `daily_picks` | the viewer | 7 days | deleted |
-| rate-limit counters | abuse prevention | system | Redis | nobody | minutes to hours (TTL) | expire |
+| rate-limit counters (*stage 6*) | abuse prevention | system | Redis, keyed by an HMAC of the email, IP or user ID (no plain values) | nobody | 1 minute to 24 hours (TTL) | expire |
+| job queue rows (*stage 6*) | sending codes and notices | system | `procrastinate_jobs` (user ID, purpose or notice kind; no email, no code) | engineers | deleted when the job succeeds; failed jobs kept for diagnosis **(R: define a sweep)** | expire with the sweep |
 | security logs (truncated IP, route template, method, status, duration, request ID; user ID from stage 6) | security, breach detection | system | log store | restricted engineers | 1 year (DPDP minimum for such logs), then deleted | kept under the exception, then deleted |
 | backups | disaster recovery | system | provider backups | restricted engineers | 30-day rolling **(R)** | deleted data disappears when the backups age out; disclosed to members |
 
@@ -42,7 +43,7 @@ Principles:
 
 | processor type | data shared | status |
 | --- | --- | --- |
-| email delivery | email address, code or notice text | to choose (stage 6). Check the provider's own log retention, which we cannot erase |
+| email delivery | email address, code or notice text | **not chosen yet** (owner). Development prints mail to the worker's console; tests keep it in memory. Check the chosen provider's log retention, which we cannot erase |
 | cloud host, database, object storage | everything above, encrypted at rest by the provider | to choose. India region preferred |
 | later: SMS, push, verification vendor, payments, error tracking | only what each needs | each requires a review and an inventory row before use |
 

@@ -50,8 +50,10 @@ _SECRET_ASSIGN = re.compile(
     r"(?i)\b(authorization|token|password|secret|code)(\s*[:=]\s*)(?!bearer\b|<redacted>)[^\s,;'\"]+"
 )
 # Opaque tokens and digests: 32+ URL-safe characters including a digit (so
-# long code identifiers in tracebacks survive).
-_LONG_TOKEN = re.compile(r"\b(?=[A-Za-z_\-]*\d)[A-Za-z0-9_\-]{32,}\b")
+# long code identifiers in tracebacks survive). A canonical UUID standing on
+# its own is kept: record IDs are allowed in security logs (privacy inventory).
+_UUID = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![A-Za-z0-9_\-])"
+_LONG_TOKEN = re.compile(rf"\b(?!{_UUID})(?=[A-Za-z_\-]*\d)[A-Za-z0-9_\-]{{32,}}\b")
 _PG_KEY_DETAIL = re.compile(r"Key \((?P<cols>[^)]*)\)=\([^)]*\)")
 _URL_PASSWORD = re.compile(r"(?P<scheme>[a-z][a-z0-9+.-]*://[^:/@\s]+):[^@\s]+@")
 

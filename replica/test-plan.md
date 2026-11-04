@@ -1,6 +1,6 @@
 # Test plan
 
-Build: `apps/api` stage 5 foundation  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
+Build: `apps/api` stages 5-6 (foundation, auth API)  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
 
 ## Strategy
 
@@ -30,13 +30,24 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 
 | case | flow | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- | --- |
-| F01-H1 | sign up | happy | register as an adult → code → verify | session issued; label reads "age declared, email verified" | api | planned |
-| F01-N1 | sign up | negative | register with an under-18 birthdate | rejected; no user, email or code row stored | api | planned |
-| F01-E1 | sign up | edge | resend or reset for unknown and known emails | identical status, body and timing class | api | planned |
-| F01-N2 | sign up | negative | wrong code 5 times; expired code; reused code | locked, rejected, rejected | api | planned |
-| F01-H2 | sessions | happy | login, logout, logout-all | revoked tokens are refused on every route | api | planned |
-| F01-N3 | sessions | negative | password reset while other devices are signed in | every older session refused | api | planned |
-| F01-N4 | abuse | negative | burst login, register and code requests | 429 with `Retry-After`; limits per account and IP | api | planned |
+| F01-H1 | sign up | happy | register as an adult → code → verify | session issued; label reads "age declared, email verified" | api | pass (stage 6) |
+| F01-N1 | sign up | negative | register with an under-18 birthdate | rejected; no user, email or code row stored | api | pass: also no job and no Redis counter |
+| F01-E1 | sign up | edge | register, resend or reset for unknown and known emails | identical status, body and timing class | api | pass for status and body; timing class by construction (every path hashes or verifies a password; mail is sent by the worker), **not measured** |
+| F01-N2 | sign up | negative | wrong code 5 times; expired code; reused code | locked, rejected, rejected | api | pass |
+| F01-H2 | sessions | happy | login, logout, logout-all | revoked tokens are refused on every route | api | pass (every protected route so far: `/v1/me`, logout, logout-all) |
+| F01-N3 | sessions | negative | password reset while other devices are signed in | every older session refused | api | pass |
+| F01-N4 | abuse | negative | burst login, register and code requests | 429 with `Retry-After`; limits per account and IP | api | pass (per email and per IP) |
+| F01-E2 | age gate | edge | exactly 18 today; 18 tomorrow; 00:30 IST while the UTC date is still yesterday; future or 120+ years | accepted; rejected; accepted (IST date); rejected | api | pass |
+| F01-E3 | sign up | edge | owner signs up, a stranger re-registers the unverified address, owner enters the latest code | refused (password binds the code, D045); owner signs up again and gets in; stranger never can | api + mutation check | pass |
+| F01-E4 | codes | edge | 10 failures across two codes, then a new correct code | 429: a new code does not reset the failure count (NIST) | api | pass |
+| F01-E5 | sessions | edge | use on day 20 and day 40, then idle 31 days | slides; then expires | api | pass |
+| F01-E6 | sign up | edge | real worker delivers the code; two concurrent verifies with it | exactly one 201 and one 400; job row deleted | api + worker (committed scratch DB) | pass |
+| F01-N5 | passwords | negative | 14 chars; 129 chars; breached; service-name or email derivative; repetition; NFC length; spaces kept | rejected with `problems`; Unicode counted in code points; spaces preserved | unit + api | pass |
+| F01-N6 | lockout | negative | 100th consecutive failure | notice emailed; even the right password gets the generic 401 until a reset | api | pass |
+| F01-N7 | abuse | negative | Redis down | 503 `rate_limit_unavailable` on every auth route (fail closed) | api | pass |
+| F01-N8 | validation | negative | bad email, date, empty password, unknown fields (`role`), stale consent versions | 422; password never echoed | api | pass |
+| F01-H3 | recovery | happy | request reset → code → confirm | new password works, old fails, all sessions revoked, "password changed" notice, code single use | api | pass |
+| JOB-1 | jobs | edge | defer then roll back; defer then commit; one job app per process | no row; one row; task names stable | api | pass |
 | F02-H1 | profile | happy | create and edit a profile without an intent, then with one | without: validation error; with: saved | api + e2e | planned |
 | F02-N1 | photos | negative | upload a non-image, a polyglot, > 10 MB, > 40 MP, an animated image | each rejected with a clear problem code | api | planned |
 | F02-E1 | photos | edge | upload a JPEG with GPS metadata | stored copies contain no metadata | api | planned |
@@ -60,7 +71,7 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | F09-H1 | delete | happy | delete the account and run the purge job | hidden at once; sessions revoked; data purged; listed exceptions retained | api + job | planned |
 | ADM-N1 | admin | negative | a member token calls `/v1/admin/*`; a moderator calls an admin-only route | refused | api | planned |
 | ADM-H1 | admin | happy | a moderator actions a report | action applied; audit entry written | api | planned |
-| SEC-1 | logging | negative | capture logs through every flow | no message bodies, emails, birthdates, codes or tokens | api | partial: stage 5 paths pass (FND-L1); rerun as each flow lands |
+| SEC-1 | logging | negative | capture logs through every flow | no message bodies, emails, birthdates, codes or tokens | api | partial: stage 5 paths and the full auth flow pass (also checked on the real dev server); rerun as each flow lands |
 | FND-H1 | health | happy | `GET /healthz`; `GET /readyz` with DB and Redis up | 200 `ok`; 200 `ready` with both checks `ok` | api | pass |
 | FND-N1 | health | negative | `/readyz` with the DB down, Redis down, both down, or a hanging check | 503 problem `not_ready` naming the failed check; no driver text leaks; `/healthz` still 200 | api | pass |
 | FND-H2 | errors | happy | 404, 405, 409 (`ApiError`), 422, 413, 500 | `application/problem+json`, `type` `about:blank`, stable `code`, `request_id` equal to `X-Request-ID` | api | pass |
@@ -89,3 +100,6 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | same | dev server (`datingapp-api serve`) probed with curl | `/healthz` 200, `/readyz` 200, `/v1/openapi.json` 200, `/v1/docs` 200, unknown route 404 problem |
 | 2026-11-04 | same | procrastinate 3.10.0 smoke test (scratch venv and database) | schema applied; a deferred job ran to `succeeded` (D035) |
 | 2026-11-04 | GitHub Actions run 41823765056 (Ubuntu 24.04, Python 3.13, `postgres:17`, `redis:7`) on `1fec2cc` | `.github/workflows/api.yml` | ruff and mypy clean; migrations applied, no drift; 69 passed; pip-audit clean |
+| 2026-11-04 | owner's laptop | `uv run pytest` (stage 6) | 141 passed, 0 failed |
+| 2026-11-04 | same | `ruff`, `mypy` (strict), `pip-audit`, `alembic check` | clean; no known vulnerabilities; no drift |
+| 2026-11-04 | same | dev server and worker, console mail, curl: register → code from the worker → verify → `/me` → logout → `/me` | 202, code printed, 201 with labels age `declared` / email `verified` / identity `not_checked`, 200, 204, 401; 0 server log lines held the email, code or token |

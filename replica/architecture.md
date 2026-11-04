@@ -142,11 +142,11 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | method and path | does | who | flow |
 | --- | --- | --- | --- |
 | POST /v1/auth/register | email, password, birthdate (rejected if under 18; nothing stored), consents; sends a code | P | F01 |
-| POST /v1/auth/verify-email | email and code; opens a session | P | F01 |
+| POST /v1/auth/verify-email | email, code **and the sign-up password** (D045); opens a session | P | F01 |
 | POST /v1/auth/resend-code | same response whether or not the account exists | P | F01 |
 | POST /v1/auth/login, /logout, /logout-all | session lifecycle | P / M | F01 |
 | POST /v1/auth/password-reset/request, /confirm | email code; on confirm, every session is revoked | P | F01 |
-| GET /v1/me; DELETE /v1/me | account summary with verification labels; schedule deletion (re-authentication required) | M | F01, F09 |
+| GET /v1/me; DELETE /v1/me | account summary with verification labels (GET, stage 6); schedule deletion with re-authentication (DELETE, stage 12) | M | F01, F09 |
 | GET, PUT /v1/me/profile; GET, PUT /v1/me/preferences; GET /v1/areas | edit own profile and preferences | M | F02 |
 | POST /v1/me/photos; PATCH /v1/me/photos/order; DELETE /v1/me/photos/{id} | upload (multipart), reorder, delete | M | F02 |
 | PATCH /v1/me/privacy | visibility, discovery pause | M | F07 |
@@ -172,7 +172,8 @@ webhooks and store server notifications. **Webhooks out:** none.
 
 | job | when | does |
 | --- | --- | --- |
-| `send_email` | on demand | sends codes and notices through the provider |
+| `auth:issue_code` | on demand | generates a code (only its HMAC is stored) and emails it; arguments are a user ID and a purpose only (D046) |
+| `auth:send_notice` | on demand | security notices (sign-up attempt on a taken address, password changed, password sign-in paused) |
 | `purge_deleted_accounts` | hourly | after the grace period, deletes data and media |
 | `cleanup_expired` | hourly | expired codes, sessions, tickets and old daily picks |
 | `retention_sweep` | daily | applies the privacy inventory's retention rules |
@@ -180,18 +181,19 @@ webhooks and store server notifications. **Webhooks out:** none.
 ## Key mechanisms
 
 - **Sessions:** an opaque 256-bit random token is stored only as a SHA-256 hash.
-  - Mobile sessions last 30 days, sliding; admin sessions last 12 hours with a 30-minute idle timeout.
+  - Mobile sessions last 30 days, sliding (refreshed at most every 15 minutes); admin sessions (stage 14) last 12 hours with a 30-minute idle timeout.
   - All sessions are revoked on logout-all, password reset, ban or deletion.
   - JWTs were rejected because revocation must take effect immediately.
 - **One-time codes:**
-  - 6 digits, valid 10 minutes, single use, at most 5 attempts.
-  - Stored as an HMAC under a server secret.
-  - 60-second resend cooldown, with per-email and per-IP limits held in Redis.
-  - Auth limits fail closed if Redis is down.
+  - 6 digits, valid 10 minutes, single use, at most 5 attempts per code, and at most 10 failures a day per account and purpose; a new code does not reset that count (NIST SP 800-63B-4).
+  - Stored as an HMAC (bound to user and purpose) under a key derived from `APP_SECRET_KEY`. The plaintext exists only in the worker and the email.
+  - 60-second resend cooldown and a daily cap, plus per-IP limits, in Redis under HMAC'd keys (D047).
+  - Auth limits fail closed (503) if Redis is down.
 - **Passwords:**
   - Argon2id.
-  - Length policy (10-128 characters) plus a common-password blocklist; no composition rules. Policy details to re-check against current guidance in stage 6.
-  - Login errors are uniform, with backoff.
+  - NIST SP 800-63B-4 (D042): 15-128 characters counted in code points after NFC; no composition rules; the whole password is checked against a 15,841-entry breach blocklist (D043), context words (service name, email) and trivial repetition. Spaces are kept.
+  - Login errors are uniform (unknown email and wrong password look the same, with an equal-cost dummy verify), with per-email and per-IP limits; 100 consecutive failures pause password sign-in until a reset.
+  - Hashes are upgraded on login when the Argon2 parameters change.
 - **Age gate:**
   - Date of birth is compared with today in IST.
   - Under-18 sign-ups are rejected and none of their data is stored.

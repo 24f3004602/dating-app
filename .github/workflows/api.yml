@@ -55,10 +55,11 @@ jobs:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
 
-      - name: Generate per-run database role passwords
+      - name: Generate per-run secrets (database role passwords, app secret)
         run: |
-          owner=$(openssl rand -hex 24); runtime=$(openssl rand -hex 24)
-          echo "::add-mask::$owner"; echo "::add-mask::$runtime"
+          owner=$(openssl rand -hex 24); runtime=$(openssl rand -hex 24); app_secret=$(openssl rand -hex 32)
+          echo "::add-mask::$owner"; echo "::add-mask::$runtime"; echo "::add-mask::$app_secret"
+          echo "APP_SECRET_KEY=${app_secret}" >> "$GITHUB_ENV"
           echo "DATABASE_URL=postgresql+psycopg://app_runtime:${runtime}@localhost:5432/datingapp" >> "$GITHUB_ENV"
           echo "MIGRATIONS_DATABASE_URL=postgresql+psycopg://app_owner:${owner}@localhost:5432/datingapp" >> "$GITHUB_ENV"
 
