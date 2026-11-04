@@ -47,9 +47,15 @@ def _problem_bytes(status: int, code: str, request_id: str) -> bytes:
 
 
 class RequestContextMiddleware:
-    def __init__(self, app: ASGIApp, max_body_bytes: int) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        max_body_bytes: int,
+        body_limit_overrides: dict[tuple[str, str], int] | None = None,
+    ) -> None:
         self.app = app
         self.max_body_bytes = max_body_bytes
+        self.overrides = dict(body_limit_overrides or {})
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -87,6 +93,7 @@ class RequestContextMiddleware:
             )
             await send_wrapper({"type": "http.response.body", "body": body, "_ours": True})
 
+        limit = self.overrides.get((str(scope.get("method")), str(scope.get("path"))), self.max_body_bytes)
         received = 0
 
         async def receive_wrapper() -> Message:
@@ -94,7 +101,7 @@ class RequestContextMiddleware:
             message = await receive()
             if message["type"] == "http.request":
                 received += len(message.get("body", b""))
-                if received > self.max_body_bytes and not state["started"]:
+                if received > limit and not state["started"]:
                     await respond(413, "payload_too_large")
                     state["short_circuited"] = True
                     return {"type": "http.disconnect"}
@@ -102,7 +109,7 @@ class RequestContextMiddleware:
 
         try:
             declared = _header(scope, b"content-length")
-            if declared is not None and declared.isdigit() and int(declared) > self.max_body_bytes:
+            if declared is not None and declared.isdigit() and int(declared) > limit:
                 await respond(413, "payload_too_large")
                 return
             await self.app(scope, receive_wrapper, send_wrapper)

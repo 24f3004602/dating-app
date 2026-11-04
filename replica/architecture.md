@@ -100,10 +100,10 @@ migrations run as a separate role.
 | `sessions` | `token_hash` unique (SHA-256 of an opaque token); `user_id`; `client` (mobile, web_admin); `expires_at`; `revoked_at`; `last_used_at` | 5 |
 | `one_time_codes` | `user_id`; `purpose` (verify_email, reset_password); `code_hash` (keyed HMAC); `expires_at`; `consumed_at`; `attempts`; one live code per user and purpose (partial unique index) | 5 |
 | `audit_log` | append-only: actor, action, target type and id, `metadata` jsonb without personal data, `created_at` | 5 |
-| `areas` | city, area name, public centroid latitude and longitude, active. Seeded geography, not user data | 7 |
-| `profiles` | `user_id` primary key; `display_name` (1-40); `gender`; `interested_in` (array); `intent` (required); `bio` (≤ 500); `area_id`; `visibility`; `discovery_paused` | 7 |
+| `areas` | slug `id`; city, area name, approximate public centroid latitude and longitude, active. Seeded by migration, read-only for the app (D051) | 7 |
+| `profiles` | `user_id` primary key; `display_name` (1-40); `gender`; `interested_in` (array); `intent` (required); `bio` (≤ 500); `area_id`; `area_changed_at`; `visibility`; `discovery_paused` (vocabularies: D050) | 7 |
 | `profile_prompts` | `user_id`, `prompt_key` (our own prompt catalogue), `answer` (≤ 200), `position`; unique (`user_id`, `position`) | 7 |
-| `photos` | `user_id`; `position` 0-5, unique per user (deferrable, for reorders); random `storage_key`; dimensions; `sha256`; `moderation_state` (pending, approved, rejected) | 7 |
+| `photos` | `user_id`; `position` 0-5, unique per user (deferrable, for reorders); random `storage_key`; dimensions; `sha256` of the original; `moderation_state` (pending, approved, rejected); `reviewed_at` | 7 |
 | `preferences` | `user_id` primary key; age min and max (18-99, min ≤ max); `max_distance_km`; `genders` | 8 |
 | `daily_picks` | (`viewer_id`, `pick_date`, `candidate_id`) primary key; `rank`. Kept 7 days | 8 |
 | `interactions` | `actor_id`, `target_id`, `kind` (like, pass), optional `comment` (≤ 150) and target item; **unique (`actor_id`, `target_id`)**; check actor ≠ target | 9 |
@@ -147,11 +147,12 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | POST /v1/auth/login, /logout, /logout-all | session lifecycle | P / M | F01 |
 | POST /v1/auth/password-reset/request, /confirm | email code; on confirm, every session is revoked | P | F01 |
 | GET /v1/me; DELETE /v1/me | account summary with verification labels (GET, stage 6); schedule deletion with re-authentication (DELETE, stage 12) | M | F01, F09 |
-| GET, PUT /v1/me/profile; GET, PUT /v1/me/preferences; GET /v1/areas | edit own profile and preferences | M | F02 |
+| GET, PUT /v1/me/profile; GET /v1/areas; GET /v1/prompts | edit own profile (stage 7); areas and prompts, never coordinates | M | F02 |
+| GET, PUT /v1/me/preferences | discovery preferences (stage 8) | M | F03 |
 | POST /v1/me/photos; PATCH /v1/me/photos/order; DELETE /v1/me/photos/{id} | upload (multipart), reorder, delete | M | F02 |
-| PATCH /v1/me/privacy | visibility, discovery pause | M | F07 |
+| PATCH /v1/me/privacy | visibility (`everyone`, `liked_only`) and discovery pause; stored from stage 7, applied to discovery in stage 8 | M | F07 |
 | GET /v1/profiles/{user_id} | only if `access.can_view_profile` (in today's set, matched, or liked you); otherwise 404 | M | F03 |
-| GET /v1/media/{photo_id} | authorised redirect to a short-lived signed URL (local streaming in development) | M | F03, F05 |
+| GET /v1/media/{photo_id} | authorised redirect to a short-lived signed URL; in development the URL is the API's own signed `/v1/media/blob/...` route (D053) | M | F03, F05 |
 | GET /v1/discovery/today | today's finite set; generated once per viewer per day | M | F03 |
 | POST /v1/interactions | like or pass, optional comment; enforces eligibility, the daily like limit and the your-turn cap; returns the match if one is created | M | F03, F04 |
 | GET /v1/likes/received | people who liked you | M | F04 |

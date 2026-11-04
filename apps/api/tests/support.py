@@ -13,7 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.config import Settings
 from app.modules.auth import service
 from app.modules.auth.models import CodePurpose
+from app.modules.media import service as media_service
 from app.providers.email import EmailMessage, MemoryEmailSender
+from app.providers.storage import ObjectStorage
 
 # Long, unusual, and not in the blocklist (checked by test_passwords).
 PASSWORD = "violet harbour lantern seventy"
@@ -38,10 +40,17 @@ class JobRunner:
     separately in test_jobs.py against a committed scratch database.
     """
 
-    def __init__(self, db: async_sessionmaker[AsyncSession], settings: Settings, clock: FrozenClock) -> None:
+    def __init__(
+        self,
+        db: async_sessionmaker[AsyncSession],
+        settings: Settings,
+        clock: FrozenClock,
+        storage: ObjectStorage | None = None,
+    ) -> None:
         self.db = db
         self.settings = settings
         self.clock = clock
+        self.storage = storage
         self.mail = MemoryEmailSender()
         self.codes: list[str] = []
 
@@ -69,6 +78,9 @@ class JobRunner:
                     )
                     if code:
                         self.codes.append(code)
+                elif name == media_service.DELETE_OBJECTS:
+                    assert self.storage is not None
+                    await media_service.delete_objects(self.storage, list(args["keys"]))
                 elif name == service.SEND_NOTICE:
                     await service.send_notice(
                         s, self.settings, self.mail, uuid.UUID(args["user_id"]), service.Notice(args["kind"])

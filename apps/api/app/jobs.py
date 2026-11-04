@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.clock import Clock
 from app.config import Settings
 from app.providers.email import EmailSender
+from app.providers.storage import ObjectStorage
 
 
 def libpq_url(sqlalchemy_url: str) -> str:
@@ -40,9 +41,11 @@ def get_job_app() -> procrastinate.App:
     global _job_app  # noqa: PLW0603 - one app per process, by design
     if _job_app is None:
         from app.modules.auth.tasks import blueprint as auth_tasks  # noqa: PLC0415 - tasks import this module
+        from app.modules.media.tasks import blueprint as media_tasks  # noqa: PLC0415
 
         app = procrastinate.App(connector=procrastinate.PsycopgConnector())
         app.add_tasks_from(auth_tasks, namespace="auth")
+        app.add_tasks_from(media_tasks, namespace="media")
         _job_app = app
     return _job_app
 
@@ -71,6 +74,7 @@ class WorkerContext:
     session_factory: async_sessionmaker[AsyncSession]
     email_sender: EmailSender
     clock: Clock
+    storage: ObjectStorage
 
 
 _context: WorkerContext | None = None

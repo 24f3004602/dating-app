@@ -4,9 +4,9 @@ Updated: 2026-11-04
 
 ## Current phase
 
-Stage 6 (auth API) **done for the API**: implemented, tested locally and in
-CI (run 41828807895, 141 passed). Next: stage 7 (profiles, media, first Expo
-screens).
+Stage 7 in progress. **7a (profiles and media API) is implemented and tested
+locally** (196 tests); its CI run is pending. Next: 7b, the Expo app scaffold
+with auth and profile screens.
 
 ## Done
 
@@ -18,7 +18,20 @@ screens).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 7a status
+
+- **Implemented and tested** (cases F02-*, PRF-*, IMG-1, PHO-* in `test-plan.md`): everything in the stage 7 brief except the app screens.
+  - Persistence, permissions, invalid uploads and deletion are tested.
+  - The real dev server, worker and local storage were exercised end to end.
+- **Partial, by design:**
+  - Photos stay pending; the review queue comes with moderation (stage 11).
+  - Another member's profile is always a 404 until stages 8-9 add the daily set, matches and likes.
+  - Visibility and pause are stored; discovery applies them (stage 8).
+  - Storage is local disk until the owner sets up a bucket.
+- **Fixed during the stage:** FastAPI's generated upload form allowed unknown fields (D055), caught by the OpenAPI meta-test.
 
 ## Stage 6 status
 
@@ -57,8 +70,9 @@ screens).
    - put the API key in `.env` or a secret manager.
    I then add and test the adapter.
 3. **Legal documents:** terms and privacy notice, with legal review. Production refuses the current `draft-2026-11` versions (D044).
-4. SMS stays off until India DLT registration (entity, sender ID, templates) and an SMS provider exist (D012).
+4. **Object storage** (needed before any real photo): a private bucket in an India region, for example S3 in ap-south-1 or Cloudflare R2, with an access key for the app. I then add and test the adapter with presigned GETs (D053).
+5. SMS stays off until India DLT registration (entity, sender ID, templates) and an SMS provider exist (D012).
 
 ## Next
 
-Stage 7: profiles and media API (areas, profiles, prompts, photos with safe processing and pre-moderation), then the Expo scaffold with auth and profile screens (first vertical slice).
+Stage 7b: the Expo SDK 58 app (`apps/mobile`): Expo Router, TanStack Query, React Hook Form and Zod, with types generated from the OpenAPI spec. Screens: sign-up with the age gate and consents, verify, sign-in, password reset, profile create and edit, photos, and privacy. Unit tests, plus an Expo web run against the local API.

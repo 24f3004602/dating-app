@@ -78,6 +78,20 @@ class Settings(BaseSettings):
     email_backend: Literal["console", "memory"] = "console"
     email_from: str = Field(default="no-reply@example.invalid", max_length=254)
 
+    # Media (stage 7). "local" writes under media_dir (development); "memory"
+    # is for tests. Production needs a private bucket adapter (owner setup).
+    storage_backend: Literal["local", "memory"] = "local"
+    media_dir: str = "var/media"
+    media_url_ttl_s: int = Field(default=300, ge=30, le=3600)
+    # D026: photos are hidden from others until a moderator approves them.
+    photo_review_required: bool = True
+    photo_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
+    photo_max_pixels: int = Field(default=40_000_000, ge=1_000_000)
+    photo_min_side: int = Field(default=300, ge=100)
+    photo_max_count: int = Field(default=6, ge=1, le=6)
+    # Upload requests may exceed the general body limit (multipart overhead included).
+    max_upload_body_bytes: int = Field(default=11 * 1024 * 1024, ge=1024)
+
     @field_validator("db_runtime_role")
     @classmethod
     def _role_is_identifier(cls, v: str) -> str:
@@ -105,6 +119,8 @@ class Settings(BaseSettings):
             problems.append("the test password-hash profile is not allowed in production")
         if self.email_backend in {"console", "memory"}:
             problems.append("a real email backend is required in production")
+        if self.storage_backend in {"local", "memory"}:
+            problems.append("a private object-storage bucket is required in production")
         if self.terms_version.startswith("draft-") or self.privacy_version.startswith("draft-"):
             problems.append("terms and privacy documents need final (non-draft) versions in production")
         if problems:

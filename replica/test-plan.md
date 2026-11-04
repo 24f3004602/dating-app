@@ -1,6 +1,6 @@
 # Test plan
 
-Build: `apps/api` stages 5-6 (foundation, auth API)  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
+Build: `apps/api` stages 5-7a (foundation, auth, profiles and media API)  Date: 2026-11-04  Env: owner's Windows 11 laptop (local PostgreSQL 17.5, Redis 7.0.15 in WSL2) and GitHub Actions (Ubuntu, `postgres:17`, `redis:7`)
 
 ## Strategy
 
@@ -48,10 +48,21 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | F01-N8 | validation | negative | bad email, date, empty password, unknown fields (`role`), stale consent versions | 422; password never echoed | api | pass |
 | F01-H3 | recovery | happy | request reset → code → confirm | new password works, old fails, all sessions revoked, "password changed" notice, code single use | api | pass |
 | JOB-1 | jobs | edge | defer then roll back; defer then commit; one job app per process | no row; one row; task names stable | api | pass |
-| F02-H1 | profile | happy | create and edit a profile without an intent, then with one | without: validation error; with: saved | api + e2e | planned |
-| F02-N1 | photos | negative | upload a non-image, a polyglot, > 10 MB, > 40 MP, an animated image | each rejected with a clear problem code | api | planned |
-| F02-E1 | photos | edge | upload a JPEG with GPS metadata | stored copies contain no metadata | api | planned |
-| F02-N2 | photos | negative | another member fetches a pending photo | 404 | api | planned |
+| F02-H1 | profile | happy | create and edit a profile without an intent, then with one | without: validation error; with: saved | api + e2e | api pass (stage 7a); e2e with the app (7b) |
+| F02-N1 | photos | negative | upload a non-image, a polyglot, > 10 MB, > 40 MP, an animated image | each rejected with a clear problem code | api | pass: polyglots are accepted as images but their payload is discarded by re-encoding (IMG-*) |
+| F02-E1 | photos | edge | upload a JPEG with GPS metadata | stored copies contain no metadata | api | pass (unit, API and real dev server) |
+| F02-N2 | photos | negative | another member fetches a pending photo | 404 | api | pass (also approved photos without a relation) |
+| PRF-H1 | profile | happy | areas and prompts; create, read, replace prompts; readiness | stored and returned; no coordinates anywhere | api | pass |
+| PRF-N1 | profile | negative | 18 invalid bodies: contact details in names, control and zero-width characters, bad enums, casual intent, long bio, unknown or duplicate prompts, unknown fields; unknown area | 422 each | api | pass |
+| PRF-E1 | profile | edge | names in Devanagari, Bengali, Tamil, and one needing a zero-width joiner | accepted unchanged | api | pass |
+| PRF-E2 | location | edge | change area twice within 24 h; then after 24 h | 429 `area_change_limited` with `Retry-After`; then allowed | api | pass |
+| PRF-N2 | access | negative | another member's profile; a random ID | identical 404 | api | pass |
+| PRF-H2 | privacy | happy | set `liked_only`, pause, empty and invalid bodies, before a profile exists | stored; 422; 422; 409 | api | pass |
+| IMG-1 | media | edge | orientation 6; 3000x2000; CMYK; PNG with alpha; WebP; GIF; APNG; animated WebP; truncated; 200 px; 48 MP; header-only 3.6 GP bomb; HTML; PDF; empty; over 10 MB | upright; 1080 and 400 px; RGB JPEG; refused with codes | unit | pass |
+| PHO-H1 | photos | happy | upload, fetch through the signed URL, reorder, delete | 201 pending; 200 JPEG without EXIF; compact positions; objects deleted by the queued job | api + real dev server | pass |
+| PHO-E1 | photos | edge | expired URL; forged expiry; wrong signature; path traversal | 404 each | api | pass |
+| PHO-N1 | photos | negative | 7th photo; unknown form field; no file; 12 MB request; rate limit | 409; 422; 422; 413; 429 | api | pass |
+| PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | planned |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | planned |
 | F03-N1 | discovery | negative | inspect every discovery and profile response | no coordinates, exact distance, email or birthdate | api (schema) | planned |
@@ -104,3 +115,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | same | `ruff`, `mypy` (strict), `pip-audit`, `alembic check` | clean; no known vulnerabilities; no drift |
 | 2026-11-04 | same | dev server and worker, console mail, curl: register → code from the worker → verify → `/me` → logout → `/me` | 202, code printed, 201 with labels age `declared` / email `verified` / identity `not_checked`, 200, 204, 401; 0 server log lines held the email, code or token |
 | 2026-11-04 | GitHub Actions run 41828807895 on `7af98c9` | `.github/workflows/api.yml` | ruff and mypy clean; migrations applied, no drift; 141 passed; pip-audit clean |
+| 2026-11-04 | owner's laptop | `uv run pytest` (stage 7a) | 196 passed, 0 failed |
+| 2026-11-04 | same | dev server, worker and local storage: sign up, profile, upload a GPS-tagged 2400x1600 JPEG, fetch, redirect, delete | 201 pending 1080x720; 0 EXIF tags; 302; 204; both files removed by `media:delete_objects` |

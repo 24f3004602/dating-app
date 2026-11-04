@@ -116,7 +116,9 @@ def _worker_command(_: argparse.Namespace) -> int:
     from app.clock import system_clock  # noqa: PLC0415 - worker-only imports
     from app.jobs import WorkerContext, get_job_app, open_worker_pool, set_worker_context  # noqa: PLC0415
     from app.logs import configure_logging  # noqa: PLC0415
+    from app.modules.auth.crypto import derive_key  # noqa: PLC0415
     from app.providers.email import create_email_sender  # noqa: PLC0415
+    from app.providers.storage import create_storage  # noqa: PLC0415
 
     settings = get_settings()
     configure_logging(settings.log_level, settings.log_json)
@@ -129,6 +131,7 @@ def _worker_command(_: argparse.Namespace) -> int:
                 session_factory=create_session_factory(engine),
                 email_sender=create_email_sender(settings),
                 clock=system_clock,
+                storage=create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url")),
             )
         )
         job_app = get_job_app()

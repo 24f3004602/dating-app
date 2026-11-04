@@ -2,7 +2,7 @@
 
 Date: 2026-11-04. Status: **partly implemented**. Stage 6 added the sign-up
 API, so the rows for email, password, birthdate, consents, sessions, codes and
-rate-limit counters are now real (marked *stage 6*); nothing is collected from
+rate-limit counters are now real (marked *stage 6*), as are profiles, areas and photos (*stage 7*); nothing is collected from
 real people yet (no deployment, and no real mail provider). Retention jobs and
 deletion are stage 12, which implements and tests the rest of this design. Regulatory frame: India's DPDP
 Act and Rules; core obligations apply from 2027-05-13 [recon 22]. This is not
@@ -20,9 +20,9 @@ Principles:
 | email | login, codes, service notices | member | `users` | the member; staff when handling a case | while the account exists | deleted. A keyed hash of a **banned** account's email is kept 1 year to stop immediate re-registration **(R)** |
 | password | authentication | member | `users`, as an Argon2id hash only | nobody | while the account exists | deleted |
 | birthdate | age gate (18+); show age | member | `users` | others see age in years only; staff see age | while the account exists | deleted. Under-18 attempts are never stored |
-| display name, gender, interested in, intent, bio, prompt answers | matching and display | member | `profiles`, `profile_prompts` | eligible members (daily set, matches, people who liked them); staff for reports | while the account exists | deleted |
-| area (coarse) | distance buckets, discovery | member choice from a list | `profiles.area_id` | others see the area name and a distance bucket, never coordinates | while the account exists | deleted |
-| photos and derived sizes, plus an image hash | display; abuse signal (same photo on many accounts) | member | private object storage; `photos` | eligible members via signed URLs; staff | until the member deletes the photo | files and rows purged. The hash of a photo removed for abuse is kept 1 year **(R)** |
+| display name, gender, interested in, intent, bio, prompt answers (*stage 7*) | matching and display | member | `profiles`, `profile_prompts` | eligible members (daily set, matches, people who liked them); staff for reports | while the account exists | deleted |
+| area (coarse) (*stage 7*: one change per 24 h) | distance buckets, discovery | member choice from a list | `profiles.area_id` | others see the area name and a distance bucket, never coordinates | while the account exists | deleted |
+| photos and derived sizes, plus an image hash (*stage 7*: only two re-encoded JPEGs with no metadata are kept; the original upload is discarded) | display; abuse signal (same photo on many accounts) | member | private object storage (development: local disk under `var/media`); `photos` | eligible members via signed URLs; staff | until the member deletes the photo | files and rows purged. The hash of a photo removed for abuse is kept 1 year **(R)** |
 | likes, passes, like comments | matching | member actions | `interactions` | the target sees likes and comments; passes are private | while the account exists | deleted |
 | matches | chat access | system | `matches` | both participants | until unmatched or an account is deleted | deleted, except where a report references them |
 | messages | communication | members | `messages` | the two participants; staff only for reported messages, with minimal context | hidden at unmatch; purged after 30 days unless a report references them | purged, except evidence for open or recently resolved reports |

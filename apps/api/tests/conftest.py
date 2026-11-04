@@ -119,6 +119,7 @@ def test_db(base_settings: Settings) -> Iterator[MigratedDatabase]:
             "migrations_database_url": SecretStr(owner_url),
             "password_hash_profile": "test",
             "email_backend": "memory",
+            "storage_backend": "memory",
         }
     )
     yield MigratedDatabase(name=name, settings=settings, owner_url=owner_url, runtime_url=runtime_url)
@@ -185,7 +186,7 @@ async def app(
 
 @pytest.fixture
 def jobs(app: FastAPI, db: async_sessionmaker[AsyncSession], clock: FrozenClock) -> JobRunner:
-    return JobRunner(db, app.state.settings, clock)
+    return JobRunner(db, app.state.settings, clock, app.state.storage)
 
 
 @pytest.fixture

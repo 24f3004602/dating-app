@@ -4,5 +4,7 @@ from app.db import Base
 from app.modules.accounts.models import Consent, User
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import OneTimeCode, Session
+from app.modules.media.models import Photo
+from app.modules.profiles.models import Area, Profile, ProfilePrompt
 
-__all__ = ["AuditLog", "Base", "Consent", "OneTimeCode", "Session", "User"]
+__all__ = ["Area", "AuditLog", "Base", "Consent", "OneTimeCode", "Photo", "Profile", "ProfilePrompt", "Session", "User"]

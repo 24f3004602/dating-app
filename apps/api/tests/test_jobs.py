@@ -88,7 +88,11 @@ async def test_worker_end_to_end_with_concurrent_verification(
     committed_app: FastAPI, scratch_settings: Settings
 ) -> None:
     mail = MemoryEmailSender()
-    set_worker_context(WorkerContext(scratch_settings, committed_app.state.session_factory, mail, system_clock))
+    set_worker_context(
+        WorkerContext(
+            scratch_settings, committed_app.state.session_factory, mail, system_clock, committed_app.state.storage
+        )
+    )
     job_app = get_job_app()
     pool = await open_worker_pool(scratch_settings)
     email = "worker.e2e@example.com"
