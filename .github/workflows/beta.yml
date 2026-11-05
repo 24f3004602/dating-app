@@ -113,9 +113,10 @@ jobs:
           if docker compose exec -T api datingapp-api seed-dev; then echo "fixtures were seeded on a beta server" && exit 1; fi
           test "$(docker compose exec -T api id -u)" = 10001
           docker compose exec -T api sh -c 'touch /app/var/media/.probe && rm /app/var/media/.probe'
-          # Only Caddy listens on the host.
-          if docker compose port postgres 5432 2>/dev/null | grep -q .; then echo "postgres published" && exit 1; fi
-          if docker compose port redis 6379 2>/dev/null | grep -q .; then echo "redis published" && exit 1; fi
+          # Only Caddy listens on the host: the database, Redis, the API and the website don't.
+          ss -ltnH | awk '{print $4}' | sort -u
+          if ss -ltnH | awk '{print $4}' | grep -Eq ':(5432|6379|8000|3000)$'; then echo "an internal port is published" && exit 1; fi
+          ss -ltnH | awk '{print $4}' | grep -Eq ':443$'
 
       - name: Backup
         run: |
