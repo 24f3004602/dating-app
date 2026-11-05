@@ -1,4 +1,4 @@
-"""Command line: `datingapp-api serve | worker | seed-dev`."""
+"""Command line: `datingapp-api serve | worker | seed-dev | staff-enrollment | invite`."""
 
 from __future__ import annotations
 
@@ -57,8 +57,8 @@ class SeedRefusedError(RuntimeError):
 
 async def seed_dev(session: AsyncSession, settings: Settings, storage: ObjectStorage) -> int:
     """Create the labelled fixtures. Idempotent. Returns how many accounts were new."""
-    if settings.is_production:
-        raise SeedRefusedError("refusing to seed fixtures in production")
+    if settings.is_deployed:
+        raise SeedRefusedError(f"refusing to seed fixtures in {settings.app_env}")
     now = datetime.now(UTC)
     created = 0
     for f in FIXTURES:
@@ -155,6 +155,44 @@ def _staff_enrollment_command(args: argparse.Namespace) -> int:
     token, expires = issued
     print(f"staff-enrollment: one-time token (valid until {expires.isoformat()}); give it to them in person:")
     print(token)
+    return 0
+
+
+def _invite_command(args: argparse.Namespace) -> int:
+    """The beta's invite list (D096): add, remove or count. Emails are stored as
+    keyed hashes only, so the list can't be printed; keep your own copy."""
+    from app.clock import system_clock  # noqa: PLC0415 - command-only imports
+    from app.modules.auth import service  # noqa: PLC0415
+    from app.modules.auth.schemas import normalize_email  # noqa: PLC0415
+
+    settings = get_settings()
+    try:
+        emails = [normalize_email(e) for e in args.emails]
+    except ValueError as exc:
+        print(f"invite: {exc}", file=sys.stderr)
+        return 2
+    if args.action != "count" and not emails:
+        print("invite: give at least one email", file=sys.stderr)
+        return 2
+
+    async def go() -> str:
+        engine = create_engine(settings)
+        try:
+            async with create_session_factory(engine)() as session:
+                now = system_clock()
+                if args.action == "add":
+                    n = await service.add_invites(session, settings, emails, now)
+                    return f"invite: {n} invited for {settings.invite_days} days"
+                if args.action == "remove":
+                    n = await service.remove_invites(session, settings, emails)
+                    return f"invite: {n} removed"
+                return f"invite: {await service.live_invites(session, now)} open invite(s)"
+        finally:
+            await engine.dispose()
+
+    print(run_async(go))
+    if not settings.signup_invite_only:
+        print("invite: note: SIGNUP_INVITE_ONLY is off, so anyone can sign up here", file=sys.stderr)
     return 0
 
 
@@ -255,6 +293,10 @@ def main(argv: list[str] | None = None) -> int:
     enrol = sub.add_parser("staff-enrollment", help="issue a one-time authenticator enrolment token (staff)")
     enrol.add_argument("email")
     enrol.set_defaults(func=_staff_enrollment_command)
+    invite = sub.add_parser("invite", help="manage the invite list for invite-only sign-up (beta)")
+    invite.add_argument("action", choices=["add", "remove", "count"])
+    invite.add_argument("emails", nargs="*")
+    invite.set_defaults(func=_invite_command)
     args = parser.parse_args(argv)
     result: int = args.func(args)
     return result

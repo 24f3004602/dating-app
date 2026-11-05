@@ -31,7 +31,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,7 +52,7 @@ from app.modules.auth.crypto import (
     new_code,
     new_session_token,
 )
-from app.modules.auth.models import CodePurpose, OneTimeCode, Session, SessionClient
+from app.modules.auth.models import CodePurpose, OneTimeCode, Session, SessionClient, SignupInvite
 from app.modules.auth.passwords import Passwords, password_problems
 from app.modules.auth.schemas import (
     LoginIn,
@@ -115,6 +115,62 @@ def code_key(settings: Settings) -> bytes:
 
 def banned_email_key(settings: Settings) -> bytes:
     return derive_key(settings.app_secret_key.get_secret_value(), "banned-email")
+
+
+def invite_key(settings: Settings) -> bytes:
+    return derive_key(settings.app_secret_key.get_secret_value(), "signup-invite")
+
+
+def invite_digest(settings: Settings, email: str) -> bytes:
+    return banned_email_digest(invite_key(settings), email)
+
+
+async def invited(session: AsyncSession, settings: Settings, email: str, now: datetime) -> bool:
+    found = await session.execute(
+        select(SignupInvite.email_digest).where(
+            SignupInvite.email_digest == invite_digest(settings, email), SignupInvite.expires_at > now
+        )
+    )
+    return found.first() is not None
+
+
+async def add_invites(session: AsyncSession, settings: Settings, emails: list[str], now: datetime) -> int:
+    """Invite (or re-invite, renewing the expiry). Commits. Counts only are audited."""
+    expires = now + timedelta(days=settings.invite_days)
+    digests = {invite_digest(settings, e) for e in emails}
+    for digest in digests:
+        await session.execute(
+            pg_insert(SignupInvite)
+            .values(email_digest=digest, created_at=now, expires_at=expires)
+            .on_conflict_do_update(
+                index_elements=[SignupInvite.email_digest], set_={"created_at": now, "expires_at": expires}
+            )
+        )
+    session.add(AuditLog(actor_id=None, action="auth.invites_added", details={"count": len(digests)}))
+    await session.commit()
+    return len(digests)
+
+
+async def remove_invites(session: AsyncSession, settings: Settings, emails: list[str]) -> int:
+    digests = {invite_digest(settings, e) for e in emails}
+    removed = len(
+        (
+            await session.execute(
+                delete(SignupInvite).where(SignupInvite.email_digest.in_(digests)).returning(SignupInvite.email_digest)
+            )
+        ).all()
+    )
+    session.add(AuditLog(actor_id=None, action="auth.invites_removed", details={"count": removed}))
+    await session.commit()
+    return removed
+
+
+async def live_invites(session: AsyncSession, now: datetime) -> int:
+    return int(
+        (
+            await session.execute(select(func.count()).select_from(SignupInvite).where(SignupInvite.expires_at > now))
+        ).scalar_one()
+    )
 
 
 def deletion_pending(user: User) -> bool:
@@ -288,6 +344,12 @@ async def register(ctx: AuthContext, session: AsyncSession, data: RegisterIn, ip
         _audit(session, "auth.register_barred", None)  # the same answer, and no code
         await session.commit()
         return
+    if user is None and s.signup_invite_only and not await invited(session, s, data.email, now):
+        # The same answer as any sign-up, and nothing stored or sent: whether an
+        # email is on the invite list is not revealed (D096).
+        _audit(session, "auth.register_not_invited", None)
+        await session.commit()
+        return
     if user is None:
         new_id = (
             await session.execute(
@@ -367,6 +429,9 @@ async def verify_email(
     row.consumed_at = now
     user.status = UserStatus.active
     user.email_verified_at = now
+    # The invite has done its job (D096): the account exists now.
+    invite = invite_digest(ctx.settings, user.email_normalized)
+    await session.execute(delete(SignupInvite).where(SignupInvite.email_digest == invite))
     user.failed_login_count = 0
     token, expires = _open_session(session, ctx.settings, user, now, user_agent)
     _audit(session, "auth.email_verified", user.id, actor=user.id)

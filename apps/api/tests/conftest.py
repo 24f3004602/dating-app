@@ -107,8 +107,8 @@ class MigratedDatabase:
 @pytest.fixture(scope="session")
 def base_settings() -> Settings:
     settings = Settings()
-    if settings.is_production:
-        raise RuntimeError("refusing to run tests with APP_ENV=production")
+    if settings.is_deployed:
+        raise RuntimeError(f"refusing to run tests with APP_ENV={settings.app_env}")
     if settings.migrations_database_url is None:
         raise RuntimeError("MIGRATIONS_DATABASE_URL is required for tests")
     return settings

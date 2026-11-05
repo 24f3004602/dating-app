@@ -26,7 +26,10 @@ class Settings(BaseSettings):
         frozen=True,
     )
 
-    app_env: Literal["development", "test", "production"] = "development"
+    # "beta" (stage 18, D096): a small invite-only test with real people on one
+    # server. Every production rule applies, except that photos may stay on the
+    # server's disk and the documents may be the plain-language beta notice.
+    app_env: Literal["development", "test", "beta", "production"] = "development"
     # D019: code uses neutral identifiers; the brand name is configuration.
     brand_name: str = Field(default="Haanji", min_length=1, max_length=40)
 
@@ -85,10 +88,23 @@ class Settings(BaseSettings):
     privacy_version: str = Field(default="draft-2026-11", max_length=32)
 
     # Providers (D044). "console" prints mail to stdout (development only);
-    # "memory" keeps it in process (tests). A real adapter arrives with the
-    # owner's provider account.
-    email_backend: Literal["console", "memory"] = "console"
+    # "memory" keeps it in process (tests); "smtp" sends through any SMTP
+    # submission server, always over TLS (stage 18; a Gmail app password for the
+    # beta, a provider's SMTP credentials later).
+    email_backend: Literal["console", "memory", "smtp"] = "console"
     email_from: str = Field(default="no-reply@example.invalid", max_length=254)
+    smtp_host: str | None = Field(default=None, max_length=253)
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    # "starttls" (port 587) or "tls" (implicit TLS, port 465). Never plaintext.
+    smtp_security: Literal["starttls", "tls"] = "starttls"
+    smtp_username: str | None = Field(default=None, max_length=254)
+    smtp_password: SecretStr | None = None
+    smtp_timeout_s: float = Field(default=15.0, gt=0, le=120)
+
+    # Invite-only sign-up (stage 18, D096): only emails on the invite list can
+    # create an account. Required in beta. Invites expire after this many days.
+    signup_invite_only: bool = False
+    invite_days: int = Field(default=30, ge=1, le=90)
 
     # Push notifications (stage 16, D093). "none" sends nothing (the default until
     # the owner's EAS project exists); "memory" is for tests; "expo" uses Expo's
@@ -187,27 +203,48 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _smtp_rules(self) -> Settings:
+        if self.email_backend == "smtp" and not self.smtp_host:
+            raise ValueError("the smtp email backend needs SMTP_HOST")
+        if (self.smtp_username is None) != (self.smtp_password is None):
+            raise ValueError("SMTP_USERNAME and SMTP_PASSWORD go together")
+        return self
+
+    @model_validator(mode="after")
     def _production_rules(self) -> Settings:
-        if self.app_env != "production":
+        """Rules for a server real people use: production, and the beta (D096)."""
+        if not self.is_deployed:
             return self
-        problems = []
-        if self.log_level == "DEBUG":
-            problems.append("DEBUG logging is not allowed in production")
-        if self.password_hash_profile == "test":  # noqa: S105 - a profile name
-            problems.append("the test password-hash profile is not allowed in production")
-        if self.email_backend in {"console", "memory"}:
-            problems.append("a real email backend is required in production")
-        if self.storage_backend in {"local", "memory"}:
-            problems.append("a private object-storage bucket is required in production")
-        if self.terms_version.startswith("draft-") or self.privacy_version.startswith("draft-"):
-            problems.append("terms and privacy documents need final (non-draft) versions in production")
-        # Stage 17: test-only backends and plain-HTTP browser origins never reach production.
-        if self.push_backend == "memory":
-            problems.append("the memory push backend is for tests only")
-        if self.payments_backend == "fake":
-            problems.append("the fake payments backend is for tests only")
-        if any(not origin.startswith("https://") for origin in self.cors_origins):
-            problems.append("CORS origins must be https in production")
+        env = self.app_env
+        versions = (self.terms_version, self.privacy_version)
+        checks = [
+            (self.log_level == "DEBUG", f"DEBUG logging is not allowed in {env}"),
+            (self.password_hash_profile == "test", f"the test password-hash profile is not allowed in {env}"),  # noqa: S105
+            (self.email_backend in {"console", "memory"}, f"a real email backend is required in {env}"),
+            # The beta may keep photos on the server's own disk; production needs the bucket.
+            (
+                self.storage_backend == "memory" or (self.storage_backend == "local" and env == "production"),
+                f"a private object-storage bucket is required in {env}",
+            ),
+            (
+                any(v.startswith("draft-") for v in versions),
+                f"terms and privacy documents need final (non-draft) versions in {env}",
+            ),
+            (
+                env == "production" and any(v.startswith("beta-") for v in versions),
+                "the beta notice is not the final terms and privacy notice",
+            ),
+            # Stage 17: test-only backends and plain-HTTP browser origins never reach a server.
+            (self.push_backend == "memory", "the memory push backend is for tests only"),
+            (self.payments_backend == "fake", "the fake payments backend is for tests only"),
+            (
+                any(not origin.startswith("https://") for origin in self.cors_origins),
+                f"CORS origins must be https in {env}",
+            ),
+            (env == "beta" and not self.signup_invite_only, "the beta is invite-only (SIGNUP_INVITE_ONLY=true)"),
+            (env == "beta" and self.payments_live, "no live payments in the beta"),
+        ]
+        problems = [problem for failed, problem in checks if failed]
         if problems:
             raise ValueError("; ".join(problems))
         return self
@@ -221,8 +258,13 @@ class Settings(BaseSettings):
         return self.app_env == "production"
 
     @property
+    def is_deployed(self) -> bool:
+        """A server real people use (beta or production): no fixtures, no dev mail."""
+        return self.app_env in {"beta", "production"}
+
+    @property
     def interactive_docs_enabled(self) -> bool:
-        return not self.is_production
+        return not self.is_deployed
 
 
 @lru_cache(maxsize=1)

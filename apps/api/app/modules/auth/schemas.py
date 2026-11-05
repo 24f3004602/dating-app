@@ -6,7 +6,7 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, EmailStr, Field, StringConstraints
+from pydantic import AfterValidator, EmailStr, Field, StringConstraints, TypeAdapter, ValidationError
 
 from app.schemas import ApiModel
 
@@ -17,6 +17,17 @@ def _lower(v: str) -> str:
 
 # Normalised: email-validator's checks, then the whole address lowercased.
 Email = Annotated[EmailStr, Field(max_length=254), AfterValidator(_lower)]
+_EMAIL: TypeAdapter[str] = TypeAdapter(Email)
+
+
+def normalize_email(raw: str) -> str:
+    """The API's normalisation, for command-line tools (the invite list)."""
+    try:
+        return _EMAIL.validate_python(raw.strip())
+    except ValidationError:
+        raise ValueError("not a valid email address") from None
+
+
 # Never stripped (spaces are valid password characters), never in reprs.
 # Length and quality rules are applied by the service (passwords.py).
 Password = Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=1024), Field(repr=False)]

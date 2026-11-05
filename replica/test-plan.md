@@ -145,6 +145,20 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | OPS-3 | release | config | production refuses the memory push backend, the fake payments backend and http CORS origins | refused | unit | pass |
 | OPS-4 | release | images | build both images; the API image refuses development settings by default; migrations run from it; API and worker start as uid 10001; `/readyz`; a breached password refused (the blocklist ships); the worker keeps running; the web image as uid 1000 sets the CSP and `X-Frame-Options`, and `/admin` redirects to sign-in on the server | as listed | CI (`images.yml`) | pass |
 | OPS-5 | release | brand | rebrand sweep over the shipped code | clean except two breached-password substrings (not brand use) | `sweep.py` | pass |
+| MAIL-1 | email | delivery | SMTP with STARTTLS: delivered with From, To, Subject, Date and Message-ID; the password is sent only after TLS | delivered; AUTH only over TLS | fake TLS server | pass |
+| MAIL-2 | email | delivery | SMTP with implicit TLS (port 465) | delivered | fake TLS server | pass |
+| MAIL-3 | email | security | a server that doesn't offer STARTTLS; an untrusted certificate | refused before AUTH; nothing sent | fake TLS server | pass |
+| MAIL-4 | email | privacy | a rejected recipient; a wrong password | errors name the error type and SMTP code only: no address, no password, no chained server reply | fake TLS server | pass |
+| MAIL-5 | email | security | CR or LF in a header | refused before connecting | unit | pass |
+| MAIL-6 | email | config | smtp without a host; a username without a password; the console sender on a beta server | refused | unit | pass |
+| BETA-1 | beta | config | `APP_ENV=beta` allows local photo storage and `beta-` documents; refuses no invite gate, the console sender, `draft-` documents, memory storage, live payments, memory push, http origins, DEBUG; production refuses local storage and `beta-` documents; no interactive docs in beta | as listed | unit | pass |
+| INV-1 | invites | privacy | sign-up without an invite | the usual 202; no account, no job, no email; audited without a user | API | pass (mutation-checked) |
+| INV-2 | invites | flow | an invited tester (address typed with spaces and capitals) signs up and verifies | account created; the invite is deleted | API | pass |
+| INV-3 | invites | expiry | an invite past 30 days; a re-invite | refused; then accepted | API | pass (mutation-checked) |
+| INV-4 | invites | privacy | what's stored | a 32-byte keyed hash, different under another key; no address | API | pass |
+| INV-5 | invites | retention | remove, count, the sweep at the expiry boundary | counts right; expired invites swept | API | pass |
+| INV-6 | invites | default | invite-only off (development, production default) | anyone can sign up | API | pass |
+| INV-7 | invites | CLI | `invite add` with a bad address or none | exit 2 | unit | pass |
 | BIL-1 | billing | guard | live keys without `PAYMENTS_LIVE`; the Razorpay backend without its secrets | the server refuses to start | unit | pass |
 | BIL-2 | billing | negative | payments not set up: checkout 503; webhooks refused | as listed | api | pass |
 | BIL-3 | billing | happy | checkout, then activated: entitled and renewing; a second checkout 409; a duplicate event and a late event change nothing; cancel stops renewal once and keeps what was paid; cancelled after the period: not entitled; cancel again 409 | as listed (mutation: no stale check caught) | api | pass |

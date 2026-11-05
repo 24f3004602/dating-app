@@ -16,7 +16,7 @@ from sqlalchemy import func, or_, select, text, update
 
 from app.modules.accounts.models import Consent, ConsentKind, User, UserStatus
 from app.modules.audit.models import AuditLog
-from app.modules.auth.models import CodePurpose, OneTimeCode, Session, SessionClient
+from app.modules.auth.models import CodePurpose, OneTimeCode, Session, SessionClient, SignupInvite
 from app.modules.auth.service import local_today
 from app.modules.discovery.models import Block, DailyPick, Interaction, InteractionKind, Match, Preferences
 from app.modules.media.models import Photo
@@ -477,6 +477,9 @@ async def test_the_retention_sweep_applies_each_rule_at_its_boundary(
         DeletedAccount(user_id=uuid.uuid4(), deleted_at=ago(days=400), was_banned=False, keep_until=ago(days=35)),
         DeletedAccount(user_id=uuid.uuid4(), deleted_at=ago(days=300), was_banned=False,
                        keep_until=now + timedelta(days=65)),
+        SignupInvite(email_digest=secrets.token_bytes(32), created_at=ago(days=30), expires_at=ago(seconds=1)),
+        SignupInvite(email_digest=secrets.token_bytes(32), created_at=ago(days=30),
+                     expires_at=now + timedelta(seconds=1)),
     )  # fmt: skip
     await add(db, Consent(user_id=pending_old.id, kind=ConsentKind.terms, version="draft-2026-11"))
     async with db() as s:
@@ -497,7 +500,7 @@ async def test_the_retention_sweep_applies_each_rule_at_its_boundary(
     assert counts == {
         "closed_matches": 1, "daily_picks": 1, "sessions": 2, "codes": 1, "unverified_accounts": 1,
         "reporter_links": 1, "reports": 1, "deleted_account_records": 1, "audit_records": 2, "staff_enrollments": 0,
-        "payment_events": 0,
+        "payment_events": 0, "signup_invites": 1,
     }  # fmt: skip
 
     assert await count(db, Match, Match.id == old) == 0

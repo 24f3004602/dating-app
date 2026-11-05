@@ -40,7 +40,7 @@ from app.modules.accounts.models import Consent, User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.audit.service import record
 from app.modules.auth.crypto import banned_email_digest
-from app.modules.auth.models import OneTimeCode, Session
+from app.modules.auth.models import OneTimeCode, Session, SignupInvite
 from app.modules.auth.service import AuthContext, banned_email_key, local_today, revoke_all_sessions
 from app.modules.billing import service as billing
 from app.modules.discovery.models import DailyPick, Match, MatchCloseReason
@@ -218,6 +218,7 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
         session, delete(OneTimeCode).where(OneTimeCode.expires_at < now - retention.EXPIRED_CODE)
     )
     counts["payment_events"] = await billing.purge_events(session, now)
+    counts["signup_invites"] = await _count(session, delete(SignupInvite).where(SignupInvite.expires_at < now))
     ended_token = now - retention.ENDED_ENROLLMENT
     counts["staff_enrollments"] = await _count(
         session,

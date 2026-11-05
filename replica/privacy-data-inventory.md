@@ -45,6 +45,7 @@ this table together.
 | push tickets (stage 16) | checking delivery and dropping dead tokens | system | `push_tickets` (receipt ID, token) | nobody | until checked, at most 24 hours | expire |
 | staff console cookies (stage 14b) | keeping a staff member signed in to the console | system | the staff member's browser: `__Host-staff` (the session token) and `__Host-staff-step` (the sign-in challenge), HttpOnly, Secure, SameSite=Strict | nobody else; page scripts can't read them | until the session ends (12 hours at most) or sign-out; the challenge 5 minutes | cleared at sign-out; the API revokes the session |
 | staff sign-in challenges | the step between password and code | system | Redis: SHA-256 of the challenge, the user ID, the attempt count, a pending secret (encrypted) | nobody | 5 minutes, or until used | expire |
+| beta invite list (stage 18, D096) | invite-only sign-up | the owner, from the testers' addresses | `signup_invites`: an HMAC-SHA256 of the normalised email and its expiry, never the address | nobody (it can be checked, not read) | until the email is verified, or 30 days | already gone once the email is verified |
 | one-time codes | verification | system | `one_time_codes` (HMAC only, plus attempts); the plaintext exists only in worker memory and the email | nobody | 1 day after expiry | deleted |
 | daily picks (candidate, rank, distance bucket) | discovery | system | `daily_picks` | the viewer | 7 days | the account leaves everyone's sets at the request; deleted |
 | discovery preferences (age range, distance bucket) | discovery | member | `preferences` | the member | while the account exists | deleted |
@@ -101,8 +102,8 @@ Residual gaps:
 
 | processor type | data shared | status |
 | --- | --- | --- |
-| email delivery | email address, code or notice text | **not chosen yet** (owner). Development prints mail to the worker's console; tests keep it in memory. Check the chosen provider's log retention, which we cannot erase, and list it in the privacy notice |
-| cloud host, database, object storage | everything above, encrypted at rest by the provider | to choose. India region preferred. Backups: 30-day rolling |
+| email delivery | email address, code or notice text | **beta: Gmail over SMTP** (a dedicated account, owner's choice, D096); the adapter works with any SMTP provider. Gmail keeps a copy in the account's Sent folder: delete it with the beta data. Launch: a provider with our own domain; check its log retention, which we cannot erase, and list it in the privacy notice |
+| cloud host, database, object storage | everything above, encrypted at rest by the provider | **beta: one Amazon Lightsail server in Mumbai** (owner's choice, D096); photos on its disk; everything deleted when the test ends. Launch: to choose, India region. Backups: 30-day rolling |
 | push delivery: Expo push service, then Apple (APNs) and Google (FCM) | the push token and the discreet text ("You have a new message."), never names, message text or IDs | **not connected** (needs the owner's EAS project and credentials); the adapter is built and tested against a fake server. Expo's own retention of tickets is a day; check its privacy terms before connecting |
 | payments: Razorpay (website) | nothing from us about the member: they enter their payment details in Razorpay's own checkout; we keep only the subscription ID | **not connected** (needs the owner's account and KYC). Razorpay holds payment data under its own terms and RBI rules; check them, and invoicing and GST, before going live (D094) |
 | later: SMS, verification vendor, error tracking | only what each needs | each requires a review and an inventory row before use |

@@ -48,6 +48,55 @@ def test_production_rejects_test_backends_and_plain_http_origins(extra: dict[str
         settings_from({"APP_ENV": "production", **extra})
 
 
+BETA = {
+    "APP_ENV": "beta",
+    "EMAIL_BACKEND": "smtp",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SIGNUP_INVITE_ONLY": True,
+    "TERMS_VERSION": "beta-2026-11",
+    "PRIVACY_VERSION": "beta-2026-11",
+    "CORS_ORIGINS": ["https://app.example.in"],
+}
+
+
+def test_a_beta_server_may_keep_photos_on_its_disk_and_use_the_beta_notice() -> None:
+    s = settings_from(BETA)
+    assert s.is_deployed
+    assert not s.is_production
+    assert s.storage_backend == "local"
+    assert not s.interactive_docs_enabled
+
+
+@pytest.mark.parametrize(
+    ("change", "problem"),
+    [
+        ({"SIGNUP_INVITE_ONLY": False}, "the beta is invite-only"),
+        ({"EMAIL_BACKEND": "console"}, "a real email backend is required in beta"),
+        ({"TERMS_VERSION": "draft-2026-11"}, r"need final \(non-draft\) versions in beta"),
+        ({"STORAGE_BACKEND": "memory"}, "a private object-storage bucket is required in beta"),
+        ({"PAYMENTS_LIVE": True}, "no live payments in the beta"),
+        ({"PUSH_BACKEND": "memory"}, "the memory push backend is for tests only"),
+        ({"CORS_ORIGINS": ["http://app.example.in"]}, "CORS origins must be https in beta"),
+        ({"LOG_LEVEL": "DEBUG"}, "DEBUG logging is not allowed in beta"),
+    ],
+)
+def test_a_beta_server_keeps_every_other_production_rule(change: dict[str, object], problem: str) -> None:
+    with pytest.raises(ValidationError, match=problem):
+        settings_from({**BETA, **change})
+
+
+@pytest.mark.parametrize(
+    ("change", "problem"),
+    [
+        ({}, "a private object-storage bucket is required in production"),
+        ({}, "the beta notice is not the final terms and privacy notice"),
+    ],
+)
+def test_production_refuses_the_beta_allowances(change: dict[str, object], problem: str) -> None:
+    with pytest.raises(ValidationError, match=problem):
+        settings_from({**BETA, "APP_ENV": "production", **change})
+
+
 @pytest.mark.parametrize("role", ["App", "drop table", "x;y", ""])
 def test_runtime_role_must_be_a_plain_identifier(role: str) -> None:
     with pytest.raises(ValidationError, match="db_runtime_role"):
@@ -61,7 +110,9 @@ async def test_openapi_is_served_under_v1(client: AsyncClient) -> None:
     assert (await client.get("/openapi.json")).status_code == 404
 
 
-@pytest.mark.parametrize(("env", "docs_status"), [("development", 200), ("test", 200), ("production", 404)])
+@pytest.mark.parametrize(
+    ("env", "docs_status"), [("development", 200), ("test", 200), ("beta", 404), ("production", 404)]
+)
 async def test_interactive_docs_only_outside_production(test_db: MigratedDatabase, env: str, docs_status: int) -> None:
     application = create_app(test_db.settings.model_copy(update={"app_env": env}), configure_logs=False)
     try:

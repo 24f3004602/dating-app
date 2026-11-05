@@ -83,3 +83,20 @@ class OneTimeCode(CreatedAtMixin, Base):
     expires_at: Mapped[datetime] = mapped_column(index=True)
     consumed_at: Mapped[datetime | None]
     attempts: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
+
+
+class SignupInvite(Base):
+    """Invite-only sign-up (stage 18, D096). Only an HMAC of the normalised
+    email is kept (like banned emails), so the list can be checked but not read.
+    Removed when the invited person verifies their email, or when it expires."""
+
+    __tablename__ = "signup_invites"
+    __table_args__ = (
+        CheckConstraint("octet_length(email_digest) = 32", name="email_digest_length"),
+        CheckConstraint("expires_at > created_at", name="expires_after_created"),
+        Index("ix_signup_invites_expires_at", "expires_at"),
+    )
+
+    email_digest: Mapped[bytes] = mapped_column(LargeBinary, primary_key=True)
+    created_at: Mapped[datetime]
+    expires_at: Mapped[datetime]
