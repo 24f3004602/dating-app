@@ -350,6 +350,7 @@ All 17 stages are done. What comes next depends on the owner's decisions (deploy
 3. **Legal documents:** terms and privacy notice, with legal review. Production refuses the current `draft-2026-11` versions (D044).
 4. **Object storage** (needed before any real photo): a private bucket in an India region, for example S3 in ap-south-1 or Cloudflare R2, with an access key for the app. I then add and test the adapter with presigned GETs (D053).
 5. SMS stays off until India DLT registration (entity, sender ID, templates) and an SMS provider exist (D012).
+6. **Name:** Haanji failed screening on 2026-11-05: a matrimonial service (Radio Haanji's "Haanji Rishte") and a relationships check-in app use it, and every domain is taken. The lean is Kinaara (kinaara.in and kinaara.app are free). Next: the owner runs the IP India search (it needs a sign-in), then an attorney's opinion (`brand.md`).
 
 ## Next
 
