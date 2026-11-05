@@ -5,13 +5,14 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.errors import ApiError
 from app.modules.accounts.models import User
+from app.modules.auth.deps import client_ip
 from app.schemas import ApiModel
 
 router = APIRouter(prefix="/v1/_probe")
@@ -25,6 +26,11 @@ class ProbeIn(ApiModel):
 
 class ProbeOut(ApiModel):
     ok: bool
+
+
+@router.get("/ip")
+async def ip(request: Request) -> dict[str, str]:
+    return {"ip": client_ip(request)}
 
 
 @router.post("/echo")

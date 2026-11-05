@@ -26,7 +26,8 @@ AuthCtx = Annotated[service.AuthContext, Depends(auth_context)]
 
 
 def client_ip(request: Request) -> str:
-    # Behind a proxy this must come from a trusted forwarded header (stage 17).
+    # Uvicorn has already applied X-Forwarded-For if, and only if, it came
+    # from a trusted proxy (TRUSTED_PROXIES; cli.server_config).
     return request.client.host if request.client else "unknown"
 
 

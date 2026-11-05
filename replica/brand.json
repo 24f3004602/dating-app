@@ -1,0 +1,6 @@
+{
+  "_about": "Rebrand sweep config (replica-brand sweep.py, run by the stage 17 preflight). Names and domains of the apps studied in recon.md, which must never appear in shipped code. No colours: recon recorded none, and guessing their brand values would be inventing data.",
+  "avoid": ["Tinder", "Bumble", "Hinge", "Match Group", "TrulyMadly", "QuackQuack", "Aisle"],
+  "domains": ["tinder.com", "gotinder.com", "bumble.com", "hinge.co"],
+  "colors": []
+}

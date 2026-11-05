@@ -1,0 +1,112 @@
+# Container images (stage 17): built and smoke-tested here, never pushed or
+# deployed. A deployment needs the owner's authorization (CLAUDE.md).
+name: images
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/api/**", "apps/web/**", "replica/design/tokens.json", "package-lock.json", ".dockerignore", ".github/workflows/images.yml"]
+  pull_request:
+    paths: ["apps/api/**", "apps/web/**", "replica/design/tokens.json", "package-lock.json", ".dockerignore", ".github/workflows/images.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust  # ephemeral CI container; app roles get random passwords
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DB_RUNTIME_ROLE: app_runtime
+      REDIS_URL: redis://localhost:6379/0
+      BOOTSTRAP_ADMIN_URL: postgresql://postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.25"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Generate per-run secrets
+        run: |
+          owner=$(openssl rand -hex 24); runtime=$(openssl rand -hex 24); app_secret=$(openssl rand -hex 32)
+          echo "::add-mask::$owner"; echo "::add-mask::$runtime"; echo "::add-mask::$app_secret"
+          echo "APP_SECRET_KEY=${app_secret}" >> "$GITHUB_ENV"
+          echo "DATABASE_URL=postgresql+psycopg://app_runtime:${runtime}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+          echo "MIGRATIONS_DATABASE_URL=postgresql+psycopg://app_owner:${owner}@localhost:5432/datingapp" >> "$GITHUB_ENV"
+
+      - name: Database roles (from the checkout; the image has no bootstrap script)
+        working-directory: apps/api
+        run: uv sync --locked && uv run python scripts/bootstrap_db.py
+
+      - name: Build the API image
+        run: docker build -t datingapp-api:ci apps/api
+
+      - name: The image defaults to production and refuses development settings
+        run: |
+          if docker run --rm --network host -e DATABASE_URL -e REDIS_URL -e APP_SECRET_KEY datingapp-api:ci \
+               python -c "from app.config import get_settings; get_settings()" 2> refused.txt; then
+            echo "expected production to refuse the console email backend and draft documents" && exit 1
+          fi
+          grep -q "a real email backend is required in production" refused.txt
+
+      - name: Migrations run from the image (owner role)
+        run: |
+          docker run --rm --network host -e APP_ENV=development -e DATABASE_URL -e MIGRATIONS_DATABASE_URL \
+            -e REDIS_URL -e APP_SECRET_KEY -e DB_RUNTIME_ROLE datingapp-api:ci alembic upgrade head
+
+      - name: API and worker start, run as non-root, and answer
+        run: |
+          common="--network host -e APP_ENV=development -e DATABASE_URL -e REDIS_URL -e APP_SECRET_KEY -e DB_RUNTIME_ROLE -e STORAGE_BACKEND=memory -e EMAIL_BACKEND=memory"
+          test "$(docker run --rm datingapp-api:ci id -u)" = "10001"
+          docker run -d --name api $common datingapp-api:ci
+          docker run -d --name worker $common datingapp-api:ci datingapp-api worker
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/healthz > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:8000/readyz
+          # The breached-password list ships in the image: a long but breached password is refused.
+          code=$(curl -s -X POST http://127.0.0.1:8000/v1/auth/register -H 'content-type: application/json' \
+            -d '{"email":"smoke@example.com","password":"nothingelsematters","birthdate":"1990-01-01","consents":{"terms":"draft-2026-11","privacy":"draft-2026-11"}}' \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['code'])")
+          test "$code" = "weak_password"
+          sleep 5 && test "$(docker inspect -f '{{.State.Running}}' worker)" = "true"
+          docker logs worker 2>&1 | tail -5
+
+      - name: Build the web image
+        run: docker build -f apps/web/Dockerfile -t datingapp-web:ci .
+
+      - name: Web starts as non-root, sets its policy and protects the console on the server
+        run: |
+          test "$(docker run --rm datingapp-web:ci id -u)" = "1000"
+          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e PORT=3000 datingapp-web:ci
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/ > /dev/null && break; sleep 1; done
+          curl -s -D headers.txt -o /dev/null http://127.0.0.1:3000/
+          grep -qi "content-security-policy: default-src 'self'; script-src 'self' 'nonce-" headers.txt
+          grep -qi "x-frame-options: DENY" headers.txt
+          test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://127.0.0.1:3000/admin)" = "307 http://127.0.0.1:3000/admin/login"
+
+      - name: Logs on failure
+        if: failure()
+        run: for c in api worker web; do echo "== $c"; docker logs $c 2>&1 | tail -40 || true; done

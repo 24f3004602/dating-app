@@ -15,6 +15,7 @@ import dataclasses
 import io
 import logging
 import sys
+import time
 import uuid
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
@@ -74,8 +75,18 @@ def recreate_database(owner_url: str, name: str) -> None:
 def drop_database(owner_url: str, name: str) -> None:
     if not name.endswith("_test"):
         raise RuntimeError(f"refusing to drop {name!r}")
-    with psycopg.connect(plain(with_database(owner_url, "postgres")), autocommit=True) as conn:
-        conn.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(name)))
+    # FORCE ends the owner's own sessions; the runtime role's (a worker pool
+    # that has just closed) can take a moment to go, and the owner may not
+    # terminate them, so wait briefly rather than grant it more (stage 17).
+    for attempt in range(20):
+        try:
+            with psycopg.connect(plain(with_database(owner_url, "postgres")), autocommit=True) as conn:
+                conn.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(name)))
+            return
+        except psycopg.errors.InsufficientPrivilege:
+            if attempt == 19:
+                raise
+            time.sleep(0.25)
 
 
 def alembic_config(owner_url: str, runtime_role: str) -> Config:

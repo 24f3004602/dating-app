@@ -1,0 +1,12 @@
+# Never in the image: local environments, secrets, caches, test data.
+.venv
+.env
+.env.*
+!.env.example
+var
+tests
+scripts
+**/__pycache__
+.mypy_cache
+.ruff_cache
+.pytest_cache

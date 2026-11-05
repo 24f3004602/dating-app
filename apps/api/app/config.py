@@ -6,6 +6,7 @@ has a production default for a secret: production must set every value.
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from functools import lru_cache
 from typing import Literal
@@ -51,6 +52,11 @@ class Settings(BaseSettings):
     # admin console). Exact origins only; empty means no CORS at all. The
     # mobile app is not a browser and needs none.
     cors_origins: list[str] = Field(default_factory=list)
+
+    # Proxies whose X-Forwarded-For uvicorn believes (stage 17): the load
+    # balancer, and the console's server. Addresses or networks, never "*".
+    # Empty means forwarded headers are ignored and the client IP is the socket's.
+    trusted_proxies: list[str] = Field(default_factory=list)
 
     # Server secret for keyed hashes (one-time codes, rate-limit keys). At
     # least 32 characters; rotating it invalidates live codes only.
@@ -151,6 +157,16 @@ class Settings(BaseSettings):
                 raise ValueError("CORS origins must be exact http(s) origins, never '*'")
         return v
 
+    @field_validator("trusted_proxies")
+    @classmethod
+    def _proxy_addresses(cls, v: list[str]) -> list[str]:
+        for entry in v:
+            try:
+                ipaddress.ip_network(entry, strict=False)
+            except ValueError as exc:
+                raise ValueError("trusted proxies are IP addresses or networks, never '*'") from exc
+        return v
+
     @field_validator("app_timezone")
     @classmethod
     def _known_timezone(cls, v: str) -> str:
@@ -185,6 +201,13 @@ class Settings(BaseSettings):
             problems.append("a private object-storage bucket is required in production")
         if self.terms_version.startswith("draft-") or self.privacy_version.startswith("draft-"):
             problems.append("terms and privacy documents need final (non-draft) versions in production")
+        # Stage 17: test-only backends and plain-HTTP browser origins never reach production.
+        if self.push_backend == "memory":
+            problems.append("the memory push backend is for tests only")
+        if self.payments_backend == "fake":
+            problems.append("the fake payments backend is for tests only")
+        if any(not origin.startswith("https://") for origin in self.cors_origins):
+            problems.append("CORS origins must be https in production")
         if problems:
             raise ValueError("; ".join(problems))
         return self

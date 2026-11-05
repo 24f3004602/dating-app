@@ -35,6 +35,19 @@ def test_production_rejects_debug_logging() -> None:
         settings_from({"APP_ENV": "production", "LOG_LEVEL": "DEBUG"})
 
 
+@pytest.mark.parametrize(
+    ("extra", "problem"),
+    [
+        ({"PUSH_BACKEND": "memory"}, "the memory push backend is for tests only"),
+        ({"PAYMENTS_BACKEND": "fake"}, "the fake payments backend is for tests only"),
+        ({"CORS_ORIGINS": ["http://console.example.in"]}, "CORS origins must be https in production"),
+    ],
+)
+def test_production_rejects_test_backends_and_plain_http_origins(extra: dict[str, object], problem: str) -> None:
+    with pytest.raises(ValidationError, match=problem):
+        settings_from({"APP_ENV": "production", **extra})
+
+
 @pytest.mark.parametrize("role", ["App", "drop table", "x;y", ""])
 def test_runtime_role_must_be_a_plain_identifier(role: str) -> None:
     with pytest.raises(ValidationError, match="db_runtime_role"):

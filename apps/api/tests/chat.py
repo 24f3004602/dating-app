@@ -57,8 +57,8 @@ async def history(client: AsyncClient, who: Member, match_id: uuid.UUID, **param
 class LiveServer:
     """The app served by real uvicorn (the production settings) on this event loop."""
 
-    def __init__(self, app: FastAPI) -> None:
-        self.server = uvicorn.Server(server_config(app, host="127.0.0.1", port=0, lifespan="off"))
+    def __init__(self, app: FastAPI, **config: Any) -> None:
+        self.server = uvicorn.Server(server_config(app, host="127.0.0.1", port=0, lifespan="off", **config))
         self.task: asyncio.Task[None] | None = None
 
     async def __aenter__(self) -> LiveServer:

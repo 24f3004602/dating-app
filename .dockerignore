@@ -1,0 +1,13 @@
+# Root build context (the web image builds from here): only what it needs.
+**/node_modules
+**/.next
+**/.venv
+**/.env
+**/.env.*
+!**/.env.example
+.git
+apps/api
+apps/mobile/dist
+apps/mobile/.expo
+e2e/test-results
+e2e/.run

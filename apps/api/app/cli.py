@@ -201,15 +201,23 @@ def _worker_command(_: argparse.Namespace) -> int:
     return 0
 
 
-def server_config(app: Any, *, host: str, port: int, **kw: Any) -> uvicorn.Config:
-    """The uvicorn settings the API runs with (the tests use them too)."""
+def server_config(
+    app: Any, *, host: str, port: int, trusted_proxies: list[str] | None = None, **kw: Any
+) -> uvicorn.Config:
+    """The uvicorn settings the API runs with (the tests use them too).
+
+    Forwarded headers count only from `trusted_proxies` (TRUSTED_PROXIES); with
+    none, the client IP is the socket's, so nobody can pick their own IP to
+    dodge the per-IP rate limits.
+    """
     return uvicorn.Config(
         app,
         host=host,
         port=port,
         access_log=False,  # our middleware writes a privacy-safe access log
         log_config=None,  # keep our logging configuration
-        proxy_headers=False,
+        proxy_headers=bool(trusted_proxies),
+        forwarded_allow_ips=list(trusted_proxies) if trusted_proxies else [],
         # Realtime (D074): clients only ever send tiny frames; hints are tiny
         # too, so compression buys nothing. Protocol pings drop dead clients.
         ws="websockets-sansio",
@@ -222,7 +230,13 @@ def server_config(app: Any, *, host: str, port: int, **kw: Any) -> uvicorn.Confi
 
 
 def _serve_command(args: argparse.Namespace) -> int:
-    config = server_config("app.main:create_app", host=args.host, port=args.port, factory=True)
+    config = server_config(
+        "app.main:create_app",
+        host=args.host,
+        port=args.port,
+        factory=True,
+        trusted_proxies=get_settings().trusted_proxies,
+    )
     run_async(uvicorn.Server(config).serve)
     return 0
 
