@@ -5,7 +5,7 @@ Updated: 2026-11-05
 ## Current phase
 
 Stage 13 (design system) **done for the web build**:
-- 103 mobile tests pass, and all four e2e specs passed in each of 2 local runs, including the new gallery spec. CI is pending.
+- Passed CI (mobile run 41974905121): 103 mobile tests and all four e2e specs, which also passed 2 local runs, including the new gallery spec.
 - The contrast check reports 26 pairs, 0 failing AA.
 - VoiceOver, TalkBack and large system text still need a native device pass.
 
