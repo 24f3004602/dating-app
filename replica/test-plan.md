@@ -76,6 +76,24 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | MAT-E1 | match | edge | like notes and items: someone else's photo, a pending photo, an unanswered prompt, both, over 150, a pass with a note; a valid prompt like | 422 each; the note and prompt shown in likes received | api | pass |
 | MAT-A1 | access | edge | match keeps profiles and photos visible after the day; a block hides the match and both profiles; `liked_only` seen only after liking | as listed | api | pass |
 | MOB-6 | mobile | screen | like with note, pass without, match state, like limit and already-decided messages, likes received, matches | as listed | jest + RNTL | pass |
+| MSG-N1 | chat | negative | a stranger, an unknown match ID, no session | 404 on send, history, read and the match; 401 | api | pass |
+| MSG-N2 | chat | negative | the match closed, a block either way, the partner suspended or leaving | 404 everywhere; the match leaves the list; nothing stored | api | pass |
+| MSG-V1 | chat | negative | empty, blank, 2,001 characters, control and bidi characters, bad or missing ID, an extra field; Devanagari with a joiner | 422 each; the last is stored | api | pass |
+| MSG-P1 | chat | edge | pages: latest, `before`, `after`, both (422), limits | correct numbers and `has_more` | api | pass |
+| MSG-R1 | chat | negative | 31 sends in a minute | the 31st is 429 | api | pass |
+| MSG-L1 | privacy | negative | message text in logs | absent | api | pass |
+| MSG-T1 | chat | edge | five chats awaiting reply, then a like; a pass; reply, then like; old and blocked chats | 409 `your_turn_limit` with `waiting`; pass allowed; like allowed; not counted | api | pass |
+| MSG-U1 | chat | edge | nudge flags: case, fullwidth, phrases, whole words, Devanagari; the money tip only for the recipient | as listed; nothing blocked | api | pass |
+| MSG-C1 | chat | concurrency | both people send at once, each message twice (double tap), while a reader polls `after=`; then without the match row lock | numbers 1..N, no gap or duplicate, one row per message, the reader never sees a gap; without the lock, sends collide (500) | concurrency + mutation | pass |
+| RT-1 | realtime | happy | hints to both people across two API processes; read pointer hint to my devices only; a mutual like announced to both | IDs only, no text; no read receipts | real uvicorn + ws | pass |
+| RT-2 | realtime | negative | ticket reused, expired, garbage, empty, oversized, of a signed-out session; ticket without a session | handshake refused (403); 401 | real uvicorn + ws; mutation (GET instead of GETDEL) caught | pass |
+| RT-3 | realtime | edge | disconnect, two messages meanwhile, reconnect, catch up `after=`, then live | nothing lost or duplicated | real uvicorn + ws | pass |
+| RT-4 | realtime | negative | a block, then the other person sends | 404, and no hint | real uvicorn + ws | pass |
+| RT-5 | realtime | negative | sign out on one device; sign out everywhere | that session's connection closes 4401, the other stays; then 4401 | real uvicorn + ws | pass |
+| RT-6 | realtime | negative | session revoked or account suspended without an event | closed 4401 at the next re-check | real uvicorn + ws | pass |
+| RT-7 | realtime | edge | heartbeats; a third connection with a cap of 2; a slot freed | ping; 4429; accepted | real uvicorn + ws | pass |
+| RT-8 | realtime | edge | a flooding client; Redis drops the subscriber; Redis resubscribes | 1008; 1012 then recovery; `resync` | real uvicorn + ws | pass |
+| RT-9 | privacy | negative | handshake logs | no ticket, no query string, no full IP; one `realtime.closed` record | real uvicorn + ws | pass |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
@@ -93,11 +111,11 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | F04-E1 | match | edge | A and B like each other simultaneously (parallel, 50 rounds) | exactly one match every round | concurrency | pass (MAT-C1) |
 | F04-N1 | match | negative | like yourself, or a blocked, paused, ineligible or deleted user | rejected; no match | api | pass |
 | F04-N2 | match | negative | exceed the daily like limit | 429 with code `like_limit` | api | pass |
-| F05-H1 | chat | happy | send, receive, paginate, read | ordered history; unread counts correct | api | planned |
-| F05-E1 | chat | edge | resend with the same `client_message_id`; double tap | one stored message | api | planned |
-| F05-E2 | chat | edge | drop the WebSocket, send meanwhile, reconnect | REST catch-up; nothing lost or duplicated | api + ws | planned |
-| F05-N1 | chat | negative | a non-participant reads or sends; a stale (unmatched) match; a blocked pair | all refused | api | planned |
-| F05-N2 | chat | negative | reuse or expire a realtime ticket | connection refused | ws | planned |
+| F05-H1 | chat | happy | send, receive, paginate, read | ordered history; unread counts correct | api | pass |
+| F05-E1 | chat | edge | resend with the same `client_message_id`; double tap | one stored message | api | pass (MSG-C1 for concurrent taps) |
+| F05-E2 | chat | edge | drop the WebSocket, send meanwhile, reconnect | REST catch-up; nothing lost or duplicated | api + ws | pass (RT-3) |
+| F05-N1 | chat | negative | a non-participant reads or sends; a stale (unmatched) match; a blocked pair | all refused | api | pass (MSG-N1, MSG-N2) |
+| F05-N2 | chat | negative | reuse or expire a realtime ticket | connection refused | ws | pass (RT-2) |
 | F06-H1 | safety | happy | block, then probe every path (discovery, profile, media, likes, matches, messages, realtime) | invisible and unreachable on each path | api | planned |
 | F06-H2 | safety | happy | report a message | reporter sees the status; it appears in the moderation queue | api | planned |
 | F07-H1 | pause | happy | pause discovery | absent from other sets; existing chats keep working | api | planned |
@@ -153,3 +171,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | owner's laptop | `uv run pytest` (stage 9); matching tests 3 runs; mutation without the pair lock | 244 passed; 14/14 each run; the mutation run missed a match (as expected) |
 | 2026-11-04 | same | `npm test` in `apps/mobile`; e2e (2 runs) | 49 passed; e2e passed (like with a note, matches and likes empty states) |
 | 2026-11-04 | GitHub Actions api run 41872861914 and mobile run 41872861907 on `c3b5da9` (stage 9) | both workflows | 244 passed (incl. MAT-C1 on Ubuntu); mobile checks and e2e passed |
+| 2026-11-05 | owner's laptop | `uv run pytest` (stage 10a); realtime tests 3 runs; mutations: no send lock, reusable tickets | 285 passed; 13/13 each run; both mutations caught |
+| 2026-11-05 | same | `npm test` in `apps/mobile` with the regenerated API types | 49 passed (one cold run timed out 4 tests at 30 s; three reruns passed in 7 s) |

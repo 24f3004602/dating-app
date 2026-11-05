@@ -41,13 +41,14 @@ ALLOWED_FIELDS = frozenset(
         "constraint",
         "count",
         "revision",
+        "close_code",
     }
 )
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _BEARER = re.compile(r"(?i)\b(bearer)(\s+)[^\s,;'\"]+")
 _SECRET_ASSIGN = re.compile(
-    r"(?i)\b(authorization|token|password|secret|code)(\s*[:=]\s*)(?!bearer\b|<redacted>)[^\s,;'\"]+"
+    r"(?i)\b(authorization|token|password|secret|code|ticket)(\s*[:=]\s*)(?!bearer\b|<redacted>)[^\s,;'\"]+"
 )
 # Opaque tokens and digests: 32+ URL-safe characters including a digit (so
 # long code identifiers in tracebacks survive). A canonical UUID standing on
@@ -120,9 +121,26 @@ class ScrubbingTextFormatter(logging.Formatter):
 QUIET_LOGGERS = ("sqlalchemy", "psycopg", "alembic.runtime.migration", "httpx", "httpcore")
 
 
+class DropUvicornWebSocketAccess(logging.Filter):
+    """Uvicorn logs every WebSocket handshake with the full client address and
+    the query string (a realtime ticket), and at DEBUG the websockets library
+    dumps request lines, headers and frames through the same logger. The
+    realtime router writes its own privacy-safe record instead
+    (`realtime.closed`)."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno < logging.INFO:
+            return False
+        return not (isinstance(record.msg, str) and record.msg.startswith('%s - "WebSocket '))
+
+
+UVICORN_WS_FILTER = DropUvicornWebSocketAccess()
+
+
 def quiet_library_loggers() -> None:
     for name in QUIET_LOGGERS:
         logging.getLogger(name).setLevel(logging.WARNING)
+    logging.getLogger("uvicorn.error").addFilter(UVICORN_WS_FILTER)  # idempotent
 
 
 def configure_logging(level: str = "INFO", json_output: bool = True) -> None:

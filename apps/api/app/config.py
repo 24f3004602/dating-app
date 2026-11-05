@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     session_touch_interval_s: int = Field(default=900, ge=60)
     # Consecutive failed logins before password sign-in is locked until a reset.
     login_lockout_threshold: int = Field(default=100, ge=10, le=100)
+    # Namespace for every Redis key and channel (rate limits and realtime).
     rate_limit_prefix: str = Field(default="rl", pattern=r"^[a-z0-9:_-]{1,40}$")
 
     # Versions of the documents a member accepts at sign-up. "draft-" versions
@@ -99,6 +100,16 @@ class Settings(BaseSettings):
     discovery_set_size: int = Field(default=15, ge=1, le=50)
     # The same for every member, never sold (D015, fixes.md differentiator 3).
     daily_like_limit: int = Field(default=10, ge=1, le=50)
+    # Messaging (stage 10, D073): likes pause while this many chats await your
+    # reply (the other person wrote last, within the window).
+    your_turn_cap: int = Field(default=5, ge=1, le=50)
+    your_turn_window_days: int = Field(default=7, ge=1, le=60)
+    # Realtime (D025, D074): single-use tickets, heartbeats, re-checks of the
+    # session behind a long-lived connection, connections per member.
+    realtime_ticket_ttl_s: int = Field(default=30, ge=5, le=120)
+    realtime_heartbeat_s: float = Field(default=25.0, gt=0, le=60)
+    realtime_revalidate_s: float = Field(default=120.0, gt=0, le=900)
+    realtime_max_connections: int = Field(default=5, ge=1, le=20)
     # Upload requests may exceed the general body limit (multipart overhead included).
     max_upload_body_bytes: int = Field(default=11 * 1024 * 1024, ge=1024)
 

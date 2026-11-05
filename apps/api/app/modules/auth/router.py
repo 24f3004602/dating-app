@@ -16,6 +16,13 @@ from app.modules.auth.schemas import (
     VerifyEmailIn,
 )
 from app.openapi import problems
+from app.realtime import RealtimeHub
+
+
+def _hub(request: Request) -> RealtimeHub:
+    hub: RealtimeHub = request.app.state.realtime
+    return hub
+
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"], responses=problems(422, 429, 503))
 
@@ -52,16 +59,18 @@ async def login(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, responses=problems(401), summary="End this session")
-async def logout(auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
+async def logout(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.logout(db, auth.session, ctx.clock())
+    await _hub(request).revoke(auth.user.id, auth.session.id)  # closes this session's realtime connections
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(
     "/logout-all", status_code=status.HTTP_204_NO_CONTENT, responses=problems(401), summary="End every session"
 )
-async def logout_all(auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
+async def logout_all(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.logout_all(db, auth.user.id, ctx.clock())
+    await _hub(request).revoke(auth.user.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -81,6 +90,9 @@ async def request_password_reset(body: EmailIn, ctx: AuthCtx, db: DbSession, ip:
     responses=problems(400),
     summary="Set a new password with the code; signs out every session",
 )
-async def confirm_password_reset(body: PasswordResetConfirmIn, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> Response:
-    await service.confirm_password_reset(ctx, db, body, ip)
+async def confirm_password_reset(
+    body: PasswordResetConfirmIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp
+) -> Response:
+    user_id = await service.confirm_password_reset(ctx, db, body, ip)
+    await _hub(request).revoke(user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

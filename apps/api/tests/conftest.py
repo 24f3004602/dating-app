@@ -34,6 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_sessionm
 from sqlalchemy.pool import NullPool
 
 from app.config import Settings
+from app.db import UTC_SESSION
 from app.logs import QUIET_LOGGERS, JsonFormatter, quiet_library_loggers
 from app.main import create_app
 from tests.probes import router as probe_router
@@ -129,7 +130,9 @@ def test_db(base_settings: Settings) -> Iterator[MigratedDatabase]:
 @pytest.fixture
 async def db_conn(test_db: MigratedDatabase) -> AsyncIterator[AsyncConnection]:
     """A runtime-role connection inside a transaction that is rolled back."""
-    engine = create_async_engine(test_db.runtime_url, poolclass=NullPool, hide_parameters=True)
+    engine = create_async_engine(
+        test_db.runtime_url, poolclass=NullPool, hide_parameters=True, connect_args=UTC_SESSION
+    )
     try:
         async with engine.connect() as conn:
             trans = await conn.begin()
@@ -148,6 +151,7 @@ async def session(db_conn: AsyncConnection) -> AsyncIterator[AsyncSession]:
 
 
 async def close_app(app: FastAPI) -> None:
+    await app.state.realtime.aclose()
     await app.state.redis.aclose()
     await app.state.engine.dispose()
 

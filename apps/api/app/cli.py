@@ -159,16 +159,28 @@ def _worker_command(_: argparse.Namespace) -> int:
     return 0
 
 
-def _serve_command(args: argparse.Namespace) -> int:
-    config = uvicorn.Config(
-        "app.main:create_app",
-        factory=True,
-        host=args.host,
-        port=args.port,
+def server_config(app: Any, *, host: str, port: int, **kw: Any) -> uvicorn.Config:
+    """The uvicorn settings the API runs with (the tests use them too)."""
+    return uvicorn.Config(
+        app,
+        host=host,
+        port=port,
         access_log=False,  # our middleware writes a privacy-safe access log
         log_config=None,  # keep our logging configuration
         proxy_headers=False,
+        # Realtime (D074): clients only ever send tiny frames; hints are tiny
+        # too, so compression buys nothing. Protocol pings drop dead clients.
+        ws="websockets-sansio",
+        ws_max_size=4096,
+        ws_per_message_deflate=False,
+        ws_ping_interval=20.0,
+        ws_ping_timeout=20.0,
+        **kw,
     )
+
+
+def _serve_command(args: argparse.Namespace) -> int:
+    config = server_config("app.main:create_app", host=args.host, port=args.port, factory=True)
     run_async(uvicorn.Server(config).serve)
     return 0
 

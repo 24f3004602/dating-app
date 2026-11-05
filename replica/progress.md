@@ -1,14 +1,13 @@
 # Progress
 
-Updated: 2026-11-04
+Updated: 2026-11-05
 
 ## Current phase
 
-Stage 9 (matching) **done for the API and the web build**: 244 API tests,
-including 50 rounds of simultaneous reciprocal likes, 49 mobile tests and the
-web e2e all pass locally and in CI (api run 41872861914, mobile run
-41872861907). A native device pass is still pending. Next: stage 10
-(messaging).
+Stage 10a (messaging API) **implemented and tested locally**: 285 API tests,
+including concurrent sends and real WebSocket connections through uvicorn.
+CI is pending. Next: stage 10b (the chat screens, the app's realtime client
+and a two-person browser test).
 
 ## Done
 
@@ -20,12 +19,29 @@ web e2e all pass locally and in CI (api run 41872861914, mobile run
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 10a | Messages in open matches (idempotent, gap-free numbering under the match row lock), history pages, read pointers and unread counts, the your-turn cap, nudge lists, realtime hints over WebSockets (tickets, one Redis channel, revocation, caps); migration 0007 | `app/modules/messaging/`, `app/modules/realtime/`, `app/realtime.py` |
 | 9 | Likes and passes (no undo, idempotent retries), the equal daily like limit, notes on likes, atomic mutual matches, likes received, matches, access through likes and matches; Like and Pass on profiles, likes and matches screens; migration 0006 | `app/modules/matching/`, `apps/mobile/src/screens/matching.tsx` |
 | 8b | Screens: today's introductions (empty, not-ready, paused and error states), a person's profile, preferences; e2e extended through discovery with axe | `apps/mobile/src/screens/discover.tsx`, `e2e/` |
 | 8a | Discovery API: preferences, eligibility filters before ranking, the deterministic daily set (built once, availability re-checked on read), distance buckets, access to profiles and photos in today's set, rate limits, labelled fixtures; tables for interactions and blocks (D064); migration 0005 | `app/modules/discovery/`, `app/fixtures.py` |
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 10a status
+
+- **Implemented and tested:** F05-*, MSG-* and RT-* in `test-plan.md`.
+  - Concurrent sends from both people, with double taps and a reader polling `after=`, give gap-free numbers and one stored row per message (MSG-C1).
+  - Real-time tests run a real uvicorn server and WebSocket client, with a second app instance standing in for another API process.
+- **Mutation checks:** without the send lock, sends collide; with reusable tickets, the reuse test fails.
+- **Found and fixed:**
+  - PostgreSQL returned timestamps in the server's zone (Asia/Calcutta here, UTC in CI); sessions are now pinned to UTC (D076).
+  - The age-gate test helper used the UTC date and failed every evening (D076).
+  - Uvicorn logged WebSocket handshakes with the full IP and the ticket in the query string; filtered (D074).
+  - The hub fixed the connection cap at start-up, so changed settings were ignored; the router now passes the current settings.
+- **Partial, by design:**
+  - No app screens yet (10b).
+  - Unmatch, the block API and message removal come in stage 11; the 30-day purge after unmatch in stages 11-12.
+  - The nudge lists are a starter list for moderators to tune (D075).
 
 ## Stage 9 status
 
@@ -148,10 +164,9 @@ web e2e all pass locally and in CI (api run 41872861914, mobile run
 
 ## Next
 
-Stage 10: messaging. Covers:
-- **Sending:** authenticated sends in open matches only (the shared match-row lock against blocks), idempotent by `client_message_id`.
-- **Reading:** cursor pagination, read pointers and unread counts.
-- **Realtime:** single-use WebSocket tickets, Redis pub/sub fan-out, REST catch-up on reconnect.
-- **Behaviour:** the pre-send nudge word list, and the your-turn cap.
-- **Tests:** unauthorized access, stale matches, blocked users, persistence and reconnection.
-- **App:** the chat screens.
+Stage 10b: the chat in the app. Covers:
+- the chat screen: history with older pages, send with retry and the same `client_message_id`, the hurtful-word prompt, the money safety tip;
+- the matches list: last message, unread count, "your turn";
+- the realtime client: ticket, `ready` then REST catch-up, reconnect with backoff, heartbeat timeout, close codes;
+- the your-turn message on Like;
+- a two-person e2e: both sign up, match, and chat with live delivery.

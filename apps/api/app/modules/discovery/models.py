@@ -17,6 +17,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    Integer,
     SmallInteger,
     String,
     UniqueConstraint,
@@ -106,11 +107,22 @@ class Match(CreatedAtMixin, Base):
         UniqueConstraint("user_a_id", "user_b_id"),
         CheckConstraint("user_a_id < user_b_id", name="ordered_pair"),
         CheckConstraint("(closed_at IS NULL) = (closed_reason IS NULL)", name="closed_consistent"),
+        CheckConstraint("last_message_n >= 0", name="last_message_n"),
+        CheckConstraint(
+            "(last_message_n = 0) = (last_message_at IS NULL) AND (last_message_at IS NULL) = (last_sender_id IS NULL)",
+            name="last_message_consistent",
+        ),
+        CheckConstraint("last_sender_id IS NULL OR last_sender_id IN (user_a_id, user_b_id)", name="last_sender"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
     user_a_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     user_b_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    # Conversation state (stage 10), written by each send under the match row
+    # lock: the sequence number of the latest message, when, and by whom.
+    last_message_n: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    last_message_at: Mapped[datetime | None]
+    last_sender_id: Mapped[uuid.UUID | None]
     closed_at: Mapped[datetime | None]
     closed_reason: Mapped[MatchCloseReason | None] = mapped_column(
         Enum(

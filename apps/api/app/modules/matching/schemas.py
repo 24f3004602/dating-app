@@ -41,10 +41,20 @@ class PersonBrief(ApiModel):
     photo: PhotoOut | None
 
 
+class LastMessage(ApiModel):
+    n: int
+    from_me: bool
+    preview: str = Field(description="The first 100 characters")
+    sent_at: datetime
+
+
 class MatchOut(ApiModel):
     id: uuid.UUID
     matched_at: datetime
     person: PersonBrief
+    last_message: LastMessage | None
+    unread: int
+    your_turn: bool = Field(description="They wrote last, recently: counts towards the your-turn cap")
 
 
 class InteractionOut(ApiModel):

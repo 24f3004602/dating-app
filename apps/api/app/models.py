@@ -6,6 +6,7 @@ from app.modules.audit.models import AuditLog
 from app.modules.auth.models import OneTimeCode, Session
 from app.modules.discovery.models import Block, DailyPick, Interaction, Match, Preferences
 from app.modules.media.models import Photo
+from app.modules.messaging.models import MatchRead, Message
 from app.modules.profiles.models import Area, Profile, ProfilePrompt
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     "DailyPick",
     "Interaction",
     "Match",
+    "MatchRead",
+    "Message",
     "OneTimeCode",
     "Photo",
     "Preferences",

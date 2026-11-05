@@ -30,6 +30,12 @@ NAMING_CONVENTION = {
 # deadlock the matching concurrency test found (D071).
 
 
+# Timestamps come back from PostgreSQL in the session's time zone. Pin it to
+# UTC, so the API always answers in UTC (architecture: RFC 3339 UTC) whatever
+# the server's default is; this laptop's cluster says Asia/Calcutta.
+UTC_SESSION = {"options": "-c TimeZone=UTC"}
+
+
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
     type_annotation_map: ClassVar[dict[Any, Any]] = {datetime: DateTime(timezone=True)}
@@ -46,7 +52,7 @@ def create_engine(settings: Settings) -> AsyncEngine:
         pool_pre_ping=True,
         # Keep bound parameters (emails, hashes) out of logs and error strings.
         hide_parameters=True,
-        connect_args={"connect_timeout": max(1, round(settings.db_connect_timeout_s))},
+        connect_args={"connect_timeout": max(1, round(settings.db_connect_timeout_s)), **UTC_SESSION},
     )
 
 

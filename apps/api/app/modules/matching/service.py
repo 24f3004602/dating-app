@@ -11,6 +11,9 @@ One transaction per decision:
 4. insert the interaction (unique per pair: no second decision, no undo);
 5. if both liked, insert the match with ON CONFLICT DO NOTHING on the
    unique ordered pair: duplicates are impossible even if the lock failed.
+
+Likes pause while too many chats await the member's reply (the your-turn
+cap, D073). Passes never do.
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ import hashlib
 import uuid
 from datetime import datetime, time, timedelta
 
-from sqlalchemy import and_, exists, func, or_, select
+from sqlalchemy import and_, case, exists, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
@@ -35,6 +38,7 @@ from app.modules.discovery.service import approved_photo_count, base_available_t
 from app.modules.matching.schemas import (
     InteractionIn,
     InteractionOut,
+    LastMessage,
     LikeAbout,
     LikeReceivedOut,
     MatchOut,
@@ -42,6 +46,7 @@ from app.modules.matching.schemas import (
 )
 from app.modules.media.models import ModerationState, Photo
 from app.modules.media.service import MIN_APPROVED_FOR_DISCOVERY, list_photos, photo_out
+from app.modules.messaging.queries import message_at, read_pointer, unread_count
 from app.modules.profiles.catalogue import PROMPTS
 from app.modules.profiles.models import Profile, ProfilePrompt
 from app.modules.profiles.service import public_profile
@@ -58,6 +63,24 @@ def ordered(a: uuid.UUID, b: uuid.UUID) -> tuple[uuid.UUID, uuid.UUID]:
 def pair_lock_key(a: uuid.UUID, b: uuid.UUID) -> int:
     lo, hi = ordered(a, b)
     return int.from_bytes(hashlib.sha256(lo.bytes + hi.bytes).digest()[:8], "big", signed=True)
+
+
+def other_of(match: Match, me: uuid.UUID) -> uuid.UUID:
+    return match.user_b_id if match.user_a_id == me else match.user_a_id
+
+
+def your_turn_cutoff(settings: Settings, now: datetime) -> datetime:
+    return now - timedelta(days=settings.your_turn_window_days)
+
+
+def is_your_turn(match: Match, me: uuid.UUID, cutoff: datetime) -> bool:
+    """They wrote last, within the window."""
+    return (
+        match.last_sender_id is not None
+        and match.last_sender_id != me
+        and match.last_message_at is not None
+        and match.last_message_at >= cutoff
+    )
 
 
 def day_start(settings: Settings, now: datetime) -> datetime:
@@ -97,6 +120,32 @@ async def liked_me(session: AsyncSession, viewer_id: uuid.UUID, target_id: uuid.
         )
     ).scalar_one_or_none()
     return row is not None
+
+
+async def chats_awaiting_reply(session: AsyncSession, settings: Settings, me: uuid.UUID, now: datetime) -> int:
+    """Open matches with an available person who wrote last, within the window (D073)."""
+    other = case((Match.user_a_id == me, Match.user_b_id), else_=Match.user_a_id)
+    stmt = (
+        select(func.count())
+        .select_from(Match)
+        .join(User, User.id == other)
+        .where(
+            or_(Match.user_a_id == me, Match.user_b_id == me),
+            Match.closed_at.is_(None),
+            Match.last_sender_id.is_not(None),
+            Match.last_sender_id != me,
+            Match.last_message_at >= your_turn_cutoff(settings, now),
+            User.status == UserStatus.active,
+            User.deletion_requested_at.is_(None),
+            ~exists().where(
+                or_(
+                    and_(Block.blocker_id == me, Block.blocked_id == User.id),
+                    and_(Block.blocker_id == User.id, Block.blocked_id == me),
+                )
+            ),
+        )
+    )
+    return int((await session.execute(stmt)).scalar_one())
 
 
 async def open_match_with(session: AsyncSession, viewer_id: uuid.UUID, target_id: uuid.UUID) -> Match | None:
@@ -139,12 +188,22 @@ async def _brief(
     )
 
 
-async def _match_out(
+async def match_out(
     session: AsyncSession, settings: Settings, storage: ObjectStorage, match: Match, *, me: uuid.UUID, now: datetime
 ) -> MatchOut:
-    other = match.user_b_id if match.user_a_id == me else match.user_a_id
+    last = None
+    if match.last_message_n:
+        msg = await message_at(session, match.id, match.last_message_n)
+        if msg is not None:
+            last = LastMessage(n=msg.n, from_me=msg.sender_id == me, preview=msg.body[:100], sent_at=msg.created_at)
+    read_n = await read_pointer(session, match.id, me)
     return MatchOut(
-        id=match.id, matched_at=match.created_at, person=await _brief(session, settings, storage, other, now)
+        id=match.id,
+        matched_at=match.created_at,
+        person=await _brief(session, settings, storage, other_of(match, me), now),
+        last_message=last,
+        unread=await unread_count(session, match.id, me, read_n),
+        your_turn=is_your_turn(match, me, your_turn_cutoff(settings, now)),
     )
 
 
@@ -200,7 +259,7 @@ async def decide(
         await session.commit()
         out = InteractionOut(
             target_id=data.target_id, kind=data.kind, decided_at=previous.created_at,
-            match=await _match_out(session, settings, storage, existing, me=actor.id, now=now) if existing else None,
+            match=await match_out(session, settings, storage, existing, me=actor.id, now=now) if existing else None,
             likes_left_today=max(0, settings.daily_like_limit - used),
         )  # fmt: skip
         return out, False
@@ -214,6 +273,12 @@ async def decide(
 
     used = await likes_used_today(session, settings, actor.id, now)
     if kind is InteractionKind.like:
+        waiting = await chats_awaiting_reply(session, settings, actor.id, now)
+        if waiting >= settings.your_turn_cap:
+            raise ApiError(
+                409, "your_turn_limit", f"{waiting} chats are waiting for your reply. Reply first, then like again.",
+                extra={"waiting": waiting},
+            )  # fmt: skip
         if used >= settings.daily_like_limit:
             wait = int((day_start(settings, now) + timedelta(days=1) - now).total_seconds())
             raise ApiError(
@@ -259,7 +324,7 @@ async def decide(
     await session.commit()
     out = InteractionOut(
         target_id=data.target_id, kind=data.kind, decided_at=now,
-        match=await _match_out(session, settings, storage, match, me=actor.id, now=now) if match else None,
+        match=await match_out(session, settings, storage, match, me=actor.id, now=now) if match else None,
         likes_left_today=max(0, settings.daily_like_limit - used),
     )  # fmt: skip
     return out, True
@@ -309,12 +374,25 @@ async def my_matches(
         await session.execute(
             select(Match)
             .where(or_(Match.user_a_id == me, Match.user_b_id == me), Match.closed_at.is_(None))
-            .order_by(Match.created_at.desc())
+            # Most recent activity first: the latest message, or the match itself.
+            .order_by(func.coalesce(Match.last_message_at, Match.created_at).desc(), Match.id)
         )
     ).scalars()
-    out: list[MatchOut] = []
-    for match in rows:
-        other = match.user_b_id if match.user_a_id == me else match.user_a_id
-        if await open_match_with(session, me, other) is not None:
-            out.append(await _match_out(session, settings, storage, match, me=me, now=now))
-    return out
+    return [
+        await match_out(session, settings, storage, match, me=me, now=now)
+        for match in rows
+        if await open_match_with(session, me, other_of(match, me)) is not None
+    ]
+
+
+async def visible_match(session: AsyncSession, me: uuid.UUID, match_id: uuid.UUID, *, lock: bool = False) -> Match:
+    """My match, while it is open, the other person is available and neither has
+    blocked the other; otherwise 404. `lock` takes the match row lock that sends,
+    unmatching and blocking share (FOR NO KEY UPDATE), before the checks."""
+    stmt = select(Match).where(Match.id == match_id, or_(Match.user_a_id == me, Match.user_b_id == me))
+    if lock:
+        stmt = stmt.with_for_update(key_share=True)
+    match = (await session.execute(stmt)).scalar_one_or_none()
+    if match is None or await open_match_with(session, me, other_of(match, me)) is None:
+        raise ApiError(404, "not_found")
+    return match

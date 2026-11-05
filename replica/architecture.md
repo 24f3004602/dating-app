@@ -108,8 +108,8 @@ migrations run as a separate role.
 | `daily_picks` | (`viewer_id`, `pick_date`, `candidate_id`) primary key; `rank`. Kept 7 days | 8 |
 | `interactions` | `actor_id`, `target_id`, `kind` (like, pass), optional `comment` (≤ 150) and target item; **unique (`actor_id`, `target_id`)**; check actor ≠ target. Table from stage 8 (D064), API in 9 | 8 (API 9) |
 | `matches` | `user_a_id` < `user_b_id` (check); **unique (`user_a_id`, `user_b_id`)**; `closed_at`, `closed_reason` (unmatched, blocked, deleted, moderation), set together (check). Interactions gained `target_photo_id` and `target_prompt_key` | 9 |
-| `messages` | `match_id`, `sender_id`, `body` (1-2000), `client_message_id`; **unique (`match_id`, `sender_id`, `client_message_id`)**; `keyword_flag`; `removed_at`; index (`match_id`, `created_at`, `id`) | 10 |
-| `match_reads` | (`match_id`, `user_id`) primary key; `last_read_message_id` | 10 |
+| `messages` | `match_id`, `sender_id`, `n` (sequence number per match, **unique (`match_id`, `n`)**), `body` (1-2000), `client_message_id`; **unique (`match_id`, `sender_id`, `client_message_id`)**; `flag` (hurtful, money; D075). Matches gained `last_message_n`, `last_message_at`, `last_sender_id`, written under the match row lock (D072). `removed_at` arrives with moderation (11) | 10 |
+| `match_reads` | (`match_id`, `user_id`) primary key; `last_read_n`, only moves forward; never shown to the other person | 10 |
 | `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked. Table from stage 8 (D064), API in 11 | 8 (API 11) |
 | `reports` | reporter, subject user, optional message or photo; `reason` (fake, harassment, explicit, scam, underage, hate, other); `details` (≤ 1000); `status` (open, in_review, actioned, dismissed); assignee | 11 |
 | `moderation_actions` | append-only: moderator, target, report, `action` (dismiss, warn, remove_photo, remove_message, suspend, ban, reinstate), reason | 11 |
@@ -156,12 +156,12 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/discovery/today | today's finite set; generated once per viewer per day | M | F03 |
 | POST /v1/interactions | like or pass, optional comment; enforces eligibility, the daily like limit and the your-turn cap; returns the match if one is created | M | F03, F04 |
 | GET /v1/likes/received | people who liked you | M | F04 |
-| GET /v1/matches; POST /v1/matches/{id}/unmatch | list matches with unread counts; unmatch | M | F04, F06 |
-| GET, POST /v1/matches/{id}/messages; POST /v1/matches/{id}/read | history (cursor), idempotent send, read pointer | M | F05 |
-| POST /v1/realtime/ticket; WS /v1/realtime | single-use 30-second ticket, so the session token never appears in URLs; events: message.created, match.created, match.closed | M | F05 |
+| GET /v1/matches; GET /v1/matches/{id}; POST /v1/matches/{id}/unmatch | matches by latest activity, with the last message, unread count and `your_turn` (stage 10); one match; unmatch (stage 11) | M | F04, F06 |
+| GET, POST /v1/matches/{id}/messages; POST /v1/matches/{id}/read | history by sequence number (`before`, `after`), idempotent send (201, or 200 for a retry), read pointer (D072) | M | F05 |
+| POST /v1/realtime/ticket; WS /v1/realtime | single-use 30-second ticket, so the session token never appears in URLs; events: `ready`, `message.created`, `match.created`, `read.updated`, `resync`, `ping` (match.closed in stage 11); close codes 4401, 4429, 1012 (D074) | M | F05 |
 | POST /v1/blocks; GET /v1/blocks; DELETE /v1/blocks/{user_id} | block, list blocks, unblock (a match is not restored) | M | F06 |
 | POST /v1/reports; GET /v1/reports/mine | report a profile, message or photo (blocks by default); see report status | M | F06 |
-| GET /v1/safety/nudge-terms | word list for the pre-send nudge | M | F05 |
+| GET /v1/safety/nudge-terms | the `hurtful` and `money` word lists (D075) | M | F05 |
 | GET /v1/admin/reports; GET /v1/admin/reports/{id}; POST /v1/admin/reports/{id}/actions | moderation queue; minimal context; every read and action is audited | Mod | admin |
 | GET /v1/admin/photos/pending; POST /v1/admin/photos/{id}/decision | photo review | Mod | admin |
 | POST /v1/admin/users/{id}/(suspend, ban, reinstate); GET /v1/admin/audit-log | account actions; audit trail | Mod / Adm | admin |

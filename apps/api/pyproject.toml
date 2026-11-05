@@ -18,6 +18,7 @@ dependencies = [
     "sqlalchemy[asyncio]==2.1.*",
     "tzdata>=2026.1",
     "uvicorn==0.54.*",
+    "websockets==17.*",
 ]
 
 [project.scripts]

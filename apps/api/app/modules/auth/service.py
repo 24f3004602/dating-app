@@ -383,7 +383,8 @@ async def request_password_reset(ctx: AuthContext, session: AsyncSession, email:
 
 async def confirm_password_reset(
     ctx: AuthContext, session: AsyncSession, data: PasswordResetConfirmIn, ip: str
-) -> None:
+) -> uuid.UUID:
+    """Returns the member's ID (every session is revoked)."""
     now = ctx.clock()
     await ctx.limiter.hit(VERIFY_IP, ip)
     await ctx.limiter.hit(VERIFY_EMAIL, f"reset_password:{data.email}")
@@ -411,6 +412,7 @@ async def confirm_password_reset(
     _audit(session, "auth.password_reset", user.id, actor=user.id)
     await ctx.jobs.defer(session, SEND_NOTICE, user_id=str(user.id), kind=Notice.password_changed.value)
     await session.commit()
+    return user.id
 
 
 # --- sessions ----------------------------------------------------------------
@@ -438,6 +440,24 @@ async def authenticate(
         user.last_active_at = now
         await session.commit()
     return sess, user
+
+
+async def session_is_live(session: AsyncSession, session_id: uuid.UUID, user_id: uuid.UUID, now: datetime) -> bool:
+    """For long-lived connections (realtime): not revoked, not expired, account active."""
+    found = (
+        await session.execute(
+            select(Session.id)
+            .join(User, User.id == Session.user_id)
+            .where(
+                Session.id == session_id,
+                Session.user_id == user_id,
+                Session.revoked_at.is_(None),
+                Session.expires_at > now,
+                User.status == UserStatus.active,
+            )
+        )
+    ).scalar_one_or_none()
+    return found is not None
 
 
 async def logout(session: AsyncSession, sess: Session, now: datetime) -> None:

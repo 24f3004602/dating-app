@@ -25,11 +25,14 @@ from app.modules.discovery.router import router as discovery_router
 from app.modules.health.router import router as health_router
 from app.modules.matching.router import router as matching_router
 from app.modules.media.router import router as media_router
+from app.modules.messaging.router import router as messaging_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.realtime.router import router as realtime_router
 from app.openapi import install_openapi
 from app.providers.identity import NoIdentityVerifier
 from app.providers.storage import create_storage
 from app.ratelimit import RateLimiter
+from app.realtime import RealtimeHub
 
 API_PREFIX = "/v1"
 
@@ -47,10 +50,12 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
         socket_connect_timeout=settings.redis_timeout_s,
         socket_timeout=settings.redis_timeout_s,
     )
+    realtime = RealtimeHub(redis, settings.rate_limit_prefix)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        await realtime.aclose()
         await redis.aclose()
         await engine.dispose()
 
@@ -67,6 +72,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
     app.state.redis = redis
+    app.state.realtime = realtime
     app.state.identity = NoIdentityVerifier()
     app.state.storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
     app.state.auth = AuthContext(
@@ -106,5 +112,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(media_router)
     app.include_router(discovery_router)
     app.include_router(matching_router)
+    app.include_router(messaging_router)
+    app.include_router(realtime_router)
     install_openapi(app)
     return app

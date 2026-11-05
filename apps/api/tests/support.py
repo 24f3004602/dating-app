@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from httpx import AsyncClient, Response
 from sqlalchemy import text
@@ -16,6 +17,9 @@ from app.modules.auth.models import CodePurpose
 from app.modules.media import service as media_service
 from app.providers.email import EmailMessage, MemoryEmailSender
 from app.providers.storage import ObjectStorage
+
+# APP_TIMEZONE; the tests run with the default.
+APP_TZ = ZoneInfo("Asia/Kolkata")
 
 # Long, unusual, and not in the blocklist (checked by test_passwords).
 PASSWORD = "violet harbour lantern seventy"
@@ -102,7 +106,9 @@ class JobRunner:
 
 
 def birthdate_for_age(clock: FrozenClock, years: int, *, days_extra: int = 0) -> date:
-    today = clock().date()
+    # The age gate counts on the India date (D049), which is a day ahead of
+    # UTC from 18:30 UTC: using the UTC date here failed every evening.
+    today = clock().astimezone(APP_TZ).date()
     try:
         born = today.replace(year=today.year - years)
     except ValueError:  # 29 February
