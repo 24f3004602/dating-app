@@ -265,3 +265,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | owner's laptop | stage 16a: `pytest`; `npm test` in `apps/mobile`; onboarding e2e (now with Notifications) | 330 passed; mutation checks (no session check, no throttle) caught; 110 passed; passed |
 | 2026-11-05 | GitHub Actions api run 42004360276 and mobile run 42004360275 on `f962695` (stage 16a) | both workflows | passed |
 | 2026-11-05 | owner's laptop | stage 16b: `pytest`; pip-audit | 338 passed; mutation checks (no signature check, no stale check) caught; no known vulnerabilities |
+| 2026-11-05 | GitHub Actions api run 42007106214 and mobile run 42007106643 on `25b9b0f` (stage 16b) | both workflows | passed |

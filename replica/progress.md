@@ -6,7 +6,7 @@ Updated: 2026-11-05
 
 Stage 16 (optional) **done for what can be built without the owner's accounts**.
 - **16a:** discreet notifications. Passed CI (api run 42004360276, mobile run 42004360275).
-- **16b:** the billing evaluation, and the website's payment server side in sandbox code. 338 API tests pass; CI is pending.
+- **16b:** the billing evaluation, and the website's payment server side in sandbox code. Passed CI (api run 42007106214, mobile run 42007106643; 338 API tests).
 - **Waiting on the owner:**
   - delivery of pushes needs an EAS project;
   - payments need decisions on the plan's contents and price, and accounts with Razorpay, Apple and Google.
