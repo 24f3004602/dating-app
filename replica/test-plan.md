@@ -179,3 +179,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | same | `npm test` in `apps/mobile` with the regenerated API types | 49 passed (one cold run timed out 4 tests at 30 s; three reruns passed in 7 s) |
 | 2026-11-05 | GitHub Actions api run 41938343026 and mobile run 41938342940 on `b656d5c` (stage 10a) | both workflows | passed (285 API tests on Ubuntu; mobile checks and e2e) |
 | 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 10b); e2e 3 runs on a fresh database | 79 passed; both specs passed each run (chat 25-26 s) |
+| 2026-11-05 | GitHub Actions api run 41941301362 and mobile run 41941301558 on `02592ff` (stage 10b) | both workflows | passed (285 API tests; 79 mobile tests; both e2e specs incl. the two-person chat) |

@@ -4,10 +4,10 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 10 (messaging) **done for the API and the web build**: 285 API tests
-(10a passed CI: api run 41938343026, mobile run 41938342940), 79 mobile tests,
-and a two-person web e2e in which messages arrive live both ways. CI for 10b
-is pending; a native device pass is still pending. Next: stage 11 (safety).
+Stage 10 (messaging) **done for the API and the web build**: 285 API tests,
+79 mobile tests and a two-person web e2e in which messages arrive live both
+ways, all passing locally and in CI (api run 41941301362, mobile run
+41941301558). A native device pass is still pending. Next: stage 11 (safety).
 
 ## Done
 
