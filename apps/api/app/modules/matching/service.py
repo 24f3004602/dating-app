@@ -408,6 +408,23 @@ async def close_open_match(
     return match
 
 
+async def close_all_open_matches(
+    session: AsyncSession, user_id: uuid.UUID, reason: MatchCloseReason, now: datetime
+) -> list[Match]:
+    """Close every open match of one member (a ban, or a deletion request), under
+    the same row lock as sends."""
+    rows = await session.execute(
+        select(Match)
+        .where(or_(Match.user_a_id == user_id, Match.user_b_id == user_id), Match.closed_at.is_(None))
+        .with_for_update(key_share=True)
+    )
+    closed = list(rows.scalars())
+    for match in closed:
+        match.closed_at = now
+        match.closed_reason = reason
+    return closed
+
+
 async def visible_match(session: AsyncSession, me: uuid.UUID, match_id: uuid.UUID, *, lock: bool = False) -> Match:
     """My match, while it is open, the other person is available and neither has
     blocked the other; otherwise 404. `lock` takes the match row lock that sends,

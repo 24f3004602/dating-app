@@ -19,10 +19,9 @@ from app.modules.audit.models import AuditLog
 from app.modules.discovery.models import Block, Match
 from app.modules.media.models import ModerationState, Photo
 from app.modules.safety.models import ModerationAction
-from tests.chat import Db, LiveServer, connected, history, pair, send
+from tests.chat import Db, LiveServer, closed_with, connected, history, pair, send
 from tests.members import Member, make_member
 from tests.support import FrozenClock
-from tests.test_realtime import closed_with
 
 ADMIN_ROUTES = [
     ("GET", "/v1/admin/reports", None),

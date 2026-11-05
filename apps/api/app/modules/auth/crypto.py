@@ -35,3 +35,9 @@ def code_digest(key: bytes, user_id: uuid.UUID, purpose: str, code: str) -> byte
 
 def digests_equal(a: bytes, b: bytes) -> bool:
     return hmac.compare_digest(a, b)
+
+
+def banned_email_digest(key: bytes, email: str) -> bytes:
+    """HMAC-SHA256 of a normalised email, kept for a year after a banned account
+    is purged (D083). Without the key it can't be reversed or checked."""
+    return hmac.new(key, email.encode(), hashlib.sha256).digest()

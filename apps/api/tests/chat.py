@@ -10,11 +10,13 @@ from collections.abc import AsyncIterator
 from datetime import datetime
 from typing import Any
 
+import pytest
 import uvicorn
 from fastapi import FastAPI
 from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from websockets.asyncio.client import ClientConnection, connect
+from websockets.exceptions import ConnectionClosed
 
 from app.cli import server_config
 from app.modules.discovery.models import Match
@@ -116,3 +118,16 @@ async def nothing(ws: ClientConnection, wait: float = 0.5) -> bool:
     except TimeoutError:
         return True
     return False
+
+
+async def closed_with(ws: Any, wait: float = 3.0) -> int:
+    """The close code the server sends within `wait` seconds (pings ignored)."""
+
+    async def drain() -> None:
+        while True:
+            await ws.recv()
+
+    with pytest.raises(ConnectionClosed) as closed:
+        await asyncio.wait_for(drain(), wait)
+    assert closed.value.rcvd is not None
+    return int(closed.value.rcvd.code)

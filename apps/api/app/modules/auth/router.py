@@ -58,6 +58,15 @@ async def login(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip
     return await service.login(ctx, db, body, ip, request.headers.get("user-agent"))
 
 
+@router.post(
+    "/restore",
+    responses=problems(401, 403),
+    summary="Sign in and keep an account that is waiting to be deleted (otherwise the same as sign-in)",
+)
+async def restore(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> SessionOut:
+    return await service.login(ctx, db, body, ip, request.headers.get("user-agent"), restore=True)
+
+
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, responses=problems(401), summary="End this session")
 async def logout(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.logout(db, auth.session, ctx.clock())

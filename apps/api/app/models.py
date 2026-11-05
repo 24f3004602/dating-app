@@ -7,6 +7,7 @@ from app.modules.auth.models import OneTimeCode, Session
 from app.modules.discovery.models import Block, DailyPick, Interaction, Match, Preferences
 from app.modules.media.models import Photo
 from app.modules.messaging.models import MatchRead, Message
+from app.modules.privacy.models import DeletedAccount
 from app.modules.profiles.models import Area, Profile, ProfilePrompt
 from app.modules.safety.models import ModerationAction, Report
 
@@ -17,6 +18,7 @@ __all__ = [
     "Block",
     "Consent",
     "DailyPick",
+    "DeletedAccount",
     "Interaction",
     "Match",
     "MatchRead",

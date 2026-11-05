@@ -54,6 +54,8 @@ replica-backend's security checklist (D041).
 | T22 | Payment replay or forged webhooks (later) | signature verification; event-ID deduplication; server-side entitlements; idempotency keys | payment tests (16) | planned |
 | T23 | Notifications leaking content (later) | discreet defaults: no names, no message text | notification tests (16) | planned |
 | T24 | Public-repo exposure | no secrets; no competitor screenshots (gitignored); review before every push; visibility decision pending | pre-push checklist | partial: pre-push scan for secrets, binaries and screenshots run before each push so far |
+| T25 | Deletion abuse: a stolen phone deletes the account, or a reported member deletes to destroy evidence or come straight back | password re-entry, 5 tries an hour; 7-day restore; reports keep a copy of the reported message; an open report delays the purge (max 30 days); a banned email can't sign up again for a year | privacy tests (12) | **done** for the API: PRIV-D1..D4, PRIV-P2, PRIV-B1; mutation checks (no hold, no barred-email check) caught |
+| T26 | Data kept longer than needed | retention rules in one file, applied hourly; append-only records expire through an owner-rights function only | privacy tests (12) | **done** for the API: PRIV-S1 checks each rule at its boundary; the real worker runs the jobs (PRIV-W1). Residual: orphaned files if a deletion job fails 8 times (needs a bucket reconciliation sweep) |
 
 ## Residual risks (accepted for MVP; revisit before public launch)
 

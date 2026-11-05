@@ -52,6 +52,7 @@ class Report(CreatedAtMixin, Base):
         CheckConstraint("priority BETWEEN 1 AND 3", name="priority_range"),
         CheckConstraint("(resolved_at IS NULL) = (status IN ('open', 'in_review'))", name="resolved_consistent"),
         Index("ix_reports_queue", "status", "priority", "created_at"),
+        Index("ix_reports_resolved_at", "resolved_at", postgresql_where=text("resolved_at IS NOT NULL")),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))

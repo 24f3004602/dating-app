@@ -146,7 +146,8 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | POST /v1/auth/resend-code | same response whether or not the account exists | P | F01 |
 | POST /v1/auth/login, /logout, /logout-all | session lifecycle | P / M | F01 |
 | POST /v1/auth/password-reset/request, /confirm | email code; on confirm, every session is revoked | P | F01 |
-| GET /v1/me; DELETE /v1/me | account summary with verification labels (GET, stage 6); schedule deletion with re-authentication (DELETE, stage 12) | M | F01, F09 |
+| GET /v1/me; POST /v1/me/deletion | account summary with verification labels (stage 6); delete my account with the password: hidden and signed out now, purged after 7 days (stage 12, D083) | M | F01, F09 |
+| POST /v1/auth/restore | sign in and keep an account that is waiting to be deleted (otherwise the same as sign-in) | P | F09 |
 | GET, PUT /v1/me/profile; GET /v1/areas; GET /v1/prompts | edit own profile (stage 7); areas and prompts, never coordinates | M | F02 |
 | GET, PUT /v1/me/preferences | discovery preferences (stage 8) | M | F03 |
 | POST /v1/me/photos; PATCH /v1/me/photos/order; DELETE /v1/me/photos/{id} | upload (multipart), reorder, delete | M | F02 |
@@ -175,9 +176,10 @@ webhooks and store server notifications. **Webhooks out:** none.
 | --- | --- | --- |
 | `auth:issue_code` | on demand | generates a code (only its HMAC is stored) and emails it; arguments are a user ID and a purpose only (D046) |
 | `auth:send_notice` | on demand | security notices (sign-up attempt on a taken address, password changed, password sign-in paused) |
-| `purge_deleted_accounts` | hourly | after the grace period, deletes data and media |
-| `cleanup_expired` | hourly | expired codes, sessions, tickets and old daily picks |
-| `retention_sweep` | daily | applies the privacy inventory's retention rules |
+| `media:delete_objects` | on demand | deletes photo files after their rows are gone (photo delete, account purge) |
+| `privacy:purge_accounts` | hourly at :07 | purges accounts past the grace period (or 90 days after a ban), unless held by an open report, at most 30 days (D083) |
+| `privacy:retention_sweep` | hourly at :37 | the privacy inventory's retention rules: ended conversations, old picks, sessions, codes, unverified sign-ups, report links and reports, deleted-account records, expired audit records (D084, D085) |
+| `privacy:remove_old_jobs` | daily 21:15 UTC | finished, failed, cancelled and aborted job rows after 30 days |
 
 ## Key mechanisms
 
@@ -265,9 +267,10 @@ account.
   - profiles are reachable only through the daily set, a match or a like
   - signed media URLs expire quickly
 - **Realtime:** 25-second heartbeats; reconnect with backoff; a connection cap per user; REST catch-up.
-- **Deletion (DPDP):**
-  - Requesting deletion immediately hides the account and revokes its sessions.
-  - Data is purged after a short grace period.
+- **Deletion (DPDP, D083):**
+  - Requesting deletion (with the password) immediately hides the account, revokes its sessions, closes its realtime connections and ends its matches.
+  - Signing in within 7 days can keep it; after that the purge deletes the user row and the database cascades, while photo files go through a queued job in the same transaction.
+  - An open report delays the purge (at most 30 days); reports, moderation records and the audit trail are kept under listed exceptions, without the link where the inventory says so.
   - Backups expire on a schedule, and erasure from backups happens when they expire. We say exactly that, no more.
 - **Email deliverability:** SPF, DKIM and DMARC on the sending domain are owner setup.
 - **Offline:** the mobile app shows an offline state and retries idempotent requests.

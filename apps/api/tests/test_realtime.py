@@ -17,7 +17,7 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import update
-from websockets.exceptions import ConnectionClosed, InvalidStatus
+from websockets.exceptions import InvalidStatus
 
 from app.main import create_app
 from app.modules.accounts.models import User
@@ -25,7 +25,19 @@ from app.modules.auth.crypto import new_session_token
 from app.modules.auth.models import Session, SessionClient
 from app.modules.auth.service import local_today
 from app.modules.discovery.models import Block, DailyPick
-from tests.chat import Db, LiveServer, connected, event, history, nothing, pair, send, socket, ticket
+from tests.chat import (
+    Db,
+    LiveServer,
+    closed_with,
+    connected,
+    event,
+    history,
+    nothing,
+    pair,
+    send,
+    socket,
+    ticket,
+)
 from tests.conftest import close_app
 from tests.members import Member, add, make_member
 from tests.support import FrozenClock
@@ -51,19 +63,6 @@ async def elsewhere(app: FastAPI, db: Db, clock: FrozenClock) -> AsyncIterator[A
 
 def tune(app: FastAPI, **settings: Any) -> None:
     app.state.settings = app.state.settings.model_copy(update=settings)
-
-
-async def closed_with(ws: Any, wait: float = 3.0) -> int:
-    """The close code the server sends within `wait` seconds (pings ignored)."""
-
-    async def drain() -> None:
-        while True:
-            await ws.recv()
-
-    with pytest.raises(ConnectionClosed) as closed:
-        await asyncio.wait_for(drain(), wait)
-    assert closed.value.rcvd is not None
-    return int(closed.value.rcvd.code)
 
 
 async def another_session(db: Db, who: Member, now: datetime) -> Member:

@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Enum, ForeignKey, SmallInteger, String, UniqueConstraint, func, text
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, Index, SmallInteger, String, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base, CreatedAtMixin
@@ -35,6 +35,8 @@ class User(CreatedAtMixin, Base):
         CheckConstraint("email_normalized = lower(email_normalized)", name="email_lowercase"),
         CheckConstraint("char_length(email_normalized) BETWEEN 3 AND 254", name="email_length"),
         CheckConstraint("birthdate >= DATE '1900-01-01'", name="birthdate_plausible"),
+        # The retention sweep: sign-ups never confirmed are deleted after 7 days.
+        Index("ix_users_pending_created_at", "created_at", postgresql_where=text("status = 'pending'")),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))

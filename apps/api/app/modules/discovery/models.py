@@ -51,7 +51,7 @@ class DailyPick(CreatedAtMixin, Base):
     __tablename__ = "daily_picks"
 
     viewer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    pick_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    pick_date: Mapped[date] = mapped_column(Date, primary_key=True, index=True)
     candidate_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
     )
@@ -113,6 +113,8 @@ class Match(CreatedAtMixin, Base):
             name="last_message_consistent",
         ),
         CheckConstraint("last_sender_id IS NULL OR last_sender_id IN (user_a_id, user_b_id)", name="last_sender"),
+        # The retention sweep: conversations are purged 30 days after they end.
+        Index("ix_matches_closed_at", "closed_at", postgresql_where=text("closed_at IS NOT NULL")),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))

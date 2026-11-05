@@ -24,7 +24,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
@@ -34,6 +34,7 @@ from app.modules.audit.models import AuditLog
 from app.modules.audit.service import record
 from app.modules.auth.service import age_on, local_today, revoke_all_sessions
 from app.modules.discovery.models import Match, MatchCloseReason
+from app.modules.matching.service import close_all_open_matches
 from app.modules.media.models import ModerationState, Photo
 from app.modules.media.service import list_photos, photo_out
 from app.modules.messaging.models import Message
@@ -215,19 +216,6 @@ async def report_detail(
     )
 
 
-async def _close_all_matches(session: AsyncSession, user_id: uuid.UUID, now: datetime) -> list[Match]:
-    rows = await session.execute(
-        select(Match)
-        .where(or_(Match.user_a_id == user_id, Match.user_b_id == user_id), Match.closed_at.is_(None))
-        .with_for_update(key_share=True)
-    )
-    closed = list(rows.scalars())
-    for m in closed:
-        m.closed_at = now
-        m.closed_reason = MatchCloseReason.moderation
-    return closed
-
-
 async def _apply_account(
     session: AsyncSession, target: User, action: ActionKind, now: datetime, effects: Effects
 ) -> None:
@@ -235,11 +223,12 @@ async def _apply_account(
         target.status = UserStatus.suspended
     elif action is ActionKind.ban:
         target.status = UserStatus.banned
-        effects.closed += await _close_all_matches(session, target.id, now)
+        effects.closed += await close_all_open_matches(session, target.id, MatchCloseReason.moderation, now)
     elif action is ActionKind.reinstate:
         if target.status not in (UserStatus.suspended, UserStatus.banned):
             raise ApiError(409, "not_restricted", "That account isn't suspended or banned.")
-        target.status = UserStatus.active
+        # An account waiting for deletion goes back to waiting, not to active (D083).
+        target.status = UserStatus.deactivated if target.deletion_requested_at else UserStatus.active
         return
     await revoke_all_sessions(session, target.id, now)
     effects.revoke.append(target.id)

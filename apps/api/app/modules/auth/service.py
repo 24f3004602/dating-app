@@ -16,6 +16,11 @@ password reset. Security properties and where they come from:
   sliding expiry; revoked on logout, logout-all and password reset.
 - Lockout (NIST): 100 consecutive failed logins pause password sign-in until
   a reset; the response never says so (the member is emailed instead).
+- Deletion (D083): an account waiting for deletion can't hold a session.
+  With the right password, sign-in says so and `restore` keeps the account;
+  a password reset still works, so a forgotten password doesn't stop that.
+  A banned account's email can't sign up again for a year after its purge,
+  and sign-up answers exactly as usual.
 """
 
 from __future__ import annotations
@@ -39,6 +44,7 @@ from app.modules.accounts.models import Consent, ConsentKind, User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.auth import emails
 from app.modules.auth.crypto import (
+    banned_email_digest,
     code_digest,
     derive_key,
     digests_equal,
@@ -57,6 +63,8 @@ from app.modules.auth.schemas import (
     Verification,
     VerifyEmailIn,
 )
+from app.modules.privacy.models import DeletedAccount
+from app.modules.privacy.retention import ACCOUNT_GRACE
 from app.providers.email import EmailSender
 from app.providers.identity import IdentityStatus
 from app.ratelimit import Limit, RateLimiter
@@ -103,6 +111,35 @@ class AuthContext:
 
 def code_key(settings: Settings) -> bytes:
     return derive_key(settings.app_secret_key.get_secret_value(), "one-time-code")
+
+
+def banned_email_key(settings: Settings) -> bytes:
+    return derive_key(settings.app_secret_key.get_secret_value(), "banned-email")
+
+
+def deletion_pending(user: User) -> bool:
+    """Waiting for its purge (D083). Hidden everywhere; no sessions."""
+    return user.deletion_requested_at is not None
+
+
+def purge_after(user: User) -> datetime:
+    """When the grace period ends (the purge may wait for an open report)."""
+    if user.deletion_requested_at is None:
+        raise ValueError("no deletion requested")
+    return user.deletion_requested_at + ACCOUNT_GRACE
+
+
+def can_reset_password(user: User) -> bool:
+    return user.status is UserStatus.active or (user.status is UserStatus.deactivated and deletion_pending(user))
+
+
+async def email_barred(session: AsyncSession, settings: Settings, email: str, now: datetime) -> bool:
+    """A banned account with this email was purged less than a year ago."""
+    digest = banned_email_digest(banned_email_key(settings), email)
+    found = await session.execute(
+        select(DeletedAccount.user_id).where(DeletedAccount.email_digest == digest, DeletedAccount.keep_until > now)
+    )
+    return found.first() is not None
 
 
 # --- helpers ---------------------------------------------------------------
@@ -247,6 +284,10 @@ async def register(ctx: AuthContext, session: AsyncSession, data: RegisterIn, ip
     password_hash = ctx.passwords.hash(data.password)  # on every path, for equal timing
 
     user = await _user_by_email(session, data.email, lock=True)
+    if user is None and await email_barred(session, s, data.email, now):
+        _audit(session, "auth.register_barred", None)  # the same answer, and no code
+        await session.commit()
+        return
     if user is None:
         new_id = (
             await session.execute(
@@ -333,7 +374,10 @@ async def verify_email(
     return SessionOut(token=token, expires_at=expires, user=me_out(user, ctx.settings, now))
 
 
-async def login(ctx: AuthContext, session: AsyncSession, data: LoginIn, ip: str, user_agent: str | None) -> SessionOut:
+async def login(
+    ctx: AuthContext, session: AsyncSession, data: LoginIn, ip: str, user_agent: str | None, *, restore: bool = False
+) -> SessionOut:
+    """Sign in. With `restore`, an account waiting for deletion is kept (D083)."""
     s = ctx.settings
     now = ctx.clock()
     await ctx.limiter.hit(LOGIN_IP, ip)
@@ -358,6 +402,15 @@ async def login(ctx: AuthContext, session: AsyncSession, data: LoginIn, ip: str,
     # The password is right, so the account's state can be told to its holder.
     if user.status is UserStatus.pending:
         raise ApiError(403, "email_not_verified", "Confirm your email address first: we can send a new code.")
+    if user.status is UserStatus.deactivated and deletion_pending(user):
+        if not restore:
+            raise ApiError(
+                403, "deletion_scheduled", "This account is waiting to be deleted. You can still keep it.",
+                extra={"purge_after": purge_after(user).isoformat()},
+            )  # fmt: skip
+        user.status = UserStatus.active
+        user.deletion_requested_at = None
+        _audit(session, "account.restored", user.id, actor=user.id)
     if user.status is not UserStatus.active:
         raise ApiError(403, f"account_{user.status.value}", "This account cannot sign in. Contact support.")
 
@@ -375,7 +428,7 @@ async def request_password_reset(ctx: AuthContext, session: AsyncSession, email:
     await ctx.limiter.hit(CODE_COOLDOWN, f"reset_password:{email}")
     await ctx.limiter.hit(CODE_DAILY, f"reset_password:{email}")
     user = await _user_by_email(session, email)
-    if user is not None and user.status is UserStatus.active:
+    if user is not None and can_reset_password(user):
         _audit(session, "auth.password_reset_requested", user.id)
         await ctx.jobs.defer(session, ISSUE_CODE, user_id=str(user.id), purpose=CodePurpose.reset_password.value)
         await session.commit()
@@ -390,7 +443,7 @@ async def confirm_password_reset(
     await ctx.limiter.hit(VERIFY_EMAIL, f"reset_password:{data.email}")
     _check_password_policy(ctx, data.new_password, data.email)
     user = await _user_by_email(session, data.email, lock=True)
-    if user is None or user.status is not UserStatus.active:
+    if user is None or not can_reset_password(user):
         ctx.passwords.hash(data.new_password)
         raise _verification_failed()
     failures_key = f"{CodePurpose.reset_password.value}:{user.id}"
@@ -431,7 +484,12 @@ async def authenticate(
     if row is None:
         return None
     sess, user = row
-    if sess.revoked_at is not None or sess.expires_at <= now or user.status is not UserStatus.active:
+    if (
+        sess.revoked_at is not None
+        or sess.expires_at <= now
+        or user.status is not UserStatus.active
+        or deletion_pending(user)
+    ):
         return None
     # Sliding expiry, written at most once per touch interval.
     if sess.last_used_at is None or now - sess.last_used_at >= timedelta(seconds=settings.session_touch_interval_s):
@@ -454,6 +512,7 @@ async def session_is_live(session: AsyncSession, session_id: uuid.UUID, user_id:
                 Session.revoked_at.is_(None),
                 Session.expires_at > now,
                 User.status == UserStatus.active,
+                User.deletion_requested_at.is_(None),
             )
         )
     ).scalar_one_or_none()
@@ -498,8 +557,10 @@ async def issue_code(
     user = (
         await session.execute(select(User).where(User.id == user_id).with_for_update(key_share=True))
     ).scalar_one_or_none()
-    wanted = UserStatus.pending if purpose is CodePurpose.verify_email else UserStatus.active
-    if user is None or user.status is not wanted:
+    if user is None:
+        return None
+    eligible = user.status is UserStatus.pending if purpose is CodePurpose.verify_email else can_reset_password(user)
+    if not eligible:
         return None
     code = new_code()
     await session.execute(

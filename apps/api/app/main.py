@@ -27,6 +27,7 @@ from app.modules.matching.router import router as matching_router
 from app.modules.media.router import router as media_router
 from app.modules.messaging.router import router as messaging_router
 from app.modules.moderation.router import router as moderation_router
+from app.modules.privacy.router import router as privacy_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.realtime.router import router as realtime_router
 from app.modules.safety.router import router as safety_router
@@ -118,5 +119,6 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(realtime_router)
     app.include_router(safety_router)
     app.include_router(moderation_router)
+    app.include_router(privacy_router)
     install_openapi(app)
     return app

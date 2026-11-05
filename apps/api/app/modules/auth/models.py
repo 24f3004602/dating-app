@@ -45,7 +45,7 @@ class Session(CreatedAtMixin, Base):
     # A shortened user agent (for a future device list); never the raw header.
     user_agent: Mapped[str | None] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(index=True)
-    revoked_at: Mapped[datetime | None]
+    revoked_at: Mapped[datetime | None] = mapped_column(index=True)
     last_used_at: Mapped[datetime | None]
 
 

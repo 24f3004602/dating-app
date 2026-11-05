@@ -33,7 +33,7 @@ ID or age verification via a provider,trust,could,yes,no,Bumble ID verification 
 Hide from contacts or a known-people block list,privacy,could,yes,no,Tinder [2]; Hinge India [14]; contact data needs explicit consent
 Discovery pause,privacy,must,yes,partial,Bumble Snooze [7]; Stage 7a: setting stored and tested; applied in discovery (stage 8); Stage 7b: screens built; screen tests and the web e2e pass; native device pass pending (NAT-1); applied in discovery (stage 8)
 Discreet notifications (no names or message text by default),privacy,should,no,no,Default behaviour; competitors not checked; ships with push (stage 16)
-Account deletion under a documented retention policy,privacy,must,yes,no,Stage 5: sessions and codes cascade on user delete (tested). No deletion flow yet
+Account deletion under a documented retention policy,privacy,must,yes,partial,"Stage 5: sessions and codes cascade on user delete (tested). No deletion flow yet; Stage 12a: request with the password, 7-day restore, purge with listed exceptions, report hold, banned-email hash, hourly retention sweep; API tested (PRIV-*). App screens in 12b"
 Safety center (static guidance),safety,should,yes,no,
 Protected admin and moderation console,admin,must,yes,no,Server-side authorization
 Landing page,web,should,yes,no,

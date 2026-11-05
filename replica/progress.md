@@ -4,12 +4,10 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 11 (safety) **done for the API and the web build**: 298 API tests (11a
-passed CI: api run 41947439992, mobile run 41947439991), 86 mobile tests and
-the two-person e2e, now ending with a report that closes the other person's
-chat live. 11b passed CI (mobile run 41949229426, after a fix for a cold-cache
-test timeout). A native device pass is still pending; the staff console is
-stage 14. Next: stage 12 (privacy).
+Stage 12 (privacy) **in progress**. 12a (API) is done: account deletion with a
+7-day restore, the purge with its listed exceptions, the report hold, the
+banned-email hash and an hourly retention sweep, with 310 API tests passing
+locally and CI pending. 12b (app screens) is next.
 
 ## Done
 
@@ -21,6 +19,7 @@ stage 14. Next: stage 12 (privacy).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 12a | Account deletion (password, 7-day restore, purge through the database cascade, photo files by a queued job, report hold, banned-email hash), retention sweep (conversations, picks, sessions, codes, unverified sign-ups, reports, records), expired audit records through an owner-rights function, the store review; migration 0009 | `app/modules/privacy/`, `privacy-data-inventory.md` |
 | 11b | Unmatch, Block and Report on chats and profiles (with confirmations), the report form, the Safety screen (blocks, report statuses), removed messages, `match.closed` in the app; e2e report flow | `apps/mobile/src/screens/safety.tsx` |
 | 11a | Block, unblock and unmatch (closing the match under the send lock), reports with a copy of the reported message and a visible status, the moderation queue, photo review, account actions, message removal, staff roles, audited reads and actions, append-only moderation records; migration 0008 | `app/modules/safety/`, `app/modules/moderation/` |
 | 10b | Chat screen (history, send with retry by the same ID, the hurtful-word prompt, the money tip, read pointer, older pages), matches list with last message, unread and your turn, realtime client (tickets, catch-up, backoff, heartbeat watchdog, close codes); two-person e2e on a fresh database per run | `apps/mobile/src/screens/chat.tsx`, `apps/mobile/src/realtime/`, `e2e/tests/chat.spec.ts` |
@@ -31,6 +30,22 @@ stage 14. Next: stage 12 (privacy).
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 12a status
+
+- **Implemented and tested:** F09-H1 and PRIV-* in `test-plan.md`. The purge is checked table by table, and photo files are checked in storage. Every retention rule is checked one step either side of its period. The real worker runs all three privacy jobs.
+- **Mutation checks:** each of these breaks a test: no report hold, no barred-email check, no session revocation, no re-check under the row lock.
+- **Found and fixed:**
+  - Unverified sign-ups were kept forever (email, password hash, birthdate); they're now deleted after 7 days.
+  - A reinstated account that was waiting for deletion would have become active with its deletion date still set; it now goes back to waiting.
+  - procrastinate keeps an external pool after closing, so a second worker test reused a closed pool. Production opens once per process; the tests reset it (D085).
+- **Partial, by design:**
+  - The app screens are 12b.
+  - The data export is planned before launch (D086).
+  - Erasure for suspended or banned members goes through the grievance contact until the staff console (stage 14).
+- **Residual:**
+  - Orphaned files if a deletion job fails 8 times (needs a reconciliation sweep with the bucket adapter).
+  - Periods marked (R) need legal review.
 
 ## Stage 11b build log
 
@@ -205,9 +220,8 @@ stage 14. Next: stage 12 (privacy).
 
 ## Next
 
-Stage 12: privacy. Covers:
-- **Settings:** privacy preferences and the discovery pause (exists since stage 7; review it end to end).
-- **Retention jobs:** conversations purged 30 days after a match ends (reports keep their copies), daily picks after 7 days, sessions and codes after expiry, resolved reports pseudonymised and deleted on schedule.
-- **Account deletion:** request (hidden at once, sessions revoked, realtime closed), a short grace period, then the purge of profile, photos and files, likes, matches, messages and blocks; the banned-email hash; the listed exceptions kept.
-- **Review:** every store (database, object storage, Redis, logs, the worker, providers) against the privacy inventory, with honest wording on what deletion does and doesn't reach (backups, email already sent).
-- **Tests:** deletion and every purge, including files in storage.
+Stage 12b: privacy in the app.
+- A delete-account screen from Privacy, saying what happens and what isn't reached (backups, emails already sent, kept safety records). It asks for the password, then signs out to a screen with the date.
+- On sign-in, an account waiting for deletion is offered "Keep my account".
+- The Privacy screen reviewed end to end: visibility and pause.
+- Screen tests, and an e2e that deletes and restores an account; then the stage report.
