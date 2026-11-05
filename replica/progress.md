@@ -4,7 +4,7 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 15 (audit) **done locally**; CI is pending.
+Stage 15 (audit) **done**; passed CI (api run 41985853625, mobile run 41985853301).
 - **Parity:** 74.1 of 100, with 17 of 20 must-haves. The 3 missing are all owner setup: an email provider for sign-up codes and password recovery, and a private bucket for photos.
 - **Tests:** every level passed. One defect found and fixed: BUG-001, S4.
 - **Verdict:** not shippable yet. It needs those owner items, the native device pass (NAT-1) and a deployment with TLS (stage 17).
