@@ -50,6 +50,132 @@ store publishing without it). Template: replica-deploy `preflight.md`.
 4. **Set `TRUSTED_PROXIES`** to the load balancer's and the console's addresses (OPS-1).
 5. **PostgreSQL logging settings** (stage 6 note): `log_parameter_max_length_on_error = 0`, `log_statement = none`.
 
+## Closed beta on one server (stage 18, D096)
+
+A small, invite-only user test before any launch. The owner's choices (2026-11-05):
+- one Amazon Lightsail server in Mumbai;
+- testers use a web link, plus an Android app file (APK);
+- Gmail sends the codes.
+
+The kit is in `infra/beta`, and the `beta-stack` workflow starts it exactly as below on every change. **Not deployed:** the steps marked (owner) need your accounts and your go.
+
+**What runs:** one server, Docker Compose.
+- **Caddy** (`edge`): the only thing reachable from the internet (80 and 443, with HTTPS from Let's Encrypt). It also serves the app's web build.
+- **PostgreSQL, Redis, the API, the worker and the website:** all on a private network.
+- **Photos:** on a volume on the server's disk.
+- **Hosts:**
+  - `app.<domain>`: the app, for testers;
+  - `api.<domain>`: the API;
+  - `<domain>`: the tester notice and the staff console.
+
+**Cost (check current prices):**
+- **Lightsail:** the 2 GB plan is US$12 a month with a public IPv4 address, and new accounts get 3 months free on that plan (AWS docs, checked 2026-11-05). The static IP is free while attached.
+- **Free:** Gmail and the Expo free tier.
+- **The domain:** the registrar's price.
+
+**1. The server (owner).**
+1. In Lightsail, create an instance:
+   - Region: **Mumbai**;
+   - Linux, "OS Only": **Ubuntu 24.04 LTS** (or 26.04 LTS);
+   - Plan: **2 GB**;
+   - Name: `datingapp-beta`.
+2. Networking:
+   - Create a **static IP** and attach it.
+   - In the firewall, keep only SSH 22 (restricted to your own IP if you can), HTTP 80 and HTTPS 443, for both IPv4 and IPv6.
+3. At your domain's registrar, add three **A records**: `@`, `api` and `app`, all pointing to the static IP. Check with `nslookup app.<domain>`.
+
+**2. Software on the server** (SSH from the Lightsail page or your terminal):
+```sh
+sudo apt update && sudo apt -y upgrade
+# Docker Engine from Docker's apt repository (docs.docker.com/engine/install/ubuntu, read 2026-11-05)
+sudo apt install -y ca-certificates curl git
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker $USER   # then sign out and back in
+# 4 GB of swap: building the images needs more than 2 GB of memory
+sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+**3. Start it:**
+```sh
+git clone https://github.com/24f3004602/dating-app.git && cd dating-app/infra/beta
+./make-env.sh <domain> <your-email>   # generates the passwords and keys on the server
+nano .env                              # OPERATOR_NAME, CONTACT_EMAIL, SMTP_USERNAME (the Gmail address), SMTP_PASSWORD (its app password)
+docker compose build                   # the first build takes a while on 2 GB
+docker compose run --rm migrate
+docker compose up -d && docker compose ps
+```
+- **Check it:**
+  - `https://app.<domain>` shows the app;
+  - `https://<domain>/privacy` shows your name and contact;
+  - `https://api.<domain>/readyz` answers.
+- **Rules:**
+  - `.env` never leaves the server.
+  - Secrets never go in chat, email or the repo.
+
+**4. You as the first admin:**
+1. `docker compose exec api datingapp-api invite add <you@...>`.
+2. Sign up in the app and enter the code.
+3. Make yourself an admin: `docker compose exec postgres psql -U postgres -d datingapp -c "UPDATE users SET role = 'admin' WHERE email_normalized = '<you@...>';"`.
+4. Get an enrolment token: `docker compose exec api datingapp-api staff-enrollment <you@...>`.
+5. Go to `https://<domain>/admin/login`, scan the key with an authenticator app, and keep the 10 recovery codes offline.
+
+**5. Testers:**
+- Invite them: `docker compose exec api datingapp-api invite add a@example.com b@example.com`. The list holds keyed hashes only, so keep your own list of who you invited.
+- `invite count` shows how many invites are open; `invite remove` takes one back.
+- Send each tester:
+  - the link `https://app.<domain>`, plus the APK link for Android;
+  - "18+, use the address I invited, check spam for the code";
+  - the notice links.
+- **Discovery needs real overlap:** introductions only pair people whose gender, age, area and intentions fit both ways. Recruit enough testers in one area whose preferences match each other. There are never filler profiles (CLAUDE.md: never manufacture users).
+
+**6. Running it day to day:**
+- **Review photos and reports** in the console every day. Photos stay hidden until approved, so slow review means empty introductions.
+- **Backups:** `crontab -e`, then add:
+  - `30 21 * * * $HOME/dating-app/infra/beta/backup.sh >> $HOME/backup.log 2>&1`
+
+  That runs 03:00 India time and keeps 7 days in `/var/backups/datingapp-beta`. Make the folder once: `sudo install -d -o $USER /var/backups/datingapp-beta`.
+- **Health:** `docker compose ps`; `docker compose logs --tail 100 api worker`. Logs rotate at 3 × 10 MB per service.
+- **Updates:** `git pull && docker compose build && docker compose run --rm migrate && docker compose up -d`.
+- **Restore** a database backup into a fresh volume: `docker compose up -d postgres`, then `docker compose exec -T postgres pg_restore -U postgres -d datingapp --clean --if-exists < db-<time>.dump`. Photos: `docker compose exec -T api tar xzf - -C /app/var < media-<time>.tgz`.
+
+**7. The Android app file (owner + me):**
+1. Sign up at expo.dev.
+2. In `apps/mobile`: `npx eas-cli login`, then `npx eas-cli init`. Put the project ID and your domain's URLs in `eas.json` (the `beta` profile refuses placeholders).
+3. Build: `npx eas-cli build -p android --profile beta`. EAS gives an install link; testers allow "install unknown apps".
+4. Push on Android is optional: it needs a Firebase project and `PUSH_BACKEND=expo`.
+
+**8. When the test ends (the wipe):**
+1. Tell the testers first.
+2. On the server: `docker compose down -v`, which deletes the database, photos and certificates; then `sudo rm -rf /var/backups/datingapp-beta`.
+3. Delete:
+   - the Lightsail instance, any snapshots and the static IP;
+   - the Gmail account's sent mail, or the whole account;
+   - the EAS builds.
+4. Record the date in `decision-log.md`.
+
+The privacy notice promises all this within 30 days of the end.
+
+**Limits of the beta, by design:**
+- **One server:** no redundancy.
+- **Backups:** on the same disk. Copy one off the server now and then, with `scp`.
+- **Photos:** on disk; the bucket comes at launch.
+- **Documents:** the notice hasn't had legal review.
+- **Email:** Gmail's sending limits apply.
+- **Staff sign-in limits:** the console's server doesn't pass the visitor's IP to the API, so per-IP limits on staff sign-in count all staff together. That's stricter, not weaker, but an attack on the console could lock staff out for a while.
+
 ## Staging plan (planned)
 
 **Shape:** one India region, everything private except the load balancer.

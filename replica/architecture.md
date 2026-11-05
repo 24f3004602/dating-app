@@ -79,6 +79,7 @@ apps/mobile/         Expo SDK 58 app (expo-router)
 apps/web/            Next.js 16: / (landing), /admin (moderation console)
 packages/api-types/  generated TypeScript types
 apps/api/Dockerfile  the API and worker image; apps/web/Dockerfile the web image (stage 17, built and smoke-tested in CI, never pushed)
+infra/beta/          the closed beta on one server (stage 18, D096): compose.yaml, Caddyfile, app.Dockerfile (Caddy + the app's web build), app-csp.txt, make-env.sh, backup.sh; started in CI by beta-stack
 .github/workflows/   CI
 replica/             project documents
 ```

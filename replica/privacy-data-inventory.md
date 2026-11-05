@@ -52,7 +52,7 @@ this table together.
 | rate-limit counters | abuse prevention | system | Redis, keyed by an HMAC of the email, IP or user ID (no plain values) | nobody | 1 minute to 24 hours (TTL) | expire |
 | job queue rows | sending codes and notices; deleting files; the privacy jobs | system | `procrastinate_jobs` and `procrastinate_events` (user ID or object keys, purpose or notice kind; never an email or a code) | engineers | succeeded jobs deleted at once; failed, cancelled or aborted jobs 30 days after they end (`privacy:remove_old_jobs`) | a failed job naming the user ID lasts at most 30 days |
 | security logs (truncated IP, route template, method, status, duration, request ID, user ID) | security, breach detection | system | log store (stdout in development; to choose at deployment) | restricted engineers | 1 year (DPDP minimum for such logs), then deleted by the log store's retention setting (deployment, stage 17) | kept under the exception, then deleted |
-| backups | disaster recovery | system | provider backups (none exist yet) | restricted engineers | 30-day rolling **(R)** | deleted data disappears when the backups age out; members are told so |
+| backups | disaster recovery | system | beta (D096): `backup.sh`, daily, the database and photos on the server's own disk, 7 days; launch: provider backups | restricted engineers | 30-day rolling **(R)** | deleted data disappears when the backups age out; members are told so |
 
 ## Account deletion (D083)
 

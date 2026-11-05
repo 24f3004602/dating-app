@@ -26,7 +26,7 @@ features yet. Current state and next step:
 | [`privacy-data-inventory.md`](replica/privacy-data-inventory.md) | what data we hold, why, who sees it, retention, deletion |
 | [`test-plan.md`](replica/test-plan.md) | test strategy, cases and results |
 | [`bugs.md`](replica/bugs.md) | the bug register, with severity and status, and a "to check" list |
-| [`deploy.md`](replica/deploy.md) | release readiness (preflight results), the release gates, the staging plan and runbooks (planned; nothing deployed) |
+| [`deploy.md`](replica/deploy.md) | release readiness, the closed beta on one server (stage 18: the steps, running it, the wipe), the release gates, the staging plan and runbooks (nothing deployed yet) |
 | [`design/`](replica/design/) | design tokens (contrast-checked), component specs, the gallery screenshot |
 
 The layout follows the conventions of the open-source
