@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { connection } from "next/server";
+
+import { BRAND } from "@/lib/config";
 
 // Every claim here is something the app already does and tests check (features.csv);
 // nothing about members, numbers or reviews, because there are none yet.
@@ -45,7 +48,7 @@ export default async function Landing() {
         Skip to content
       </a>
       <header className="site-header">
-        <span className="brand">Haanji</span>
+        <span className="brand">{BRAND}</span>
         <span className="badge highlight">Not open yet</span>
       </header>
       <main id="main" className="page">
@@ -70,7 +73,9 @@ export default async function Landing() {
       </main>
       <footer>
         <p className="caption">
-          Haanji is a working name. The terms and the privacy notice are drafts under legal review.
+          {BRAND} is a working name. For the invite-only test: <Link href="/terms">terms for testers</Link> and{" "}
+          <Link href="/privacy">privacy notice for testers</Link>. Full documents will follow before any public
+          launch.
         </p>
       </footer>
     </>

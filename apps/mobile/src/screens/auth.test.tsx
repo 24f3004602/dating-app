@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
+import { Linking } from "react-native";
 
 import { useAuth } from "@/auth/AuthProvider";
 import { t } from "@/i18n/en";
@@ -50,6 +51,16 @@ test("sign-up sends a normalised body with the consent versions, then asks for t
     birthdate: "2008-11-04",
     consents: { terms: "draft-2026-11", privacy: "draft-2026-11" },
   });
+});
+
+test("sign-up links to the terms and the privacy notice, opened in the browser", async () => {
+  const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+  const { api } = fakeApi({});
+  await renderWithApp(<SignUpScreen now={now} />, api);
+  await fireEvent.press(screen.getByRole("link", { name: t.signUp.readTerms }));
+  await fireEvent.press(screen.getByRole("link", { name: t.signUp.readPrivacy }));
+  expect(open.mock.calls).toEqual([["http://127.0.0.1:3000/terms"], ["http://127.0.0.1:3000/privacy"]]);
+  expect(screen.getByText(t.signUp.draftNotice)).toBeTruthy(); // development documents
 });
 
 test("sign-up shows the app's message for a server rejection", async () => {

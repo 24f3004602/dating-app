@@ -43,6 +43,23 @@ test("the landing page says only what the app does", async ({ page }) => {
   expect(errors.console).toEqual([]);
 });
 
+test("the tester notice pages are linked, readable and accessible", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("/");
+  await page.getByRole("link", { name: "privacy notice for testers" }).click();
+  await expect(page.getByRole("heading", { name: "Privacy notice for testers", level: 1 })).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11/)).toBeVisible();
+  await expect(page.getByText(/never your messages/i)).toBeVisible();
+  await checkA11y(page, "privacy");
+  await page.getByRole("link", { name: "Terms for testers" }).click();
+  await expect(page.getByRole("heading", { name: "Terms for testers", level: 1 })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "You are 18 or over." })).toBeVisible();
+  await checkA11y(page, "terms");
+  await page.setViewportSize({ width: 320, height: 700 }); // reflow
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  expect(errors.console).toEqual([]);
+});
+
 test("an unknown page is a plain 404 that keeps the policy", async ({ page }) => {
   const errors = watchErrors(page);
   const res = await page.goto("/no-such-page");

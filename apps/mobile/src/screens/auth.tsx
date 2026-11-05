@@ -8,11 +8,11 @@ import { View } from "react-native";
 import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
-import { DOCUMENT_VERSIONS } from "@/config";
+import { BETA_DOCUMENTS, DOCUMENT_LINKS, DOCUMENT_VERSIONS, INVITE_ONLY } from "@/config";
 import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
-import { Body, Button, Checkbox, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
+import { Body, Button, Checkbox, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
 import {
   birthdateIso,
   type CodeValues,
@@ -89,13 +89,15 @@ export function SignUpScreen({ now }: { now?: () => Date }) {
         </View>
       </Row>
       <FieldError message={e.day?.message ?? e.month?.message ?? e.year?.message} />
+      <ExternalLink label={t.signUp.readTerms} url={DOCUMENT_LINKS.terms} />
       <Controller control={control} name="terms" render={({ field }) => (
         <Checkbox label={t.signUp.terms} checked={!!field.value} onChange={field.onChange} error={e.terms?.message} />
       )} />
+      <ExternalLink label={t.signUp.readPrivacy} url={DOCUMENT_LINKS.privacy} />
       <Controller control={control} name="privacy" render={({ field }) => (
         <Checkbox label={t.signUp.privacy} checked={!!field.value} onChange={field.onChange} error={e.privacy?.message} />
       )} />
-      <Body muted>{t.signUp.draftNotice}</Body>
+      <Body muted>{BETA_DOCUMENTS ? t.signUp.betaNotice : t.signUp.draftNotice}</Body>
       {failure ? <Notice kind="error">{failure}</Notice> : null}
       <Button label={t.signUp.submit} onPress={submit} busy={formState.isSubmitting} />
     </Screen>
@@ -146,6 +148,7 @@ export function VerifyScreen() {
     <Screen>
       <Title>{t.verify.title}</Title>
       <Body>{fill(t.verify.body, { email: pending.email })}</Body>
+      {INVITE_ONLY ? <Body muted>{t.verify.inviteOnly}</Body> : null}
       <FormField control={control} name="code" label={t.verify.code} error={formState.errors.code?.message}
         keyboardType="number-pad" inputMode="numeric" autoComplete="one-time-code" maxLength={6} />
       {failure ? <Notice kind="error">{failure}</Notice> : null}

@@ -1,0 +1,23 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "beta": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_VARIANT": "beta",
+        "EAS_PROJECT_ID": "set-by-the-owner-after-eas-init",
+        "EXPO_PUBLIC_API_URL": "https://api.example.in",
+        "EXPO_PUBLIC_WEB_URL": "https://example.in",
+        "EXPO_PUBLIC_TERMS_VERSION": "beta-2026-11",
+        "EXPO_PUBLIC_PRIVACY_VERSION": "beta-2026-11",
+        "EXPO_PUBLIC_INVITE_ONLY": "1"
+      }
+    }
+  }
+}

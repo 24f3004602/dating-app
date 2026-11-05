@@ -33,7 +33,10 @@ export const en = {
     birthdateHint: "We show your age, never your date of birth.",
     terms: "I accept the terms of use",
     privacy: "I have read the privacy notice",
+    readTerms: "Read the terms of use",
+    readPrivacy: "Read the privacy notice",
     draftNotice: "Draft documents: final versions will follow legal review.",
+    betaNotice: "A short notice for this invite-only test. Full documents will follow before any public launch.",
     submit: "Create account",
   },
   verify: {
@@ -45,6 +48,7 @@ export const en = {
     resent: "If the address can be used, a new code is on its way.",
     restart: "Start again",
     failed: "That code didn't work, or it has expired. Check it, or ask for a new one.",
+    inviteOnly: "This test is invite-only. If no code arrives within a few minutes, check your spam folder, and check with the person who invited you that this is the address they added.",
   },
   signIn: {
     title: "Sign in",

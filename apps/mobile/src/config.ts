@@ -3,9 +3,21 @@
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 // Versions of the documents shown at sign-up. The API refuses a mismatch with
-// `consent_required` and the versions it expects; production needs final,
-// legally reviewed versions (D044).
-export const DOCUMENT_VERSIONS = { terms: "draft-2026-11", privacy: "draft-2026-11" } as const;
+// `consent_required` and the versions it expects; the beta uses the tester
+// notice ("beta-" versions, D096) and production needs final, legally reviewed
+// versions (D044). Build-time values (EXPO_PUBLIC_*), kept equal to the API's.
+export const DOCUMENT_VERSIONS = {
+  terms: process.env.EXPO_PUBLIC_TERMS_VERSION ?? "draft-2026-11",
+  privacy: process.env.EXPO_PUBLIC_PRIVACY_VERSION ?? "draft-2026-11",
+};
+export const BETA_DOCUMENTS = DOCUMENT_VERSIONS.terms.startsWith("beta-");
+
+// The website that hosts the documents (the web app's /terms and /privacy).
+export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
+export const DOCUMENT_LINKS = { terms: `${WEB_URL}/terms`, privacy: `${WEB_URL}/privacy` };
+
+// Invite-only sign-up (the beta, D096): the verify screen explains a missing code.
+export const INVITE_ONLY = process.env.EXPO_PUBLIC_INVITE_ONLY === "1";
 
 // The design-system gallery (`/design`): development and the e2e build only.
 // It shows labelled samples, never people (D088).

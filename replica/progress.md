@@ -6,7 +6,8 @@ Updated: 2026-11-05
 
 Stage 18 (closed beta, D096) **in progress**. The owner wants a small invite-only user test before any launch or scaling. Their choices (2026-11-05): one Lightsail server in Mumbai, a web link plus an Android app file, Gmail over SMTP for codes.
 - **18a done:** SMTP email (TLS required), `APP_ENV=beta` (production's rules except disk photos and the beta notice), invite-only sign-up with the `invite` command; migration 0013. 372 API tests pass.
-- **Next:** 18b, the tester notice (terms and privacy for the beta) and the app's beta build settings; 18c, the one-server setup kit (compose, HTTPS, backups, wipe). Then the deploy with the owner.
+- **18b done:** the tester notice (`/terms`, `/privacy`), linked from the landing page and from sign-up; the app's beta build settings (`app.config.ts`, `eas.json`), with an invite-only hint on the code screen. 113 app tests, the console e2e (4) pass.
+- **Next:** 18c, the one-server setup kit (compose, HTTPS, backups, wipe). Then the deploy with the owner.
 - The launch gates in `deploy.md` (name, lawyer, bucket, stores) still apply to the public launch, not to the beta.
 
 ## Done
@@ -19,6 +20,7 @@ Stage 18 (closed beta, D096) **in progress**. The owner wants a small invite-onl
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 18b | Tester notice (terms and privacy for the beta, website pages, linked at sign-up); Android beta build settings that refuse placeholders; invite-only hint | `apps/web/app/privacy`, `apps/web/app/terms`, `apps/mobile/app.config.ts`, `apps/mobile/eas.json` |
 | 18a | Closed beta, server side: SMTP email over TLS (stdlib, fake-server tested), the `beta` environment, invite-only sign-up (HMAC list, `datingapp-api invite`), invites swept at 30 days; migration 0013 | `app/providers/email.py`, `app/config.py`, `migrations/versions/0013_signup_invites.py` |
 | 17 | Release readiness: preflight run and recorded; container images for the API, worker and web, built and smoke-tested in CI (never pushed); `TRUSTED_PROXIES`; production guards for test backends and http origins; a complete `.env.example` with a test; original placeholder icons; rebrand sweep; the staging plan and runbooks (planned) | `replica/deploy.md`, `apps/*/Dockerfile`, `.github/workflows/images.yml` |
 | 16b | Billing rules evaluated (Apple, Google Play in India, Razorpay); the payment-provider interface, a Razorpay adapter (fake-server tested), signed and deduplicated webhooks, a server-side entitlement, cancel at cycle end, cancellation on deletion, a live-key guard; migration 0012 | `replica/launch/pricing.md`, `app/modules/billing/`, `app/providers/payments.py` |

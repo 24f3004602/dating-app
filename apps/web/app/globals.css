@@ -66,6 +66,9 @@ nav a { display: inline-flex; align-items: center; min-height: var(--touch-chip)
 nav a[aria-current="page"] { background: var(--color-accent-soft); font-weight: 600; }
 
 .hero { padding: var(--space-7) 0 var(--space-6); }
+.document { max-width: 44rem; }
+.document h2 { margin-top: var(--space-6); }
+.document li { margin-bottom: var(--space-2); }
 .hero p { font-size: 1.25rem; max-width: 40rem; }
 .features { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); padding: 0; list-style: none; }
 .features li { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5); }

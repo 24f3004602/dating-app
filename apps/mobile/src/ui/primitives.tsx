@@ -13,6 +13,7 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   Image,
+  Linking,
   Platform,
   Pressable,
   type PressableStateCallbackType,
@@ -140,6 +141,17 @@ export function TextLink({ label, href }: { label: string; href: Href }) {
         {({ pressed }) => <Text style={[styles.linkText, pressed && styles.linkPressed]}>{label}</Text>}
       </Pressable>
     </Link>
+  );
+}
+
+/** A link to a web page outside the app (the documents): the browser opens it,
+ *  in a new tab on the web, so a half-filled form isn't lost. */
+export function ExternalLink({ label, url }: { label: string; url: string }) {
+  return (
+    <Pressable role="link" aria-label={label} onPress={() => void Linking.openURL(url)}
+      style={(state) => [styles.link, focusStyle(state)]}>
+      {({ pressed }) => <Text style={[styles.linkText, pressed && styles.linkPressed]}>{label}</Text>}
+    </Pressable>
   );
 }
 
