@@ -1,0 +1,85 @@
+/* Built only from the design tokens (tokens.css). System fonts, as in the app (D088). */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+h1 { font-size: var(--type-title-size); line-height: var(--type-title-line); font-weight: var(--type-title-weight); margin: 0 0 var(--space-4); }
+h2 { font-size: var(--type-heading-size); line-height: var(--type-heading-line); font-weight: var(--type-heading-weight); margin: var(--space-6) 0 var(--space-3); }
+p { margin: 0 0 var(--space-4); }
+a { color: var(--color-accent); text-underline-offset: 2px; }
+a:hover { color: var(--color-accent-pressed); }
+:focus-visible { outline: var(--focus-width) solid var(--color-focus); outline-offset: var(--focus-offset); }
+.muted { color: var(--color-text-muted); }
+.caption { font-size: var(--type-caption-size); line-height: var(--type-caption-line); color: var(--color-text-muted); }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: var(--space-4); top: var(--space-4); background: var(--color-bg); padding: var(--space-2); z-index: 10; }
+
+.page { max-width: 64rem; margin: 0 auto; padding: var(--space-6) var(--space-5); }
+.narrow { max-width: 30rem; }
+
+.button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: var(--touch-min); padding: 0 var(--space-4);
+  border-radius: var(--radius-md); border: 1px solid var(--color-accent);
+  font: inherit; font-weight: var(--type-label-weight); text-decoration: none; cursor: pointer;
+  background: var(--color-accent); color: var(--color-on-accent);
+}
+.button:hover { background: var(--color-accent-pressed); border-color: var(--color-accent-pressed); color: var(--color-on-accent); }
+.button.secondary { background: var(--color-bg); color: var(--color-accent); }
+.button.secondary:hover { background: var(--color-accent-soft); }
+.button.danger { background: var(--color-bg); color: var(--color-danger); border-color: var(--color-danger); }
+.button.danger:hover { background: var(--color-danger-soft); }
+.button:disabled { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-muted); cursor: not-allowed; }
+
+label { display: block; font-weight: var(--type-label-weight); margin-bottom: var(--space-1); }
+.hint { display: block; font-size: var(--type-caption-size); color: var(--color-text-muted); font-weight: 400; }
+input, select, textarea {
+  font: inherit; width: 100%; min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-input); border-radius: var(--radius-sm);
+  background: var(--color-bg); color: var(--color-text);
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border: 2px solid var(--color-accent); }
+textarea { min-height: 6rem; }
+.field { margin-bottom: var(--space-4); }
+
+.notice { padding: var(--space-3); border-radius: var(--radius-md); border-left: 4px solid var(--color-accent); background: var(--color-accent-soft); margin-bottom: var(--space-4); }
+.notice.error { border-color: var(--color-danger); background: var(--color-danger-soft); }
+.notice.success { border-color: var(--color-success); background: var(--color-success-soft); }
+.badge { display: inline-block; border-radius: var(--radius-pill); padding: 0 var(--space-2); font-size: var(--type-caption-size); font-weight: 600; background: var(--color-surface); }
+.badge.highlight { background: var(--color-highlight); }
+.badge.danger { background: var(--color-danger-soft); }
+
+.site-header, .console-header {
+  display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border);
+}
+.brand { font-weight: 700; font-size: var(--type-heading-size); color: var(--color-text); text-decoration: none; }
+nav ul { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+nav a { display: inline-flex; align-items: center; min-height: var(--touch-chip); padding: 0 var(--space-3); border-radius: var(--radius-md); }
+nav a[aria-current="page"] { background: var(--color-accent-soft); font-weight: 600; }
+
+.hero { padding: var(--space-7) 0 var(--space-6); }
+.hero p { font-size: 1.25rem; max-width: 40rem; }
+.features { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); padding: 0; list-style: none; }
+.features li { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5); }
+.features h3 { margin: 0 0 var(--space-2); font-size: var(--type-label-size); }
+.features p { margin: 0; }
+footer { border-top: 1px solid var(--color-border); margin-top: var(--space-7); padding: var(--space-5); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+th { font-size: var(--type-caption-size); color: var(--color-text-muted); }
+.photos { display: flex; flex-wrap: wrap; gap: var(--space-3); list-style: none; padding: 0; }
+.photos img { width: 8rem; height: 8rem; object-fit: cover; border-radius: var(--radius-md); background: var(--color-surface); }
+.codes { font-family: ui-monospace, Menlo, Consolas, monospace; columns: 2; padding-left: var(--space-5); }
+.secret { font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; background: var(--color-surface); padding: var(--space-2); border-radius: var(--radius-sm); }
+.inline-form { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: flex-end; margin-bottom: var(--space-3); }
+.inline-form .field { margin-bottom: 0; flex: 1 1 12rem; }
+@media (max-width: 40rem) { .codes { columns: 1; } table { font-size: var(--type-caption-size); } }

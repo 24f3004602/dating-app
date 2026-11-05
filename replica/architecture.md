@@ -52,7 +52,7 @@ Exact versions are pinned in lockfiles when each part is created.
 | API tests | pytest 9.2, pytest-asyncio 1.4, httpx 0.28 against a real PostgreSQL | tests constraints and transactions for real |
 | quality | ruff 0.17, mypy 2.4, pip-audit 2.10 | lint, types, dependency vulnerabilities |
 | mobile | Expo SDK 58 (React Native 0.88.1, React 19.3.0; Node ≥ 22.13), Expo Router 58, TanStack Query 5.105, React Hook Form 7.91, Zod 4.6, openapi-fetch 0.17, expo-secure-store, expo-image-picker; TypeScript 6.0 (Expo's pin) (D057) | owner spec; SDK 58 requirements checked in Expo's docs (iOS 16.4+, Android 7+) |
-| web | Next.js 16.4 (App Router), React 19, TypeScript | owner spec; landing page and admin console |
+| web | Next.js 16.4.5 (App Router), React 19.3, TypeScript 6.0 | owner spec; landing page and admin console; the browser never holds an API token (D091) |
 | shared types | openapi-typescript 7.13 (with its own TypeScript 5.9) in `packages/api-types`, generated from `scripts/export_openapi.py`; CI fails if they drift | one contract; no hand-written duplicate types |
 | JS workspace | npm workspaces (`apps/mobile`, `apps/web`, `packages/api-types`) | hoisted layout is the safest for Metro. To verify against Expo's monorepo guide in stage 7 |
 | e2e tests | Playwright 1.64 with the installed Chrome, axe-core 4.14 scans, against the Expo web build and a real API (D062) | Playwright not yet installed on the owner's laptop (Chrome 156 and Edge 156 are); install when the first web or e2e stage starts |
@@ -168,6 +168,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/admin/photos/pending; POST /v1/admin/photos/{id}/decision | photo review | Mod | admin |
 | POST /v1/admin/users/{id}/actions (suspend: Mod; ban, reinstate: Adm); GET /v1/admin/audit-log (Adm) | account actions with a required note; audit trail (D081) | Mod / Adm | admin |
 | POST /v1/admin/auth/login, /enroll, /verify, /logout; GET /v1/admin/auth/me | staff sign-in: password, then a challenge; a TOTP code or a recovery code opens a `web_admin` session; enrolment with a one-time token (D090) | P / staff | admin |
+| GET /v1/admin/staff | staff accounts and whether each has an authenticator | Adm | admin |
 | POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
 
 **Webhooks in:** none in the MVP. Payments later need signed Razorpay

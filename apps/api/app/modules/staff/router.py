@@ -21,6 +21,7 @@ from app.modules.staff.schemas import (
     EnrollOut,
     StaffLoginIn,
     StaffMe,
+    StaffMember,
     StaffSessionOut,
     VerifyIn,
 )
@@ -69,6 +70,11 @@ async def me(auth: StaffSession, db: DbSession) -> StaffMe:
 async def logout(auth: CurrentStaffSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.staff_logout(db, auth.session, ctx.clock())
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/staff", responses=problems(401, 403), summary="Staff accounts and their authenticators (admin)")
+async def staff_list(auth: AdminSession, db: DbSession) -> list[StaffMember]:
+    return await service.staff_list(db, auth.user)
 
 
 @router.post(

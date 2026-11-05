@@ -35,8 +35,8 @@ Discovery pause,privacy,must,yes,partial,Bumble Snooze [7]; Stage 7a: setting st
 Discreet notifications (no names or message text by default),privacy,should,no,no,Default behaviour; competitors not checked; ships with push (stage 16)
 Account deletion under a documented retention policy,privacy,must,yes,partial,"Stage 5: sessions and codes cascade on user delete (tested). No deletion flow yet; Stage 12a: request with the password, 7-day restore, purge with listed exceptions, report hold, banned-email hash, hourly retention sweep; API tested (PRIV-*). App screens in 12b; Stage 12b: in the app (profile and Privacy), keep-my-account on sign-in; screen tests and a web e2e pass; native device pass pending"
 Safety center (static guidance),safety,should,yes,no,
-Protected admin and moderation console,admin,must,yes,no,Server-side authorization
-Landing page,web,should,yes,no,
+Protected admin and moderation console,admin,must,yes,partial,"Server-side authorization; Stage 14b: Next.js console (queue, report, photos, audit log, staff resets) behind server-side checks and staff two-factor sign-in; web e2e with axe. Needs a deployment with TLS"
+Landing page,web,should,yes,partial,"Stage 14b: responsive, built-features only, 'not open yet', strict CSP; axe and reflow tested. Final name and legal pages pending"
 English and Hindi UI,i18n,should,no,partial,Strings externalized in MVP; Hindi before public launch; Stage 7b: all copy in one strings file; Hindi file to come
 Push notifications with user preferences,notifications,should,yes,no,Stage 16
 Single paid plan (sandbox first),monetization,could,yes,no,Stage 16; P1-P2

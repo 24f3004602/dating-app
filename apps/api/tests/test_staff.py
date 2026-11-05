@@ -306,6 +306,12 @@ async def test_only_another_admin_can_reset_an_authenticator(
 
     r = await client.post(url.format(admin.id), headers=bearer(mod_session))
     assert (r.status_code, r.json()["code"]) == (403, "admin_only")
+    r = await client.get("/v1/admin/staff", headers=bearer(mod_session))
+    assert (r.status_code, r.json()["code"]) == (403, "admin_only")
+    listed = (await client.get("/v1/admin/staff", headers=bearer(admin_session))).json()
+    assert sorted((s["id"], s["role"], s["enrolled"]) for s in listed) == sorted(
+        [(str(admin.id), "admin", True), (str(moderator.id), "moderator", True)]
+    )  # members aren't listed
     r = await client.post(url.format(admin.id), headers=bearer(admin_session))
     assert (r.status_code, r.json()["code"]) == (409, "own_account")
     for target in (member.id, uuid.uuid4()):

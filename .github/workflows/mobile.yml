@@ -1,11 +1,12 @@
+# The app (Expo), the web site and staff console (Next.js), and the e2e suite.
 name: mobile
 
 on:
   push:
     branches: [main]
-    paths: ["apps/mobile/**", "apps/api/**", "packages/**", "e2e/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
+    paths: ["apps/mobile/**", "apps/web/**", "apps/api/**", "packages/**", "e2e/**", "replica/design/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
   pull_request:
-    paths: ["apps/mobile/**", "apps/api/**", "packages/**", "e2e/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
+    paths: ["apps/mobile/**", "apps/web/**", "apps/api/**", "packages/**", "e2e/**", "replica/design/**", "package.json", "package-lock.json", ".github/workflows/mobile.yml"]
 
 permissions:
   contents: read
@@ -43,6 +44,11 @@ jobs:
       - run: npm run typecheck -w @datingapp/mobile
       - run: npm test -w @datingapp/mobile -- --ci
       - run: npm run export:web -w @datingapp/mobile
+      - name: Web (landing page and staff console)
+        run: |
+          npm test -w @datingapp/web
+          npm run build -w @datingapp/web
+          npm run typecheck -w @datingapp/web
 
   e2e:
     needs: checks

@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-import { API_PORT, API_URL, apiEnv, WEB_PORT, WEB_URL } from "./env";
+import { API_PORT, API_URL, apiEnv, CONSOLE_PORT, CONSOLE_URL, WEB_PORT, WEB_URL } from "./env";
 
 const runId = process.env.E2E_RUN_ID ?? Date.now().toString(36);
 process.env.E2E_RUN_ID = runId;
@@ -31,6 +31,15 @@ export default defineConfig({
       command: `node serve-static.mjs ../apps/mobile/dist ${WEB_PORT}`,
       url: WEB_URL,
       reuseExistingServer: false,
+    },
+    {
+      // The Next.js landing page and staff console, production build.
+      command: `npx next start -p ${CONSOLE_PORT} -H 127.0.0.1`,
+      cwd: "../apps/web",
+      url: CONSOLE_URL,
+      env: { ...process.env, API_URL } as Record<string, string>,
+      reuseExistingServer: false,
+      timeout: 60_000,
     },
   ],
 });

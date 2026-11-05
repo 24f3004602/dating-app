@@ -65,6 +65,13 @@ class StaffSessionOut(ApiModel):
     recovery_codes: list[str] | None = Field(default=None, repr=False)
 
 
+class StaffMember(ApiModel):
+    id: uuid.UUID
+    email: str
+    role: Literal["moderator", "admin"]
+    enrolled: bool
+
+
 class EnrollmentTokenOut(ApiModel):
     """Give this to the staff member out of band (not by email); it works once."""
 

@@ -4,7 +4,11 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and two-factor sign-in, with 319 API tests passing locally and CI pending. 14b (the Next.js landing page and admin console) is next.
+Stage 14 (web) **done locally**:
+- 14a passed CI (api run 41977719453, mobile run 41977719394).
+- 14b passes locally: 319 API tests, the web build and tests, and all six e2e specs in each of 2 runs. CI for 14b is pending.
+
+The console needs a deployment with TLS before real use (stage 17). Next: stage 15 (audit).
 
 ## Done
 
@@ -16,6 +20,7 @@ Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and t
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 14b | Next.js landing page and staff console (queue, report detail and actions, photo review, audit log, staff authenticator resets) as a backend for the browser: HttpOnly `__Host-` cookies, server-side session checks on every page and action, nonce CSP; web e2e with axe | `apps/web/`, `e2e/tests/admin.spec.ts` |
 | 14a | Staff sign-in with a second factor: password, then a TOTP code or recovery code; enrolment only with a one-time token from another admin or the server CLI; secrets encrypted; codes work once; separate `web_admin` sessions (12 h, 30 min idle); migration 0010 | `app/modules/staff/` |
 | 13 | Design system: role tokens checked for contrast and kept equal to `replica/design/tokens.json` by a test; type scale, 48-point targets, web focus rings, distinct pressed and disabled states; Caption, TextLink, Badge, Card, Thumb; the peacock and marigold palette; a `/design` gallery with axe, focus, field and reflow checks; applied across the screens | `replica/design/`, `apps/mobile/src/ui/primitives.tsx` |
 | 12b | Delete-account screen (from the profile in any state and from Privacy), the welcome-screen date, Keep my account on sign-in, Privacy hints that say what visibility and pause do; e2e of delete, keep and delete again | `apps/mobile/src/screens/account.tsx`, `e2e/tests/privacy.spec.ts` |
@@ -30,6 +35,26 @@ Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and t
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 14b status and build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| landing | done | built features only, not open yet; CSP; axe and reflow |
+| staff sign-in | done | password, enrolment token, key and otpauth link, code, recovery codes; axe on each step |
+| reports, report | done | queue by urgency; reported item, message copy, what members saw, history; resolve; reinstate (admin) |
+| photos | done | approve or reject; your own photos never shown to you |
+| audit log, staff | done | admins only (the API decides); authenticator reset shows the token once |
+
+- **Found and fixed:**
+  - React resets a form after an action, so a wrong password also wiped the email; it's now kept.
+  - The final sign-in step re-rendered the route without its page title (axe); it's now set explicitly.
+  - The seeded fixtures can't sign in (undeliverable domain, by design), so the e2e creates its own labelled admin, in the e2e database only.
+  - The format check failed CI for 14a: I'd formatted `app` and `tests` but not `migrations`. I now run CI's exact commands over the whole project.
+- **Not yet:**
+  - QR codes for enrolment.
+  - A static not-found page without the nonce.
+  - Deployment and TLS (stage 17).
 
 ## Stage 14a status
 
@@ -246,7 +271,7 @@ Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and t
 
 ## Blockers / owner actions
 
-0. **Before any deployment:** staff two-factor sign-in is done in the API (14a, D090). The console that uses it is 14b. The first admin's enrolment token comes from `datingapp-api staff-enrollment <email>` run on the server, and you hand it over in person.
+0. **Before any deployment:** staff two-factor sign-in and the console are done (14a-b, D090-D091). They need TLS in front of them (stage 17). The first admin's enrolment token comes from `datingapp-api staff-enrollment <email>`, run on the server and handed over in person.
 1. Turn on Dependabot alerts and security updates (repo Settings → Code security).
 2. **Email provider** (needed before any real sign-up; not blocking development):
    - choose one, for example Amazon SES in ap-south-1, Postmark or Resend;
@@ -259,14 +284,9 @@ Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and t
 
 ## Next
 
-Stage 14: the web app (Next.js).
-- **Landing page:** responsive, using the design tokens.
-- **Admin console** for the moderation API:
-  - the report queue, report detail and actions;
-  - photo review, account actions and the audit log.
-- **Security:**
-  - Server-side route protection.
-  - Separate staff sessions in an HttpOnly, Secure, `SameSite=Strict` cookie, 12 hours long with a 30-minute idle timeout.
-  - Staff two-factor sign-in (TOTP), required by `/v1/admin` (release blocker D081).
-  - CSRF protection.
-- **Tests:** API tests for staff sessions and 2FA; web e2e with axe.
+Stage 15: the audit.
+- **Feature matrix:** every `features.csv` row against the code and tests.
+- **Architecture:** checked against what was built.
+- **Every test level, in one go:** API, mobile, web, e2e, migrations round trip, dependency audits and the contrast check.
+- **Review:** a security pass over the diff since stage 5, reading the code for the threat model's rows.
+- **Docs:** stale statements fixed; the native device pass (NAT-1) still flagged as not done.

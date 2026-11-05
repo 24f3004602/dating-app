@@ -53,14 +53,30 @@ uv run ruff check . && uv run mypy
 npm install                                  # at the repo root (npm workspaces)
 npm run typecheck -w @datingapp/mobile && npm test -w @datingapp/mobile
 npm run web -w @datingapp/mobile             # Expo web; set CORS_ORIGINS in apps/api/.env
-npm test -w @datingapp/e2e                   # web build + API + worker in Chrome (needs PostgreSQL and Redis)
+npm test -w @datingapp/e2e                   # web builds + API + worker in Chrome (needs PostgreSQL and Redis)
 ```
+
+## Development: web (`apps/web`)
+
+```bash
+API_URL=http://127.0.0.1:8000 npm run dev -w @datingapp/web   # landing page at /, staff console at /admin
+npm test -w @datingapp/web && npm run build -w @datingapp/web && npm run typecheck -w @datingapp/web
+```
+
+The console calls the API from its server; browsers never hold an API token.
+Staff sign in with a password and an authenticator. The first admin's one-time
+enrolment token comes from the server: `uv run datingapp-api staff-enrollment
+<email>` (in `apps/api`, for an account whose role is admin). After that,
+admins reset each other's authenticators from the console's Staff page.
 
 The e2e run recreates and migrates its own database, `datingapp_e2e_test`, each
 time (the owner role in `apps/api/.env` needs CREATEDB, as for the API tests), so
-your development database is never touched. Two specs: onboarding through
-discovery, and two people matching and chatting live over the realtime
-connection.
+your development database is never touched. The specs cover:
+- onboarding through discovery;
+- two people matching and chatting live;
+- deleting and keeping an account;
+- the design gallery;
+- the landing page and the staff console with two-factor sign-in.
 
 After an API change, regenerate the client types: `uv run python scripts/export_openapi.py
 ../../packages/api-types/openapi.json` (in `apps/api`), then `npm run generate -w @datingapp/api-types`.

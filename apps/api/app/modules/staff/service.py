@@ -45,6 +45,7 @@ from app.modules.staff.schemas import (
     EnrollOut,
     StaffLoginIn,
     StaffMe,
+    StaffMember,
     StaffSessionOut,
     VerifyIn,
 )
@@ -310,6 +311,26 @@ async def staff_logout(session: AsyncSession, sess: Session, now: datetime) -> N
     sess.revoked_at = now
     record(session, "staff.logout", actor=sess.user_id, target_type="user", target_id=sess.user_id)
     await session.commit()
+
+
+async def staff_list(session: AsyncSession, admin: User) -> list[StaffMember]:
+    """Active staff accounts and whether each has an authenticator (admin; audited)."""
+    rows = await session.execute(
+        select(User, StaffMfa.user_id)
+        .outerjoin(StaffMfa, StaffMfa.user_id == User.id)
+        .where(User.role.in_(STAFF), User.status == UserStatus.active)
+        .order_by(User.email_normalized)
+    )
+    out = [
+        StaffMember(
+            id=user.id, email=user.email_normalized,
+            role="admin" if user.role is UserRole.admin else "moderator", enrolled=mfa is not None,
+        )
+        for user, mfa in rows.all()
+    ]  # fmt: skip
+    record(session, "staff.list_viewed", actor=admin.id)
+    await session.commit()
+    return out
 
 
 # --- enrolment tokens --------------------------------------------------------------

@@ -6,6 +6,9 @@ export const API_PORT = 8771;
 export const WEB_PORT = 8772;
 export const API_URL = `http://127.0.0.1:${API_PORT}`;
 export const WEB_URL = `http://127.0.0.1:${WEB_PORT}`;
+// The Next.js landing page and staff console (stage 14).
+export const CONSOLE_PORT = 8773;
+export const CONSOLE_URL = `http://127.0.0.1:${CONSOLE_PORT}`;
 export const RUN_DIR = resolve(__dirname, ".run");
 export const WORKER_LOG = resolve(RUN_DIR, "worker.log");
 export const PHOTO = resolve(RUN_DIR, "photo-with-gps.jpg");

@@ -1,0 +1,26 @@
+{
+  "name": "@datingapp/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Landing page and the staff console (Next.js). The console calls the API from its server only; browsers never hold an API token.",
+  "scripts": {
+    "tokens": "node scripts/tokens-css.mjs",
+    "dev": "npm run tokens && next dev -p 3000",
+    "build": "npm run tokens && next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
+    "typescript": "~6.0.3"
+  }
+}
