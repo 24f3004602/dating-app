@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 # The API and the worker (same image, different command). Stage 17: built and
-# smoke-tested in CI (.github/workflows/images.yml); not deployed anywhere.
+# smoke-tested in CI (.github/workflows/images.yml). Stage 18: the closed beta
+# runs it on one server (infra/beta, D096).
 # Pattern: uv's Docker guide (docs.astral.sh/uv/guides/integration/docker, read 2026-11-05).
 
 FROM python:3.13-slim AS build
@@ -17,8 +18,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-editable
 
 FROM python:3.13-slim
-# A user with no login and no write access to the code.
-RUN useradd --system --no-create-home --uid 10001 app
+# A user with no login and no write access to the code. It can write only to
+# var/media, where the beta keeps photos on a volume (STORAGE_BACKEND=local, D096).
+RUN useradd --system --no-create-home --uid 10001 app  && mkdir -p /app/var/media && chown -R 10001:10001 /app/var
 WORKDIR /app
 COPY --from=build /app/.venv /app/.venv
 COPY --from=build /app/alembic.ini /app/alembic.ini

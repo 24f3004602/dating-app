@@ -1,0 +1,48 @@
+# The closed beta's front door (stage 18, D096): automatic HTTPS (Let's Encrypt)
+# for three hosts, then plain HTTP to the containers on the private network.
+#   {$DOMAIN}        the landing page, the tester notice and the staff console (web)
+#   api.{$DOMAIN}    the API, including the realtime WebSocket
+#   app.{$DOMAIN}    the app's web build (static files, from this image)
+# Caddy sets X-Forwarded-For; the API believes it only from this network
+# (TRUSTED_PROXIES). In CI, CADDY_GLOBAL_OPTIONS=local_certs uses Caddy's own CA.
+{
+	email {$ACME_EMAIL}
+	{$CADDY_GLOBAL_OPTIONS}
+}
+
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	# No `log` directive: Caddy keeps no access log (it would hold full client
+	# IPs and photo links). The API logs requests with truncated IPs.
+}
+
+{$DOMAIN} {
+	import common
+	reverse_proxy web:3000
+}
+
+api.{$DOMAIN} {
+	import common
+	reverse_proxy api:8000
+}
+
+app.{$DOMAIN} {
+	import common
+	header {
+		Content-Security-Policy "{$APP_CSP}"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	root * /srv/app
+	# A single-page app: unknown paths get the app shell; hashed bundles are cached.
+	@bundles path /_expo/static/*
+	header @bundles Cache-Control "public, max-age=31536000, immutable"
+	try_files {path} /index.html
+	file_server
+}

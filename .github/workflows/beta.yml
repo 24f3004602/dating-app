@@ -1,0 +1,128 @@
+# The closed beta's one-server stack (stage 18, D096), started here exactly as the
+# server runs it (infra/beta), with Caddy's own CA instead of Let's Encrypt and a
+# test domain in /etc/hosts. Nothing is pushed or deployed: deploying needs the
+# owner (CLAUDE.md).
+name: beta-stack
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/beta/**", "apps/api/**", "apps/web/**", "apps/mobile/**", "packages/**", "replica/design/tokens.json", "package-lock.json", ".dockerignore", ".github/workflows/beta.yml"]
+  pull_request:
+    paths: ["infra/beta/**", "apps/api/**", "apps/web/**", "apps/mobile/**", "packages/**", "replica/design/tokens.json", "package-lock.json", ".dockerignore", ".github/workflows/beta.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: infra/beta
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The test domain points at this machine
+        run: echo "127.0.0.1 beta.test api.beta.test app.beta.test" | sudo tee -a /etc/hosts
+
+      - name: Settings from make-env.sh, plus test values for what the owner fills in
+        run: |
+          ./make-env.sh beta.test ci@example.com
+          if ./make-env.sh beta.test ci@example.com; then echo "make-env.sh overwrote .env" && exit 1; fi
+          test "$(stat -c %a .env)" = 600
+          # A host that can't resolve: code emails fail and retry, nothing is sent anywhere.
+          sed -i -e 's/^SMTP_USERNAME=$/SMTP_USERNAME=beta-sender@example.com/' \
+                 -e 's/^SMTP_PASSWORD=$/SMTP_PASSWORD=not-a-real-password/' \
+                 -e 's/^OPERATOR_NAME=$/OPERATOR_NAME=CI operator/' \
+                 -e 's/^CONTACT_EMAIL=$/CONTACT_EMAIL=contact@example.com/' .env
+          printf 'SMTP_HOST=smtp.invalid\nCADDY_GLOBAL_OPTIONS=local_certs\n' >> .env
+
+      - name: Build the images
+        run: docker compose build
+
+      - name: Migrate, then start everything
+        run: |
+          docker compose run --rm migrate
+          docker compose up -d --wait --wait-timeout 300
+
+      - name: Trust Caddy's local CA for this run
+        run: |
+          for i in $(seq 1 30); do
+            docker compose cp edge:/data/caddy/pki/authorities/local/root.crt "$RUNNER_TEMP/root.crt" 2>/dev/null && break
+            sleep 2
+          done
+          test -s "$RUNNER_TEMP/root.crt"
+
+      - name: HTTPS, headers, the app build, the notice, the console, CORS
+        run: |
+          c() { curl -sS --retry 10 --retry-all-errors --retry-delay 2 --cacert "$RUNNER_TEMP/root.crt" "$@"; }
+          c -f https://api.beta.test/readyz
+          test "$(c -o /dev/null -w '%{http_code}' https://api.beta.test/v1/docs)" = 404
+          test "$(curl -sS -o /dev/null -w '%{http_code}' http://app.beta.test/)" = 308
+
+          c -D app.h -o app.html https://app.beta.test/
+          grep -q '<div id="root">' app.html
+          grep -qi "^content-security-policy: default-src 'self'; script-src 'self';" app.h
+          grep -qi "connect-src 'self' blob: data: https://api.beta.test wss://api.beta.test;" app.h
+          grep -qi "^strict-transport-security: max-age=31536000" app.h
+          grep -qi "^x-frame-options: DENY" app.h
+          if grep -qi "^server:" app.h; then echo "Server header present" && exit 1; fi
+          c -f https://app.beta.test/delete-account | grep -q '<div id="root">'  # deep links get the app shell
+
+          # The app was built for this server: its API, the beta notice, invite-only.
+          for src in $(grep -o '/_expo/static/js/web/[^"]*\.js' app.html); do c -f "https://app.beta.test$src"; done > bundle.js
+          grep -q 'https://api.beta.test' bundle.js
+          grep -q 'https://beta.test' bundle.js
+          grep -q 'beta-2026-11' bundle.js
+
+          c -f https://beta.test/privacy > privacy.html
+          grep -q 'Privacy notice for testers' privacy.html
+          grep -q 'CI operator' privacy.html
+          grep -q 'contact@example.com' privacy.html
+          c -f https://beta.test/terms | grep -q 'Terms for testers'
+          test "$(c -o /dev/null -w '%{http_code} %{redirect_url}' https://beta.test/admin)" = "307 https://beta.test/admin/login"
+
+          preflight() {
+            c -o /dev/null -D - -X OPTIONS https://api.beta.test/v1/auth/register -H "Origin: $1" \
+              -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'
+          }
+          preflight https://app.beta.test | grep -qi '^access-control-allow-origin: https://app.beta.test'
+          if preflight https://elsewhere.example | grep -qi '^access-control-allow-origin'; then echo "CORS too open" && exit 1; fi
+
+      - name: Invite-only sign-up and the beta's server rules
+        run: |
+          register() {
+            curl -sS --cacert "$RUNNER_TEMP/root.crt" -o /dev/null -w '%{http_code}' -X POST https://api.beta.test/v1/auth/register \
+              -H 'content-type: application/json' \
+              -d "{\"email\":\"$1\",\"password\":\"violet harbour lantern seventy\",\"birthdate\":\"1995-01-01\",\"consents\":{\"terms\":\"beta-2026-11\",\"privacy\":\"beta-2026-11\"}}"
+          }
+          users() { docker compose exec -T postgres psql -U postgres -d datingapp -tAc "SELECT count(*) FROM users"; }
+          test "$(register stranger@example.com)" = 202
+          test "$(users)" = 0   # not invited: the same answer, nothing kept
+          docker compose exec -T api datingapp-api invite add Tester@Example.com | grep -q "1 invited"
+          test "$(register tester@example.com)" = 202
+          test "$(users)" = 1
+          if docker compose exec -T api datingapp-api seed-dev; then echo "fixtures were seeded on a beta server" && exit 1; fi
+          test "$(docker compose exec -T api id -u)" = 10001
+          docker compose exec -T api sh -c 'touch /app/var/media/.probe && rm /app/var/media/.probe'
+          # Only Caddy listens on the host.
+          if docker compose port postgres 5432 2>/dev/null | grep -q .; then echo "postgres published" && exit 1; fi
+          if docker compose port redis 6379 2>/dev/null | grep -q .; then echo "redis published" && exit 1; fi
+
+      - name: Backup
+        run: |
+          BACKUP_DIR="$RUNNER_TEMP/backups" ./backup.sh
+          ls -l "$RUNNER_TEMP/backups"
+          test -s "$(ls "$RUNNER_TEMP"/backups/db-*.dump)"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 60

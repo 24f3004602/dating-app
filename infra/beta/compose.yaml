@@ -1,0 +1,170 @@
+# The closed beta on one server (stage 18, D096). Everything runs here; only
+# Caddy (the `edge` service) is reachable from the internet, on ports 80 and 443.
+# Settings come from .env, made by make-env.sh (secrets generated on the server).
+#   first time:  ./make-env.sh <domain> <your-email>, edit .env, then
+#                docker compose build && docker compose run --rm migrate && docker compose up -d
+#   updates:     git pull, then the same three commands
+# Runbooks: replica/deploy.md, "Closed beta on one server".
+
+name: datingapp-beta
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+# The API's settings, shared by the API, the worker and migrations. APP_ENV=beta
+# keeps production's rules except disk photos and the beta notice (app/config.py).
+x-app-env: &app-env
+  APP_ENV: beta
+  BRAND_NAME: ${BRAND_NAME:-Haanji}
+  LOG_JSON: "true"
+  APP_SECRET_KEY: ${APP_SECRET_KEY:?run make-env.sh}
+  DATABASE_URL: postgresql+psycopg://app_runtime:${RUNTIME_PASSWORD:?run make-env.sh}@postgres:5432/datingapp
+  MIGRATIONS_DATABASE_URL: postgresql+psycopg://app_owner:${OWNER_PASSWORD:?run make-env.sh}@postgres:5432/datingapp
+  DB_RUNTIME_ROLE: app_runtime
+  REDIS_URL: redis://redis:6379/0
+  CORS_ORIGINS: '["https://app.${DOMAIN:?run make-env.sh}"]'
+  # Caddy and the console's server, on this private network only.
+  TRUSTED_PROXIES: '["172.30.0.0/24"]'
+  TERMS_VERSION: beta-2026-11
+  PRIVACY_VERSION: beta-2026-11
+  SIGNUP_INVITE_ONLY: "true"
+  EMAIL_BACKEND: smtp
+  EMAIL_FROM: ${SMTP_USERNAME:?set the Gmail address in .env}
+  SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+  SMTP_USERNAME: ${SMTP_USERNAME:?set the Gmail address in .env}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:?set the Gmail app password in .env}
+  STORAGE_BACKEND: local
+  PUSH_BACKEND: ${PUSH_BACKEND:-none}
+  EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+
+x-api-image: &api-image
+  image: datingapp-api:beta
+  build: { context: ../../apps/api }
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run make-env.sh}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:?run make-env.sh}
+      RUNTIME_PASSWORD: ${RUNTIME_PASSWORD:?run make-env.sh}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "datingapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    logging: *logging
+    # Rate limits and realtime fan-out only: nothing to persist.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Schema changes, run by hand before starting a new version (the owner role).
+  migrate:
+    <<: *api-image
+    profiles: ["tools"]
+    logging: *logging
+    environment: *app-env
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *api-image
+    restart: unless-stopped
+    logging: *logging
+    environment: *app-env
+    command: ["datingapp-api", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - media:/app/var/media
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    <<: *api-image
+    restart: unless-stopped
+    logging: *logging
+    environment: *app-env
+    command: ["datingapp-api", "worker"]
+    volumes:
+      - media:/app/var/media
+    depends_on:
+      api: { condition: service_healthy }
+
+  web:
+    image: datingapp-web:beta
+    build: { context: ../.., dockerfile: apps/web/Dockerfile }
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      API_URL: http://api:8000
+      API_PUBLIC_URL: https://api.${DOMAIN}
+      BRAND_NAME: ${BRAND_NAME:-Haanji}
+      OPERATOR_NAME: ${OPERATOR_NAME:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  edge:
+    image: datingapp-edge:beta
+    build:
+      context: ../..
+      dockerfile: infra/beta/app.Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: https://api.${DOMAIN}
+        EXPO_PUBLIC_WEB_URL: https://${DOMAIN}
+        BRAND_NAME: ${BRAND_NAME:-Haanji}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?run make-env.sh}
+      APP_CSP: ${APP_CSP:?run make-env.sh}
+      CADDY_GLOBAL_OPTIONS: ${CADDY_GLOBAL_OPTIONS:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: { condition: service_healthy }
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

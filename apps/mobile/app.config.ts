@@ -19,14 +19,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       throw new Error(`${key} must be an https URL for the beta build.`);
     }
   }
+  // The Android build needs the EAS project ID (EAS refuses to build without it,
+  // and push uses it); the web build for the beta server doesn't.
   const projectId = process.env.EAS_PROJECT_ID;
-  if (!projectId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(projectId)) {
-    throw new Error("The beta build needs EAS_PROJECT_ID: the project ID from `eas init` (replica/deploy.md).");
+  if (projectId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(projectId)) {
+    throw new Error("EAS_PROJECT_ID must be the project ID from `eas init` (replica/deploy.md).");
   }
   return {
     ...base,
     name: `${process.env.BRAND_NAME ?? "Haanji"} (beta)`,
     android: { ...base.android, package: process.env.ANDROID_PACKAGE ?? "dev.datingapp.beta" },
-    extra: { ...base.extra, eas: { projectId } },
+    extra: projectId ? { ...base.extra, eas: { projectId } } : base.extra,
   };
 };
