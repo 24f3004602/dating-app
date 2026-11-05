@@ -14,6 +14,7 @@ import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
 import { color, radius, size, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
+import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
 import { Body, Button, ChoiceGroup, Heading, Loading, Notice, Screen, Title } from "@/ui/primitives";
 
@@ -102,6 +103,7 @@ export function PersonScreen({ id }: { id: string }) {
 }
 
 function PersonView({ person }: { person: Person }) {
+  const router = useRouter();
   return (
     <Screen>
       <DecisionBar targetId={person.user_id} />
@@ -124,6 +126,7 @@ function PersonView({ person }: { person: Person }) {
           <Body>{p.answer}</Body>
         </View>
       ))}
+      <SafetyActions userId={person.user_id} name={person.display_name} onEnded={() => router.back()} />
     </Screen>
   );
 }

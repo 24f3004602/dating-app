@@ -4,10 +4,11 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 11a (safety API) **implemented and tested locally**: 298 API tests,
-including blocks on every path, the block-against-send race and staff
-access controls; mobile tests and the e2e pass. CI is pending. Next: stage
-11b (block, unmatch and report in the app).
+Stage 11 (safety) **done for the API and the web build**: 298 API tests (11a
+passed CI: api run 41947439992, mobile run 41947439991), 86 mobile tests and
+the two-person e2e, now ending with a report that closes the other person's
+chat live. CI for 11b is pending; a native device pass is still pending; the
+staff console is stage 14. Next: stage 12 (privacy).
 
 ## Done
 
@@ -19,6 +20,7 @@ access controls; mobile tests and the e2e pass. CI is pending. Next: stage
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 11b | Unmatch, Block and Report on chats and profiles (with confirmations), the report form, the Safety screen (blocks, report statuses), removed messages, `match.closed` in the app; e2e report flow | `apps/mobile/src/screens/safety.tsx` |
 | 11a | Block, unblock and unmatch (closing the match under the send lock), reports with a copy of the reported message and a visible status, the moderation queue, photo review, account actions, message removal, staff roles, audited reads and actions, append-only moderation records; migration 0008 | `app/modules/safety/`, `app/modules/moderation/` |
 | 10b | Chat screen (history, send with retry by the same ID, the hurtful-word prompt, the money tip, read pointer, older pages), matches list with last message, unread and your turn, realtime client (tickets, catch-up, backoff, heartbeat watchdog, close codes); two-person e2e on a fresh database per run | `apps/mobile/src/screens/chat.tsx`, `apps/mobile/src/realtime/`, `e2e/tests/chat.spec.ts` |
 | 10a | Messages in open matches (idempotent, gap-free numbering under the match row lock), history pages, read pointers and unread counts, the your-turn cap, nudge lists, realtime hints over WebSockets (tickets, one Redis channel, revocation, caps); migration 0007 | `app/modules/messaging/`, `app/modules/realtime/`, `app/realtime.py` |
@@ -28,6 +30,14 @@ access controls; mobile tests and the e2e pass. CI is pending. Next: stage
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 11b build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| chat, person | done | Unmatch (chat), Block, Report; the first two ask first; e2e |
+| report | done | reasons, their latest messages, details, also block (default on), sent state; e2e and axe |
+| safety | done | blocked people with unblock, my reports with status; e2e and axe |
 
 ## Stage 11a status
 
@@ -192,9 +202,9 @@ access controls; mobile tests and the e2e pass. CI is pending. Next: stage
 
 ## Next
 
-Stage 11b: safety in the app. Covers:
-- Block, Unmatch and Report on the chat and on a person's profile; a report form with reasons, details and "also block" (on by default), and a choice of one of their recent messages;
-- the blocked list (with unblock) and my reports with their status;
-- `match.closed` in the realtime client: an open chat shows that it has ended;
-- removed messages shown as removed;
-- the e2e: report a message, then both chats close live.
+Stage 12: privacy. Covers:
+- **Settings:** privacy preferences and the discovery pause (exists since stage 7; review it end to end).
+- **Retention jobs:** conversations purged 30 days after a match ends (reports keep their copies), daily picks after 7 days, sessions and codes after expiry, resolved reports pseudonymised and deleted on schedule.
+- **Account deletion:** request (hidden at once, sessions revoked, realtime closed), a short grace period, then the purge of profile, photos and files, likes, matches, messages and blocks; the banned-email hash; the listed exceptions kept.
+- **Review:** every store (database, object storage, Redis, logs, the worker, providers) against the privacy inventory, with honest wording on what deletion does and doesn't reach (backups, email already sent).
+- **Tests:** deletion and every purge, including files in storage.

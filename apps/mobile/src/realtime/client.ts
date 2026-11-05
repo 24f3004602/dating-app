@@ -15,6 +15,7 @@
 export type RealtimeEvent =
   | { type: "message.created"; match_id: string; n: number }
   | { type: "match.created"; match_id: string }
+  | { type: "match.closed"; match_id: string }
   | { type: "read.updated"; match_id: string; last_read_n: number };
 
 export type RealtimeStatus = "connecting" | "live" | "offline";
@@ -127,7 +128,12 @@ export class RealtimeClient {
       this.options.onCatchUp();
     } else if (event.type === "resync") {
       this.options.onCatchUp();
-    } else if (event.type === "message.created" || event.type === "match.created" || event.type === "read.updated") {
+    } else if (
+      event.type === "message.created" ||
+      event.type === "match.created" ||
+      event.type === "match.closed" ||
+      event.type === "read.updated"
+    ) {
       this.options.onEvent(event as RealtimeEvent);
     }
     // `ping` only resets the silence timer.

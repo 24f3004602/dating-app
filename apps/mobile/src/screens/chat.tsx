@@ -1,6 +1,7 @@
 /** A conversation with one match (F05). REST is the source of truth; the
  * realtime provider refreshes this screen when something changes. */
 import { randomUUID } from "expo-crypto";
+import { useRouter } from "expo-router";
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +13,7 @@ import { nudgeFor } from "@/chat/nudge";
 import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
 import { useRealtimeStatus } from "@/realtime/RealtimeProvider";
+import { SafetyActions } from "@/screens/safety";
 import { color, font, radius, size, space } from "@/theme/tokens";
 import { Body, Button, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
 
@@ -20,11 +22,13 @@ const BODY_MAX = 2000;
 /** A message the server hasn't confirmed yet. Retries reuse its ID (idempotent). */
 type Pending = { clientId: string; body: string; failed: boolean };
 
-function Bubble({ mine, body, meta, tip }: { mine: boolean; body: string; meta: string; tip?: boolean }) {
+function Bubble({ mine, body, meta, tip, removed }: { mine: boolean; body: string; meta: string; tip?: boolean; removed?: boolean }) {
   return (
     <View role="listitem" style={[styles.item, mine ? styles.itemMine : styles.itemTheirs]}>
-      <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
-        <Text style={mine ? styles.mineText : styles.theirsText}>{body}</Text>
+      <View style={[styles.bubble, removed ? styles.removed : mine ? styles.mine : styles.theirs]}>
+        <Text style={removed ? styles.removedText : mine ? styles.mineText : styles.theirsText}>
+          {removed ? t.chat.removed : body}
+        </Text>
       </View>
       <Text style={styles.meta}>{meta}</Text>
       {tip ? <Notice kind="info">{t.chat.moneyTip}</Notice> : null}
@@ -33,6 +37,7 @@ function Bubble({ mine, body, meta, tip }: { mine: boolean; body: string; meta: 
 }
 
 export function ChatScreen({ matchId }: { matchId: string }) {
+  const router = useRouter();
   const match = useMatch(matchId);
   const convo = useConversation(matchId);
   const send = useSendMessage(matchId);
@@ -104,6 +109,12 @@ export function ChatScreen({ matchId }: { matchId: string }) {
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
         >
           <Title>{name}</Title>
+          <SafetyActions
+            userId={match.data.person.user_id}
+            name={name}
+            matchId={matchId}
+            onEnded={() => router.replace("/matches")}
+          />
           {realtime === "offline" ? <Body muted>{t.chat.offline}</Body> : null}
           {convo.hasNextPage ? (
             <Button
@@ -118,7 +129,14 @@ export function ChatScreen({ matchId }: { matchId: string }) {
           ) : null}
           <View role="list" style={styles.messages}>
             {messages.map((m) => (
-              <Bubble key={m.id} mine={m.from_me} body={m.body} meta={meta(m)} tip={m.safety_tip === "money"} />
+              <Bubble
+                key={m.id}
+                mine={m.from_me}
+                body={m.body}
+                meta={meta(m)}
+                tip={m.safety_tip === "money"}
+                removed={m.removed}
+              />
             ))}
             {waiting.map((p) => (
               <Bubble
@@ -184,6 +202,8 @@ const styles = StyleSheet.create({
   theirs: { backgroundColor: color.surfaceAlt },
   mineText: { color: color.onPrimary, fontSize: font.body, lineHeight: font.body * 1.4 },
   theirsText: { color: color.text, fontSize: font.body, lineHeight: font.body * 1.4 },
+  removed: { borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
+  removedText: { color: color.muted, fontSize: font.body, fontStyle: "italic" },
   meta: { color: color.muted, fontSize: font.small },
   retry: { gap: space.sm },
   composer: {

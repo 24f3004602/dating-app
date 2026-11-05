@@ -82,6 +82,7 @@ export function ProfileScreen() {
           <Button label={t.profile.edit} variant="secondary" onPress={() => router.push("/profile/edit")} />
           <Button label={t.profile.photos} variant="secondary" onPress={() => router.push("/photos")} />
           <Button label={t.profile.privacy} variant="secondary" onPress={() => router.push("/privacy")} />
+          <Button label={t.safety.open} variant="secondary" onPress={() => router.push("/safety")} />
         </>
       ) : null}
       <Button label={t.profile.signOut} variant="secondary" onPress={() => void signOut()} />

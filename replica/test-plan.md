@@ -110,6 +110,8 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | MODR-S1 | admin | negative | act on yourself; a moderator on another moderator; a missing account; no note; reports about yourself or about staff | 409, 403, 409, 422; 403 own_account, 403 admin_only, admin 200 | api | pass |
 | MODR-B1 | admin | happy | ban (admin), reinstate, reinstate again; the audit log | matches closed (moderation), signed out; active again, the match stays ended; 409; entries with codes only | api | pass |
 | MODR-P1 | admin | happy | photo review: pending oldest first with signed URLs; approve makes the profile ready; reject; unknown; your own photo | as listed; 404; 409 | api | pass |
+| MOB-10 | mobile | screen | safety: Unmatch and Block ask first (cancel sends nothing), Report opens the form; the form needs a reason, offers their latest messages newest first without removed ones, blocks by default, can opt out, maps errors; the Safety screen lists blocks with unblock and report statuses; a removed message reads as removed; `match.closed` ends an open chat | as listed | jest + RNTL | pass |
+| E2E-4 | e2e | journey | in the two-person spec: Meera reports Kabir's money message (scam, block on); his open chat closes live; her Safety screen shows the block and "Received"; axe on the report and Safety screens | as listed | Playwright + axe | pass |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
@@ -194,3 +196,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | GitHub Actions api run 41941301362 and mobile run 41941301558 on `02592ff` (stage 10b) | both workflows | passed (285 API tests; 79 mobile tests; both e2e specs incl. the two-person chat) |
 | 2026-11-05 | owner's laptop | `uv run pytest` (stage 11a); mutations: no send lock, no staff check | 298 passed; both mutations caught |
 | 2026-11-05 | same | mobile tests and e2e with the regenerated types | 79 passed; both specs passed |
+| 2026-11-05 | GitHub Actions api run 41947439992 and mobile run 41947439991 on `6f1538e` (stage 11a) | both workflows | passed (298 API tests) |
+| 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 11b); e2e 2 runs | 86 passed; both specs passed each run |

@@ -214,9 +214,10 @@ export const chatKeys = {
 };
 
 /** History, newest page first; `fetchNextPage` loads older messages. */
-export function useConversation(matchId: string) {
+export function useConversation(matchId: string, { enabled = true }: { enabled?: boolean } = {}) {
   const { api } = useAuth();
   return useInfiniteQuery({
+    enabled,
     queryKey: chatKeys.conversation(matchId),
     initialPageParam: undefined as number | undefined,
     queryFn: ({ pageParam }) =>
@@ -278,4 +279,67 @@ export function useNudgeTerms() {
     queryFn: () => unwrap(api.GET("/v1/safety/nudge-terms")),
     staleTime: 60 * 60 * 1000,
   });
+}
+
+export type Blocked = Schemas["BlockedOut"];
+export type ReportItem = Schemas["ReportOut"];
+export type ReportBody = Schemas["ReportIn"];
+
+export const safetyKeys = { blocks: ["safety", "blocks"] as const, reports: ["safety", "reports"] as const };
+
+/** After a block, unmatch or report, everything that might show them is refreshed. */
+function useForget() {
+  const qc = useQueryClient();
+  return () => {
+    for (const queryKey of [matchingKeys.matches, matchingKeys.likes, discoveryKeys.today, chatKeys.all, ["profiles"], safetyKeys.blocks, safetyKeys.reports]) {
+      void qc.invalidateQueries({ queryKey });
+    }
+  };
+}
+
+export function useBlock() {
+  const { api } = useAuth();
+  const forget = useForget();
+  return useMutation({
+    mutationFn: (userId: string) => unwrap(api.POST("/v1/blocks", { body: { user_id: userId } })),
+    onSuccess: forget,
+  });
+}
+
+export function useUnblock() {
+  const { api } = useAuth();
+  const forget = useForget();
+  return useMutation({
+    mutationFn: (userId: string) => unwrap(api.DELETE("/v1/blocks/{user_id}", { params: { path: { user_id: userId } } })),
+    onSuccess: forget,
+  });
+}
+
+export function useBlocks() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: safetyKeys.blocks, queryFn: () => unwrap(api.GET("/v1/blocks")) });
+}
+
+export function useUnmatch() {
+  const { api } = useAuth();
+  const forget = useForget();
+  return useMutation({
+    mutationFn: (matchId: string) =>
+      unwrap(api.POST("/v1/matches/{match_id}/unmatch", { params: { path: { match_id: matchId } } })),
+    onSuccess: forget,
+  });
+}
+
+export function useReport() {
+  const { api } = useAuth();
+  const forget = useForget();
+  return useMutation({
+    mutationFn: (body: ReportBody) => unwrap(api.POST("/v1/reports", { body })),
+    onSuccess: forget,
+  });
+}
+
+export function useMyReports() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: safetyKeys.reports, queryFn: () => unwrap(api.GET("/v1/reports/mine")) });
 }

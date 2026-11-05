@@ -86,6 +86,23 @@ test("two people match and chat, live", async ({ browser }) => {
   await expect(meera.getByText(/^Safety tip: never send money/)).toBeVisible();
   await expect(kabir.getByText(/^Safety tip: never send money/)).toHaveCount(0); // the tip is for the recipient
 
+  // Meera reports that message (blocking him, the default): his open chat closes live.
+  await meera.getByRole("button", { name: "Report", exact: true }).click();
+  await expect(meera.getByRole("heading", { name: "Report Kabir" })).toBeVisible();
+  await meera.getByRole("radio", { name: "Scam, or asking for money", exact: true }).click();
+  await meera.getByRole("radio", { name: "Message: Can you send money on UPI for the tickets?", exact: true }).click();
+  await expect(meera.getByRole("checkbox", { name: "Also block Kabir", exact: true })).toBeChecked();
+  await checkA11y(meera, "report");
+  await meera.getByRole("button", { name: "Send report" }).click();
+  await expect(meera.getByText(/^Thanks for telling us\./)).toBeVisible();
+  await expect(kabir.getByText("This conversation isn't available any more.")).toBeVisible();
+
+  // Her Safety screen: the block (with unblock) and the report's status.
+  await meera.getByRole("button", { name: "Go to Safety" }).click();
+  await expect(meera.getByText("Kabir: Scam, or asking for money. Received")).toBeVisible();
+  await expect(meera.getByRole("button", { name: "Unblock Kabir" })).toBeVisible();
+  await checkA11y(meera, "safety");
+
   for (const found of errors) {
     expect(found.server).toEqual([]);
     expect(found.console).toEqual([]);

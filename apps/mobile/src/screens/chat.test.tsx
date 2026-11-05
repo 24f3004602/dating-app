@@ -133,3 +133,12 @@ test("a conversation that has gone says so", async () => {
   await renderWithApp(<ChatScreen matchId="m1" />, api);
   expect(await screen.findByText(t.chat.gone)).toBeTruthy();
 });
+
+test("a removed message shows as removed, and the safety actions are there", async () => {
+  const { api } = fakeApi(routes([msg(1, false, "", { removed: true }), msg(2, false, "Still here")]));
+  await renderWithApp(<ChatScreen matchId="m1" />, api);
+  expect(await screen.findByText(t.chat.removed)).toBeTruthy();
+  for (const name of [t.chat.unmatch, t.chat.block, t.chat.report]) {
+    expect(screen.getByRole("button", { name })).toBeTruthy();
+  }
+});

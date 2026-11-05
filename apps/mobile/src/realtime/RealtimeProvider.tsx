@@ -31,7 +31,8 @@ export function RealtimeProvider({ children, openSocket }: Props) {
   useEffect(() => {
     const refresh = (event: RealtimeEvent) => {
       void qc.invalidateQueries({ queryKey: matchingKeys.matches });
-      if (event.type === "message.created") {
+      if (event.type === "message.created" || event.type === "match.closed") {
+        // A closed match: the open chat refetches, gets 404 and says it has ended.
         void qc.invalidateQueries({ queryKey: chatKeys.conversation(event.match_id) });
       } else if (event.type === "match.created") {
         void qc.invalidateQueries({ queryKey: matchingKeys.likes });

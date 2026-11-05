@@ -58,11 +58,13 @@ test("connects with a fresh ticket, catches up on ready, then passes hints on", 
   expect(options.onStatus).toHaveBeenLastCalledWith("live");
   sockets[0]?.say({ type: "message.created", match_id: "m1", n: 3 });
   expect(options.onEvent).toHaveBeenCalledWith({ type: "message.created", match_id: "m1", n: 3 });
+  sockets[0]?.say({ type: "match.closed", match_id: "m1" });
+  expect(options.onEvent).toHaveBeenLastCalledWith({ type: "match.closed", match_id: "m1" });
   sockets[0]?.say({ type: "resync" });
   expect(options.onCatchUp).toHaveBeenCalledTimes(2);
   sockets[0]?.say({ type: "ping" });
   sockets[0]?.say({ type: "something.new" });
-  expect(options.onEvent).toHaveBeenCalledTimes(1);
+  expect(options.onEvent).toHaveBeenCalledTimes(2);
   client.stop();
 });
 

@@ -55,3 +55,36 @@ test("a hint refreshes the open conversation: the new message appears without a 
   expect(calls.filter((c) => c.path === "/v1/matches/m1/messages").length).toBeGreaterThan(before);
   await screen.unmount();
 });
+
+test("match.closed closes an open chat: it says it has ended", async () => {
+  const sockets: FakeSocket[] = [];
+  let gone = false;
+  const { api } = fakeApi({
+    "POST /v1/realtime/ticket": () => ({ status: 201, body: { ticket: "tk", expires_in: 30 } }),
+    "GET /v1/matches/m1": () =>
+      gone
+        ? { status: 404, body: { type: "about:blank", title: "Not Found", status: 404, code: "not_found" } }
+        : {
+            status: 200,
+            body: { id: "m1", matched_at: "2026-11-05T09:00:00Z", unread: 0, your_turn: false, last_message: null,
+                    person: { user_id: "u2", display_name: "Kabir", age: 29, photo: null } },
+          }, // prettier-ignore
+    "GET /v1/matches/m1/messages": () =>
+      gone
+        ? { status: 404, body: { type: "about:blank", title: "Not Found", status: 404, code: "not_found" } }
+        : { status: 200, body: { items: [], has_more: false } },
+    "GET /v1/safety/nudge-terms": () => ({ status: 200, body: { version: "t", hurtful: [], money: [] } }),
+  });
+  await renderWithApp(
+    <RealtimeProvider openSocket={(url) => { const s = new FakeSocket(url); sockets.push(s); return s; }}>
+      <ChatScreen matchId="m1" />
+    </RealtimeProvider>,
+    api,
+  ); // prettier-ignore
+  expect(await screen.findByText(/Say hello to Kabir/)).toBeTruthy();
+  await waitFor(() => expect(sockets).toHaveLength(1));
+  gone = true;
+  await act(async () => sockets[0]?.say({ type: "match.closed", match_id: "m1" }));
+  expect(await screen.findByText("This conversation isn't available any more.")).toBeTruthy();
+  await screen.unmount();
+});
