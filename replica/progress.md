@@ -4,10 +4,10 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 10a (messaging API) **implemented and tested locally**: 285 API tests,
-including concurrent sends and real WebSocket connections through uvicorn.
-CI is pending. Next: stage 10b (the chat screens, the app's realtime client
-and a two-person browser test).
+Stage 10 (messaging) **done for the API and the web build**: 285 API tests
+(10a passed CI: api run 41938343026, mobile run 41938342940), 79 mobile tests,
+and a two-person web e2e in which messages arrive live both ways. CI for 10b
+is pending; a native device pass is still pending. Next: stage 11 (safety).
 
 ## Done
 
@@ -19,6 +19,7 @@ and a two-person browser test).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 10b | Chat screen (history, send with retry by the same ID, the hurtful-word prompt, the money tip, read pointer, older pages), matches list with last message, unread and your turn, realtime client (tickets, catch-up, backoff, heartbeat watchdog, close codes); two-person e2e on a fresh database per run | `apps/mobile/src/screens/chat.tsx`, `apps/mobile/src/realtime/`, `e2e/tests/chat.spec.ts` |
 | 10a | Messages in open matches (idempotent, gap-free numbering under the match row lock), history pages, read pointers and unread counts, the your-turn cap, nudge lists, realtime hints over WebSockets (tickets, one Redis channel, revocation, caps); migration 0007 | `app/modules/messaging/`, `app/modules/realtime/`, `app/realtime.py` |
 | 9 | Likes and passes (no undo, idempotent retries), the equal daily like limit, notes on likes, atomic mutual matches, likes received, matches, access through likes and matches; Like and Pass on profiles, likes and matches screens; migration 0006 | `app/modules/matching/`, `apps/mobile/src/screens/matching.tsx` |
 | 8b | Screens: today's introductions (empty, not-ready, paused and error states), a person's profile, preferences; e2e extended through discovery with axe | `apps/mobile/src/screens/discover.tsx`, `e2e/` |
@@ -26,6 +27,20 @@ and a two-person browser test).
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 10b status and build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| chat | done | sending, not sent and retry, the hurtful-word prompt, the money tip, the storage note, older pages, gone; live updates; e2e and axe |
+| matches | done | last message, unread, "your turn", the waiting notice; updates live; e2e and axe |
+| like | done | the your-turn message |
+
+- **Found and fixed:**
+  - The e2e used the developer's database, so earlier runs' members could crowd a new member's daily set; each run now gets a fresh database (D078).
+  - The matches list showed the UTC date; dates and times are now in India time.
+  - Locators found text twice: the matches list stays mounted under the chat and shows the same preview, so the spec reads messages by list item.
+- **Not done:** a native device run (NAT-1), now also for the realtime connection and the keyboard behaviour of the composer.
 
 ## Stage 10a status
 
@@ -164,9 +179,9 @@ and a two-person browser test).
 
 ## Next
 
-Stage 10b: the chat in the app. Covers:
-- the chat screen: history with older pages, send with retry and the same `client_message_id`, the hurtful-word prompt, the money safety tip;
-- the matches list: last message, unread count, "your turn";
-- the realtime client: ticket, `ready` then REST catch-up, reconnect with backoff, heartbeat timeout, close codes;
-- the your-turn message on Like;
-- a two-person e2e: both sign up, match, and chat with live delivery.
+Stage 11: safety. Covers:
+- **Blocking and unmatching:** the block API, block and unmatch close the match under the match row lock, `match.closed` hints.
+- **Reporting:** reports on profiles, photos and messages with reasons and a visible status.
+- **Moderation:** a moderation queue with staff roles and server-side access controls; the photo review queue (photos have waited since stage 7); message removal; an audit trail of every staff read and action.
+- **Retention:** the 30-day purge of messages after unmatch, except report evidence.
+- **Tests:** blocks on every server path, staff authorization, and abuse cases.

@@ -53,8 +53,14 @@ uv run ruff check . && uv run mypy
 npm install                                  # at the repo root (npm workspaces)
 npm run typecheck -w @datingapp/mobile && npm test -w @datingapp/mobile
 npm run web -w @datingapp/mobile             # Expo web; set CORS_ORIGINS in apps/api/.env
-npm test -w @datingapp/e2e                   # web build + API + worker in Chrome (needs the dev DB and Redis)
+npm test -w @datingapp/e2e                   # web build + API + worker in Chrome (needs PostgreSQL and Redis)
 ```
+
+The e2e run recreates and migrates its own database, `datingapp_e2e_test`, each
+time (the owner role in `apps/api/.env` needs CREATEDB, as for the API tests), so
+your development database is never touched. Two specs: onboarding through
+discovery, and two people matching and chatting live over the realtime
+connection.
 
 After an API change, regenerate the client types: `uv run python scripts/export_openapi.py
 ../../packages/api-types/openapi.json` (in `apps/api`), then `npm run generate -w @datingapp/api-types`.

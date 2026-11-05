@@ -1,0 +1,83 @@
+/** Steps and checks shared by the specs. */
+import AxeBuilder from "@axe-core/playwright";
+import { expect, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+
+import { PHOTO, WORKER_LOG } from "../env";
+
+export const PASSWORD = "violet harbour lantern seventy";
+
+export async function codeFromWorkerMail(email: string): Promise<string> {
+  for (let i = 0; i < 80; i++) {
+    const log = readFileSync(WORKER_LOG, "utf8");
+    const block = log.split("----- DEV EMAIL (not sent) -----").reverse().find((b) => b.includes(`To: ${email}`));
+    const code = block?.match(/Your code is (\d{6})/)?.[1];
+    if (code) return code;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`no code mailed to ${email}`);
+}
+
+/** Serious and critical WCAG A/AA issues fail the test. */
+export async function checkA11y(page: Page, screen: string) {
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  const blocking = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(
+    blocking.map((v) => `${screen}: ${v.id} (${v.impact}) ${v.help} -> ${v.nodes.map((n) => n.html.slice(0, 160)).join(" | ")}`),
+  ).toEqual([]);
+}
+
+/** Console errors and 5xx answers, to assert empty at the end of a spec. */
+export function watchErrors(page: Page) {
+  const found = { console: [] as string[], server: [] as string[] };
+  page.on("console", (m) => {
+    // Chrome logs expected 4xx answers (e.g. "no profile yet") as resource errors; those are checked by the specs.
+    if (m.type() === "error" && !m.text().startsWith("Failed to load resource")) found.console.push(m.text());
+  });
+  page.on("pageerror", (e) => found.console.push(e.message));
+  page.on("response", (r) => {
+    if (r.status() >= 500) found.server.push(`${r.status()} ${r.url()}`);
+  });
+  return found;
+}
+
+/** Sign up as a 27-year-old and verify with the mailed code. Ends on the empty profile. */
+export async function signUp(page: Page, email: string) {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Create an account" }).click();
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByLabel("Day", { exact: true }).fill("1");
+  await page.getByLabel("Month", { exact: true }).fill("1");
+  await page.getByLabel("Year", { exact: true }).fill(String(new Date().getFullYear() - 27));
+  await page.getByRole("checkbox", { name: "I accept the terms of use", exact: true }).click();
+  await page.getByRole("checkbox", { name: "I have read the privacy notice", exact: true }).click();
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await page.getByLabel("Code", { exact: true }).fill(await codeFromWorkerMail(email));
+  await page.getByRole("button", { name: "Confirm" }).click();
+  await expect(page.getByRole("heading", { name: "Let's set up your profile" })).toBeVisible();
+}
+
+/** From the empty profile: a profile, then two photos. Ends on the profile, ready to be introduced. */
+export async function readyProfile(page: Page, who: { name: string; gender: "Woman" | "Man"; seeking: "Woman" | "Man" }) {
+  await page.getByRole("button", { name: "Create your profile" }).click();
+  await page.getByLabel("First name", { exact: true }).fill(who.name);
+  await page.getByRole("radio", { name: who.gender, exact: true }).click();
+  await page.getByRole("checkbox", { name: who.seeking, exact: true }).click();
+  await page.getByRole("radio", { name: "A long-term relationship", exact: true }).click();
+  await page.getByRole("radio", { name: "Saket, Delhi", exact: true }).click();
+  await page.getByRole("radio", { name: "The festival I look forward to all year", exact: true }).click();
+  await page.getByLabel("Your answer", { exact: true }).fill("Holi, for the colours.");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("heading", { name: `${who.name}, 27` })).toBeVisible();
+  await page.getByRole("button", { name: "Photos" }).click();
+  for (const n of [1, 2]) {
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Add a photo" }).click();
+    await (await chooser).setFiles(PHOTO);
+    await expect(page.locator(`[role="img"][aria-label="Your photo ${n} of ${n}"]`)).toBeVisible();
+  }
+  await page.goBack();
+  await expect(page.getByText("Ready to be introduced")).toBeVisible();
+}

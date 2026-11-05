@@ -21,6 +21,11 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   mkdirSync(RUN_DIR, { recursive: true });
   makePhoto(api);
   const env = { ...process.env, ...apiEnv(process.env.E2E_RUN_ID ?? "run"), PYTHONUNBUFFERED: "1" };
+  // A fresh, migrated database for this run (see env.ts).
+  for (const command of ["uv run python scripts/recreate_e2e_db.py", "uv run alembic upgrade head"]) {
+    const done = spawnSync(command, { cwd: api, shell: true, env, stdio: "inherit" });
+    if (done.status !== 0) throw new Error(`${command} failed`);
+  }
   // Labelled development fixtures to be introduced to (idempotent).
   const seeded = spawnSync("uv run datingapp-api seed-dev", { cwd: api, shell: true, env, stdio: "inherit" });
   if (seeded.status !== 0) throw new Error("seed-dev failed");

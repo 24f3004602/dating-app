@@ -83,3 +83,34 @@ test("matches: empty state, then a list", async () => {
   await waitFor(() => expect(screen.getByText("Aarav, 29")).toBeTruthy());
   expect(screen.getByText("Matched 2026-11-04")).toBeTruthy();
 });
+
+test("matches show the last message, unread and your turn, and open the chat", async () => {
+  const item = (id: string, extra: object) => ({
+    id, matched_at: "2026-11-04T19:00:00Z", unread: 0, your_turn: false, last_message: null, person: brief, ...extra,
+  }); // prettier-ignore
+  const { api } = fakeApi({
+    "GET /v1/matches": () => ({
+      status: 200,
+      body: [
+        item("m1", { unread: 2, your_turn: true, last_message: { n: 3, from_me: false, preview: "Free on Sunday?", sent_at: "2026-11-05T09:00:00Z" } }),
+        item("m2", { last_message: { n: 1, from_me: true, preview: "Hi!", sent_at: "2026-11-05T08:00:00Z" } }),
+        item("m3", {}),
+      ],
+    }),
+  });
+  await renderWithApp(<MatchesScreen />, api);
+  expect(await screen.findByText("Free on Sunday?")).toBeTruthy();
+  expect(screen.getByText("2 new · Your turn")).toBeTruthy();
+  expect(screen.getByText("You: Hi!")).toBeTruthy();
+  expect(screen.getByText("Matched 2026-11-05")).toBeTruthy(); // 19:00 UTC is the next day in India
+  expect(screen.getByText(/^Waiting for your reply: 1\. /)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: "Chat with Aarav, 29. 2 new. Your turn" }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/chat/m1");
+});
+
+test("the your-turn cap gets the app's own message", async () => {
+  const { api } = fakeApi({ "POST /v1/interactions": () => problem(409, "your_turn_limit", { waiting: 5 }) });
+  await renderWithApp(<DecisionBar targetId="u2" />, api);
+  await fireEvent.press(screen.getByRole("button", { name: t.decide.like }));
+  expect(await screen.findByText(t.errors.your_turn_limit)).toBeTruthy();
+});

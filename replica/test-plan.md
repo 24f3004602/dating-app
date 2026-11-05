@@ -94,6 +94,10 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | RT-7 | realtime | edge | heartbeats; a third connection with a cap of 2; a slot freed | ping; 4429; accepted | real uvicorn + ws | pass |
 | RT-8 | realtime | edge | a flooding client; Redis drops the subscriber; Redis resubscribes | 1008; 1012 then recovery; `resync` | real uvicorn + ws | pass |
 | RT-9 | privacy | negative | handshake logs | no ticket, no query string, no full IP; one `realtime.closed` record | real uvicorn + ws | pass |
+| MOB-7 | mobile | screen | chat: history with names and India times, the money tip, the storage note, send with a fresh UUID and "Sending" until confirmed, a failed send retried with the same ID, the hurtful-word prompt (nothing sent until confirmed), read pointer, older pages, a gone conversation | as listed | jest + RNTL | pass |
+| MOB-8 | mobile | unit | realtime client: ticket per connection, catch-up on `ready` and `resync`, hints passed on, backoff growth and cap, reset on `ready`, 4401 stops and signs out, 4429 waits 60 s, silence replaces the connection, failed ticket retried, stop; URL scheme | as listed | jest (fake sockets and timers) | pass |
+| MOB-9 | mobile | screen | matches list: last message, "2 new · Your turn", the waiting notice, India date, opens the chat; the your-turn error on Like; a realtime hint refreshes an open chat | as listed | jest + RNTL | pass |
+| E2E-3 | e2e | journey | two people in two browsers: sign up, introduction, like, like back, match; chat both ways with no reload (the matches list and the open chat update live); the hurtful-word prompt; the money tip for the recipient only; axe on the chat, the prompt and the list | as listed; no console errors or 5xx | Playwright + axe | pass |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
@@ -173,3 +177,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-04 | GitHub Actions api run 41872861914 and mobile run 41872861907 on `c3b5da9` (stage 9) | both workflows | 244 passed (incl. MAT-C1 on Ubuntu); mobile checks and e2e passed |
 | 2026-11-05 | owner's laptop | `uv run pytest` (stage 10a); realtime tests 3 runs; mutations: no send lock, reusable tickets | 285 passed; 13/13 each run; both mutations caught |
 | 2026-11-05 | same | `npm test` in `apps/mobile` with the regenerated API types | 49 passed (one cold run timed out 4 tests at 30 s; three reruns passed in 7 s) |
+| 2026-11-05 | GitHub Actions api run 41938343026 and mobile run 41938342940 on `b656d5c` (stage 10a) | both workflows | passed (285 API tests on Ubuntu; mobile checks and e2e) |
+| 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 10b); e2e 3 runs on a fresh database | 79 passed; both specs passed each run (chat 25-26 s) |

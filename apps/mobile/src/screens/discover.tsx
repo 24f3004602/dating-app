@@ -11,17 +11,11 @@ import { absoluteUrl, type Card, type Person, usePerson, usePreferences, useSave
 import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
+import { timeInIndia } from "@/i18n/time";
 import { color, radius, size, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
 import { FormField } from "@/ui/FormField";
 import { Body, Button, ChoiceGroup, Heading, Loading, Notice, Screen, Title } from "@/ui/primitives";
-
-function timeInIndia(iso: string): string {
-  const d = new Date(iso);
-  // India has no daylight saving: UTC+5:30 all year.
-  const ist = new Date(d.getTime() + 5.5 * 60 * 60 * 1000);
-  return `${String(ist.getUTCHours()).padStart(2, "0")}:${String(ist.getUTCMinutes()).padStart(2, "0")}`;
-}
 
 function cardLabel(c: Card): string {
   return fill(t.discover.card, {

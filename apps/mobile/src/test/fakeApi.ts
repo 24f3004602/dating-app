@@ -1,13 +1,14 @@
 import { createApi } from "@/api/client";
 
-type Handler = (req: { method: string; path: string; body: unknown; headers: Headers }) => { status: number; body?: unknown; headers?: Record<string, string> };
+type Request_ = { method: string; path: string; body: unknown; headers: Headers; query: URLSearchParams };
+type Handler = (req: Request_) => { status: number; body?: unknown; headers?: Record<string, string> };
 
 /**
  * The real openapi-fetch client over a fake `fetch`, so tests exercise the
  * same request building, auth header and error parsing as the app.
  */
 export function fakeApi(routes: Record<string, Handler>, token: { value: string | null } = { value: null }) {
-  const calls: { method: string; path: string; body: unknown; headers: Headers }[] = [];
+  const calls: Request_[] = [];
   const fetchImpl = (async (input: Request) => {
     const req = input instanceof Request ? input : new Request(input);
     const url = new URL(req.url);
@@ -18,7 +19,7 @@ export function fakeApi(routes: Record<string, Handler>, token: { value: string 
     } catch {
       // multipart or plain bodies stay as text
     }
-    const call = { method: req.method, path: url.pathname, body, headers: req.headers };
+    const call = { method: req.method, path: url.pathname, body, headers: req.headers, query: url.searchParams };
     calls.push(call);
     const handler = routes[`${req.method} ${url.pathname}`];
     if (!handler) return new Response(JSON.stringify({ code: "not_found", status: 404 }), { status: 404, headers: { "content-type": "application/problem+json" } });

@@ -90,9 +90,9 @@ jobs:
           echo "DATABASE_URL=postgresql+psycopg://app_runtime:${runtime}@localhost:5432/datingapp" >> "$GITHUB_ENV"
           echo "MIGRATIONS_DATABASE_URL=postgresql+psycopg://app_owner:${owner}@localhost:5432/datingapp" >> "$GITHUB_ENV"
       - run: npm ci
-      - name: Database
+      - name: Database roles (the e2e creates and migrates its own database)
         working-directory: apps/api
-        run: uv sync --locked && uv run python scripts/bootstrap_db.py && uv run alembic upgrade head
+        run: uv sync --locked && uv run python scripts/bootstrap_db.py
       - name: End-to-end (Expo web build, real API, worker, installed Chrome)
         run: npm test -w @datingapp/e2e
       - if: failure()

@@ -3,10 +3,11 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 
-import { absoluteUrl, type Decision, useDecide, useLikesReceived, useMatches } from "@/api/hooks";
+import { absoluteUrl, type Decision, type MatchItem, useDecide, useLikesReceived, useMatches } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
+import { dateInIndia } from "@/i18n/time";
 import { color, radius, size, space } from "@/theme/tokens";
 import { Body, Button, Heading, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
 
@@ -97,7 +98,13 @@ export function LikesScreen() {
   );
 }
 
+function preview(m: MatchItem): string | null {
+  if (!m.last_message) return null;
+  return m.last_message.from_me ? fill(t.matches.lastMine, { text: m.last_message.preview }) : m.last_message.preview;
+}
+
 export function MatchesScreen() {
+  const router = useRouter();
   const matches = useMatches();
   if (matches.isPending) return <Loading label={t.common.loading} />;
   if (matches.isError) {
@@ -108,26 +115,39 @@ export function MatchesScreen() {
       </Screen>
     );
   }
+  const waiting = matches.data.filter((m) => m.your_turn).length;
   return (
     <Screen>
       <Title>{t.matches.title}</Title>
       {matches.data.length === 0 ? <Body>{t.matches.empty}</Body> : null}
-      {matches.data.map((m) => (
-        <View key={m.id} style={styles.item}>
-          {m.person.photo ? (
-            <Image
-              source={{ uri: absoluteUrl(API_URL, m.person.photo.urls.small) }}
-              style={styles.thumb}
-              role="img"
-              aria-label={fill(t.matches.photo, { name: m.person.display_name })}
-            />
-          ) : null}
-          <View style={styles.grow}>
-            <Heading>{`${m.person.display_name}, ${m.person.age}`}</Heading>
-            <Body muted>{fill(t.matches.since, { date: m.matched_at.slice(0, 10) })}</Body>
-          </View>
-        </View>
-      ))}
+      {waiting > 0 ? (
+        <Notice kind="info">{`${fill(t.matches.waiting, { n: waiting })}. ${t.matches.waitingHint}`}</Notice>
+      ) : null}
+      {matches.data.map((m) => {
+        const status = [
+          m.unread > 0 ? fill(t.matches.unread, { n: m.unread }) : null,
+          m.your_turn ? t.matches.yourTurn : null,
+        ].filter(Boolean);
+        const text = preview(m);
+        return (
+          <Pressable
+            key={m.id}
+            role="button"
+            aria-label={[fill(t.matches.chatWith, { name: `${m.person.display_name}, ${m.person.age}` }), ...status].join(". ")}
+            onPress={() => router.push(`/chat/${m.id}`)}
+            style={styles.item}
+          >
+            {m.person.photo ? (
+              <Image source={{ uri: absoluteUrl(API_URL, m.person.photo.urls.small) }} style={styles.thumb} aria-hidden />
+            ) : null}
+            <View style={styles.grow}>
+              <Heading>{`${m.person.display_name}, ${m.person.age}`}</Heading>
+              {text ? <Body>{text}</Body> : <Body muted>{fill(t.matches.since, { date: dateInIndia(m.matched_at) })}</Body>}
+              {status.length > 0 ? <Body muted>{status.join(" · ")}</Body> : null}
+            </View>
+          </Pressable>
+        );
+      })}
     </Screen>
   );
 }

@@ -7,32 +7,10 @@
  * Every screen gets an axe scan (serious and critical WCAG A/AA issues fail
  * the test); any console error or 5xx response fails it too.
  */
-import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { expect, test } from "@playwright/test";
 
-import { PHOTO, WORKER_LOG } from "../env";
-
-const PASSWORD = "violet harbour lantern seventy";
-
-async function codeFromWorkerMail(email: string): Promise<string> {
-  for (let i = 0; i < 80; i++) {
-    const log = readFileSync(WORKER_LOG, "utf8");
-    const block = log.split("----- DEV EMAIL (not sent) -----").reverse().find((b) => b.includes(`To: ${email}`));
-    const code = block?.match(/Your code is (\d{6})/)?.[1];
-    if (code) return code;
-    await new Promise((r) => setTimeout(r, 250));
-  }
-  throw new Error(`no code mailed to ${email}`);
-}
-
-async function checkA11y(page: Page, screen: string) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  const blocking = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  expect(
-    blocking.map((v) => `${screen}: ${v.id} (${v.impact}) ${v.help} -> ${v.nodes.map((n) => n.html.slice(0, 160)).join(" | ")}`),
-  ).toEqual([]);
-}
+import { PHOTO } from "../env";
+import { checkA11y, codeFromWorkerMail, PASSWORD } from "./helpers";
 
 test("sign up, verify, create a profile, add a photo, set privacy, sign out", async ({ page }) => {
   const consoleErrors: string[] = [];

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Platform } from "react-native";
 
 import { ApiError, type Schemas, unwrap } from "@/api/client";
@@ -200,5 +200,82 @@ export function useDecide() {
       void qc.invalidateQueries({ queryKey: matchingKeys.likes });
       void qc.invalidateQueries({ queryKey: matchingKeys.matches });
     },
+  });
+}
+
+export type Message = Schemas["MessageOut"];
+export type MessagePage = Schemas["MessagePage"];
+
+export const chatKeys = {
+  all: ["conversation"] as const,
+  conversation: (matchId: string) => ["conversation", matchId] as const,
+  match: (matchId: string) => ["matches", matchId] as const,
+  nudge: ["safety", "nudge-terms"] as const,
+};
+
+/** History, newest page first; `fetchNextPage` loads older messages. */
+export function useConversation(matchId: string) {
+  const { api } = useAuth();
+  return useInfiniteQuery({
+    queryKey: chatKeys.conversation(matchId),
+    initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/v1/matches/{match_id}/messages", {
+          params: { path: { match_id: matchId }, query: pageParam === undefined ? {} : { before: pageParam } },
+        }),
+      ),
+    getNextPageParam: (last: MessagePage) => (last.has_more ? last.items[0]?.n : undefined),
+    retry: false,
+  });
+}
+
+/** Every message once, oldest first (pages can overlap after a refetch). */
+export function flattenPages(pages: MessagePage[] | undefined): Message[] {
+  const byN = new Map<number, Message>();
+  for (const page of pages ?? []) for (const m of page.items) byN.set(m.n, m);
+  return [...byN.values()].sort((a, b) => a.n - b.n);
+}
+
+export function useMatch(matchId: string) {
+  const { api } = useAuth();
+  return useQuery({
+    queryKey: chatKeys.match(matchId),
+    queryFn: () => unwrap(api.GET("/v1/matches/{match_id}", { params: { path: { match_id: matchId } } })),
+    retry: false,
+  });
+}
+
+export function useSendMessage(matchId: string) {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["MessageIn"]) =>
+      unwrap(api.POST("/v1/matches/{match_id}/messages", { params: { path: { match_id: matchId } }, body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chatKeys.conversation(matchId) });
+      void qc.invalidateQueries({ queryKey: matchingKeys.matches });
+    },
+  });
+}
+
+export function useMarkRead(matchId: string) {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (upToN: number) =>
+      unwrap(
+        api.POST("/v1/matches/{match_id}/read", { params: { path: { match_id: matchId } }, body: { up_to_n: upToN } }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: matchingKeys.matches }),
+  });
+}
+
+export function useNudgeTerms() {
+  const { api } = useAuth();
+  return useQuery({
+    queryKey: chatKeys.nudge,
+    queryFn: () => unwrap(api.GET("/v1/safety/nudge-terms")),
+    staleTime: 60 * 60 * 1000,
   });
 }
