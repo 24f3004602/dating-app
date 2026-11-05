@@ -25,6 +25,8 @@ features yet. Current state and next step:
 | [`security-threat-model.md`](replica/security-threat-model.md) | threats, planned mitigations, residual risks |
 | [`privacy-data-inventory.md`](replica/privacy-data-inventory.md) | what data we hold, why, who sees it, retention, deletion |
 | [`test-plan.md`](replica/test-plan.md) | test strategy, cases and results |
+| [`bugs.md`](replica/bugs.md) | the bug register, with severity and status, and a "to check" list |
+| [`design/`](replica/design/) | design tokens (contrast-checked), component specs, the gallery screenshot |
 
 The layout follows the conventions of the open-source
 [Replica skill pack](https://github.com/Jakeschincariol/replica-skill) (MIT).
@@ -75,8 +77,9 @@ your development database is never touched. The specs cover:
 - onboarding through discovery;
 - two people matching and chatting live;
 - deleting and keeping an account;
+- account recovery with a mailed code;
 - the design gallery;
-- the landing page and the staff console with two-factor sign-in.
+- the landing page, the 404 page, and the staff console with two-factor sign-in.
 
 After an API change, regenerate the client types: `uv run python scripts/export_openapi.py
 ../../packages/api-types/openapi.json` (in `apps/api`), then `npm run generate -w @datingapp/api-types`.

@@ -4,11 +4,12 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 14 (web) **done**:
-- 14a passed CI (api run 41977719453, mobile run 41977719394).
-- 14b passed CI (api run 41981021674, mobile run 41981021743): 319 API tests, the web build and tests, and all six e2e specs. They also passed 2 local runs.
+Stage 15 (audit) **done locally**; CI is pending.
+- **Parity:** 74.1 of 100, with 17 of 20 must-haves. The 3 missing are all owner setup: an email provider for sign-up codes and password recovery, and a private bucket for photos.
+- **Tests:** every level passed. One defect found and fixed: BUG-001, S4.
+- **Verdict:** not shippable yet. It needs those owner items, the native device pass (NAT-1) and a deployment with TLS (stage 17).
 
-The console needs a deployment with TLS before real use (stage 17). Next: stage 15 (audit).
+Next: stage 16, which is optional (sandbox subscriptions and discreet notifications), or straight to stage 17. That's the owner's call.
 
 ## Done
 
@@ -20,6 +21,7 @@ The console needs a deployment with TLS before real use (stage 17). Next: stage 
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 15 | Audit: feature matrix checked row by row with evidence under one status rule (D092); architecture checked against the code (endpoints, jobs, tables); every test level run; route inventory test; recovery e2e; BUG-001 (the 404 page's CSP) fixed; stale threat-model and architecture statements corrected; `bugs.md` started | `replica/features.csv`, `replica/bugs.md`, `tests/test_route_inventory.py` |
 | 14b | Next.js landing page and staff console (queue, report detail and actions, photo review, audit log, staff authenticator resets) as a backend for the browser: HttpOnly `__Host-` cookies, server-side session checks on every page and action, nonce CSP; web e2e with axe | `apps/web/`, `e2e/tests/admin.spec.ts` |
 | 14a | Staff sign-in with a second factor: password, then a TOTP code or recovery code; enrolment only with a one-time token from another admin or the server CLI; secrets encrypted; codes work once; separate `web_admin` sessions (12 h, 30 min idle); migration 0010 | `app/modules/staff/` |
 | 13 | Design system: role tokens checked for contrast and kept equal to `replica/design/tokens.json` by a test; type scale, 48-point targets, web focus rings, distinct pressed and disabled states; Caption, TextLink, Badge, Card, Thumb; the peacock and marigold palette; a `/design` gallery with axe, focus, field and reflow checks; applied across the screens | `replica/design/`, `apps/mobile/src/ui/primitives.tsx` |
@@ -35,6 +37,29 @@ The console needs a deployment with TLS before real use (stage 17). Next: stage 
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 15 audit
+
+| check | result |
+| --- | --- |
+| feature matrix | every `yes` names its tests (D092). 17 of 20 must-haves; parity 74.1. Partial must-haves: email registration and recovery (no email provider), photos (no bucket) |
+| architecture against code | 51 endpoints, 7 jobs and every table accounted for. 4 tables were missing from the data model (added) |
+| routes | 14 public by design, 33 member, 11 staff. A test now fails on any route without a session (AUD-1, mutation-checked) |
+| API | ruff, format and mypy clean; 320 tests pass; pip-audit clean |
+| app | typecheck; 103 tests pass; the web export works |
+| web | 2 tests pass; the build and typecheck pass |
+| e2e | 8 tests across 6 specs passed in each of 2 runs; axe on every screen |
+| supply chain | npm: 0 high or critical; 24 moderate or low, all in development tooling |
+| design | contrast 26 pairs, 0 failing AA |
+| security read-through | T03, T05, T11, T15, T20 and T21 updated to what's built; test IDs that didn't exist fixed |
+
+- **Found and fixed:**
+  - BUG-001 (S4): the built-in 404 page had no CSP nonce, so its scripts and styles were blocked. Our own 404 page now renders per request.
+  - Password recovery had no browser test; E2E-7 covers it now.
+- **Release gates** (all features at once):
+  - the native device pass (NAT-1);
+  - deployment with TLS (stage 17);
+  - owner setup: email provider and DNS, bucket, legal documents, Dependabot, SMS/DLT, trademark.
 
 ## Stage 14b status and build log
 
@@ -284,9 +309,12 @@ The console needs a deployment with TLS before real use (stage 17). Next: stage 
 
 ## Next
 
-Stage 15: the audit.
-- **Feature matrix:** every `features.csv` row against the code and tests.
-- **Architecture:** checked against what was built.
-- **Every test level, in one go:** API, mobile, web, e2e, migrations round trip, dependency audits and the contrast check.
-- **Review:** a security pass over the diff since stage 5, reading the code for the threat model's rows.
-- **Docs:** stale statements fixed; the native device pass (NAT-1) still flagged as not done.
+Stage 16 is optional; you choose whether to do it or go straight to 17.
+- **Payments (sandbox only):**
+  - First, the payment evaluation CLAUDE.md requires: Razorpay for web payments in India, and Apple's and Google's billing rules for digital features in mobile apps.
+  - Then a payment-provider interface and one sandbox plan, with signed webhooks deduplicated by event ID.
+  - No live payments without your authorization.
+- **Discreet notifications:**
+  - push through Expo, with no names or message text by default;
+  - preferences, and the warnings that are recorded but not yet sent.
+- **Or stage 17:** release readiness and a staging plan, with no deploy, spending or store publishing without your authorization.

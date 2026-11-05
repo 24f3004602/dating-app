@@ -43,6 +43,15 @@ test("the landing page says only what the app does", async ({ page }) => {
   expect(errors.console).toEqual([]);
 });
 
+test("an unknown page is a plain 404 that keeps the policy", async ({ page }) => {
+  const errors = watchErrors(page);
+  const res = await page.goto("/no-such-page");
+  expect(res?.status()).toBe(404);
+  expect(res?.headers()["content-security-policy"] ?? "").toContain("frame-ancestors 'none'");
+  await checkA11y(page, "not-found");
+  expect(errors.console).toEqual([]); // no scripts blocked by the policy
+});
+
 test("staff sign in with a second factor and work the queue", async ({ page, context, request }) => {
   /** The console page, requested with this staff cookie and no browser state. */
   const consoleWith = async (token: string) => {

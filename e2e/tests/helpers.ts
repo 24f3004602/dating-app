@@ -8,11 +8,13 @@ import { PHOTO, WORKER_LOG } from "../env";
 
 export const PASSWORD = "violet harbour lantern seventy";
 
-export async function codeFromWorkerMail(email: string): Promise<string> {
+/** The latest code mailed to `email` (the dev mail printer writes to the worker log). */
+export async function codeFromWorkerMail(email: string, kind: "sign-up" | "reset" = "sign-up"): Promise<string> {
+  const pattern = kind === "reset" ? /Your password reset code is (\d{6})/ : /Your code is (\d{6})/;
   for (let i = 0; i < 80; i++) {
     const log = readFileSync(WORKER_LOG, "utf8");
     const block = log.split("----- DEV EMAIL (not sent) -----").reverse().find((b) => b.includes(`To: ${email}`));
-    const code = block?.match(/Your code is (\d{6})/)?.[1];
+    const code = block?.match(pattern)?.[1];
     if (code) return code;
     await new Promise((r) => setTimeout(r, 250));
   }

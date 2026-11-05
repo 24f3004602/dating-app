@@ -114,6 +114,10 @@ migrations run as a separate role.
 | `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked. Table from stage 8 (D064), API in 11 | 8 (API 11) |
 | `reports` | reporter, subject user, optional message or photo (SET NULL: reports outlive accounts); `evidence_text` (a copy of the reported message, D080); `reason` (fake, harassment, explicit, scam, underage, hate, other); `details` (≤ 1000); `status` (open, in_review, actioned, dismissed); `priority` 1-3; assignee; `resolved_at`, `resolved_by`; index (status, priority, created_at) | 11 |
 | `moderation_actions` | append-only for the app (SELECT, INSERT), no foreign keys: moderator, target user, report, photo, message, `action` (dismiss, warn, remove_photo, remove_message, suspend, ban, reinstate, approve_photo, reject_photo), `note` (≤ 500). Messages gained `removed_at` | 11 |
+| `deleted_accounts` | `user_id` (no foreign key), `requested_at`, `deleted_at`, `was_banned`, `email_digest` (HMAC, banned accounts only), `consents` (JSON), `keep_until` (1 year) (D083) | 12 |
+| `staff_mfa` | `user_id` (cascade), `secret_enc` (AES-256-GCM), `enrolled_at`, `last_step` (TOTP replay guard) (D090) | 14 |
+| `staff_recovery_codes` | `user_id` (cascade), `code_hash` (HMAC, unique), `used_at` | 14 |
+| `staff_enrollments` | `user_id` (cascade), `token_hash` (SHA-256, unique), `issued_by` (SET NULL), `expires_at` (24 h), `used_at` | 14 |
 
 Foreign keys declare their `on delete` rule explicitly. Safety records
 (reports, moderation actions) are kept on purpose; see
@@ -160,7 +164,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/likes/received | people who liked you | M | F04 |
 | GET /v1/matches; GET /v1/matches/{id}; POST /v1/matches/{id}/unmatch | matches by latest activity, with the last message, unread count and `your_turn` (stage 10); one match; unmatch (stage 11) | M | F04, F06 |
 | GET, POST /v1/matches/{id}/messages; POST /v1/matches/{id}/read | history by sequence number (`before`, `after`), idempotent send (201, or 200 for a retry), read pointer (D072) | M | F05 |
-| POST /v1/realtime/ticket; WS /v1/realtime | single-use 30-second ticket, so the session token never appears in URLs; events: `ready`, `message.created`, `match.created`, `read.updated`, `resync`, `ping` (match.closed in stage 11); close codes 4401, 4429, 1012 (D074) | M | F05 |
+| POST /v1/realtime/ticket; WS /v1/realtime | single-use 30-second ticket, so the session token never appears in URLs; events: `ready`, `message.created`, `match.created`, `read.updated`, `resync`, `ping`, `match.closed`; close codes 4401, 4429, 1012 (D074) | M | F05 |
 | POST /v1/blocks; GET /v1/blocks; DELETE /v1/blocks/{user_id} | block, list blocks, unblock (a match is not restored) | M | F06 |
 | POST /v1/reports; GET /v1/reports/mine | report a profile, message or photo (blocks by default); see report status | M | F06 |
 | GET /v1/safety/nudge-terms | the `hurtful` and `money` word lists (D075) | M | F05 |
@@ -188,7 +192,7 @@ webhooks and store server notifications. **Webhooks out:** none.
 ## Key mechanisms
 
 - **Sessions:** an opaque 256-bit random token is stored only as a SHA-256 hash.
-  - Mobile sessions last 30 days, sliding (refreshed at most every 15 minutes); admin sessions (stage 14) last 12 hours with a 30-minute idle timeout.
+  - Mobile sessions last 30 days, sliding (refreshed at most every 15 minutes); staff (`web_admin`) sessions last 12 hours, never extended, with a 30-minute idle timeout (D090).
   - All sessions are revoked on logout-all, password reset, ban or deletion.
   - JWTs were rejected because revocation must take effect immediately.
 - **One-time codes:**
