@@ -39,6 +39,8 @@ staff console is stage 14. Next: stage 12 (privacy).
 | report | done | reasons, their latest messages, details, also block (default on), sent state; e2e and axe |
 | safety | done | blocked people with unblock, my reports with status; e2e and axe |
 
+- **Found and fixed:** CI failed on a Jest timeout. With no transform cache, as on CI, the first screen test in a file pays the one-time cost of compiling React Native modules and passed 5 s; warm, the whole file takes 4 s. The test timeout is now 30 s; from a cleared cache all 86 tests pass in 53 s.
+
 ## Stage 11a status
 
 - **Implemented and tested:** F06-*, ADM-*, SAF-* and MODR-* in `test-plan.md`.
