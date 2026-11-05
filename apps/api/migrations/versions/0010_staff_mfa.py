@@ -27,9 +27,7 @@ def upgrade() -> None:
         sa.Column("last_step", sa.BigInteger(), server_default=sa.text("0"), nullable=False),
         sa.PrimaryKeyConstraint("user_id", name="pk_staff_mfa"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_staff_mfa_user_id_users", ondelete="CASCADE"),
-        sa.CheckConstraint(
-            "octet_length(secret_enc) BETWEEN 40 AND 128", name=op.f("ck_staff_mfa_secret_enc_length")
-        ),
+        sa.CheckConstraint("octet_length(secret_enc) BETWEEN 40 AND 128", name=op.f("ck_staff_mfa_secret_enc_length")),
     )
     op.create_table(
         "staff_recovery_codes",
