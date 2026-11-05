@@ -47,7 +47,7 @@ async def live(app: FastAPI) -> AsyncIterator[LiveServer]:
 
 
 async def staff(app: FastAPI, db: Db, now: datetime, role: str = "moderator") -> Member:
-    return await make_member(db, app.state.storage, now, role=role, profile=False)
+    return await make_member(db, app.state.storage, now, role=role, profile=False, session_client="web_admin")
 
 
 async def call(client: AsyncClient, who: Member | None, method: str, url: str, body: Any = None) -> Any:
@@ -77,10 +77,15 @@ async def test_only_staff_reach_admin_routes_and_some_need_an_admin(
     app: FastAPI, client: AsyncClient, db: Db, now: datetime
 ) -> None:
     member = await make_member(db, app.state.storage, now)
+    # A staff session whose holder is no longer staff (demoted after signing in).
+    demoted = await make_member(db, app.state.storage, now, profile=False, session_client="web_admin")
     moderator = await staff(app, db, now)
+    moderator_app = await make_member(db, app.state.storage, now, role="moderator", profile=False)
     for method, url, body in ADMIN_ROUTES:
         assert (await call(client, None, method, url, body)).status_code == 401, url
-        r = await call(client, member, method, url, body)
+        for app_session in (member, moderator_app):  # app sessions never open the console (D090)
+            assert (await call(client, app_session, method, url, body)).status_code == 401, url
+        r = await call(client, demoted, method, url, body)
         assert (r.status_code, r.json()["code"]) == (403, "staff_only"), url
     r = await call(client, moderator, "GET", "/v1/admin/audit-log")
     assert (r.status_code, r.json()["code"]) == (403, "admin_only")
@@ -283,7 +288,9 @@ async def test_photo_review_approves_and_rejects(
     assert (await call(client, moderator, "POST", f"/v1/admin/photos/{uuid.uuid4()}/decision",
                        {"decision": "approve"})).status_code == 404  # fmt: skip
 
-    selfie = await make_member(db, app.state.storage, now, role="moderator", photos=("pending",))
+    selfie = await make_member(
+        db, app.state.storage, now, role="moderator", photos=("pending",), session_client="web_admin"
+    )
     own = await call(
         client, selfie, "POST", f"/v1/admin/photos/{selfie.photo_ids[0]}/decision", {"decision": "approve"}
     )

@@ -48,6 +48,7 @@ from app.modules.media.service import DELETE_OBJECTS, list_photos
 from app.modules.privacy import retention
 from app.modules.privacy.models import DeletedAccount
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
+from app.modules.staff.models import StaffEnrollment
 from app.providers.storage import photo_keys
 from app.ratelimit import Limit
 
@@ -213,6 +214,13 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
     )
     counts["codes"] = await _count(
         session, delete(OneTimeCode).where(OneTimeCode.expires_at < now - retention.EXPIRED_CODE)
+    )
+    ended_token = now - retention.ENDED_ENROLLMENT
+    counts["staff_enrollments"] = await _count(
+        session,
+        delete(StaffEnrollment).where(
+            or_(StaffEnrollment.used_at < ended_token, StaffEnrollment.expires_at < ended_token)
+        ),
     )
     expired = (
         (

@@ -1,9 +1,10 @@
 """Staff authorization for /v1/admin/* (T15). The API is the authority; the
 admin console (stage 14) only improves the experience.
 
-Until stage 14, staff use their ordinary session. Before any deployment,
-/v1/admin must require separate staff sessions with two-factor
-authentication (architecture; release blocker in progress.md).
+Every route needs a staff session (`web_admin`), which only two-factor
+sign-in opens (D090); an ordinary app session gets 401 here, even a staff
+member's. The role is checked on every request, so a demotion takes effect
+at once.
 """
 
 from __future__ import annotations
@@ -14,12 +15,12 @@ from fastapi import Depends
 
 from app.errors import ApiError
 from app.modules.accounts.models import UserRole
-from app.modules.auth.deps import Authenticated, CurrentSession
+from app.modules.auth.deps import Authenticated, CurrentStaffSession
 
 STAFF = {UserRole.moderator, UserRole.admin}
 
 
-async def staff_session(auth: CurrentSession) -> Authenticated:
+async def staff_session(auth: CurrentStaffSession) -> Authenticated:
     if auth.user.role not in STAFF:
         raise ApiError(403, "staff_only", "This needs a staff account.")
     return auth

@@ -110,6 +110,12 @@ class Settings(BaseSettings):
     realtime_heartbeat_s: float = Field(default=25.0, gt=0, le=60)
     realtime_revalidate_s: float = Field(default=120.0, gt=0, le=900)
     realtime_max_connections: int = Field(default=5, ge=1, le=20)
+    # Staff (stage 14, D090): separate web_admin sessions after two-factor sign-in,
+    # absolute expiry and an idle timeout; sign-in challenges and enrolment tokens.
+    staff_session_hours: int = Field(default=12, ge=1, le=24)
+    staff_idle_minutes: int = Field(default=30, ge=5, le=120)
+    staff_challenge_ttl_s: int = Field(default=300, ge=60, le=900)
+    staff_enrollment_hours: int = Field(default=24, ge=1, le=72)
     # Upload requests may exceed the general body limit (multipart overhead included).
     max_upload_body_bytes: int = Field(default=11 * 1024 * 1024, ge=1024)
 

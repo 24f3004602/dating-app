@@ -4,12 +4,7 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 13 (design system) **done for the web build**:
-- Passed CI (mobile run 41974905121): 103 mobile tests and all four e2e specs, which also passed 2 local runs, including the new gallery spec.
-- The contrast check reports 26 pairs, 0 failing AA.
-- VoiceOver, TalkBack and large system text still need a native device pass.
-
-Next: stage 14 (web: landing page and protected admin console with staff 2FA).
+Stage 14 (web) **in progress**. 14a (API) is done: separate staff sessions and two-factor sign-in, with 319 API tests passing locally and CI pending. 14b (the Next.js landing page and admin console) is next.
 
 ## Done
 
@@ -21,6 +16,7 @@ Next: stage 14 (web: landing page and protected admin console with staff 2FA).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 14a | Staff sign-in with a second factor: password, then a TOTP code or recovery code; enrolment only with a one-time token from another admin or the server CLI; secrets encrypted; codes work once; separate `web_admin` sessions (12 h, 30 min idle); migration 0010 | `app/modules/staff/` |
 | 13 | Design system: role tokens checked for contrast and kept equal to `replica/design/tokens.json` by a test; type scale, 48-point targets, web focus rings, distinct pressed and disabled states; Caption, TextLink, Badge, Card, Thumb; the peacock and marigold palette; a `/design` gallery with axe, focus, field and reflow checks; applied across the screens | `replica/design/`, `apps/mobile/src/ui/primitives.tsx` |
 | 12b | Delete-account screen (from the profile in any state and from Privacy), the welcome-screen date, Keep my account on sign-in, Privacy hints that say what visibility and pause do; e2e of delete, keep and delete again | `apps/mobile/src/screens/account.tsx`, `e2e/tests/privacy.spec.ts` |
 | 12a | Account deletion (password, 7-day restore, purge through the database cascade, photo files by a queued job, report hold, banned-email hash), retention sweep (conversations, picks, sessions, codes, unverified sign-ups, reports, records), expired audit records through an owner-rights function, the store review; migration 0009 | `app/modules/privacy/`, `privacy-data-inventory.md` |
@@ -34,6 +30,18 @@ Next: stage 14 (web: landing page and protected admin console with staff 2FA).
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 14a status
+
+- **Implemented and tested:** STF-1..7 in `test-plan.md`.
+- **Mutation checks:** each of these breaks a test: no replay check, no session separation, no enrolment token, no idle timeout.
+- **Found and fixed:**
+  - Tests moving the clock forward days at a time now use fresh staff sessions: the 12-hour limit applies to them too.
+  - The enrolment step read the email after a rollback, which expired it.
+- **Not yet:**
+  - The console (14b).
+  - WebAuthn passkeys as a stronger second factor (later).
+  - A device list.
 
 ## Stage 13 status
 
@@ -238,7 +246,7 @@ Next: stage 14 (web: landing page and protected admin console with staff 2FA).
 
 ## Blockers / owner actions
 
-0. **Before any deployment:** staff sessions with two-factor authentication for `/v1/admin` (stage 14, D081).
+0. **Before any deployment:** staff two-factor sign-in is done in the API (14a, D090). The console that uses it is 14b. The first admin's enrolment token comes from `datingapp-api staff-enrollment <email>` run on the server, and you hand it over in person.
 1. Turn on Dependabot alerts and security updates (repo Settings → Code security).
 2. **Email provider** (needed before any real sign-up; not blocking development):
    - choose one, for example Amazon SES in ap-south-1, Postmark or Resend;

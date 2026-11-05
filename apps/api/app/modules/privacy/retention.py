@@ -25,6 +25,7 @@ DAILY_PICKS_DAYS = 7
 # Authentication.
 ENDED_SESSION = timedelta(days=30)  # after expiry or revocation
 EXPIRED_CODE = timedelta(days=1)
+ENDED_ENROLLMENT = timedelta(days=30)  # staff enrolment tokens, after use or expiry
 
 # Safety.
 REPORTER_LINK = timedelta(days=90)  # (R) after resolution, the report no longer names its reporter

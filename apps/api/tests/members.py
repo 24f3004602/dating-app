@@ -59,7 +59,10 @@ async def make_member(
     profile: bool = True,
     name: str = "Member",
     role: str = "member",
+    session_client: str = "mobile",
 ) -> Member:
+    """`session_client="web_admin"` gives the token a staff session, as if after
+    two-factor sign-in (which test_staff covers end to end)."""
     today = now.date()
     async with db() as s:
         user = User(
@@ -77,8 +80,10 @@ async def make_member(
         s.add(user)
         await s.flush()
         token, digest = new_session_token()
-        s.add(Session(user_id=user.id, token_hash=digest, client=SessionClient.mobile,
-                      created_at=now, expires_at=now + timedelta(days=30), last_used_at=now))  # fmt: skip
+        staff = session_client == "web_admin"
+        life = timedelta(hours=12) if staff else timedelta(days=30)
+        s.add(Session(user_id=user.id, token_hash=digest, client=SessionClient(session_client), created_at=now,
+                      expires_at=now + life, last_used_at=now))  # fmt: skip
         photo_ids: list[uuid.UUID] = []
         if profile:
             s.add(

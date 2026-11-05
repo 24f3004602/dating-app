@@ -120,6 +120,44 @@ def _seed_command(_: argparse.Namespace) -> int:
     return 0
 
 
+def _staff_enrollment_command(args: argparse.Namespace) -> int:
+    """Bootstrap or recovery: an enrolment token for a staff account, printed once
+    to whoever runs this on the server (D090). It resets that person's authenticator."""
+    from sqlalchemy import select  # noqa: PLC0415 - command-only imports
+
+    from app.clock import system_clock  # noqa: PLC0415
+    from app.errors import ApiError  # noqa: PLC0415
+    from app.modules.staff.service import issue_enrollment  # noqa: PLC0415
+
+    settings = get_settings()
+    email = str(args.email).strip().lower()
+
+    async def go() -> tuple[str, datetime] | None:
+        engine = create_engine(settings)
+        try:
+            async with create_session_factory(engine)() as session:
+                found = await session.execute(select(User.id).where(User.email_normalized == email))
+                user_id = found.scalar_one_or_none()
+                if user_id is None:
+                    return None
+                return await issue_enrollment(session, settings, None, user_id, system_clock())
+        finally:
+            await engine.dispose()
+
+    try:
+        issued = run_async(go)
+    except ApiError as exc:
+        print(f"staff-enrollment: refused ({exc.code})", file=sys.stderr)
+        return 2
+    if issued is None:
+        print("staff-enrollment: no account with that email", file=sys.stderr)
+        return 2
+    token, expires = issued
+    print(f"staff-enrollment: one-time token (valid until {expires.isoformat()}); give it to them in person:")
+    print(token)
+    return 0
+
+
 def _worker_command(_: argparse.Namespace) -> int:
     from app.clock import system_clock  # noqa: PLC0415 - worker-only imports
     from app.jobs import WorkerContext, get_job_app, open_worker_pool, set_worker_context  # noqa: PLC0415
@@ -196,6 +234,9 @@ def main(argv: list[str] | None = None) -> int:
     worker.set_defaults(func=_worker_command)
     seed = sub.add_parser("seed-dev", help="create labelled development fixtures")
     seed.set_defaults(func=_seed_command)
+    enrol = sub.add_parser("staff-enrollment", help="issue a one-time authenticator enrolment token (staff)")
+    enrol.add_argument("email")
+    enrol.set_defaults(func=_staff_enrollment_command)
     args = parser.parse_args(argv)
     result: int = args.func(args)
     return result

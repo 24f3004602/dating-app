@@ -471,14 +471,24 @@ async def confirm_password_reset(
 # --- sessions ----------------------------------------------------------------
 
 
+STAFF_TOUCH = timedelta(seconds=60)
+
+
 async def authenticate(
-    session: AsyncSession, settings: Settings, token: str, now: datetime
+    session: AsyncSession,
+    settings: Settings,
+    token: str,
+    now: datetime,
+    client: SessionClient = SessionClient.mobile,
 ) -> tuple[Session, User] | None:
+    """The session behind `token`, if it is live and of the expected client: a
+    member session never opens /v1/admin and a staff session never acts as a
+    member (D090)."""
     row = (
         await session.execute(
             select(Session, User)
             .join(User, User.id == Session.user_id)
-            .where(Session.token_hash == hash_session_token(token))
+            .where(Session.token_hash == hash_session_token(token), Session.client == client)
         )
     ).one_or_none()
     if row is None:
@@ -491,6 +501,15 @@ async def authenticate(
         or deletion_pending(user)
     ):
         return None
+    if client is SessionClient.web_admin:
+        # Staff: a fixed 12-hour life and a 30-minute idle timeout (architecture).
+        last = sess.last_used_at or sess.created_at
+        if now - last >= timedelta(minutes=settings.staff_idle_minutes):
+            return None
+        if now - last >= STAFF_TOUCH:
+            sess.last_used_at = now
+            await session.commit()
+        return sess, user
     # Sliding expiry, written at most once per touch interval.
     if sess.last_used_at is None or now - sess.last_used_at >= timedelta(seconds=settings.session_touch_interval_s):
         sess.last_used_at = now
@@ -509,6 +528,7 @@ async def session_is_live(session: AsyncSession, session_id: uuid.UUID, user_id:
             .where(
                 Session.id == session_id,
                 Session.user_id == user_id,
+                Session.client == SessionClient.mobile,
                 Session.revoked_at.is_(None),
                 Session.expires_at > now,
                 User.status == UserStatus.active,

@@ -46,6 +46,7 @@ Exact versions are pinned in lockfiles when each part is created.
 | cache / realtime fan-out / rate limits | Redis 7, redis-py 8.1 | justified by WebSocket fan-out across workers and rate-limit counters; never the source of truth |
 | background jobs | procrastinate 3.10 (PostgreSQL-backed) | jobs are enqueued in the same transaction as the data change; no extra broker. Verified on Python 3.13 with PostgreSQL 17 (D035); added in stage 6 |
 | passwords | argon2-cffi 25.1 (Argon2id) | memory-hard; current best practice |
+| staff second factor | pyotp 2.10 (TOTP, RFC 6238); cryptography 50.0 (AES-256-GCM for the stored secrets) | stage 14, D090; both checked on PyPI 2026-11-05 (MIT; Apache-2.0 or BSD-3-Clause; wheels for Windows and Linux) |
 | images | Pillow 13 | decode, check, strip metadata, re-encode |
 | uploads | python-multipart 0.0.33 | FastAPI form uploads |
 | API tests | pytest 9.2, pytest-asyncio 1.4, httpx 0.28 against a real PostgreSQL | tests constraints and transactions for real |
@@ -166,6 +167,8 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/admin/reports; GET /v1/admin/reports/{id}; POST /v1/admin/reports/{id}/actions | moderation queue; minimal context; every read and action is audited | Mod | admin |
 | GET /v1/admin/photos/pending; POST /v1/admin/photos/{id}/decision | photo review | Mod | admin |
 | POST /v1/admin/users/{id}/actions (suspend: Mod; ban, reinstate: Adm); GET /v1/admin/audit-log (Adm) | account actions with a required note; audit trail (D081) | Mod / Adm | admin |
+| POST /v1/admin/auth/login, /enroll, /verify, /logout; GET /v1/admin/auth/me | staff sign-in: password, then a challenge; a TOTP code or a recovery code opens a `web_admin` session; enrolment with a one-time token (D090) | P / staff | admin |
+| POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
 
 **Webhooks in:** none in the MVP. Payments later need signed Razorpay
 webhooks and store server notifications. **Webhooks out:** none.
@@ -229,7 +232,7 @@ webhooks and store server notifications. **Webhooks out:** none.
 - **Admin protection:**
   - Every `/v1/admin/*` route requires a role on the server.
   - Next.js middleware only improves the experience; the API is the authority.
-  - Staff sessions are separate, and staff two-factor authentication (TOTP, pyotp) is planned for stage 14.
+  - Staff sessions are separate (`web_admin`: 12 hours, 30 minutes idle) and open only after two-factor sign-in (TOTP or a recovery code). The first enrolment needs a one-time token from another admin or the server CLI (D090).
 - **Logging:**
   - Structured JSON with request IDs and user IDs.
   - Never logged: message bodies, emails, birthdates, tokens or codes. IP addresses are truncated.

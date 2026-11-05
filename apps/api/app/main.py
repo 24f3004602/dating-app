@@ -31,6 +31,8 @@ from app.modules.privacy.router import router as privacy_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.realtime.router import router as realtime_router
 from app.modules.safety.router import router as safety_router
+from app.modules.staff.challenges import Challenges
+from app.modules.staff.router import router as staff_router
 from app.openapi import install_openapi
 from app.providers.identity import NoIdentityVerifier
 from app.providers.storage import create_storage
@@ -76,6 +78,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.state.session_factory = create_session_factory(engine)
     app.state.redis = redis
     app.state.realtime = realtime
+    app.state.staff_challenges = Challenges(redis, settings.rate_limit_prefix)
     app.state.identity = NoIdentityVerifier()
     app.state.storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
     app.state.auth = AuthContext(
@@ -120,5 +123,6 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(safety_router)
     app.include_router(moderation_router)
     app.include_router(privacy_router)
+    app.include_router(staff_router)
     install_openapi(app)
     return app

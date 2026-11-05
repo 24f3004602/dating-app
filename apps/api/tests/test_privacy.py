@@ -341,20 +341,22 @@ async def test_a_restore_that_commits_first_wins_over_the_purge(
 async def test_banned_accounts_are_purged_after_90_days_and_the_email_waits_a_year(
     app: FastAPI, client: AsyncClient, db: Db, *, jobs: JobRunner, clock: FrozenClock, now: datetime
 ) -> None:
-    admin = await make_member(db, app.state.storage, now, role="admin", name="Admin")
+    admin = await make_member(db, app.state.storage, now, role="admin", name="Admin", session_client="web_admin")
     asha, ravi, _ = await pair(app, db, now)
     email = await email_of(db, asha)
 
-    async def act(who: Member, action: str) -> None:
+    async def act(who: Member, action: str, by: Member = admin) -> None:
         r = await client.post(
-            f"/v1/admin/users/{who.id}/actions", json={"action": action, "note": "test"}, headers=admin.headers
+            f"/v1/admin/users/{who.id}/actions", json={"action": action, "note": "test"}, headers=by.headers
         )
         assert r.status_code == 201, r.text
 
     await act(asha, "ban")
     await act(ravi, "ban")
     clock.advance(days=10)
-    await act(ravi, "reinstate")  # reinstated: never purged for the ban
+    # Staff sessions last 12 hours: an admin signed in today does the reinstating.
+    today = await make_member(db, app.state.storage, clock(), role="admin", name="Admin", session_client="web_admin")
+    await act(ravi, "reinstate", today)  # reinstated: never purged for the ban
     clock.advance(days=80, seconds=-60)
     assert await purge(app, db, clock) == 0
     clock.advance(seconds=120)
@@ -386,7 +388,7 @@ async def test_banned_accounts_are_purged_after_90_days_and_the_email_waits_a_ye
 async def test_reinstating_an_account_waiting_for_deletion_keeps_it_waiting(
     app: FastAPI, client: AsyncClient, db: Db, clock: FrozenClock, now: datetime
 ) -> None:
-    admin = await make_member(db, app.state.storage, now, role="admin", name="Admin")
+    admin = await make_member(db, app.state.storage, now, role="admin", name="Admin", session_client="web_admin")
     asha = await deletable(app, db, await make_member(db, app.state.storage, now))
     assert (await delete_me(client, asha)).status_code == 202
     for action in ("ban", "reinstate"):
@@ -494,7 +496,7 @@ async def test_the_retention_sweep_applies_each_rule_at_its_boundary(
         counts = await service.sweep(s, app.state.settings, clock())
     assert counts == {
         "closed_matches": 1, "daily_picks": 1, "sessions": 2, "codes": 1, "unverified_accounts": 1,
-        "reporter_links": 1, "reports": 1, "deleted_account_records": 1, "audit_records": 2,
+        "reporter_links": 1, "reports": 1, "deleted_account_records": 1, "audit_records": 2, "staff_enrollments": 0,
     }  # fmt: skip
 
     assert await count(db, Match, Match.id == old) == 0
