@@ -4,14 +4,17 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 16 (optional) **done for what can be built without the owner's accounts**.
-- **16a:** discreet notifications. Passed CI (api run 42004360276, mobile run 42004360275).
-- **16b:** the billing evaluation, and the website's payment server side in sandbox code. Passed CI (api run 42007106214, mobile run 42007106643; 338 API tests).
-- **Waiting on the owner:**
-  - delivery of pushes needs an EAS project;
-  - payments need decisions on the plan's contents and price, and accounts with Razorpay, Apple and Google.
+Stage 17 (release readiness) **done**: nothing deployed, bought or published. All three workflows passed on `336321b` (images run 42012208962, api run 42012209136, mobile run 42012208614).
+- **Preflight** (`replica/deploy.md`): not ready to launch. No engineering defect blocks it; the gates are owner items:
+  - an email provider and DNS;
+  - a private bucket;
+  - final legal documents;
+  - the name and logo;
+  - hosting and a budget;
+  - EAS and the store accounts.
+- **Also needed:** the native device pass (NAT-1) and a staging run behind TLS.
 
-Next: stage 17 (release readiness and a staging plan).
+All 17 stages are done. What comes next depends on the owner's decisions (deploy.md, "Release gates").
 
 ## Done
 
@@ -23,6 +26,7 @@ Next: stage 17 (release readiness and a staging plan).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 17 | Release readiness: preflight run and recorded; container images for the API, worker and web, built and smoke-tested in CI (never pushed); `TRUSTED_PROXIES`; production guards for test backends and http origins; a complete `.env.example` with a test; original placeholder icons; rebrand sweep; the staging plan and runbooks (planned) | `replica/deploy.md`, `apps/*/Dockerfile`, `.github/workflows/images.yml` |
 | 16b | Billing rules evaluated (Apple, Google Play in India, Razorpay); the payment-provider interface, a Razorpay adapter (fake-server tested), signed and deduplicated webhooks, a server-side entitlement, cancel at cycle end, cancellation on deletion, a live-key guard; migration 0012 | `replica/launch/pricing.md`, `app/modules/billing/`, `app/providers/payments.py` |
 | 16a | Discreet notifications: push devices tied to sessions, fixed sentences with kind-only data, preferences, throttles, team notices for warnings, an Expo adapter (fake-server tested) with receipts, the app's settings screen and notices; migration 0011 | `app/modules/notifications/`, `apps/mobile/src/notifications/` |
 | 15 | Audit: feature matrix checked row by row with evidence under one status rule (D092); architecture checked against the code (endpoints, jobs, tables); every test level run; route inventory test; recovery e2e; BUG-001 (the 404 page's CSP) fixed; stale threat-model and architecture statements corrected; `bugs.md` started | `replica/features.csv`, `replica/bugs.md`, `tests/test_route_inventory.py` |
@@ -41,6 +45,20 @@ Next: stage 17 (release readiness and a staging plan).
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 17 status
+
+- **Implemented and tested:** OPS-1..5 in `test-plan.md`. The images workflow ran every smoke step.
+- **Found and fixed:**
+  - The app still shipped Expo's template icons, Expo's own logo; they're now an original placeholder.
+  - `.env.example` listed 13 of 58 settings, and said rotating `APP_SECRET_KEY` voids "live codes only". It also breaks staff authenticators, banned-email hashes and photo links.
+  - Forwarded client IPs were ignored outright (`proxy_headers=False`): safe, but behind a load balancer every member would share one rate-limit bucket. Now there's an explicit trusted list.
+  - A worker test's scratch-database teardown could race a closing pool; it now waits.
+- **Planned only (deploy.md):**
+  - the staging environment;
+  - DNS, TLS, monitoring and backups;
+  - EAS builds;
+  - the incident and data-breach runbooks (DPDP Rule 7, in force from 2027-05-13, followed from day one).
 
 ## Stage 16b status
 
@@ -322,7 +340,7 @@ Next: stage 17 (release readiness and a staging plan).
 
 ## Blockers / owner actions
 
-0. **Before any deployment:** staff two-factor sign-in and the console are done (14a-b, D090-D091). They need TLS in front of them (stage 17). The first admin's enrolment token comes from `datingapp-api staff-enrollment <email>`, run on the server and handed over in person.
+0. **Before any deployment:** see `deploy.md` (release gates). Staff two-factor sign-in and the console are done (D090-D091) and need TLS in front of them. The first admin's bootstrap is in the deploy runbooks.
 1. Turn on Dependabot alerts and security updates (repo Settings → Code security).
 2. **Email provider** (needed before any real sign-up; not blocking development):
    - choose one, for example Amazon SES in ap-south-1, Postmark or Resend;
@@ -335,11 +353,4 @@ Next: stage 17 (release readiness and a staging plan).
 
 ## Next
 
-Stage 17: release readiness and a staging plan. No deploy, spending or store publishing without the owner's authorization.
-- **Readiness:** a checklist against everything recorded so far. Release gates; owner setup; legal periods marked (R); the native device pass; TLS; backups; monitoring; secrets.
-- **Staging plan:**
-  - the hosting shape in an India region: API, worker, PostgreSQL, Redis, object storage and the web app;
-  - configuration and secrets, migrations and rollback, the trusted proxy for client IPs;
-  - log retention, alerts, and the store-build path with EAS.
-- **Runbooks:** incident response, the data-breach steps under DPDP, the first-admin bootstrap.
-- **Docs:** each part labelled as planned until the owner authorizes it.
+All planned stages are done. The single best next step is owner setup: the email provider and its DNS, and the private bucket (deploy.md, gates 1-2). Their adapters are the last missing engineering for the 3 must-haves. After that, the native device pass, then a staging run behind TLS, when authorized.

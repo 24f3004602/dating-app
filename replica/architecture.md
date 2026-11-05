@@ -56,7 +56,7 @@ Exact versions are pinned in lockfiles when each part is created.
 | shared types | openapi-typescript 7.13 (with its own TypeScript 5.9) in `packages/api-types`, generated from `scripts/export_openapi.py`; CI fails if they drift | one contract; no hand-written duplicate types |
 | JS workspace | npm workspaces (`apps/mobile`, `apps/web`, `packages/api-types`) | hoisted layout is the safest for Metro. To verify against Expo's monorepo guide in stage 7 |
 | e2e tests | Playwright 1.64 with the installed Chrome, axe-core 4.14 scans, against the Expo web build and a real API (D062) | Playwright not yet installed on the owner's laptop (Chrome 156 and Edge 156 are); install when the first web or e2e stage starts |
-| CI | GitHub Actions, with PostgreSQL and Redis as service containers | workflow `.github/workflows/api.yml` (D040). Docker Desktop is installed locally but its daemon is off, so container builds are verified in CI |
+| CI | GitHub Actions, with PostgreSQL and Redis as service containers | workflow `.github/workflows/api.yml` (D040). Docker Desktop is installed locally but its daemon is off, so container builds are verified in CI (`images.yml`, D095) |
 | hosting (later) | not chosen. Constraints: India region (Mumbai) for data and latency; managed PostgreSQL and Redis; S3-compatible storage | nothing is deployed without owner authorization |
 
 Compatibility risk found: the latest TypeScript is 7.0.2, but
@@ -78,7 +78,7 @@ apps/api/            FastAPI service + worker (uv project, pyproject.toml, uv.lo
 apps/mobile/         Expo SDK 58 app (expo-router)
 apps/web/            Next.js 16: / (landing), /admin (moderation console)
 packages/api-types/  generated TypeScript types
-infra/               Dockerfiles and compose for CI and deploys (not runnable here)
+apps/api/Dockerfile  the API and worker image; apps/web/Dockerfile the web image (stage 17, built and smoke-tested in CI, never pushed)
 .github/workflows/   CI
 replica/             project documents
 ```
