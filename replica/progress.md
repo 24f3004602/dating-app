@@ -6,7 +6,7 @@ Updated: 2026-11-05
 
 Stage 12 (privacy) **done for the API and the web build**:
 - 12a passed CI (api run 41968944533, mobile run 41968944600).
-- 12b passes locally: 89 mobile tests, and all three e2e specs in each of 2 runs, including deleting and keeping an account. CI for 12b is pending.
+- 12b passed CI (mobile run 41969979059): 89 mobile tests, and all three e2e specs (also 2 local runs), including deleting and keeping an account.
 
 A native device pass is still pending. Next: stage 13 (design system).
 

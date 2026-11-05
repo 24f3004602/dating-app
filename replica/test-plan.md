@@ -218,3 +218,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | owner's laptop | `pytest` in `apps/api` (stage 12a) | 310 passed; mutation checks: no report hold, no barred-email check, no session revocation, no re-check under the lock: each caught |
 | 2026-11-05 | GitHub Actions api run 41968944533 and mobile run 41968944600 on `3bb2532` (stage 12a) | both workflows | passed (310 API tests) |
 | 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 12b); e2e 2 runs | 89 passed; all three specs passed each run |
+| 2026-11-05 | GitHub Actions mobile run 41969979059 on `f56b5fb` (stage 12b) | checks and e2e | passed |
