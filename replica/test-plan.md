@@ -199,3 +199,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | GitHub Actions api run 41947439992 and mobile run 41947439991 on `6f1538e` (stage 11a) | both workflows | passed (298 API tests) |
 | 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 11b); e2e 2 runs | 86 passed; both specs passed each run |
 | 2026-11-05 | GitHub Actions mobile run 41948585270 on `6d3a449` (stage 11b) | mobile checks | **failed**: one auth screen test hit Jest's 5 s timeout on a cold cache (not a wrong result); fixed by a 30 s timeout, reproduced and verified locally from a cleared cache (86 passed) |
+| 2026-11-05 | GitHub Actions mobile run 41949229426 on `4541c9f` (stage 11b) | mobile checks and e2e | passed (86 mobile tests; both e2e specs incl. the report flow) |

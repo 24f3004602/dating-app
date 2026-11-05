@@ -7,8 +7,9 @@ Updated: 2026-11-05
 Stage 11 (safety) **done for the API and the web build**: 298 API tests (11a
 passed CI: api run 41947439992, mobile run 41947439991), 86 mobile tests and
 the two-person e2e, now ending with a report that closes the other person's
-chat live. CI for 11b is pending; a native device pass is still pending; the
-staff console is stage 14. Next: stage 12 (privacy).
+chat live. 11b passed CI (mobile run 41949229426, after a fix for a cold-cache
+test timeout). A native device pass is still pending; the staff console is
+stage 14. Next: stage 12 (privacy).
 
 ## Done
 
