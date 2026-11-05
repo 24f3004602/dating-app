@@ -10,12 +10,15 @@ import {
   useBlock,
   useBlocks,
   useConversation,
+  useMarkNoticeRead,
   useMyReports,
+  useNotices,
   useReport,
   useUnblock,
   useUnmatch,
 } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
+import { dateInIndia } from "@/i18n/time";
 import { fill, t } from "@/i18n/en";
 import { space } from "@/theme/tokens";
 import { Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
@@ -167,6 +170,26 @@ export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; 
   );
 }
 
+/** Notices from the team (stage 16): fixed wording per kind, shown whether or not push works. */
+function Notices() {
+  const notices = useNotices();
+  const markRead = useMarkNoticeRead();
+  if (!notices.data || notices.data.length === 0) return null;
+  return (
+    <>
+      <Heading>{t.notices.title}</Heading>
+      {notices.data.map((n) => (
+        <View key={n.id} style={styles.item}>
+          <Notice kind="info">{`${n.read ? "" : `${t.notices.unread}: `}${t.notices[n.kind]} (${dateInIndia(n.created_at)})`}</Notice>
+          {n.read ? null : (
+            <Button label={t.notices.markRead} variant="secondary" busy={markRead.isPending} onPress={() => markRead.mutate(n.id)} />
+          )}
+        </View>
+      ))}
+    </>
+  );
+}
+
 export function SafetyScreen() {
   const blocks = useBlocks();
   const reports = useMyReports();
@@ -182,6 +205,7 @@ export function SafetyScreen() {
   return (
     <Screen>
       <Title>{t.safety.title}</Title>
+      <Notices />
       <Heading>{t.safety.blocked}</Heading>
       {blocks.data.length === 0 ? <Body muted>{t.safety.noBlocked}</Body> : <Body muted>{t.safety.unblockHint}</Body>}
       {blocks.data.map((b) => {

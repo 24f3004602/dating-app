@@ -343,3 +343,38 @@ export function useMyReports() {
   const { api } = useAuth();
   return useQuery({ queryKey: safetyKeys.reports, queryFn: () => unwrap(api.GET("/v1/reports/mine")) });
 }
+
+// --- notifications (stage 16, D093) ---------------------------------------------------
+
+export type NotificationPrefs = Schemas["PrefsBody"];
+export type Notice = Schemas["NoticeOut"];
+export const notifyKeys = { prefs: ["notify", "prefs"] as const, notices: ["notify", "notices"] as const };
+
+export function useNotificationPrefs() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: notifyKeys.prefs, queryFn: () => unwrap(api.GET("/v1/me/notifications")) });
+}
+
+export function useSaveNotificationPrefs() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: NotificationPrefs) => unwrap(api.PUT("/v1/me/notifications", { body })),
+    onSuccess: (data) => qc.setQueryData(notifyKeys.prefs, data),
+  });
+}
+
+export function useNotices() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: notifyKeys.notices, queryFn: () => unwrap(api.GET("/v1/me/notices")) });
+}
+
+export function useMarkNoticeRead() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrap(api.POST("/v1/me/notices/{notice_id}/read", { params: { path: { notice_id: id } } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: notifyKeys.notices }),
+  });
+}

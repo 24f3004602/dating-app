@@ -4,12 +4,11 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 15 (audit) **done**; passed CI (api run 41985853625, mobile run 41985853301).
-- **Parity:** 74.1 of 100, with 17 of 20 must-haves. The 3 missing are all owner setup: an email provider for sign-up codes and password recovery, and a private bucket for photos.
-- **Tests:** every level passed. One defect found and fixed: BUG-001, S4.
-- **Verdict:** not shippable yet. It needs those owner items, the native device pass (NAT-1) and a deployment with TLS (stage 17).
+Stage 16 (optional) **in progress**. 16a, discreet notifications, is done locally:
+- 330 API tests, 110 app tests and the onboarding e2e pass; CI is pending.
+- Delivery to phones needs the owner's EAS project and credentials.
 
-Next: stage 16, which is optional (sandbox subscriptions and discreet notifications), or straight to stage 17. That's the owner's call.
+Next: 16b, the payments evaluation, then a sandbox plan.
 
 ## Done
 
@@ -21,6 +20,7 @@ Next: stage 16, which is optional (sandbox subscriptions and discreet notificati
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 16a | Discreet notifications: push devices tied to sessions, fixed sentences with kind-only data, preferences, throttles, team notices for warnings, an Expo adapter (fake-server tested) with receipts, the app's settings screen and notices; migration 0011 | `app/modules/notifications/`, `apps/mobile/src/notifications/` |
 | 15 | Audit: feature matrix checked row by row with evidence under one status rule (D092); architecture checked against the code (endpoints, jobs, tables); every test level run; route inventory test; recovery e2e; BUG-001 (the 404 page's CSP) fixed; stale threat-model and architecture statements corrected; `bugs.md` started | `replica/features.csv`, `replica/bugs.md`, `tests/test_route_inventory.py` |
 | 14b | Next.js landing page and staff console (queue, report detail and actions, photo review, audit log, staff authenticator resets) as a backend for the browser: HttpOnly `__Host-` cookies, server-side session checks on every page and action, nonce CSP; web e2e with axe | `apps/web/`, `e2e/tests/admin.spec.ts` |
 | 14a | Staff sign-in with a second factor: password, then a TOTP code or recovery code; enrolment only with a one-time token from another admin or the server CLI; secrets encrypted; codes work once; separate `web_admin` sessions (12 h, 30 min idle); migration 0010 | `app/modules/staff/` |
@@ -37,6 +37,13 @@ Next: stage 16, which is optional (sandbox subscriptions and discreet notificati
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 16a status
+
+- **Implemented and tested:** NTF-1..9 and MOB-12 in `test-plan.md`, plus a Notifications step in the onboarding e2e.
+- **Mutation checks:** each of these breaks a test: no live-session check (pushes would reach signed-out phones), no throttle.
+- **Blocked (owner):** delivery needs an EAS project ID in the app config, Firebase credentials (Android) and an Apple developer account (iOS). Until then the app says notifications aren't available in this build, and the API sends nothing (`PUSH_BACKEND=none`).
+- **Not yet:** a device pass for push (NAT-1).
 
 ## Stage 15 audit
 
@@ -309,12 +316,14 @@ Next: stage 16, which is optional (sandbox subscriptions and discreet notificati
 
 ## Next
 
-Stage 16 is optional; you choose whether to do it or go straight to 17.
-- **Payments (sandbox only):**
-  - First, the payment evaluation CLAUDE.md requires: Razorpay for web payments in India, and Apple's and Google's billing rules for digital features in mobile apps.
-  - Then a payment-provider interface and one sandbox plan, with signed webhooks deduplicated by event ID.
-  - No live payments without your authorization.
-- **Discreet notifications:**
-  - push through Expo, with no names or message text by default;
-  - preferences, and the warnings that are recorded but not yet sent.
-- **Or stage 17:** release readiness and a staging plan, with no deploy, spending or store publishing without your authorization.
+Stage 16b: payments.
+- **Evaluation first (CLAUDE.md), from public sources, dated:**
+  - Razorpay for web payments in India: subscriptions, webhooks and signature checks, test mode, KYC.
+  - Apple's App Store rules for digital features in iOS apps (in-app purchase).
+  - Google Play's billing rules, including user-choice billing in India.
+  - The result, and what it means for one plan, goes to `launch/pricing.md` and the decision log.
+- **Then, if it holds up:**
+  - a payment-provider interface and a sandbox-only plan;
+  - signed, deduplicated webhooks and server-side entitlements;
+  - tests against the documented signature scheme.
+- **Limits:** no live keys or payments without your authorization.

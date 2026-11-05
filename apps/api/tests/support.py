@@ -15,7 +15,9 @@ from app.config import Settings
 from app.modules.auth import service
 from app.modules.auth.models import CodePurpose
 from app.modules.media import service as media_service
+from app.modules.notifications import service as notify
 from app.providers.email import EmailMessage, MemoryEmailSender
+from app.providers.push import MemoryPushSender
 from app.providers.storage import ObjectStorage
 
 # APP_TIMEZONE; the tests run with the default.
@@ -56,6 +58,7 @@ class JobRunner:
         self.clock = clock
         self.storage = storage
         self.mail = MemoryEmailSender()
+        self.push = MemoryPushSender()
         self.codes: list[str] = []
 
     async def pending(self) -> list[tuple[int, str, dict[str, Any]]]:
@@ -85,6 +88,11 @@ class JobRunner:
                 elif name == media_service.DELETE_OBJECTS:
                     assert self.storage is not None
                     await media_service.delete_objects(self.storage, list(args["keys"]))
+                elif name == notify.SEND_PUSH:
+                    await notify.send_push(
+                        s, self.push, self.settings.brand_name,
+                        user_id=uuid.UUID(args["user_id"]), kind=notify.Kind(args["kind"]), now=self.clock(),
+                    )  # fmt: skip
                 elif name == service.SEND_NOTICE:
                     await service.send_notice(
                         s, self.settings, self.mail, uuid.UUID(args["user_id"]), service.Notice(args["kind"])

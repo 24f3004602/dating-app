@@ -47,6 +47,8 @@ from app.modules.moderation.schemas import (
     SubjectBrief,
     SubjectDetail,
 )
+from app.modules.notifications.models import NoticeKind
+from app.modules.notifications.service import add_notice
 from app.modules.profiles.models import Profile
 from app.modules.profiles.service import prompt_answers
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
@@ -62,6 +64,7 @@ class Effects:
 
     revoke: list[uuid.UUID] = field(default_factory=list)
     closed: list[Match] = field(default_factory=list)
+    noticed: list[uuid.UUID] = field(default_factory=list)  # members with a new notice from the team
 
 
 def _about(r: Report) -> str:
@@ -257,6 +260,10 @@ async def act_on_report(
             photo.reviewed_at = now
         elif action in (ActionKind.suspend, ActionKind.ban):
             await _apply_account(session, target, action, now, effects)
+        elif action is ActionKind.warn:
+            # Delivered in the app whether or not push works (stage 16, D093).
+            add_notice(session, target.id, NoticeKind.warning, now)
+            effects.noticed.append(target.id)
     row = ModerationAction(
         moderator_id=staff.id,
         target_user_id=r.subject_id,

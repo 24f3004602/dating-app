@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Response, status
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
 from app.modules.matching import service
 from app.modules.matching.schemas import InteractionIn, InteractionOut, LikeReceivedOut, MatchOut
+from app.modules.notifications import service as notify
 from app.openapi import problems
 from app.providers.storage import ObjectStorage
 from app.realtime import RealtimeHub
@@ -37,9 +38,16 @@ async def decide(
     out, created = await service.decide(db, ctx.settings, _storage(request), auth.user, data=body, now=ctx.clock())
     if not created:
         response.status_code = status.HTTP_200_OK
-    elif out.match is not None:
+        return out
+    if out.match is not None:
         hub: RealtimeHub = request.app.state.realtime
         await hub.publish([auth.user.id, body.target_id], {"type": "match.created", "match_id": str(out.match.id)})
+    if out.match is not None or body.kind == "like":
+        # The other person hears about it (a pass is never announced).
+        await notify.request_push(
+            db, ctx.jobs, request.app.state.redis, ctx.settings.rate_limit_prefix,
+            user_id=body.target_id, kind=notify.Kind.match if out.match is not None else notify.Kind.like,
+        )  # fmt: skip
     return out
 
 

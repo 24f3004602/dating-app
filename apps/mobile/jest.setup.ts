@@ -13,3 +13,14 @@ jest.mock("expo-secure-store", () => {
 jest.mock("expo-crypto", () => ({
   randomUUID: () => jest.requireActual<{ randomUUID: () => string }>("node:crypto").randomUUID(),
 }));
+
+// expo-notifications has no native module under Jest: a controllable stand-in (stage 16).
+jest.mock("expo-notifications", () => ({
+  AndroidImportance: { DEFAULT: 3 },
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  getPermissionsAsync: jest.fn(async () => ({ status: "undetermined" })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: "granted" })),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: "ExponentPushToken[test-device-0001]" })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+}));

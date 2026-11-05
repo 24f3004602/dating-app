@@ -1152,6 +1152,38 @@
         "title": "MyProfileOut",
         "type": "object"
       },
+      "NoticeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "warning",
+            "title": "Kind",
+            "type": "string"
+          },
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "created_at",
+          "read"
+        ],
+        "title": "NoticeOut",
+        "type": "object"
+      },
       "NudgeTermsOut": {
         "additionalProperties": false,
         "properties": {
@@ -1491,6 +1523,31 @@
         "title": "PreferencesOut",
         "type": "object"
       },
+      "PrefsBody": {
+        "additionalProperties": false,
+        "description": "What to push. Notices from the team are always delivered (in the app too).",
+        "properties": {
+          "likes": {
+            "title": "Likes",
+            "type": "boolean"
+          },
+          "matches": {
+            "title": "Matches",
+            "type": "boolean"
+          },
+          "messages": {
+            "title": "Messages",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matches",
+          "messages",
+          "likes"
+        ],
+        "title": "PrefsBody",
+        "type": "object"
+      },
       "PrivacyIn": {
         "additionalProperties": false,
         "properties": {
@@ -1760,6 +1817,30 @@
           "photos"
         ],
         "title": "PublicProfileOut",
+        "type": "object"
+      },
+      "PushDeviceIn": {
+        "additionalProperties": false,
+        "properties": {
+          "platform": {
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "token": {
+            "pattern": "^Expo(nent)?PushToken\\[[A-Za-z0-9_-]{8,200}\\]$",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ],
+        "title": "PushDeviceIn",
         "type": "object"
       },
       "QueueItem": {
@@ -5481,6 +5562,197 @@
         ]
       }
     },
+    "/v1/me/notices": {
+      "get": {
+        "operationId": "notices_v1_me_notices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NoticeOut"
+                  },
+                  "title": "Response Notices V1 Me Notices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Notices from the team, newest first",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/me/notices/{notice_id}/read": {
+      "post": {
+        "operationId": "mark_read_v1_me_notices__notice_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Mark a notice read",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/me/notifications": {
+      "get": {
+        "operationId": "get_prefs_v1_me_notifications_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrefsBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Which pushes I get (team notices always come)",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "put": {
+        "operationId": "set_prefs_v1_me_notifications_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrefsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrefsBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Choose which pushes I get",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
     "/v1/me/photos": {
       "get": {
         "operationId": "my_photos_v1_me_photos_get",
@@ -5974,6 +6246,92 @@
         "summary": "Create or replace my profile",
         "tags": [
           "profiles"
+        ]
+      }
+    },
+    "/v1/me/push-device": {
+      "delete": {
+        "operationId": "remove_device_v1_me_push_device_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Stop pushes to this phone",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "put": {
+        "operationId": "register_device_v1_me_push_device_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushDeviceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Register this phone for pushes (tied to this session; signing out stops them)",
+        "tags": [
+          "notifications"
         ]
       }
     },

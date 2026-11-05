@@ -118,6 +118,10 @@ migrations run as a separate role.
 | `staff_mfa` | `user_id` (cascade), `secret_enc` (AES-256-GCM), `enrolled_at`, `last_step` (TOTP replay guard) (D090) | 14 |
 | `staff_recovery_codes` | `user_id` (cascade), `code_hash` (HMAC, unique), `used_at` | 14 |
 | `staff_enrollments` | `user_id` (cascade), `token_hash` (SHA-256, unique), `issued_by` (SET NULL), `expires_at` (24 h), `used_at` | 14 |
+| `push_devices` | `session_id` primary key (cascade with the session), `user_id`, `token` (unique), `platform` (ios, android), `last_seen_at` (D093) | 16 |
+| `notification_prefs` | `user_id` primary key; `matches`, `messages`, `likes` (default on) | 16 |
+| `member_notices` | `user_id`, `kind` (warning), `read_at`; fixed wording in the app | 16 |
+| `push_tickets` | `receipt_id` primary key, `token`; kept until checked, at most a day | 16 |
 
 Foreign keys declare their `on delete` rule explicitly. Safety records
 (reports, moderation actions) are kept on purpose; see
@@ -174,6 +178,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | POST /v1/admin/auth/login, /enroll, /verify, /logout; GET /v1/admin/auth/me | staff sign-in: password, then a challenge; a TOTP code or a recovery code opens a `web_admin` session; enrolment with a one-time token (D090) | P / staff | admin |
 | GET /v1/admin/staff | staff accounts and whether each has an authenticator | Adm | admin |
 | POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
+| PUT, DELETE /v1/me/push-device; GET, PUT /v1/me/notifications; GET /v1/me/notices; POST /v1/me/notices/{id}/read | this session's phone for pushes; which kinds to push; notices from the team (D093) | M | notifications |
 
 **Webhooks in:** none in the MVP. Payments later need signed Razorpay
 webhooks and store server notifications. **Webhooks out:** none.
@@ -188,6 +193,8 @@ webhooks and store server notifications. **Webhooks out:** none.
 | `privacy:purge_accounts` | hourly at :07 | purges accounts past the grace period (or 90 days after a ban), unless held by an open report, at most 30 days (D083) |
 | `privacy:retention_sweep` | hourly at :37 | the privacy inventory's retention rules: ended conversations, old picks, sessions, codes, unverified sign-ups, report links and reports, deleted-account records, expired audit records (D084, D085) |
 | `privacy:remove_old_jobs` | daily 21:15 UTC | finished, failed, cancelled and aborted job rows after 30 days |
+| `notify:send` | on demand | one discreet push to a member's live devices, if they want that kind; arguments are a user ID and a kind (D093) |
+| `notify:check_receipts` | every 15 minutes | push receipts after 15 minutes; dead tokens and checked tickets removed; tickets older than a day removed |
 
 ## Key mechanisms
 
@@ -255,7 +262,7 @@ account.
 | `SmsSender` | console | an Indian SMS provider. Needs DLT entity and template registration | after the MVP |
 | `ObjectStorage` | local filesystem in `var/` | S3 (ap-south-1) or Cloudflare R2 | stage 7 |
 | `VerificationProvider` | none ("not verified" labels) | a liveness vendor, after DPDP review of biometric data | after the MVP |
-| `PushSender` | none | Expo push, APNs, FCM | stage 16 |
+| `PushSender` | none (default) and in-memory | Expo push service (adapter built and tested against a fake server; needs the owner's EAS project, FCM and APNs credentials) | stage 16 (D093) |
 | `PaymentProvider` | sandbox fake | Razorpay (web); App Store and Google Play billing (mobile) | stage 16, after rules are verified |
 
 ## The parts that bite

@@ -6,8 +6,10 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.deps import AuthCtx, DbSession
+from app.modules.auth.service import AuthContext
 from app.modules.moderation import service
 from app.modules.moderation.deps import AdminSession, StaffSession
 from app.modules.moderation.schemas import (
@@ -20,6 +22,7 @@ from app.modules.moderation.schemas import (
     ReportActionIn,
     ReportDetail,
 )
+from app.modules.notifications import service as notify
 from app.modules.safety.models import ActionKind, ReportStatus
 from app.openapi import problems
 from app.providers.storage import ObjectStorage
@@ -35,12 +38,18 @@ def _storage(request: Request) -> ObjectStorage:
     return storage
 
 
-async def _announce(request: Request, effects: service.Effects) -> None:
+async def _announce(request: Request, effects: service.Effects, db: AsyncSession) -> None:
     hub: RealtimeHub = request.app.state.realtime
     for user_id in effects.revoke:
         await hub.revoke(user_id)
     for m in effects.closed:
         await hub.publish([m.user_a_id, m.user_b_id], {"type": "match.closed", "match_id": str(m.id)})
+    auth: AuthContext = request.app.state.auth
+    for user_id in effects.noticed:
+        await notify.request_push(
+            db, auth.jobs, request.app.state.redis, auth.settings.rate_limit_prefix,
+            user_id=user_id, kind=notify.Kind.notice,
+        )  # fmt: skip
 
 
 @router.get("/reports", summary="The queue: open and in-review reports, most urgent first")
@@ -69,7 +78,7 @@ async def act(
     out, effects = await service.act_on_report(
         db, staff.user, report_id, ActionKind(body.action), body.note, now=ctx.clock()
     )
-    await _announce(request, effects)
+    await _announce(request, effects, db)
     return out
 
 
@@ -104,7 +113,7 @@ async def account_action(
     out, effects = await service.account_action(
         db, staff.user, user_id, ActionKind(body.action), body.note, now=ctx.clock()
     )
-    await _announce(request, effects)
+    await _announce(request, effects, db)
     return out
 
 

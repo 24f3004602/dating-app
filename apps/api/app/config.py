@@ -84,6 +84,12 @@ class Settings(BaseSettings):
     email_backend: Literal["console", "memory"] = "console"
     email_from: str = Field(default="no-reply@example.invalid", max_length=254)
 
+    # Push notifications (stage 16, D093). "none" sends nothing (the default until
+    # the owner's EAS project exists); "memory" is for tests; "expo" uses Expo's
+    # push service, with an access token if "enhanced push security" is on.
+    push_backend: Literal["none", "memory", "expo"] = "none"
+    expo_access_token: SecretStr | None = None
+
     # Media (stage 7). "local" writes under media_dir (development); "memory"
     # is for tests. Production needs a private bucket adapter (owner setup).
     storage_backend: Literal["local", "memory"] = "local"

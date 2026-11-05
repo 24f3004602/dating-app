@@ -8,8 +8,10 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request, Response, status
 
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
+from app.modules.matching.service import other_of
 from app.modules.messaging import nudge, service
 from app.modules.messaging.schemas import MessageIn, MessageOut, MessagePage, NudgeTermsOut, ReadIn, ReadOut
+from app.modules.notifications import service as notify
 from app.openapi import problems
 from app.realtime import RealtimeHub
 
@@ -67,6 +69,10 @@ async def send_message(
         await _hub(request).publish(
             [match.user_a_id, match.user_b_id], {"type": "message.created", "match_id": str(match.id), "n": out.n}
         )
+        await notify.request_push(
+            db, ctx.jobs, request.app.state.redis, ctx.settings.rate_limit_prefix,
+            user_id=other_of(match, auth.user.id), kind=notify.Kind.message, about=match.id,
+        )  # fmt: skip
     else:
         response.status_code = status.HTTP_200_OK
     return out

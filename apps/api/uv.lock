@@ -355,6 +355,7 @@ dependencies = [
     { name = "cryptography" },
     { name = "email-validator" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pillow" },
     { name = "procrastinate" },
     { name = "psycopg", extra = ["binary", "pool"] },
@@ -371,7 +372,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "mypy" },
     { name = "pip-audit" },
     { name = "pytest" },
@@ -386,6 +386,7 @@ requires-dist = [
     { name = "cryptography", specifier = "==50.0.*" },
     { name = "email-validator", specifier = "==2.3.*" },
     { name = "fastapi", specifier = "==0.162.*" },
+    { name = "httpx", specifier = "==0.28.*" },
     { name = "pillow", specifier = "==13.0.*" },
     { name = "procrastinate", specifier = "==3.10.*" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.3.*" },
@@ -402,7 +403,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = "==0.28.*" },
     { name = "mypy", specifier = "==2.4.*" },
     { name = "pip-audit", specifier = "==2.10.*" },
     { name = "pytest", specifier = "==9.2.*" },

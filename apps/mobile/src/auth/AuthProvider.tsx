@@ -75,6 +75,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
 
   const signOut = useCallback(async () => {
     try {
+      await api.DELETE("/v1/me/push-device"); // courtesy: revoking the session already stops pushes
       await api.POST("/v1/auth/logout");
     } catch {
       // Offline: the local session is still forgotten.

@@ -149,6 +149,16 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await expect(page.getByRole("checkbox", { name: "Pause new introductions", exact: true })).toBeChecked();
   await checkA11y(page, "privacy");
 
+  // Notifications (stage 16): categories save; push itself is for the phone app.
+  await page.goBack();
+  await page.getByRole("button", { name: "Notifications", exact: true }).click();
+  await expect(page.getByText("Notifications never show names or message text: only that something happened.")).toBeVisible();
+  await page.getByRole("checkbox", { name: "Someone liked me", exact: true }).click();
+  await expect(page.getByRole("checkbox", { name: "Someone liked me", exact: true })).not.toBeChecked();
+  await page.getByRole("button", { name: "Turn on notifications" }).click();
+  await expect(page.getByText("Notifications work in the phone app, not in a browser.")).toBeVisible();
+  await checkA11y(page, "notifications");
+
   // Sign out: back to the welcome screen, and the session no longer works.
   await page.goBack();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
