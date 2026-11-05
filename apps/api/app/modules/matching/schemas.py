@@ -44,8 +44,9 @@ class PersonBrief(ApiModel):
 class LastMessage(ApiModel):
     n: int
     from_me: bool
-    preview: str = Field(description="The first 100 characters")
+    preview: str = Field(description="The first 100 characters; empty if removed")
     sent_at: datetime
+    removed: bool = Field(description="Removed by a moderator")
 
 
 class MatchOut(ApiModel):

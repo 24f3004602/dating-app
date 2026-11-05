@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.modules.accounts.models import User, UserStatus
+from app.modules.accounts.models import User, UserRole, UserStatus
 from app.modules.auth.crypto import new_session_token
 from app.modules.auth.models import Session, SessionClient
 from app.modules.discovery.models import Preferences
@@ -58,6 +58,7 @@ async def make_member(
     last_active: timedelta | None = timedelta(hours=1),
     profile: bool = True,
     name: str = "Member",
+    role: str = "member",
 ) -> Member:
     today = now.date()
     async with db() as s:
@@ -66,6 +67,7 @@ async def make_member(
             password_hash="!",
             birthdate=born(today, age),
             status=UserStatus(status),
+            role=UserRole(role),
             email_verified_at=now,
             last_active_at=now - last_active if last_active is not None else None,
             deletion_requested_at=now if deletion_requested else None,

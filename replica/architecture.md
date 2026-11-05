@@ -111,8 +111,8 @@ migrations run as a separate role.
 | `messages` | `match_id`, `sender_id`, `n` (sequence number per match, **unique (`match_id`, `n`)**), `body` (1-2000), `client_message_id`; **unique (`match_id`, `sender_id`, `client_message_id`)**; `flag` (hurtful, money; D075). Matches gained `last_message_n`, `last_message_at`, `last_sender_id`, written under the match row lock (D072). `removed_at` arrives with moderation (11) | 10 |
 | `match_reads` | (`match_id`, `user_id`) primary key; `last_read_n`, only moves forward; never shown to the other person | 10 |
 | `blocks` | (`blocker_id`, `blocked_id`) primary key; check blocker ≠ blocked. Table from stage 8 (D064), API in 11 | 8 (API 11) |
-| `reports` | reporter, subject user, optional message or photo; `reason` (fake, harassment, explicit, scam, underage, hate, other); `details` (≤ 1000); `status` (open, in_review, actioned, dismissed); assignee | 11 |
-| `moderation_actions` | append-only: moderator, target, report, `action` (dismiss, warn, remove_photo, remove_message, suspend, ban, reinstate), reason | 11 |
+| `reports` | reporter, subject user, optional message or photo (SET NULL: reports outlive accounts); `evidence_text` (a copy of the reported message, D080); `reason` (fake, harassment, explicit, scam, underage, hate, other); `details` (≤ 1000); `status` (open, in_review, actioned, dismissed); `priority` 1-3; assignee; `resolved_at`, `resolved_by`; index (status, priority, created_at) | 11 |
+| `moderation_actions` | append-only for the app (SELECT, INSERT), no foreign keys: moderator, target user, report, photo, message, `action` (dismiss, warn, remove_photo, remove_message, suspend, ban, reinstate, approve_photo, reject_photo), `note` (≤ 500). Messages gained `removed_at` | 11 |
 
 Foreign keys declare their `on delete` rule explicitly. Safety records
 (reports, moderation actions) are kept on purpose; see
@@ -164,7 +164,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/safety/nudge-terms | the `hurtful` and `money` word lists (D075) | M | F05 |
 | GET /v1/admin/reports; GET /v1/admin/reports/{id}; POST /v1/admin/reports/{id}/actions | moderation queue; minimal context; every read and action is audited | Mod | admin |
 | GET /v1/admin/photos/pending; POST /v1/admin/photos/{id}/decision | photo review | Mod | admin |
-| POST /v1/admin/users/{id}/(suspend, ban, reinstate); GET /v1/admin/audit-log | account actions; audit trail | Mod / Adm | admin |
+| POST /v1/admin/users/{id}/actions (suspend: Mod; ban, reinstate: Adm); GET /v1/admin/audit-log (Adm) | account actions with a required note; audit trail (D081) | Mod / Adm | admin |
 
 **Webhooks in:** none in the MVP. Payments later need signed Razorpay
 webhooks and store server notifications. **Webhooks out:** none.

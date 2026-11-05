@@ -42,14 +42,16 @@ PAGE_MAX = 50
 
 def message_out(msg: Message, me: uuid.UUID) -> MessageOut:
     mine = msg.sender_id == me
+    removed = msg.removed_at is not None  # moderation: the text is withheld from both people
     return MessageOut(
         id=msg.id,
         n=msg.n,
         from_me=mine,
-        body=msg.body,
+        body="" if removed else msg.body,
         sent_at=msg.created_at,
         client_message_id=msg.client_message_id if mine else None,
-        safety_tip="money" if (not mine and msg.flag is MessageFlag.money) else None,
+        safety_tip="money" if (not mine and not removed and msg.flag is MessageFlag.money) else None,
+        removed=removed,
     )
 
 

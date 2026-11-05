@@ -51,6 +51,8 @@ class Message(CreatedAtMixin, Base):
             values_callable=lambda e: [m.value for m in e],
         )
     )
+    # Removed by a moderator (stage 11): kept for the record, shown as removed.
+    removed_at: Mapped[datetime | None]
 
 
 class MatchRead(Base):

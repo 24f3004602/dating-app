@@ -38,6 +38,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The latest audit entries (admin; audited) */
+        get: operations["audit_log_v1_admin_audit_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/photos/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Photos waiting for review, oldest first (audited) */
+        get: operations["pending_v1_admin_photos_pending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/photos/{photo_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve or reject a photo */
+        post: operations["decide_photo_v1_admin_photos__photo_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The queue: open and in-review reports, most urgent first */
+        get: operations["reports_v1_admin_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A report with its minimal context (audited) */
+        get: operations["report_v1_admin_reports__report_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports/{report_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve a report: dismiss, warn, remove the photo or message, suspend, or ban (admin) */
+        post: operations["act_v1_admin_reports__report_id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{user_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend (moderator), ban or reinstate (admin) an account */
+        post: operations["account_action_v1_admin_users__user_id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/areas": {
         parameters: {
             query?: never;
@@ -191,6 +310,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People I have blocked */
+        get: operations["blocks_v1_blocks_get"];
+        put?: never;
+        /** Block someone: they can't see or reach you anywhere, and any match ends */
+        post: operations["block_v1_blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/blocks/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unblock (an ended match is not restored) */
+        delete: operations["unblock_v1_blocks__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/discovery/today": {
         parameters: {
             query?: never;
@@ -305,6 +459,23 @@ export interface paths {
         put?: never;
         /** Move my read pointer forward (the other person is never told) */
         post: operations["mark_read_v1_matches__match_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matches/{match_id}/unmatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End a match: the conversation closes for both */
+        post: operations["unmatch_v1_matches__match_id__unmatch_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -501,6 +672,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report a profile, one of their photos or one of their messages (blocks them unless `block` is false) */
+        post: operations["report_v1_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My reports and their status */
+        get: operations["my_reports_v1_reports_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/safety/nudge-terms": {
         parameters: {
             query?: never;
@@ -534,6 +739,49 @@ export interface components {
              */
             status: "accepted";
         };
+        /** AccountActionIn */
+        AccountActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "suspend" | "ban" | "reinstate";
+            /**
+             * Note
+             * @description Required: why
+             */
+            note: string;
+        };
+        /**
+         * ActionKind
+         * @enum {string}
+         */
+        ActionKind: "dismiss" | "warn" | "remove_photo" | "remove_message" | "suspend" | "ban" | "reinstate" | "approve_photo" | "reject_photo";
+        /** ActionOut */
+        ActionOut: {
+            action: components["schemas"]["ActionKind"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Moderator Id
+             * Format: uuid
+             */
+            moderator_id: string;
+            /** Note */
+            note: string | null;
+            /** Report Id */
+            report_id: string | null;
+            /** Target User Id */
+            target_user_id: string | null;
+        };
         /**
          * AreaOut
          * @description No coordinates: they never leave the server (D020).
@@ -545,6 +793,59 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+        };
+        /** AuditEntryOut */
+        AuditEntryOut: {
+            /** Action */
+            action: string;
+            /** Actor Id */
+            actor_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Request Id */
+            request_id: string | null;
+            /** Target Id */
+            target_id: string | null;
+            /** Target Type */
+            target_type: string | null;
+        };
+        /** BlockIn */
+        BlockIn: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** BlockedOut */
+        BlockedOut: {
+            /**
+             * Blocked At
+             * Format: date-time
+             */
+            blocked_at: string;
+            /**
+             * Display Name
+             * @description None if they have left
+             */
+            display_name: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** ConsentsIn */
         ConsentsIn: {
@@ -674,9 +975,14 @@ export interface components {
             n: number;
             /**
              * Preview
-             * @description The first 100 characters
+             * @description The first 100 characters; empty if removed
              */
             preview: string;
+            /**
+             * Removed
+             * @description Removed by a moderator
+             */
+            removed: boolean;
             /**
              * Sent At
              * Format: date-time
@@ -795,6 +1101,11 @@ export interface components {
              */
             n: number;
             /**
+             * Removed
+             * @description Removed by a moderator: `body` is empty
+             */
+            removed: boolean;
+            /**
              * Safety Tip
              * @description On messages from them that mention money or payments: show a safety tip
              */
@@ -877,6 +1188,17 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /** PendingPhoto */
+        PendingPhoto: {
+            /** Display Name */
+            display_name: string | null;
+            photo: components["schemas"]["PhotoOut"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
         /** PersonBrief */
         PersonBrief: {
             /** Age */
@@ -889,6 +1211,16 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** PhotoDecisionIn */
+        PhotoDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
         };
         /** PhotoOrderIn */
         PhotoOrderIn: {
@@ -1046,6 +1378,37 @@ export interface components {
              */
             user_id: string;
         };
+        /** QueueItem */
+        QueueItem: {
+            /**
+             * About
+             * @enum {string}
+             */
+            about: "profile" | "message" | "photo";
+            /** Assignee Id */
+            assignee_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Open Reports On Subject */
+            open_reports_on_subject: number;
+            /**
+             * Priority
+             * @description 1 first (underage), 2 harm, 3 the rest
+             */
+            priority: number;
+            reason: components["schemas"]["ReportReason"];
+            status: components["schemas"]["ReportStatus"];
+            /** @description None if the account has gone */
+            subject: components["schemas"]["SubjectBrief"] | null;
+        };
         /** ReadIn */
         ReadIn: {
             /**
@@ -1077,6 +1440,112 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** ReportActionIn */
+        ReportActionIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "dismiss" | "warn" | "remove_photo" | "remove_message" | "suspend" | "ban";
+            /** Note */
+            note?: string | null;
+        };
+        /** ReportDetail */
+        ReportDetail: {
+            /** Assignee Id */
+            assignee_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Details */
+            details: string | null;
+            /**
+             * Evidence Text
+             * @description A copy of the reported message: the only message text staff see
+             */
+            evidence_text: string | null;
+            /**
+             * History
+             * @description Earlier actions on this account
+             */
+            history: components["schemas"]["ActionOut"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Message Removed */
+            message_removed: boolean;
+            photo: components["schemas"]["PhotoOut"] | null;
+            /** Priority */
+            priority: number;
+            reason: components["schemas"]["ReportReason"];
+            /**
+             * Reporter Id
+             * @description Pseudonymous: an ID, never the reporter's profile
+             */
+            reporter_id: string | null;
+            status: components["schemas"]["ReportStatus"];
+            subject: components["schemas"]["SubjectDetail"] | null;
+        };
+        /** ReportIn */
+        ReportIn: {
+            /**
+             * Block
+             * @default true
+             */
+            block: boolean;
+            /** Details */
+            details?: string | null;
+            /** Message Id */
+            message_id?: string | null;
+            /** Photo Id */
+            photo_id?: string | null;
+            reason: components["schemas"]["ReportReason"];
+            /**
+             * Subject Id
+             * Format: uuid
+             */
+            subject_id: string;
+        };
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * About
+             * @enum {string}
+             */
+            about: "profile" | "message" | "photo";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            reason: components["schemas"]["ReportReason"];
+            /** @description open, in_review, actioned or dismissed; never what action was taken */
+            status: components["schemas"]["ReportStatus"];
+            /**
+             * Subject Name
+             * @description None if they have left
+             */
+            subject_name: string | null;
+        };
+        /**
+         * ReportReason
+         * @enum {string}
+         */
+        ReportReason: "fake" | "harassment" | "explicit" | "scam" | "underage" | "hate" | "other";
+        /**
+         * ReportStatus
+         * @enum {string}
+         */
+        ReportStatus: "open" | "in_review" | "actioned" | "dismissed";
         /** SessionOut */
         SessionOut: {
             /**
@@ -1093,6 +1562,50 @@ export interface components {
              */
             token_type: "bearer";
             user: components["schemas"]["MeOut"];
+        };
+        /** SubjectBrief */
+        SubjectBrief: {
+            account_status: components["schemas"]["UserStatus"];
+            /** Display Name */
+            display_name: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * SubjectDetail
+         * @description What members could see of them, plus the account state. Never their
+         *     email, birthdate, location or conversations.
+         */
+        SubjectDetail: {
+            account_status: components["schemas"]["UserStatus"];
+            /** Age */
+            age: number;
+            /** Bio */
+            bio: string | null;
+            /** Display Name */
+            display_name: string | null;
+            /**
+             * Joined
+             * Format: date
+             */
+            joined: string;
+            /**
+             * Photos
+             * @description Every photo, any moderation state
+             */
+            photos: components["schemas"]["PhotoOut"][];
+            /** Prompts */
+            prompts: components["schemas"]["PromptAnswerOut"][];
+            /** Reports On Subject */
+            reports_on_subject: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /** TicketOut */
         TicketOut: {
@@ -1118,6 +1631,11 @@ export interface components {
             /** Size Limit */
             size_limit: number;
         };
+        /**
+         * UserStatus
+         * @enum {string}
+         */
+        UserStatus: "pending" | "active" | "suspended" | "banned" | "deactivated";
         /** ValidationProblem */
         ValidationProblem: {
             /** Code */
@@ -1258,6 +1776,416 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    audit_log_v1_admin_audit_log_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEntryOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    pending_v1_admin_photos_pending_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingPhoto"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    decide_photo_v1_admin_photos__photo_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photo_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    reports_v1_admin_reports_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ReportStatus"] | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueItem"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    report_v1_admin_reports__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportDetail"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    act_v1_admin_reports__report_id__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    account_action_v1_admin_users__user_id__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
                 };
             };
         };
@@ -1748,6 +2676,149 @@ export interface operations {
             };
         };
     };
+    blocks_v1_blocks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockedOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    block_v1_blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unblock_v1_blocks__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     today_v1_discovery_today_get: {
         parameters: {
             query?: never;
@@ -2172,6 +3243,62 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReadOut"];
                 };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unmatch_v1_matches__match_id__unmatch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                match_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not signed in, or bad credentials */
             401: {
@@ -2841,6 +3968,113 @@ export interface operations {
             };
             /** @description A dependency (database, Redis) is unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    report_v1_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    my_reports_v1_reports_mine_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

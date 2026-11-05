@@ -26,8 +26,10 @@ from app.modules.health.router import router as health_router
 from app.modules.matching.router import router as matching_router
 from app.modules.media.router import router as media_router
 from app.modules.messaging.router import router as messaging_router
+from app.modules.moderation.router import router as moderation_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.realtime.router import router as realtime_router
+from app.modules.safety.router import router as safety_router
 from app.openapi import install_openapi
 from app.providers.identity import NoIdentityVerifier
 from app.providers.storage import create_storage
@@ -114,5 +116,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(matching_router)
     app.include_router(messaging_router)
     app.include_router(realtime_router)
+    app.include_router(safety_router)
+    app.include_router(moderation_router)
     install_openapi(app)
     return app

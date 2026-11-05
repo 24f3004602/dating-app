@@ -23,10 +23,10 @@ Persistent one-to-one text messaging for matches,messaging,must,yes,partial,"Sta
 Real-time delivery; unread counts; history pagination,messaging,must,yes,partial,"Stage 10a: API done and tested (REST, concurrency, real WebSocket); app screens in 10b; hints only, REST catch-up (D074); Stage 10b: screens and realtime client done; screen tests and a two-person web e2e (live both ways) pass; native device pass pending"
 Keyword nudge before sending a harmful message,safety,should,yes,partial,Tinder [2][4]; MVP uses a word list and no LLM; Stage 10a: word lists and server flag (D075); the app's pre-send prompt in 10b; Stage 10b: screens and realtime client done; screen tests and a two-person web e2e (live both ways) pass; native device pass pending; prompt and recipient tip in the e2e
 Images in chat,messaging,could,yes,no,Deferred; needs blur and moderation [7]
-Block (enforced on every server path),safety,must,yes,no,
-Unmatch,safety,must,yes,no,
-Report profile or message with reasons and visible status,safety,must,yes,no,
-Moderation queue with roles and audit trail,admin,must,yes,no,Stage 5: `users.role` and an append-only `audit_log` (runtime role cannot UPDATE or DELETE; tested). No queue yet
+Block (enforced on every server path),safety,must,yes,partial,"Stage 11a: API done; every path tested both ways, and the block-against-send race; app button in 11b"
+Unmatch,safety,must,yes,partial,Stage 11a: API done and tested; app in 11b
+Report profile or message with reasons and visible status,safety,must,yes,partial,"Stage 11a: profiles, photos and messages, with the message copied; status visible; API tested; app in 11b"
+Moderation queue with roles and audit trail,admin,must,yes,partial,"Stage 5: `users.role` and an append-only `audit_log` (runtime role cannot UPDATE or DELETE; tested). No queue yet; Stage 11a: queue, photo review, actions, roles and audit via the API, tested; the console is stage 14"
 Honest verification labels (only checks actually run),trust,must,no,partial,Differentiator 6; Stage 6: `/v1/me` labels are typed so age can only be 'declared' and identity defaults to 'not_checked'. UI in stage 7; Stage 7b: screens built; screen tests and the web e2e pass; native device pass pending (NAT-1)
 Liveness or photo verification via a vendor,trust,should,yes,no,Post-MVP; Tinder mandatory in India [3]; biometric data needs DPDP review
 ID or age verification via a provider,trust,could,yes,no,Bumble ID verification [7]; options to research

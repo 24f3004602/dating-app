@@ -33,7 +33,7 @@ from app.logs import request_id_var
 from app.modules.accounts.models import User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.auth.service import age_on, local_today
-from app.modules.discovery.models import Block, Interaction, InteractionKind, Match
+from app.modules.discovery.models import Block, Interaction, InteractionKind, Match, MatchCloseReason
 from app.modules.discovery.service import approved_photo_count, base_available_to, in_todays_set
 from app.modules.matching.schemas import (
     InteractionIn,
@@ -195,7 +195,11 @@ async def match_out(
     if match.last_message_n:
         msg = await message_at(session, match.id, match.last_message_n)
         if msg is not None:
-            last = LastMessage(n=msg.n, from_me=msg.sender_id == me, preview=msg.body[:100], sent_at=msg.created_at)
+            removed = msg.removed_at is not None
+            last = LastMessage(
+                n=msg.n, from_me=msg.sender_id == me, preview="" if removed else msg.body[:100],
+                sent_at=msg.created_at, removed=removed,
+            )  # fmt: skip
     read_n = await read_pointer(session, match.id, me)
     return MatchOut(
         id=match.id,
@@ -383,6 +387,25 @@ async def my_matches(
         for match in rows
         if await open_match_with(session, me, other_of(match, me)) is not None
     ]
+
+
+async def close_open_match(
+    session: AsyncSession, x: uuid.UUID, y: uuid.UUID, reason: MatchCloseReason, now: datetime
+) -> Match | None:
+    """Close the pair's open match, if any, under the match row lock that sends
+    take (FOR NO KEY UPDATE): a message can't slip in after a block or unmatch."""
+    a, b = ordered(x, y)
+    match = (
+        await session.execute(
+            select(Match)
+            .where(Match.user_a_id == a, Match.user_b_id == b, Match.closed_at.is_(None))
+            .with_for_update(key_share=True)
+        )
+    ).scalar_one_or_none()
+    if match is not None:
+        match.closed_at = now
+        match.closed_reason = reason
+    return match
 
 
 async def visible_match(session: AsyncSession, me: uuid.UUID, match_id: uuid.UUID, *, lock: bool = False) -> Match:

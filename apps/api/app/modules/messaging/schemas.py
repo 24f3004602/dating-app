@@ -37,6 +37,7 @@ class MessageOut(ApiModel):
     safety_tip: Literal["money"] | None = Field(
         description="On messages from them that mention money or payments: show a safety tip"
     )
+    removed: bool = Field(description="Removed by a moderator: `body` is empty")
 
 
 class MessagePage(ApiModel):

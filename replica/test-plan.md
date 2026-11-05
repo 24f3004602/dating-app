@@ -98,6 +98,18 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | MOB-8 | mobile | unit | realtime client: ticket per connection, catch-up on `ready` and `resync`, hints passed on, backoff growth and cap, reset on `ready`, 4401 stops and signs out, 4429 waits 60 s, silence replaces the connection, failed ticket retried, stop; URL scheme | as listed | jest (fake sockets and timers) | pass |
 | MOB-9 | mobile | screen | matches list: last message, "2 new · Your turn", the waiting notice, India date, opens the chat; the your-turn error on Like; a realtime hint refreshes an open chat | as listed | jest + RNTL | pass |
 | E2E-3 | e2e | journey | two people in two browsers: sign up, introduction, like, like back, match; chat both ways with no reload (the matches list and the open chat update live); the hurtful-word prompt; the money tip for the recipient only; axe on the chat, the prompt and the list | as listed; no console errors or 5xx | Playwright + axe | pass |
+| SAF-B1 | safety | negative | after a block, each path both ways: discovery, profile, media, a new like, likes received, matches, the match, send, history, read; realtime | 404 or absent everywhere; both get `match.closed` (no reason); nothing else announced; picks removed | api + real ws; mutation (no staff check) n/a | pass |
+| SAF-B2 | safety | edge | block an unknown ID, yourself, twice; list blocks; unblock | 204 (nothing stored), 422, idempotent; only the blocker sees the list; the match stays ended | api | pass |
+| SAF-U1 | safety | happy | unmatch by either person; a stranger; twice | 204 and `match.closed`; 404; 404; both lose the chat | api + real ws | pass |
+| SAF-P1 | safety | happy | report a message (blocks by default); my reports; the reported person's list | the copy kept after the messages are deleted; status open; empty | api | pass |
+| SAF-P2 | safety | negative | report without blocking; a photo; a stranger; yourself; my own message; an unknown message; not their photo; both items; long details; a bad reason; after a block; the daily limit | 201, 201, 404, 422 x6, 201, 429 on the 21st attempt | api | pass |
+| SAF-R1 | safety | concurrency | a send arrives while a block holds the match row lock and closes the match | the send waits, then 404; nothing stored; without the send lock it is stored (mutation caught) | committed DB + mutation | pass |
+| MODR-Q1 | admin | happy | the queue and a report's detail | underage first; opening puts it in review and assigns it; the reporter sees "in review"; no email, birthdate or location in the detail | api | pass |
+| MODR-A1 | admin | happy | suspend from a report; act again | realtime closed 4401, sessions revoked; 409; report actioned; one append-only record; audited | api + real ws | pass |
+| MODR-R2 | admin | happy | remove a message; remove a photo; remove with nothing to remove | shown as removed to both (text withheld, preview empty); the photo rejected and unreachable; 409 | api | pass |
+| MODR-S1 | admin | negative | act on yourself; a moderator on another moderator; a missing account; no note; reports about yourself or about staff | 409, 403, 409, 422; 403 own_account, 403 admin_only, admin 200 | api | pass |
+| MODR-B1 | admin | happy | ban (admin), reinstate, reinstate again; the audit log | matches closed (moderation), signed out; active again, the match stays ended; 409; entries with codes only | api | pass |
+| MODR-P1 | admin | happy | photo review: pending oldest first with signed URLs; approve makes the profile ready; reject; unknown; your own photo | as listed; 404; 409 | api | pass |
 | PHO-N3 | access | negative | another member: redirect, delete, reorder, list; no session | 404, 404, 422, empty, 401 | api | pass |
 | F03-H1 | discovery | happy | build today's set for a seeded viewer | only eligible candidates; at most 15; stable all day | unit + api | pass (DSC-*) |
 | F03-E1 | discovery | edge | blocks in either direction; earlier like or pass; paused; hidden | all excluded | api | pass |
@@ -120,12 +132,12 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | F05-E2 | chat | edge | drop the WebSocket, send meanwhile, reconnect | REST catch-up; nothing lost or duplicated | api + ws | pass (RT-3) |
 | F05-N1 | chat | negative | a non-participant reads or sends; a stale (unmatched) match; a blocked pair | all refused | api | pass (MSG-N1, MSG-N2) |
 | F05-N2 | chat | negative | reuse or expire a realtime ticket | connection refused | ws | pass (RT-2) |
-| F06-H1 | safety | happy | block, then probe every path (discovery, profile, media, likes, matches, messages, realtime) | invisible and unreachable on each path | api | planned |
-| F06-H2 | safety | happy | report a message | reporter sees the status; it appears in the moderation queue | api | planned |
+| F06-H1 | safety | happy | block, then probe every path (discovery, profile, media, likes, matches, messages, realtime) | invisible and unreachable on each path | api | pass (SAF-B1) |
+| F06-H2 | safety | happy | report a message | reporter sees the status; it appears in the moderation queue | api | pass (SAF-P1, MODR-Q1) |
 | F07-H1 | pause | happy | pause discovery | absent from other sets; existing chats keep working | api | planned |
 | F09-H1 | delete | happy | delete the account and run the purge job | hidden at once; sessions revoked; data purged; listed exceptions retained | api + job | planned |
-| ADM-N1 | admin | negative | a member token calls `/v1/admin/*`; a moderator calls an admin-only route | refused | api | planned |
-| ADM-H1 | admin | happy | a moderator actions a report | action applied; audit entry written | api | planned |
+| ADM-N1 | admin | negative | a member token calls `/v1/admin/*`; a moderator calls an admin-only route | refused | api | pass (mutation-checked) |
+| ADM-H1 | admin | happy | a moderator actions a report | action applied; audit entry written | api | pass (MODR-A1) |
 | SEC-1 | logging | negative | capture logs through every flow | no message bodies, emails, birthdates, codes or tokens | api | partial: stage 5 paths and the full auth flow pass (also checked on the real dev server); rerun as each flow lands |
 | FND-H1 | health | happy | `GET /healthz`; `GET /readyz` with DB and Redis up | 200 `ok`; 200 `ready` with both checks `ok` | api | pass |
 | FND-N1 | health | negative | `/readyz` with the DB down, Redis down, both down, or a hanging check | 503 problem `not_ready` naming the failed check; no driver text leaks; `/healthz` still 200 | api | pass |
@@ -180,3 +192,5 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | GitHub Actions api run 41938343026 and mobile run 41938342940 on `b656d5c` (stage 10a) | both workflows | passed (285 API tests on Ubuntu; mobile checks and e2e) |
 | 2026-11-05 | owner's laptop | `npm test` in `apps/mobile` (stage 10b); e2e 3 runs on a fresh database | 79 passed; both specs passed each run (chat 25-26 s) |
 | 2026-11-05 | GitHub Actions api run 41941301362 and mobile run 41941301558 on `02592ff` (stage 10b) | both workflows | passed (285 API tests; 79 mobile tests; both e2e specs incl. the two-person chat) |
+| 2026-11-05 | owner's laptop | `uv run pytest` (stage 11a); mutations: no send lock, no staff check | 298 passed; both mutations caught |
+| 2026-11-05 | same | mobile tests and e2e with the regenerated types | 79 passed; both specs passed |

@@ -10,6 +10,7 @@ with every test wrapped in a transaction that is rolled back.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import dataclasses
 import io
 import logging
@@ -225,3 +226,41 @@ def captured_logs() -> Iterator[io.StringIO]:
         root.setLevel(old_root)
         for name, level in old_quiet.items():
             logging.getLogger(name).setLevel(level)
+
+
+@contextlib.contextmanager
+def scratch_database(base_settings: Settings, name: str) -> Iterator[Settings]:
+    """A committed, migrated scratch database (for tests that need real
+    transactions on separate connections), dropped afterwards."""
+    assert base_settings.migrations_database_url is not None
+    owner = base_settings.migrations_database_url.get_secret_value()
+    recreate_database(owner, name)
+    command.upgrade(alembic_config(with_database(owner, name), base_settings.db_runtime_role), "head")
+    try:
+        yield base_settings.model_copy(
+            update={
+                "app_env": "test",
+                "database_url": SecretStr(with_database(base_settings.database_url.get_secret_value(), name)),
+                "migrations_database_url": SecretStr(with_database(owner, name)),
+                "password_hash_profile": "test",
+                "email_backend": "memory",
+                "storage_backend": "memory",
+                "rate_limit_prefix": f"rl-test-{uuid.uuid4().hex[:12]}",
+                "db_pool_size": 10,
+            }
+        )
+    finally:
+        drop_database(owner, name)
+
+
+@contextlib.asynccontextmanager
+async def committed_app(settings: Settings) -> AsyncIterator[FastAPI]:
+    """The app on a scratch database: real commits, separate connections."""
+    application = create_app(settings, configure_logs=False)
+    try:
+        yield application
+    finally:
+        keys = [k async for k in application.state.redis.scan_iter(match=f"{settings.rate_limit_prefix}:*")]
+        if keys:
+            await application.state.redis.delete(*keys)
+        await close_app(application)

@@ -8,6 +8,7 @@ from app.modules.discovery.models import Block, DailyPick, Interaction, Match, P
 from app.modules.media.models import Photo
 from app.modules.messaging.models import MatchRead, Message
 from app.modules.profiles.models import Area, Profile, ProfilePrompt
+from app.modules.safety.models import ModerationAction, Report
 
 __all__ = [
     "Area",
@@ -20,11 +21,13 @@ __all__ = [
     "Match",
     "MatchRead",
     "Message",
+    "ModerationAction",
     "OneTimeCode",
     "Photo",
     "Preferences",
     "Profile",
     "ProfilePrompt",
+    "Report",
     "Session",
     "User",
 ]

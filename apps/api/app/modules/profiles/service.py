@@ -159,3 +159,8 @@ async def public_profile(
         prompts=_prompt_out(await _prompts(session, target_id)),
         photos=[photo_out(p, storage, now) for p in photos],
     )
+
+
+async def prompt_answers(session: AsyncSession, user_id: uuid.UUID) -> list[PromptAnswerOut]:
+    """A member's answered prompts, in order (for staff views)."""
+    return _prompt_out(await _prompts(session, user_id))
