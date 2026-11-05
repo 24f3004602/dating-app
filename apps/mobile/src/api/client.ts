@@ -13,8 +13,15 @@ export class ApiError extends Error {
   readonly fieldErrors: FieldError[];
   readonly problems: string[];
   readonly retryAfter: number | null;
+  /** `deletion_scheduled`: when the account will be deleted (D083). */
+  readonly purgeAfter: string | null;
 
-  constructor(status: number, code: string, detail?: string, extra?: { errors?: FieldError[]; problems?: string[]; retryAfter?: number | null }) {
+  constructor(
+    status: number,
+    code: string,
+    detail?: string,
+    extra?: { errors?: FieldError[]; problems?: string[]; retryAfter?: number | null; purgeAfter?: string | null },
+  ) {
     super(detail ?? code);
     this.name = "ApiError";
     this.status = status;
@@ -22,6 +29,7 @@ export class ApiError extends Error {
     this.fieldErrors = extra?.errors ?? [];
     this.problems = extra?.problems ?? [];
     this.retryAfter = extra?.retryAfter ?? null;
+    this.purgeAfter = extra?.purgeAfter ?? null;
   }
 }
 
@@ -54,12 +62,19 @@ export function createApi({ getToken, onUnauthorized, fetch: fetchImpl, baseUrl 
 type Result<T> = { data?: T; error?: unknown; response: Response };
 
 function toApiError(response: Response, body: unknown): ApiError {
-  const problem = (body ?? {}) as { code?: string; detail?: string; errors?: FieldError[]; problems?: string[] };
+  const problem = (body ?? {}) as {
+    code?: string;
+    detail?: string;
+    errors?: FieldError[];
+    problems?: string[];
+    purge_after?: string;
+  };
   const retry = Number(response.headers.get("retry-after"));
   return new ApiError(response.status, problem.code ?? "error", problem.detail, {
     errors: problem.errors,
     problems: problem.problems,
     retryAfter: Number.isFinite(retry) && retry > 0 ? retry : null,
+    purgeAfter: typeof problem.purge_after === "string" ? problem.purge_after : null,
   });
 }
 

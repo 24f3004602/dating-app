@@ -83,7 +83,7 @@ them go through the grievance contact.
 | Redis | rate-limit counters (HMAC'd keys), realtime tickets and slots, pub/sub hints (IDs only) | TTLs; nothing personal to delete | by design; RT-* tests |
 | logs | request lines with the user ID; no bodies, emails, tokens, codes or message text | the log store's retention (to set at deployment) | FND-L1, SEC-1, MSG-L1, RT-9 |
 | email provider | messages sent (codes, notices) | the provider's retention; can't be recalled | not connected yet |
-| devices | session token; data in memory | cleared at sign-out; the app signs out when the server ends its session | app tests (stage 12b) |
+| devices | session token; data in memory | cleared at sign-out and after a deletion request (the query cache too); the app signs out when the server ends its session | MOB-11 (keystore cleared), E2E-5 |
 
 Residual gaps:
 - A photo file whose deletion job fails 8 times is left in storage with no row pointing to it. Its job stays visible for 30 days. A reconciliation sweep that lists the bucket comes with the bucket adapter (owner setup).
@@ -103,6 +103,6 @@ Residual gaps:
 | --- | --- | --- |
 | access | a copy of my data, or a summary of what is held and why | **planned** (D086): this inventory is the summary; requests go to the grievance contact until an export exists, before launch |
 | correction | edit profile; email change later | profile: done; email change: planned |
-| erasure | account deletion; sessions revoked at once | **done in the API** (stage 12a); the app screens are stage 12b |
+| erasure | account deletion from the profile screen (any state) or Privacy; sessions revoked at once; keep the account by signing in within 7 days | **done**: API (12a) and app (12b), web e2e; native device pass pending |
 | grievance | in-app and email contact | planned (contact details are owner setup); answer within the DPDP limit of 90 days |
 | consent withdrawal | deleting the account withdraws consent to the terms and privacy notice; nothing else is consent-based yet | done through deletion (D086) |

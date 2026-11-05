@@ -4,10 +4,11 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 12 (privacy) **in progress**. 12a (API) is done: account deletion with a
-7-day restore, the purge with its listed exceptions, the report hold, the
-banned-email hash and an hourly retention sweep, with 310 API tests passing
-locally and CI pending. 12b (app screens) is next.
+Stage 12 (privacy) **done for the API and the web build**:
+- 12a passed CI (api run 41968944533, mobile run 41968944600).
+- 12b passes locally: 89 mobile tests, and all three e2e specs in each of 2 runs, including deleting and keeping an account. CI for 12b is pending.
+
+A native device pass is still pending. Next: stage 13 (design system).
 
 ## Done
 
@@ -19,6 +20,7 @@ locally and CI pending. 12b (app screens) is next.
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 12b | Delete-account screen (from the profile in any state and from Privacy), the welcome-screen date, Keep my account on sign-in, Privacy hints that say what visibility and pause do; e2e of delete, keep and delete again | `apps/mobile/src/screens/account.tsx`, `e2e/tests/privacy.spec.ts` |
 | 12a | Account deletion (password, 7-day restore, purge through the database cascade, photo files by a queued job, report hold, banned-email hash), retention sweep (conversations, picks, sessions, codes, unverified sign-ups, reports, records), expired audit records through an owner-rights function, the store review; migration 0009 | `app/modules/privacy/`, `privacy-data-inventory.md` |
 | 11b | Unmatch, Block and Report on chats and profiles (with confirmations), the report form, the Safety screen (blocks, report statuses), removed messages, `match.closed` in the app; e2e report flow | `apps/mobile/src/screens/safety.tsx` |
 | 11a | Block, unblock and unmatch (closing the match under the send lock), reports with a copy of the reported message and a visible status, the moderation queue, photo review, account actions, message removal, staff roles, audited reads and actions, append-only moderation records; migration 0008 | `app/modules/safety/`, `app/modules/moderation/` |
@@ -30,6 +32,19 @@ locally and CI pending. 12b (app screens) is next.
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 12b build log
+
+| screen | state | notes |
+| --- | --- | --- |
+| delete account | done | what happens, kept, unreachable; password; errors; e2e and axe |
+| welcome | done | after a deletion: the India date and how to keep the account; axe |
+| sign in | done | "waiting to be deleted" with the date, Keep my account; e2e and axe |
+| privacy | done | hints for visibility and pause; the way to deletion; axe (onboarding spec) |
+
+- **Found and fixed:**
+  - The delete link sat only in Privacy, which needs a profile, so a member who never finished sign-up couldn't delete the account from the app. Profile now shows the link in every state (D087).
+  - The Privacy hints didn't say that "Only people I have liked" keeps you out of introductions, or that pausing holds back likes you've sent.
 
 ## Stage 12a status
 
@@ -220,8 +235,8 @@ locally and CI pending. 12b (app screens) is next.
 
 ## Next
 
-Stage 12b: privacy in the app.
-- A delete-account screen from Privacy, saying what happens and what isn't reached (backups, emails already sent, kept safety records). It asks for the password, then signs out to a screen with the date.
-- On sign-in, an account waiting for deletion is offered "Keep my account".
-- The Privacy screen reviewed end to end: visibility and pause.
-- Screen tests, and an e2e that deletes and restores an account; then the stage report.
+Stage 13: an original, accessible mobile design system.
+- **Tokens:** the provisional ones become final, with contrast checked (Replica design skill and its WCAG checker).
+- **Components:** every component with all its states.
+- **Accessibility:** type scale and touch targets; screen-reader labels audited; dark mode if it stays cheap.
+- **Rollout and tests:** applied across the existing screens without changing behaviour; screen tests and axe stay green.

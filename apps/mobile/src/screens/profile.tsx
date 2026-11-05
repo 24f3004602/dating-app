@@ -87,6 +87,7 @@ export function ProfileScreen() {
       ) : null}
       <Button label={t.profile.signOut} variant="secondary" onPress={() => void signOut()} />
       <Button label={t.profile.signOutAll} variant="danger" onPress={() => void signOutEverywhere()} />
+      <Button label={t.profile.deleteAccount} variant="secondary" onPress={() => router.push("/delete-account")} />
     </Screen>
   );
 }
@@ -280,6 +281,7 @@ export function PhotosScreen() {
 }
 
 export function PrivacyScreen() {
+  const router = useRouter();
   const profile = useMyProfile();
   const save = useSavePrivacy();
   const [failure, setFailure] = useState<string | null>(null);
@@ -301,9 +303,13 @@ export function PrivacyScreen() {
       <Title>{t.privacy.title}</Title>
       <ChoiceGroup label={t.privacy.visibility} value={p.visibility} onChange={(v) => update({ visibility: v })}
         options={[{ value: "everyone", label: t.privacy.everyone }, { value: "liked_only", label: t.privacy.likedOnly }]} />
+      <Body muted>{t.privacy.likedOnlyHint}</Body>
       <Checkbox label={t.privacy.pause} checked={p.discovery_paused} onChange={(v) => update({ discovery_paused: v })} />
       <Body muted>{t.privacy.pauseHint}</Body>
       {failure ? <Notice kind="error">{failure}</Notice> : null}
+      <Heading>{t.privacy.deleteHeading}</Heading>
+      <Body muted>{t.privacy.deleteSummary}</Body>
+      <Button label={t.privacy.deleteOpen} variant="secondary" onPress={() => router.push("/delete-account")} />
     </Screen>
   );
 }

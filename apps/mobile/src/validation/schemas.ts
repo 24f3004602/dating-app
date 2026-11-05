@@ -73,6 +73,9 @@ export function birthdateIso(v: { year: string; month: string; day: string }): s
 export const signInSchema = z.object({ email, password: z.string().min(1, { error: "Enter your password." }) });
 export type SignInValues = z.input<typeof signInSchema>;
 
+export const deleteAccountSchema = z.object({ password: z.string().min(1, { error: "Enter your password." }) });
+export type DeleteAccountValues = z.input<typeof deleteAccountSchema>;
+
 export const codeSchema = z.object({ code: z.string().trim().regex(/^\d{6}$/, { error: "Enter the 6-digit code." }) });
 export type CodeValues = z.input<typeof codeSchema>;
 

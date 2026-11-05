@@ -5,10 +5,11 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 
-import { unwrap } from "@/api/client";
+import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
 import { DOCUMENT_VERSIONS } from "@/config";
+import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
 import { Body, Button, Checkbox, FieldError, Notice, Row, Screen, Title } from "@/ui/primitives";
@@ -27,8 +28,10 @@ import {
 
 export function WelcomeScreen() {
   const router = useRouter();
+  const { deletion } = useAuth();
   return (
     <Screen>
+      {deletion ? <Notice kind="info">{deletionNotice(t.account.goodbye, deletion.purgeAfter)}</Notice> : null}
       <Title>{t.welcome.title}</Title>
       <Body>{t.welcome.body}</Body>
       <Button label={t.welcome.signUp} onPress={() => router.push("/sign-up")} />
@@ -157,23 +160,32 @@ export function SignInScreen() {
   const { api, signIn } = useAuth();
   const router = useRouter();
   const [failure, setFailure] = useState<string | null>(null);
+  // Set when the account is waiting to be deleted (D083): offer to keep it.
+  const [scheduled, setScheduled] = useState<{ purgeAfter: string | null } | null>(null);
   const { control, handleSubmit, formState } = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const submit = handleSubmit(async (values) => {
-    setFailure(null);
-    try {
-      const session = await unwrap(
-        api.POST("/v1/auth/login", { body: { email: values.email.trim().toLowerCase(), password: values.password } }),
-      );
-      await signIn(session.token);
-      router.replace("/profile");
-    } catch (err) {
-      setFailure(messageFor(err));
-    }
-  });
+  const enter = (path: "/v1/auth/login" | "/v1/auth/restore") =>
+    handleSubmit(async (values) => {
+      setFailure(null);
+      try {
+        const body = { email: values.email.trim().toLowerCase(), password: values.password };
+        const session = await unwrap(api.POST(path, { body }));
+        await signIn(session.token);
+        router.replace("/profile");
+      } catch (err) {
+        if (err instanceof ApiError && err.code === "deletion_scheduled") {
+          setScheduled({ purgeAfter: err.purgeAfter });
+          return;
+        }
+        setScheduled(null);
+        setFailure(messageFor(err));
+      }
+    });
+  const submit = enter("/v1/auth/login");
+  const keep = enter("/v1/auth/restore");
 
   return (
     <Screen>
@@ -183,7 +195,14 @@ export function SignInScreen() {
       <FormField control={control} name="password" label={t.signUp.password} error={formState.errors.password?.message}
         secureTextEntry autoComplete="current-password" autoCapitalize="none" />
       {failure ? <Notice kind="error">{failure}</Notice> : null}
-      <Button label={t.signIn.submit} onPress={submit} busy={formState.isSubmitting} />
+      {scheduled ? (
+        <>
+          <Notice kind="info">{deletionNotice(t.account.scheduled, scheduled.purgeAfter)}</Notice>
+          <Button label={t.account.keep} hint={t.account.keepHint} onPress={keep} busy={formState.isSubmitting} />
+        </>
+      ) : (
+        <Button label={t.signIn.submit} onPress={submit} busy={formState.isSubmitting} />
+      )}
       <Link href={"/reset" as Href} role="link">
         <Body>{t.signIn.forgot}</Body>
       </Link>

@@ -47,6 +47,9 @@ test("profile: an empty state invites creating one", async () => {
   expect(await screen.findByText(t.profile.emptyTitle)).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: t.profile.create }));
   expect(mockRouter.push).toHaveBeenCalledWith("/profile/edit");
+  // Deleting the account doesn't need a profile.
+  await fireEvent.press(screen.getByRole("button", { name: t.profile.deleteAccount }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/delete-account");
 });
 
 test("profile: readiness and honest labels, never 'age verified'", async () => {
@@ -189,4 +192,9 @@ test("privacy: choosing a setting saves it at once", async () => {
     { discovery_paused: true },
   ]);
   expect(screen.getByRole("radio", { name: t.privacy.likedOnly })).toBeChecked();
+  // What each setting does, and the way to delete the account.
+  expect(screen.getByText(t.privacy.likedOnlyHint)).toBeTruthy();
+  expect(screen.getByText(t.privacy.pauseHint)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.privacy.deleteOpen }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/delete-account");
 });

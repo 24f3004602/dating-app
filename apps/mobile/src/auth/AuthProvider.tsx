@@ -9,6 +9,9 @@ export type AuthStatus = "loading" | "signedOut" | "signedIn";
 /** Kept in memory only, between sign-up and verification (D045). */
 export type PendingSignUp = { email: string; password: string };
 
+/** After a deletion request: when everything goes, for the welcome screen (D083). */
+export type DeletionNotice = { purgeAfter: string };
+
 type AuthValue = {
   status: AuthStatus;
   api: Api;
@@ -17,6 +20,9 @@ type AuthValue = {
   signOutEverywhere: () => Promise<void>;
   pending: PendingSignUp | null;
   setPending: (value: PendingSignUp | null) => void;
+  deletion: DeletionNotice | null;
+  /** The server has scheduled the deletion and ended every session: forget this one. */
+  accountDeleted: (purgeAfter: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -26,6 +32,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
   const tokenRef = useRef<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [pending, setPending] = useState<PendingSignUp | null>(null);
+  const [deletion, setDeletion] = useState<DeletionNotice | null>(null);
 
   const forget = useCallback(async () => {
     tokenRef.current = null;
@@ -62,6 +69,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
     tokenRef.current = token;
     await saveToken(token);
     setPending(null);
+    setDeletion(null);
     setStatus("signedIn");
   }, []);
 
@@ -83,9 +91,18 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
     await forget();
   }, [api, forget]);
 
+  const accountDeleted = useCallback(
+    async (purgeAfter: string) => {
+      // The realtime connection may already have signed this device out (4401).
+      setDeletion({ purgeAfter });
+      await forget();
+    },
+    [forget],
+  );
+
   const value = useMemo(
-    () => ({ status, api, signIn, signOut, signOutEverywhere, pending, setPending }),
-    [status, api, signIn, signOut, signOutEverywhere, pending],
+    () => ({ status, api, signIn, signOut, signOutEverywhere, pending, setPending, deletion, accountDeleted }),
+    [status, api, signIn, signOut, signOutEverywhere, pending, deletion, accountDeleted],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
