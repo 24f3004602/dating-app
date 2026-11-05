@@ -4,9 +4,9 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 14 (web) **done locally**:
+Stage 14 (web) **done**:
 - 14a passed CI (api run 41977719453, mobile run 41977719394).
-- 14b passes locally: 319 API tests, the web build and tests, and all six e2e specs in each of 2 runs. CI for 14b is pending.
+- 14b passed CI (api run 41981021674, mobile run 41981021743): 319 API tests, the web build and tests, and all six e2e specs. They also passed 2 local runs.
 
 The console needs a deployment with TLS before real use (stage 17). Next: stage 15 (audit).
 

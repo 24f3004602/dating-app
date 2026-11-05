@@ -238,3 +238,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-05 | owner's laptop | `pytest` in `apps/api` (stage 14a); CLI against the dev database | 319 passed; mutation checks (no replay check, no session separation, no enrolment token, no idle timeout) each caught; the CLI issues a token for staff and refuses members and unknown emails |
 | 2026-11-05 | GitHub Actions api run 41977719453 and mobile run 41977719394 on `9161621` (stage 14a, after a format fix; run 41977235463 on `404f919` failed the format check before any test) | both workflows | passed (319 API tests) |
 | 2026-11-05 | owner's laptop | stage 14b: `pytest`; `npm test -w @datingapp/web`; `next build`; e2e 2 runs | 319 passed; 2 passed; built (every page dynamic); all six specs passed each run |
+| 2026-11-05 | GitHub Actions api run 41981021674 and mobile run 41981021743 on `f659d72` (stage 14b) | both workflows (web checks, build and six e2e specs) | passed |
