@@ -147,10 +147,11 @@ jobs:
       - name: Settings
         run: |
           ./make-env.sh beta.test ci@example.com
-          sed -i -e 's/^SMTP_USERNAME=$/SMTP_USERNAME=beta-sender@example.com/'                  -e 's/^SMTP_PASSWORD=$/SMTP_PASSWORD=not-a-real-password/'                  -e 's/^OPERATOR_NAME=$/OPERATOR_NAME=CI operator/'                  -e 's/^CONTACT_EMAIL=$/CONTACT_EMAIL=contact@example.com/' .env
-          printf 'SMTP_HOST=smtp.invalid
-TUNNEL_TOKEN=not-a-real-token
-' >> .env
+          sed -i -e 's/^SMTP_USERNAME=$/SMTP_USERNAME=beta-sender@example.com/' \
+                 -e 's/^SMTP_PASSWORD=$/SMTP_PASSWORD=not-a-real-password/' \
+                 -e 's/^OPERATOR_NAME=$/OPERATOR_NAME=CI operator/' \
+                 -e 's/^CONTACT_EMAIL=$/CONTACT_EMAIL=contact@example.com/' .env
+          printf 'SMTP_HOST=smtp.invalid\nTUNNEL_TOKEN=not-a-real-token\n' >> .env
           docker compose config --format json > config.json
           python3 -c "import json; c = json.load(open('config.json'))['services']; assert not c['edge'].get('ports'), c['edge'].get('ports'); assert c['tunnel']['networks']['default']['ipv4_address'] == '172.30.0.250'"
 
