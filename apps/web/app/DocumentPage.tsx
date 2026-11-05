@@ -13,7 +13,13 @@ export function Contact() {
 }
 
 /** The shared frame for the tester notice pages. */
-export function DocumentPage({ title, children }: { title: string; children: ReactNode }) {
+export function DocumentPage({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <>
       <a className="skip" href="#main">
@@ -28,14 +34,15 @@ export function DocumentPage({ title, children }: { title: string; children: Rea
       <main id="main" className="page document">
         <h1>{title}</h1>
         <p className="muted">
-          Version {BETA_VERSION}, {BETA_DATE}. For a small, invite-only test. Full documents will follow before
-          any public launch.
+          Version {BETA_VERSION}, {BETA_DATE}. For a small, invite-only test.
+          Full documents will follow before any public launch.
         </p>
         {children}
       </main>
       <footer>
         <p className="caption">
-          <Link href="/terms">Terms for testers</Link> · <Link href="/privacy">Privacy notice for testers</Link>
+          <Link href="/terms">Terms for testers</Link> ·{" "}
+          <Link href="/privacy">Privacy notice for testers</Link>
         </p>
       </footer>
     </>

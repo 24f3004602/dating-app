@@ -12,5 +12,14 @@ export const BETA_VERSION = "beta-2026-11";
 export const BETA_DATE = "5 November 2026";
 
 /** Who runs the test, and how to reach them. Set on the server (web .env). */
-export const OPERATOR = process.env.OPERATOR_NAME?.trim() || "the team running this test";
+export const OPERATOR =
+  process.env.OPERATOR_NAME?.trim() || "the team running this test";
 export const CONTACT_EMAIL = process.env.CONTACT_EMAIL?.trim() || null;
+
+/**
+ * Where the beta's data lives (D096, D097), so the notice names the right
+ * services: "lightsail" (a server at Amazon Web Services in Mumbai) or "home"
+ * (the operator's own computer, reached through a Cloudflare Tunnel).
+ */
+export const BETA_HOSTING: "lightsail" | "home" =
+  process.env.BETA_HOSTING === "home" ? "home" : "lightsail";

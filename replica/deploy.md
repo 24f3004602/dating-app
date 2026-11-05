@@ -50,6 +50,79 @@ store publishing without it). Template: replica-deploy `preflight.md`.
 4. **Set `TRUSTED_PROXIES`** to the load balancer's and the console's addresses (OPS-1).
 5. **PostgreSQL logging settings** (stage 6 note): `log_parameter_max_length_on_error = 0`, `log_statement = none`.
 
+## Run it at home first (D097)
+
+The owner's choice (2026-11-05): run the closed beta on their own computer first, and move to a server (below) when the load grows.
+- **The same stack** as on a server, plus `compose.tunnel.yaml`.
+- **A Cloudflare Tunnel:**
+  - `cloudflared` connects out to Cloudflare, so nothing is opened on the computer or the router (home connections often have no public address anyway);
+  - Cloudflare provides HTTPS and passes requests to Caddy over the private network.
+- **Visitor addresses:** Caddy believes `X-Forwarded-For` only from the tunnel's fixed address (172.30.0.250). Per-IP limits use the visitor's address and can't be faked (the `home-mode` CI job checks both).
+- **The notice:** in home mode the privacy notice says the server is the operator's own computer, and names Cloudflare (`BETA_HOSTING=home`).
+- **Not deployed:** these steps need your accounts and your go.
+
+**The computer:** this laptop works for a small test: a Ryzen 3 7320U and 8 GB, checked 2026-11-05. It must stay on, awake and online while testers use the app.
+- **Power (Windows Settings):**
+  - keep it plugged in;
+  - Power: never sleep when plugged in;
+  - lid closing: "Do nothing" when plugged in.
+- **Docker Desktop:**
+  - start it;
+  - Settings → General: "Start Docker Desktop when you sign in".
+
+  After a Windows update restart, sign in, so the app comes back.
+- **Protect the testers' data:**
+  - a password on your Windows account;
+  - Settings → Privacy & security → **Device encryption** on, if your laptop offers it;
+  - don't share the account.
+- **Memory:** 8 GB is tight. Keep heavy programs closed while testers are active.
+
+**1. Domain and Cloudflare (owner):**
+1. Buy the domain. UPI or a debit card works at most Indian registrars.
+2. Create a free account at dash.cloudflare.com, then **Add a domain** → Free plan.
+3. Cloudflare shows two nameservers. Set them at your registrar in place of theirs, then wait until Cloudflare says **Active**.
+4. SSL/TLS → Edge Certificates → turn on **Always Use HTTPS**.
+5. Create the tunnel: **Zero Trust → Networks → Tunnels → Create a tunnel → Cloudflared**, named `datingapp-beta`.
+   - On the install page choose Docker, and copy **only the token** (the long value after `--token`).
+   - Free-plan sign-up may ask for a payment method and not charge it. Try your SBI Visa debit card. If none is accepted, tell me: tunnels can also be made from the command line.
+6. Add the tunnel's three **public hostnames**. Each has type HTTP and service `edge:80`:
+   - `<domain>`;
+   - `api.<domain>`;
+   - `app.<domain>`.
+
+   Cloudflare creates the DNS records.
+
+**2. Start it** (Git Bash, in the project folder):
+```sh
+cd ~/desktop/dating-app/infra/beta
+./make-env.sh <domain> <your-email>
+notepad .env
+#   fill in OPERATOR_NAME, CONTACT_EMAIL, SMTP_USERNAME (the Gmail address) and SMTP_PASSWORD (its app password),
+#   and add two lines:
+#     TUNNEL_TOKEN=<the token>
+#     COMPOSE_FILE=compose.yaml;compose.tunnel.yaml
+docker compose build              # the first build takes a while
+docker compose run --rm migrate
+docker compose up -d && docker compose ps
+```
+- **Check:**
+  - Cloudflare shows the tunnel **Healthy**;
+  - `https://app.<domain>` opens the app;
+  - `https://<domain>/privacy` shows your name, your contact and the Cloudflare wording;
+  - `https://api.<domain>/readyz` answers.
+- **The token and `.env`** stay on this computer. Never send them in chat.
+
+**3. Then, as on a server:** follow steps 4–7 below (first admin, testers, running it day to day, the APK). Two things differ for backups:
+- Run `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` daily, by hand or from Windows Task Scheduler.
+- Copy the backups weekly to a drive kept somewhere safe: one computer is one point of failure.
+
+**Moving to a server later:**
+1. Set up the server (steps 1–2 below) and clone the repo.
+2. Copy `.env` across securely, without the two home lines. It holds the database passwords and the app key; the invites and staff authenticators depend on that key.
+3. Restore the latest backup (step 6 below).
+4. In Cloudflare DNS, point `@`, `api` and `app` at the server's IP as **DNS only** (grey cloud), so Caddy gets its own certificates. Delete the tunnel.
+5. The notice switches to the server wording by itself. Tell the testers where their data now lives.
+
 ## Closed beta on one server (stage 18, D096)
 
 A small, invite-only user test before any launch. The owner's choices (2026-11-05):

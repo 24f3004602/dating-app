@@ -127,3 +127,63 @@ jobs:
       - name: Logs on failure
         if: failure()
         run: docker compose logs --tail 60
+
+  # Home mode (D097): the same stack behind a Cloudflare Tunnel. The tunnel itself
+  # needs the owner's Cloudflare account, so a curl container stands in for it at
+  # the tunnel's fixed address.
+  home-mode:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: infra/beta
+    env:
+      COMPOSE_FILE: compose.yaml:compose.tunnel.yaml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Settings
+        run: |
+          ./make-env.sh beta.test ci@example.com
+          sed -i -e 's/^SMTP_USERNAME=$/SMTP_USERNAME=beta-sender@example.com/'                  -e 's/^SMTP_PASSWORD=$/SMTP_PASSWORD=not-a-real-password/'                  -e 's/^OPERATOR_NAME=$/OPERATOR_NAME=CI operator/'                  -e 's/^CONTACT_EMAIL=$/CONTACT_EMAIL=contact@example.com/' .env
+          printf 'SMTP_HOST=smtp.invalid
+TUNNEL_TOKEN=not-a-real-token
+' >> .env
+          docker compose config --format json > config.json
+          python3 -c "import json; c = json.load(open('config.json'))['services']; assert not c['edge'].get('ports'), c['edge'].get('ports'); assert c['tunnel']['networks']['default']['ipv4_address'] == '172.30.0.250'"
+
+      - name: Build, migrate, start (everything but the tunnel)
+        run: |
+          docker compose build
+          docker compose run --rm migrate
+          docker compose up -d --wait --wait-timeout 300 edge worker
+          if ss -ltnH | awk '{print $4}' | grep -Eq ':(80|443)$'; then echo "a port is open on the host" && exit 1; fi
+
+      - name: Through the stand-in tunnel
+        run: |
+          net=datingapp-beta_default
+          from() { ip=$1; shift; docker run --rm --network "$net" --ip "$ip" curlimages/curl:8.23.0 -sS "$@"; }
+          tunnel() { from 172.30.0.250 "$@"; }
+          tunnel -D - -o /dev/null -H 'Host: app.beta.test' http://edge/ > app.h
+          grep -q '^HTTP/1.1 200' app.h
+          grep -qi "^content-security-policy: default-src 'self'; script-src 'self';" app.h
+          grep -qi '^strict-transport-security: max-age=31536000' app.h
+          tunnel -H 'Host: app.beta.test' http://edge/ | grep -q '<div id="root">'
+
+          tunnel -H 'Host: beta.test' http://edge/privacy > privacy.html
+          grep -q 'Cloudflare carries the encrypted connection' privacy.html
+          if grep -q 'Amazon Web Services' privacy.html; then echo "the notice names the wrong host" && exit 1; fi
+
+          # The tunnel's X-Forwarded-For reaches the API; anyone else's is ignored.
+          tunnel -f -H 'Host: api.beta.test' -H 'X-Forwarded-For: 203.0.113.7' http://edge/healthz
+          from 172.30.0.251 -f -H 'Host: api.beta.test' -H 'X-Forwarded-For: 198.51.100.7' http://edge/healthz
+          sleep 2
+          docker compose logs api > api.log
+          grep -q '203.0.113.0' api.log
+          if grep -q '198.51.100' api.log; then echo "a forged X-Forwarded-For was believed" && exit 1; fi
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 60

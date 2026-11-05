@@ -1,5 +1,6 @@
 # The closed beta on one server (stage 18, D096). Everything runs here; only
 # Caddy (the `edge` service) is reachable from the internet, on ports 80 and 443.
+# At home, add compose.tunnel.yaml (D097): no open ports, a Cloudflare Tunnel.
 # Settings come from .env, made by make-env.sh (secrets generated on the server).
 #   first time:  ./make-env.sh <domain> <your-email>, edit .env, then
 #                docker compose build && docker compose run --rm migrate && docker compose up -d
@@ -123,6 +124,8 @@ services:
       BRAND_NAME: ${BRAND_NAME:-Haanji}
       OPERATOR_NAME: ${OPERATOR_NAME:-}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+      # Where the data lives, for the privacy notice: lightsail | home (D097).
+      BETA_HOSTING: lightsail
     depends_on:
       api: { condition: service_healthy }
     healthcheck:
@@ -147,6 +150,9 @@ services:
       ACME_EMAIL: ${ACME_EMAIL:?run make-env.sh}
       APP_CSP: ${APP_CSP:?run make-env.sh}
       CADDY_GLOBAL_OPTIONS: ${CADDY_GLOBAL_OPTIONS:-}
+      # Home mode (compose.tunnel.yaml) changes these two; on a server they stay so.
+      SITE_SCHEME: ""
+      CADDY_TRUSTED_PROXIES: 127.0.0.1/32
     ports:
       - "80:80"
       - "443:443"
@@ -162,6 +168,8 @@ networks:
     ipam:
       config:
         - subnet: 172.30.0.0/24
+          # Containers get addresses from the lower half; .250 is kept for the tunnel.
+          ip_range: 172.30.0.0/25
 
 volumes:
   pgdata:

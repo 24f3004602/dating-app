@@ -1,5 +1,8 @@
 # The closed beta's front door (stage 18, D096): automatic HTTPS (Let's Encrypt)
 # for three hosts, then plain HTTP to the containers on the private network.
+# At home (compose.tunnel.yaml, D097) Cloudflare provides HTTPS: SITE_SCHEME is
+# "http://", so Caddy serves plain HTTP inside, and it believes X-Forwarded-For
+# only from the tunnel's fixed address (CADDY_TRUSTED_PROXIES).
 #   {$DOMAIN}        the landing page, the tester notice and the staff console (web)
 #   api.{$DOMAIN}    the API, including the realtime WebSocket
 #   app.{$DOMAIN}    the app's web build (static files, from this image)
@@ -8,6 +11,9 @@
 {
 	email {$ACME_EMAIL}
 	{$CADDY_GLOBAL_OPTIONS}
+	servers {
+		trusted_proxies static {$CADDY_TRUSTED_PROXIES:127.0.0.1/32}
+	}
 }
 
 (common) {
@@ -22,17 +28,17 @@
 	# IPs and photo links). The API logs requests with truncated IPs.
 }
 
-{$DOMAIN} {
+{$SITE_SCHEME}{$DOMAIN} {
 	import common
 	reverse_proxy web:3000
 }
 
-api.{$DOMAIN} {
+{$SITE_SCHEME}api.{$DOMAIN} {
 	import common
 	reverse_proxy api:8000
 }
 
-app.{$DOMAIN} {
+{$SITE_SCHEME}app.{$DOMAIN} {
 	import common
 	header {
 		Content-Security-Policy "{$APP_CSP}"

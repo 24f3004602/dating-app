@@ -1,0 +1,36 @@
+# Home mode for the closed beta (D097): the same stack on your own computer,
+# reached through a Cloudflare Tunnel. No ports are opened on the computer or
+# the router; cloudflared connects out to Cloudflare, which provides HTTPS and
+# passes requests to Caddy over the private network.
+#   docker compose -f compose.yaml -f compose.tunnel.yaml <command>
+# (or set COMPOSE_FILE=compose.yaml:compose.tunnel.yaml in .env)
+# Steps: replica/deploy.md, "Run it at home first".
+
+services:
+  edge:
+    ports: !reset []
+    environment:
+      SITE_SCHEME: "http://"
+      # Only the tunnel may tell Caddy who the visitor is (X-Forwarded-For).
+      CADDY_TRUSTED_PROXIES: 172.30.0.250/32
+
+  web:
+    environment:
+      BETA_HOSTING: home
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.7
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      # From the Cloudflare dashboard (Networks > Tunnels). Keep it in .env only:
+      # whoever has it can run your tunnel.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?add the tunnel token to .env}
+    networks:
+      default:
+        ipv4_address: 172.30.0.250
+    depends_on:
+      edge: { condition: service_started }

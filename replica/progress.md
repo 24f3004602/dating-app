@@ -9,7 +9,8 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 - **18b:** the tester notice (`/terms`, `/privacy`), linked at sign-up; the Android beta build settings.
 - **18c:** the one-server kit (`infra/beta`) and the `beta-stack` workflow that starts it as the server will.
 - **CI:** api, mobile, images and beta-stack all passed (`deploy.md` steps; test-plan results).
-- **Next (owner):** the Lightsail server, the domain's A records, the Gmail app password, then the deploy together (`deploy.md`, "Closed beta on one server"). Then the Expo account for the APK.
+- **18d:** home mode (D097): the owner runs the beta on their own laptop first, through a Cloudflare Tunnel (no open ports), and moves to Lightsail when load grows. The notice names the hosting.
+- **Next (owner):** a domain on Cloudflare (free) and the tunnel token, the Gmail app password, then start it together (`deploy.md`, "Run it at home first"). Then the Expo account for the APK.
 - The launch gates in `deploy.md` (name, lawyer, bucket, stores) still apply to the public launch, not to the beta.
 
 ## Done
@@ -22,6 +23,7 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 18d | Home mode: `compose.tunnel.yaml` (Cloudflare Tunnel, no open ports, only the tunnel may name the visitor), the notice's hosting wording, the `home-mode` CI job, the home guide in deploy.md | `infra/beta/compose.tunnel.yaml`, `apps/web/lib/documents.ts` |
 | 18c | One-server kit for the beta: compose (PostgreSQL, Redis, API, worker, web, Caddy with the app's web build), automatic HTTPS, only 80/443 published, secrets made on the server, backups; the app's CSP shared with e2e; the beta-stack CI workflow | `infra/beta/`, `.github/workflows/beta.yml`, deploy.md |
 | 18b | Tester notice (terms and privacy for the beta, website pages, linked at sign-up); Android beta build settings that refuse placeholders; invite-only hint | `apps/web/app/privacy`, `apps/web/app/terms`, `apps/mobile/app.config.ts`, `apps/mobile/eas.json` |
 | 18a | Closed beta, server side: SMTP email over TLS (stdlib, fake-server tested), the `beta` environment, invite-only sign-up (HMAC list, `datingapp-api invite`), invites swept at 30 days; migration 0013 | `app/providers/email.py`, `app/config.py`, `migrations/versions/0013_signup_invites.py` |
