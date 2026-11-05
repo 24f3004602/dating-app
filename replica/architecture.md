@@ -122,6 +122,8 @@ migrations run as a separate role.
 | `notification_prefs` | `user_id` primary key; `matches`, `messages`, `likes` (default on) | 16 |
 | `member_notices` | `user_id`, `kind` (warning), `read_at`; fixed wording in the app | 16 |
 | `push_tickets` | `receipt_id` primary key, `token`; kept until checked, at most a day | 16 |
+| `subscriptions` | `user_id` (cascade), `provider`, `provider_subscription_id` (unique), `status`, `current_end` (paid until), `cancel_at_cycle_end`, `last_event_at` (ignores late events); no amounts or payment details (D094) | 16 |
+| `payment_events` | (`provider`, `event_id`) primary key: each webhook applied once; kept 90 days | 16 |
 
 Foreign keys declare their `on delete` rule explicitly. Safety records
 (reports, moderation actions) are kept on purpose; see
@@ -179,9 +181,9 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/admin/staff | staff accounts and whether each has an authenticator | Adm | admin |
 | POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
 | PUT, DELETE /v1/me/push-device; GET, PUT /v1/me/notifications; GET /v1/me/notices; POST /v1/me/notices/{id}/read | this session's phone for pushes; which kinds to push; notices from the team (D093) | M | notifications |
+| GET, POST /v1/me/subscription; POST /v1/me/subscription/cancel; POST /v1/webhooks/razorpay | the plan: status and entitlement; start a Razorpay subscription (website, sandbox); stop renewing; provider webhooks (D094) | M / provider | billing |
 
-**Webhooks in:** none in the MVP. Payments later need signed Razorpay
-webhooks and store server notifications. **Webhooks out:** none.
+**Webhooks in:** `POST /v1/webhooks/razorpay` (stage 16b, sandbox): signature over the raw body, each event ID applied once, stale and unknown events ignored (D094). App Store and Google Play server notifications come with in-app purchase. **Webhooks out:** none.
 
 **Jobs:**
 
@@ -195,6 +197,7 @@ webhooks and store server notifications. **Webhooks out:** none.
 | `privacy:remove_old_jobs` | daily 21:15 UTC | finished, failed, cancelled and aborted job rows after 30 days |
 | `notify:send` | on demand | one discreet push to a member's live devices, if they want that kind; arguments are a user ID and a kind (D093) |
 | `notify:check_receipts` | every 15 minutes | push receipts after 15 minutes; dead tokens and checked tickets removed; tickets older than a day removed |
+| `billing:cancel_for_deletion` | on demand | cancels a member's subscription at once when they ask to delete the account; retried while the provider is down |
 
 ## Key mechanisms
 
@@ -263,7 +266,7 @@ account.
 | `ObjectStorage` | local filesystem in `var/` | S3 (ap-south-1) or Cloudflare R2 | stage 7 |
 | `VerificationProvider` | none ("not verified" labels) | a liveness vendor, after DPDP review of biometric data | after the MVP |
 | `PushSender` | none (default) and in-memory | Expo push service (adapter built and tested against a fake server; needs the owner's EAS project, FCM and APNs credentials) | stage 16 (D093) |
-| `PaymentProvider` | sandbox fake | Razorpay (web); App Store and Google Play billing (mobile) | stage 16, after rules are verified |
+| `PaymentProvider` | none (default) and a fake | Razorpay (website; adapter built and tested against a fake server, sandbox only); App Store and Google Play billing for the apps (not built) | stage 16b (D094) |
 
 ## The parts that bite
 

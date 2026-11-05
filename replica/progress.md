@@ -4,11 +4,14 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 16 (optional) **in progress**. 16a, discreet notifications, is done locally:
-- 330 API tests, 110 app tests and the onboarding e2e pass; CI is pending.
-- Delivery to phones needs the owner's EAS project and credentials.
+Stage 16 (optional) **done for what can be built without the owner's accounts**.
+- **16a:** discreet notifications. Passed CI (api run 42004360276, mobile run 42004360275).
+- **16b:** the billing evaluation, and the website's payment server side in sandbox code. 338 API tests pass; CI is pending.
+- **Waiting on the owner:**
+  - delivery of pushes needs an EAS project;
+  - payments need decisions on the plan's contents and price, and accounts with Razorpay, Apple and Google.
 
-Next: 16b, the payments evaluation, then a sandbox plan.
+Next: stage 17 (release readiness and a staging plan).
 
 ## Done
 
@@ -20,6 +23,7 @@ Next: 16b, the payments evaluation, then a sandbox plan.
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 16b | Billing rules evaluated (Apple, Google Play in India, Razorpay); the payment-provider interface, a Razorpay adapter (fake-server tested), signed and deduplicated webhooks, a server-side entitlement, cancel at cycle end, cancellation on deletion, a live-key guard; migration 0012 | `replica/launch/pricing.md`, `app/modules/billing/`, `app/providers/payments.py` |
 | 16a | Discreet notifications: push devices tied to sessions, fixed sentences with kind-only data, preferences, throttles, team notices for warnings, an Expo adapter (fake-server tested) with receipts, the app's settings screen and notices; migration 0011 | `app/modules/notifications/`, `apps/mobile/src/notifications/` |
 | 15 | Audit: feature matrix checked row by row with evidence under one status rule (D092); architecture checked against the code (endpoints, jobs, tables); every test level run; route inventory test; recovery e2e; BUG-001 (the 404 page's CSP) fixed; stale threat-model and architecture statements corrected; `bugs.md` started | `replica/features.csv`, `replica/bugs.md`, `tests/test_route_inventory.py` |
 | 14b | Next.js landing page and staff console (queue, report detail and actions, photo review, audit log, staff authenticator resets) as a backend for the browser: HttpOnly `__Host-` cookies, server-side session checks on every page and action, nonce CSP; web e2e with axe | `apps/web/`, `e2e/tests/admin.spec.ts` |
@@ -37,6 +41,21 @@ Next: 16b, the payments evaluation, then a sandbox plan.
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 16b status
+
+- **Evaluated** (`launch/pricing.md`, D094):
+  - In India the iOS app must sell the plan through in-app purchase and can't mention the web price.
+  - Android uses Play Billing, with user-choice billing possible.
+  - Razorpay serves the website.
+  - Recommendation: no paid plan during the beta.
+- **Implemented and tested:** BIL-1..8.
+- **Mutation checks:** each of these breaks a test: no signature check, no stale-event check.
+- **Not built (owner decisions and accounts):**
+  - what the plan includes and its price;
+  - the website checkout screen (it also needs Razorpay's script allowed in the CSP);
+  - in-app purchase and Play Billing;
+  - a run in Razorpay's sandbox (needs a public URL for webhooks, stage 17).
 
 ## Stage 16a status
 
@@ -316,14 +335,11 @@ Next: 16b, the payments evaluation, then a sandbox plan.
 
 ## Next
 
-Stage 16b: payments.
-- **Evaluation first (CLAUDE.md), from public sources, dated:**
-  - Razorpay for web payments in India: subscriptions, webhooks and signature checks, test mode, KYC.
-  - Apple's App Store rules for digital features in iOS apps (in-app purchase).
-  - Google Play's billing rules, including user-choice billing in India.
-  - The result, and what it means for one plan, goes to `launch/pricing.md` and the decision log.
-- **Then, if it holds up:**
-  - a payment-provider interface and a sandbox-only plan;
-  - signed, deduplicated webhooks and server-side entitlements;
-  - tests against the documented signature scheme.
-- **Limits:** no live keys or payments without your authorization.
+Stage 17: release readiness and a staging plan. No deploy, spending or store publishing without the owner's authorization.
+- **Readiness:** a checklist against everything recorded so far. Release gates; owner setup; legal periods marked (R); the native device pass; TLS; backups; monitoring; secrets.
+- **Staging plan:**
+  - the hosting shape in an India region: API, worker, PostgreSQL, Redis, object storage and the web app;
+  - configuration and secrets, migrations and rollback, the trusted proxy for client IPs;
+  - log retention, alerts, and the store-build path with EAS.
+- **Runbooks:** incident response, the data-breach steps under DPDP, the first-admin bootstrap.
+- **Docs:** each part labelled as planned until the owner authorizes it.

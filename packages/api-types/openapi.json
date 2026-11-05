@@ -312,6 +312,26 @@
         "title": "ChallengeOut",
         "type": "object"
       },
+      "CheckoutOut": {
+        "additionalProperties": false,
+        "description": "For Razorpay Checkout on the website: the subscription to authorise and the public key.",
+        "properties": {
+          "key_id": {
+            "title": "Key Id",
+            "type": "string"
+          },
+          "subscription_id": {
+            "title": "Subscription Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscription_id",
+          "key_id"
+        ],
+        "title": "CheckoutOut",
+        "type": "object"
+      },
       "ConsentsIn": {
         "additionalProperties": false,
         "properties": {
@@ -2558,6 +2578,56 @@
         "title": "SubjectDetail",
         "type": "object"
       },
+      "SubscriptionOut": {
+        "additionalProperties": false,
+        "description": "`entitled` is decided here, from the provider's webhooks. The plan unlocks\nnothing yet: what it includes is the owner's decision (pricing P2, D094).",
+        "properties": {
+          "entitled": {
+            "title": "Entitled",
+            "type": "boolean"
+          },
+          "paid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Until"
+          },
+          "renews": {
+            "title": "Renews",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "none",
+              "created",
+              "authenticated",
+              "active",
+              "pending",
+              "halted",
+              "paused",
+              "cancelled",
+              "completed",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "entitled",
+          "paid_until",
+          "renews"
+        ],
+        "title": "SubscriptionOut",
+        "type": "object"
+      },
       "TicketOut": {
         "additionalProperties": false,
         "properties": {
@@ -2774,6 +2844,20 @@
         ],
         "title": "Visibility",
         "type": "string"
+      },
+      "WebhookOut": {
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome"
+        ],
+        "title": "WebhookOut",
+        "type": "object"
       },
       "app__modules__health__router__Readiness": {
         "additionalProperties": false,
@@ -6335,6 +6419,147 @@
         ]
       }
     },
+    "/v1/me/subscription": {
+      "get": {
+        "operationId": "mine_v1_me_subscription_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          }
+        },
+        "summary": "My plan: status, whether it's active, until when",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "operationId": "checkout_v1_me_subscription_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Start a subscription to authorise in Razorpay Checkout (website only; sandbox)",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/me/subscription/cancel": {
+      "post": {
+        "operationId": "cancel_v1_me_subscription_cancel_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Stop renewing: the plan lasts until the end of what was paid",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
     "/v1/media/{photo_id}": {
       "get": {
         "operationId": "media_v1_media__photo_id__get",
@@ -6743,6 +6968,37 @@
         "summary": "Words that trigger a pre-send nudge or a safety tip",
         "tags": [
           "messaging"
+        ]
+      }
+    },
+    "/v1/webhooks/razorpay": {
+      "post": {
+        "operationId": "razorpay_webhook_v1_webhooks_razorpay_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rejected (see `code`)"
+          }
+        },
+        "summary": "Razorpay webhooks: signature checked over the raw body; each event applied once",
+        "tags": [
+          "billing"
         ]
       }
     }

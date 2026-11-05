@@ -14,9 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.config import Settings
 from app.modules.auth import service
 from app.modules.auth.models import CodePurpose
+from app.modules.billing import service as billing
 from app.modules.media import service as media_service
 from app.modules.notifications import service as notify
 from app.providers.email import EmailMessage, MemoryEmailSender
+from app.providers.payments import FakePayments
 from app.providers.push import MemoryPushSender
 from app.providers.storage import ObjectStorage
 
@@ -59,6 +61,7 @@ class JobRunner:
         self.storage = storage
         self.mail = MemoryEmailSender()
         self.push = MemoryPushSender()
+        self.payments = FakePayments()
         self.codes: list[str] = []
 
     async def pending(self) -> list[tuple[int, str, dict[str, Any]]]:
@@ -88,6 +91,8 @@ class JobRunner:
                 elif name == media_service.DELETE_OBJECTS:
                     assert self.storage is not None
                     await media_service.delete_objects(self.storage, list(args["keys"]))
+                elif name == billing.CANCEL_FOR_DELETION:
+                    await self.payments.cancel(str(args["subscription_id"]), at_cycle_end=False)
                 elif name == notify.SEND_PUSH:
                     await notify.send_push(
                         s, self.push, self.settings.brand_name,

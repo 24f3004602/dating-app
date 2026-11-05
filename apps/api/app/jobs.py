@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.clock import Clock
 from app.config import Settings
 from app.providers.email import EmailSender
+from app.providers.payments import NoPayments, PaymentProvider
 from app.providers.push import NoPushSender, PushSender
 from app.providers.storage import ObjectStorage
 
@@ -42,6 +43,7 @@ def get_job_app() -> procrastinate.App:
     global _job_app  # noqa: PLW0603 - one app per process, by design
     if _job_app is None:
         from app.modules.auth.tasks import blueprint as auth_tasks  # noqa: PLC0415 - tasks import this module
+        from app.modules.billing.tasks import blueprint as billing_tasks  # noqa: PLC0415
         from app.modules.media.tasks import blueprint as media_tasks  # noqa: PLC0415
         from app.modules.notifications.tasks import blueprint as notify_tasks  # noqa: PLC0415
         from app.modules.privacy.tasks import blueprint as privacy_tasks  # noqa: PLC0415
@@ -50,6 +52,7 @@ def get_job_app() -> procrastinate.App:
         app.add_tasks_from(auth_tasks, namespace="auth")
         app.add_tasks_from(media_tasks, namespace="media")
         app.add_tasks_from(notify_tasks, namespace="notify")
+        app.add_tasks_from(billing_tasks, namespace="billing")
         app.add_tasks_from(privacy_tasks, namespace="privacy")
         _job_app = app
     return _job_app
@@ -81,6 +84,7 @@ class WorkerContext:
     clock: Clock
     storage: ObjectStorage
     push: PushSender = field(default_factory=NoPushSender)
+    payments: PaymentProvider = field(default_factory=NoPayments)
 
 
 _context: WorkerContext | None = None

@@ -39,7 +39,7 @@ Protected admin and moderation console,admin,must,yes,yes,"Server-side authoriza
 Landing page,web,should,yes,yes,"Stage 14b: responsive, built-features only, 'not open yet', strict CSP; axe and reflow tested. Final name and legal pages pending; Stage 15 audit: yes (WEB-1; the final name and legal pages are owner items)"
 English and Hindi UI,i18n,should,no,partial,"Strings externalized in MVP; Hindi before public launch; Stage 7b: all copy in one strings file; Hindi file to come; Stage 15 audit: partial (English only; strings are in one file, ready for Hindi)"
 Push notifications with user preferences,notifications,should,yes,partial,"Stage 16; Stage 16a: API, jobs, Expo adapter (fake-server tested), preferences and the app's settings screen done (NTF-*, MOB-12); blocked: delivery needs the owner's EAS project, FCM and APNs credentials, and a device pass"
-Single paid plan (sandbox first),monetization,could,yes,no,Stage 16; P1-P2
+Single paid plan (sandbox first),monetization,could,yes,partial,"Stage 16; P1-P2; Stage 16b: the billing rules evaluated (pricing.md); the website's server side built in sandbox code (BIL-*), entitlement on the server; unlocks nothing until the owner decides the plan's contents and price; no checkout screen, in-app purchase or Play Billing yet; needs the owner's accounts"
 Travel mode,discovery,could,yes,no,Paid elsewhere [5][6]
 Advanced AI matching,discovery,could,yes,no,Deferred
 Video and voice calls,messaging,could,yes,no,Deferred; Bumble has calls [7]

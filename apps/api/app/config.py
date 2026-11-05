@@ -90,6 +90,17 @@ class Settings(BaseSettings):
     push_backend: Literal["none", "memory", "expo"] = "none"
     expo_access_token: SecretStr | None = None
 
+    # Payments (stage 16b, D094): sandbox only. "none" refuses checkouts (the
+    # default); "fake" is for tests; "razorpay" needs the owner's account. Live
+    # keys (rzp_live_...) are refused unless payments_live is set: no live
+    # payments without the owner's authorization (CLAUDE.md).
+    payments_backend: Literal["none", "fake", "razorpay"] = "none"
+    razorpay_key_id: str | None = Field(default=None, max_length=64)
+    razorpay_key_secret: SecretStr | None = None
+    razorpay_webhook_secret: SecretStr | None = None
+    razorpay_plan_id: str | None = Field(default=None, max_length=64)
+    payments_live: bool = False
+
     # Media (stage 7). "local" writes under media_dir (development); "memory"
     # is for tests. Production needs a private bucket adapter (owner setup).
     storage_backend: Literal["local", "memory"] = "local"
@@ -148,6 +159,16 @@ class Settings(BaseSettings):
         except (ZoneInfoNotFoundError, ValueError) as exc:
             raise ValueError("unknown time zone") from exc
         return v
+
+    @model_validator(mode="after")
+    def _payment_rules(self) -> Settings:
+        if self.razorpay_key_id and self.razorpay_key_id.startswith("rzp_live_") and not self.payments_live:
+            raise ValueError("live Razorpay keys need PAYMENTS_LIVE=true: live payments need the owner's authorization")
+        if self.payments_backend == "razorpay" and not (
+            self.razorpay_key_id and self.razorpay_key_secret and self.razorpay_webhook_secret and self.razorpay_plan_id
+        ):
+            raise ValueError("the razorpay backend needs a key ID, key secret, webhook secret and plan ID")
+        return self
 
     @model_validator(mode="after")
     def _production_rules(self) -> Settings:

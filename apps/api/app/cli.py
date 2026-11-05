@@ -164,6 +164,7 @@ def _worker_command(_: argparse.Namespace) -> int:
     from app.logs import configure_logging  # noqa: PLC0415
     from app.modules.auth.crypto import derive_key  # noqa: PLC0415
     from app.providers.email import create_email_sender  # noqa: PLC0415
+    from app.providers.payments import create_payments  # noqa: PLC0415
     from app.providers.push import create_push_sender  # noqa: PLC0415
     from app.providers.storage import create_storage  # noqa: PLC0415
 
@@ -180,6 +181,7 @@ def _worker_command(_: argparse.Namespace) -> int:
                 clock=system_clock,
                 storage=create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url")),
                 push=create_push_sender(settings),
+                payments=create_payments(settings),
             )
         )
         job_app = get_job_app()

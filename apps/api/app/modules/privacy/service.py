@@ -42,6 +42,7 @@ from app.modules.audit.service import record
 from app.modules.auth.crypto import banned_email_digest
 from app.modules.auth.models import OneTimeCode, Session
 from app.modules.auth.service import AuthContext, banned_email_key, local_today, revoke_all_sessions
+from app.modules.billing import service as billing
 from app.modules.discovery.models import DailyPick, Match, MatchCloseReason
 from app.modules.matching.service import close_all_open_matches
 from app.modules.media.service import DELETE_OBJECTS, list_photos
@@ -80,6 +81,7 @@ async def request_deletion(
     user.status = UserStatus.deactivated
     user.deletion_requested_at = now
     await revoke_all_sessions(session, user.id, now)
+    await billing.cancel_for_deletion(session, ctx.jobs, user.id)  # never charge someone who is leaving
     closed = await close_all_open_matches(session, user.id, MatchCloseReason.deleted, now)
     await session.execute(
         delete(DailyPick).where(or_(DailyPick.candidate_id == user.id, DailyPick.viewer_id == user.id))
@@ -215,6 +217,7 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
     counts["codes"] = await _count(
         session, delete(OneTimeCode).where(OneTimeCode.expires_at < now - retention.EXPIRED_CODE)
     )
+    counts["payment_events"] = await billing.purge_events(session, now)
     ended_token = now - retention.ENDED_ENROLLMENT
     counts["staff_enrollments"] = await _count(
         session,

@@ -45,11 +45,46 @@ In India, 5-15% of monthly users typically pay [21].
 | P5 | An annual plan priced at 10 times monthly sells to engaged users | offer it after 60 days of beta | 15%+ of payers choose annual |
 | P6 | No consumables at launch loses little revenue and keeps trust | revisit with data at 6 months | — |
 
-## Billing rules to verify before stage 16 (not yet checked)
+## Billing rules (checked 2026-11-05, stage 16b; public sources, not legal advice)
 
-- **Mobile app stores:** digital features sold inside the iOS and Android apps must use Apple In-App Purchase and Google Play Billing. Verify Google Play's user-choice billing option for India, its fees and eligibility, and Apple's current rules for India.
-- **Web:** Razorpay for web purchases where store rules allow. The app must never steer users in ways the store rules forbid.
-- **Tax and consumer terms:** confirm GST treatment, invoicing, refund handling and the Indian consumer-protection rules on auto-renewal and cancellation.
+**iOS (Apple App Store Review Guidelines, read 2026-11-05; the page shows no date):**
+- 3.1.1: features unlocked inside the app, including subscriptions, "must use in-app purchase".
+- 3.1.1(a): outside the United States storefront, apps "may not include buttons, external links, or other calls to action that direct customers to purchasing mechanisms other than in-app purchase". External-purchase entitlements exist only for specific storefronts, and the guidelines name none for India.
+- 3.1.3(b), multiplatform: something bought on our website may be used in the iOS app only if it is also sold there as an in-app purchase.
+- 3.1.2: auto-renewing subscriptions must last at least 7 days, give ongoing value, and say clearly what the price buys.
+- **For us:** in the iOS app, the plan is sold only through in-app purchase, and the app never mentions the web price.
+
+**Android (Google Play Console Help, "Understanding user choice billing on Google Play", read 2026-11-05):**
+- Google Play Billing is required for digital features, as Play's payments policy says.
+- India has user-choice billing: an alternative billing system offered alongside Play Billing, "for gaming & non-gaming mobile or tablet apps with users in India". The APIs have been available since 2023-11-14.
+- The service fee is "reduced by 4%" when users pay through the alternative.
+- Enrolment is through the Play Console.
+- **For us:** Play Billing in the app; Razorpay as the user-choice alternative is possible later, after enrolment.
+
+**Web (Razorpay docs, read 2026-11-05; the pages show no dates):**
+- Subscriptions are available in India, through cards (tokenised under RBI rules), UPI AutoPay and eMandate.
+- States: created, authenticated, active, pending (a charge failed and is being retried), halted (retries exhausted), paused, cancelled, completed, expired. "Once cancelled, a Subscription cannot be restarted."
+- Webhook events: `subscription.authenticated`, `.activated`, `.charged`, `.completed`, `.updated`, `.pending`, `.halted`, `.cancelled`, `.paused`, `.resumed`.
+- Webhooks are signed: `X-Razorpay-Signature` is an HMAC-SHA256 of the **raw** body under the webhook secret ("Do not parse or cast the webhook request body").
+- Duplicates are expected, and are deduplicated by `x-razorpay-event-id`. Events can arrive out of order.
+- Test mode needs a public webhook URL, so localhost is refused: a staging server, stage 17.
+- **For us:** the web is the only place we take payment ourselves, for members who come to the website.
+
+**What this means for one plan:**
+- **Three billing systems feed one entitlement on our server:** Razorpay on the web, App Store in-app purchase on iOS, Play Billing on Android. Each needs the owner's accounts (Razorpay with KYC, Apple Developer, Play Console) and server notifications from each.
+- **Store fees** apply to in-app sales; the web keeps more but reaches fewer people.
+
+Still to check:
+- GST and invoicing;
+- Indian consumer-protection rules on auto-renewal and cancellation;
+- refunds;
+- the current store commission rates for India.
+
+**Recommendation (D094):**
+- **No paid plan during the beta.** The core loop is free by principle 1, and P1 is a post-beta test.
+- **Stage 16b builds the server side:** a payment-provider interface, the Razorpay adapter with signed and deduplicated webhooks, and a server-side entitlement. All of it is tested against Razorpay's documented formats with our own secret, in sandbox code only.
+- **The entitlement unlocks nothing until the owner chooses what the plan includes** (P2) and its price (P1).
+- **Later, with the owner's accounts:** in-app purchase and Play Billing, and user-choice billing on Android.
 
 ## Sanity check (illustrative only)
 

@@ -31,6 +31,7 @@ PUBLIC = {
     ("POST", "/v1/admin/auth/login"),
     ("POST", "/v1/admin/auth/enroll"),  # needs the challenge from login
     ("POST", "/v1/admin/auth/verify"),  # needs the challenge from login
+    ("POST", "/v1/webhooks/razorpay"),  # HMAC-signed by the provider; checked before anything else
 }
 
 

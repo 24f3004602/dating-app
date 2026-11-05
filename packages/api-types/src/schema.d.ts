@@ -827,6 +827,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My plan: status, whether it's active, until when */
+        get: operations["mine_v1_me_subscription_get"];
+        put?: never;
+        /** Start a subscription to authorise in Razorpay Checkout (website only; sandbox) */
+        post: operations["checkout_v1_me_subscription_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/subscription/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop renewing: the plan lasts until the end of what was paid */
+        post: operations["cancel_v1_me_subscription_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/media/{photo_id}": {
         parameters: {
             query?: never;
@@ -940,6 +975,23 @@ export interface paths {
         get: operations["nudge_terms_v1_safety_nudge_terms_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/webhooks/razorpay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Razorpay webhooks: signature checked over the raw body; each event applied once */
+        post: operations["razorpay_webhook_v1_webhooks_razorpay_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1087,6 +1139,16 @@ export interface components {
              * @enum {string}
              */
             next: "verify" | "enroll";
+        };
+        /**
+         * CheckoutOut
+         * @description For Razorpay Checkout on the website: the subscription to authorise and the public key.
+         */
+        CheckoutOut: {
+            /** Key Id */
+            key_id: string;
+            /** Subscription Id */
+            subscription_id: string;
         };
         /** ConsentsIn */
         ConsentsIn: {
@@ -2003,6 +2065,24 @@ export interface components {
              */
             user_id: string;
         };
+        /**
+         * SubscriptionOut
+         * @description `entitled` is decided here, from the provider's webhooks. The plan unlocks
+         *     nothing yet: what it includes is the owner's decision (pricing P2, D094).
+         */
+        SubscriptionOut: {
+            /** Entitled */
+            entitled: boolean;
+            /** Paid Until */
+            paid_until: string | null;
+            /** Renews */
+            renews: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "none" | "created" | "authenticated" | "active" | "pending" | "halted" | "paused" | "cancelled" | "completed" | "expired";
+        };
         /** TicketOut */
         TicketOut: {
             /** Expires In */
@@ -2099,6 +2179,11 @@ export interface components {
          * @enum {string}
          */
         Visibility: "everyone" | "liked_only";
+        /** WebhookOut */
+        WebhookOut: {
+            /** Outcome */
+            outcome: string;
+        };
         /** Readiness */
         app__modules__health__router__Readiness: {
             /** Checks */
@@ -5032,6 +5117,138 @@ export interface operations {
             };
         };
     };
+    mine_v1_me_subscription_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    checkout_v1_me_subscription_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancel_v1_me_subscription_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     media_v1_media__photo_id__get: {
         parameters: {
             query?: {
@@ -5362,6 +5579,35 @@ export interface operations {
             };
             /** @description Rate limited; see `Retry-After` */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    razorpay_webhook_v1_webhooks_razorpay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookOut"];
+                };
+            };
+            /** @description Rejected (see `code`) */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

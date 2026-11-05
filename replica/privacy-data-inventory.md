@@ -38,6 +38,7 @@ this table together.
 | session token on the device | staying signed in | system | native keystore; memory only on web (D058) | the member's device | until sign-out or expiry | cleared at sign-out; the server revokes every session at the deletion request |
 | sessions (SHA-256 of the token, client type, timestamps, the first user-agent product token only) | authentication | system | `sessions` | the member (device list, later) | 30 days after expiry or revocation | revoked at the request, deleted in the purge |
 | staff second factor (stage 14): the TOTP secret, encrypted with AES-256-GCM; the last time step used; recovery codes as HMACs; enrolment tokens as SHA-256 | staff sign-in (D090) | system | `staff_mfa`, `staff_recovery_codes`, `staff_enrollments` | nobody (the staff member sees the secret and recovery codes once) | while the staff account exists; enrolment tokens 30 days after use or expiry | deleted with the account |
+| subscriptions (stage 16b, sandbox) | the plan: who has it and until when | the payment provider's webhooks | `subscriptions` (provider subscription ID, status, paid until); `payment_events` (event IDs, 90 days). No amounts, cards, UPI IDs or invoices | the member (status); admins | while the account exists; event IDs 90 days | deleted; a live subscription is cancelled at the provider at the deletion request |
 | push tokens and platform (stage 16) | sending discreet pushes to the member's phone | the member's phone, when they turn notifications on | `push_devices`, one per session | nobody (Expo, Apple and Google see the token to deliver) | while the session lives; removed at sign-out or when Expo reports the token dead | deleted with the session and the account |
 | notification preferences (stage 16) | which kinds to push | member | `notification_prefs` | the member | while the account exists | deleted |
 | notices from the team (stage 16) | telling a member about a warning | staff action | `member_notices` (kind, time, read) | the member | while the account exists | deleted |
@@ -103,7 +104,8 @@ Residual gaps:
 | email delivery | email address, code or notice text | **not chosen yet** (owner). Development prints mail to the worker's console; tests keep it in memory. Check the chosen provider's log retention, which we cannot erase, and list it in the privacy notice |
 | cloud host, database, object storage | everything above, encrypted at rest by the provider | to choose. India region preferred. Backups: 30-day rolling |
 | push delivery: Expo push service, then Apple (APNs) and Google (FCM) | the push token and the discreet text ("You have a new message."), never names, message text or IDs | **not connected** (needs the owner's EAS project and credentials); the adapter is built and tested against a fake server. Expo's own retention of tickets is a day; check its privacy terms before connecting |
-| later: SMS, verification vendor, payments, error tracking | only what each needs | each requires a review and an inventory row before use |
+| payments: Razorpay (website) | nothing from us about the member: they enter their payment details in Razorpay's own checkout; we keep only the subscription ID | **not connected** (needs the owner's account and KYC). Razorpay holds payment data under its own terms and RBI rules; check them, and invoicing and GST, before going live (D094) |
+| later: SMS, verification vendor, error tracking | only what each needs | each requires a review and an inventory row before use |
 
 ## Member rights flows
 

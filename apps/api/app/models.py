@@ -4,6 +4,7 @@ from app.db import Base
 from app.modules.accounts.models import Consent, User
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import OneTimeCode, Session
+from app.modules.billing.models import PaymentEvent, Subscription
 from app.modules.discovery.models import Block, DailyPick, Interaction, Match, Preferences
 from app.modules.media.models import Photo
 from app.modules.messaging.models import MatchRead, Message
@@ -29,6 +30,7 @@ __all__ = [
     "ModerationAction",
     "NotificationPrefs",
     "OneTimeCode",
+    "PaymentEvent",
     "Photo",
     "Preferences",
     "Profile",
@@ -40,5 +42,6 @@ __all__ = [
     "StaffEnrollment",
     "StaffMfa",
     "StaffRecoveryCode",
+    "Subscription",
     "User",
 ]
