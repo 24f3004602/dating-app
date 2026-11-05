@@ -1,15 +1,15 @@
 /** Like or pass on a person, likes received, and matches. */
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { absoluteUrl, type Decision, type MatchItem, useDecide, useLikesReceived, useMatches } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { dateInIndia } from "@/i18n/time";
-import { color, radius, size, space } from "@/theme/tokens";
-import { Body, Button, Heading, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { space } from "@/theme/tokens";
+import { Badge, Body, Button, Card, CardTitle, Loading, Notice, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
 
 /** Shown on another member's profile. Decisions are final (no undo). */
 export function DecisionBar({ targetId }: { targetId: string }) {
@@ -77,22 +77,18 @@ export function LikesScreen() {
       <Title>{t.likes.title}</Title>
       {likes.data.length === 0 ? <Body>{t.likes.empty}</Body> : null}
       {likes.data.map((like) => (
-        <Pressable
+        <Card
           key={like.person.user_id}
-          role="button"
-          aria-label={`${t.discover.view}: ${like.person.display_name}, ${like.person.age}`}
+          label={`${t.discover.view}: ${like.person.display_name}, ${like.person.age}`}
           onPress={() => router.push(`/person/${like.person.user_id}`)}
-          style={styles.item}
         >
-          {like.person.photos[0] ? (
-            <Image source={{ uri: absoluteUrl(API_URL, like.person.photos[0].urls.small) }} style={styles.thumb} aria-hidden />
-          ) : null}
-          <View style={styles.grow}>
-            <Heading>{`${like.person.display_name}, ${like.person.age}`}</Heading>
+          {like.person.photos[0] ? <Thumb uri={absoluteUrl(API_URL, like.person.photos[0].urls.small)} /> : null}
+          <Stack>
+            <CardTitle>{`${like.person.display_name}, ${like.person.age}`}</CardTitle>
             {like.about?.prompt_text ? <Body muted>{like.about.prompt_text}</Body> : null}
             {like.comment ? <Body>{fill(t.likes.note, { note: like.comment })}</Body> : null}
-          </View>
-        </Pressable>
+          </Stack>
+        </Card>
       ))}
     </Screen>
   );
@@ -124,28 +120,27 @@ export function MatchesScreen() {
         <Notice kind="info">{`${fill(t.matches.waiting, { n: waiting })}. ${t.matches.waitingHint}`}</Notice>
       ) : null}
       {matches.data.map((m) => {
-        const status = [
-          m.unread > 0 ? fill(t.matches.unread, { n: m.unread }) : null,
-          m.your_turn ? t.matches.yourTurn : null,
-        ].filter(Boolean);
+        const unread = m.unread > 0 ? fill(t.matches.unread, { n: m.unread }) : null;
+        const status = [unread, m.your_turn ? t.matches.yourTurn : null].filter((s): s is string => s !== null);
         const text = preview(m);
         return (
-          <Pressable
+          <Card
             key={m.id}
-            role="button"
-            aria-label={[fill(t.matches.chatWith, { name: `${m.person.display_name}, ${m.person.age}` }), ...status].join(". ")}
+            label={[fill(t.matches.chatWith, { name: `${m.person.display_name}, ${m.person.age}` }), ...status].join(". ")}
             onPress={() => router.push(`/chat/${m.id}`)}
-            style={styles.item}
           >
-            {m.person.photo ? (
-              <Image source={{ uri: absoluteUrl(API_URL, m.person.photo.urls.small) }} style={styles.thumb} aria-hidden />
-            ) : null}
-            <View style={styles.grow}>
-              <Heading>{`${m.person.display_name}, ${m.person.age}`}</Heading>
+            {m.person.photo ? <Thumb uri={absoluteUrl(API_URL, m.person.photo.urls.small)} /> : null}
+            <Stack>
+              <CardTitle>{`${m.person.display_name}, ${m.person.age}`}</CardTitle>
               {text ? <Body>{text}</Body> : <Body muted>{fill(t.matches.since, { date: dateInIndia(m.matched_at) })}</Body>}
-              {status.length > 0 ? <Body muted>{status.join(" · ")}</Body> : null}
-            </View>
-          </Pressable>
+              {status.length > 0 ? (
+                <Row>
+                  {unread ? <Badge label={unread} /> : null}
+                  {m.your_turn ? <Badge label={t.matches.yourTurn} tone="highlight" /> : null}
+                </Row>
+              ) : null}
+            </Stack>
+          </Card>
         );
       })}
     </Screen>
@@ -155,13 +150,4 @@ export function MatchesScreen() {
 const styles = StyleSheet.create({
   bar: { gap: space.md },
   grow: { flex: 1, gap: space.xs },
-  item: {
-    flexDirection: "row",
-    gap: space.md,
-    padding: space.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-  },
-  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
 });

@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import {
   absoluteUrl,
@@ -24,9 +24,9 @@ import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
-import { color, radius, size, space } from "@/theme/tokens";
+import { color, radius, space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
-import { Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Row, Screen, Title } from "@/ui/primitives";
+import { Badge, Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Row, Screen, Thumb, Title } from "@/ui/primitives";
 import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
 const genderOptions = GENDERS.map((g) => ({ value: g, label: t.gender[g] }));
@@ -92,12 +92,14 @@ export function ProfileScreen() {
   );
 }
 
+const PHOTO_TONE = { pending: "neutral", approved: "success", rejected: "danger" } as const;
+
 function ProfileSummary({ profile }: { profile: MyProfile }) {
   const cover = profile.photos[0];
   return (
     <View style={styles.summary}>
       {cover ? (
-        <Image source={{ uri: absoluteUrl(API_URL, cover.urls.small) }} style={styles.thumb} role="img" aria-label={t.photos.coverAlt} />
+        <Thumb uri={absoluteUrl(API_URL, cover.urls.small)} label={t.photos.coverAlt} />
       ) : null}
       <Heading>{`${profile.display_name}, ${profile.age}`}</Heading>
       <Body>{t.intent[profile.intent]}</Body>
@@ -257,10 +259,9 @@ export function PhotosScreen() {
       {list.length === 0 ? <Body>{t.photos.empty}</Body> : null}
       {list.map((photo, index) => (
         <View key={photo.id} style={styles.photoRow}>
-          <Image source={{ uri: absoluteUrl(API_URL, photo.urls.small) }} style={styles.thumb}
-            role="img" aria-label={fill(t.photos.alt, { n: index + 1, total: list.length })} />
+          <Thumb uri={absoluteUrl(API_URL, photo.urls.small)} label={fill(t.photos.alt, { n: index + 1, total: list.length })} />
           <View style={styles.photoActions}>
-            <Body muted>{t.photos[photo.moderation_state]}</Body>
+            <Badge label={t.photos[photo.moderation_state]} tone={PHOTO_TONE[photo.moderation_state]} />
             <Row>
               <Button label={t.photos.moveUp} variant="secondary" disabled={index === 0 || reorder.isPending} onPress={() => move(index, -1)} />
               <Button label={t.photos.moveDown} variant="secondary" disabled={index === list.length - 1 || reorder.isPending} onPress={() => move(index, 1)} />
@@ -316,8 +317,7 @@ export function PrivacyScreen() {
 
 const styles = StyleSheet.create({
   summary: { gap: space.sm },
-  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
-  prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
+  prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
   photoRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
   photoActions: { flex: 1, gap: space.sm },
 });

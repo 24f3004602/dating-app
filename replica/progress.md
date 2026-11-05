@@ -4,11 +4,12 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 12 (privacy) **done for the API and the web build**:
-- 12a passed CI (api run 41968944533, mobile run 41968944600).
-- 12b passed CI (mobile run 41969979059): 89 mobile tests, and all three e2e specs (also 2 local runs), including deleting and keeping an account.
+Stage 13 (design system) **done for the web build**:
+- 103 mobile tests pass, and all four e2e specs passed in each of 2 local runs, including the new gallery spec. CI is pending.
+- The contrast check reports 26 pairs, 0 failing AA.
+- VoiceOver, TalkBack and large system text still need a native device pass.
 
-A native device pass is still pending. Next: stage 13 (design system).
+Next: stage 14 (web: landing page and protected admin console with staff 2FA).
 
 ## Done
 
@@ -20,6 +21,7 @@ A native device pass is still pending. Next: stage 13 (design system).
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 13 | Design system: role tokens checked for contrast and kept equal to `replica/design/tokens.json` by a test; type scale, 48-point targets, web focus rings, distinct pressed and disabled states; Caption, TextLink, Badge, Card, Thumb; the peacock and marigold palette; a `/design` gallery with axe, focus, field and reflow checks; applied across the screens | `replica/design/`, `apps/mobile/src/ui/primitives.tsx` |
 | 12b | Delete-account screen (from the profile in any state and from Privacy), the welcome-screen date, Keep my account on sign-in, Privacy hints that say what visibility and pause do; e2e of delete, keep and delete again | `apps/mobile/src/screens/account.tsx`, `e2e/tests/privacy.spec.ts` |
 | 12a | Account deletion (password, 7-day restore, purge through the database cascade, photo files by a queued job, report hold, banned-email hash), retention sweep (conversations, picks, sessions, codes, unverified sign-ups, reports, records), expired audit records through an owner-rights function, the store review; migration 0009 | `app/modules/privacy/`, `privacy-data-inventory.md` |
 | 11b | Unmatch, Block and Report on chats and profiles (with confirmations), the report form, the Safety screen (blocks, report statuses), removed messages, `match.closed` in the app; e2e report flow | `apps/mobile/src/screens/safety.tsx` |
@@ -32,6 +34,20 @@ A native device pass is still pending. Next: stage 13 (design system).
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 13 status
+
+- **Implemented and tested:** DS-1..3 and E2E-6 in `test-plan.md`; specs in `replica/design/components.md`. Screens behave as before: every earlier test and e2e passes, and only the matches test changed, from one status line to two badges.
+- **Found and fixed:**
+  - Spinners were unnamed progressbars on the web, in every busy button and loading screen (axe on the gallery).
+  - Chrome drew its own dark ring over focused fields; `outline-width: 0` doesn't remove `outline-style: auto` (gallery screenshot).
+  - The berry accent and the danger red were 5 degrees of hue apart, so destructive buttons looked ordinary. The accent is now peacock teal (D089).
+  - Cards (introductions, likes, matches) had headings inside buttons.
+  - iOS doesn't announce live regions, so errors now announce themselves there.
+- **Partial, by design:**
+  - Dark mode is deferred (D088).
+  - No custom font: system fonts cover Devanagari and Gurmukhi.
+  - VoiceOver, TalkBack and 200% system text need the native pass (NAT-1).
 
 ## Stage 12b build log
 
@@ -235,8 +251,14 @@ A native device pass is still pending. Next: stage 13 (design system).
 
 ## Next
 
-Stage 13: an original, accessible mobile design system.
-- **Tokens:** the provisional ones become final, with contrast checked (Replica design skill and its WCAG checker).
-- **Components:** every component with all its states.
-- **Accessibility:** type scale and touch targets; screen-reader labels audited; dark mode if it stays cheap.
-- **Rollout and tests:** applied across the existing screens without changing behaviour; screen tests and axe stay green.
+Stage 14: the web app (Next.js).
+- **Landing page:** responsive, using the design tokens.
+- **Admin console** for the moderation API:
+  - the report queue, report detail and actions;
+  - photo review, account actions and the audit log.
+- **Security:**
+  - Server-side route protection.
+  - Separate staff sessions in an HttpOnly, Secure, `SameSite=Strict` cookie, 12 hours long with a 30-minute idle timeout.
+  - Staff two-factor sign-in (TOTP), required by `/v1/admin` (release blocker D081).
+  - CSRF protection.
+- **Tests:** API tests for staff sessions and 2FA; web e2e with axe.

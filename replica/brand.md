@@ -42,3 +42,10 @@ A check marked "to run" has not been done.
 
 These are screening checks, not legal clearance. A trademark lawyer should
 search before any money is spent on a name.
+
+## Palette (stage 13, D089)
+
+Peacock teal accent with a marigold highlight on warm neutral greys; values and
+contrast in `design/tokens.json`, components in `design/components.md`. The name
+is still uncleared (checks above); the palette doesn't depend on it. Logo brief,
+voice guide and the leftover sweep are still to do (replica-brand).

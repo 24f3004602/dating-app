@@ -14,7 +14,7 @@ import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
 import { useRealtimeStatus } from "@/realtime/RealtimeProvider";
 import { SafetyActions } from "@/screens/safety";
-import { color, font, radius, size, space } from "@/theme/tokens";
+import { color, radius, size, space, type } from "@/theme/tokens";
 import { Body, Button, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
 
 const BODY_MAX = 2000;
@@ -190,7 +190,7 @@ export function ChatScreen({ matchId }: { matchId: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: color.surface },
+  safe: { flex: 1, backgroundColor: color.bg },
   fill: { flex: 1 },
   list: { padding: space.lg, gap: space.md, maxWidth: size.contentMax, width: "100%", alignSelf: "center" },
   messages: { gap: space.md },
@@ -198,13 +198,13 @@ const styles = StyleSheet.create({
   itemMine: { alignSelf: "flex-end", alignItems: "flex-end" },
   itemTheirs: { alignSelf: "flex-start", alignItems: "flex-start" },
   bubble: { paddingVertical: space.sm, paddingHorizontal: space.md, borderRadius: radius.md },
-  mine: { backgroundColor: color.primary },
-  theirs: { backgroundColor: color.surfaceAlt },
-  mineText: { color: color.onPrimary, fontSize: font.body, lineHeight: font.body * 1.4 },
-  theirsText: { color: color.text, fontSize: font.body, lineHeight: font.body * 1.4 },
-  removed: { borderWidth: 1, borderColor: color.border, backgroundColor: color.surface },
-  removedText: { color: color.muted, fontSize: font.body, fontStyle: "italic" },
-  meta: { color: color.muted, fontSize: font.small },
+  mine: { backgroundColor: color.accent, borderBottomRightRadius: radius.sm / 2 },
+  theirs: { backgroundColor: color.surface, borderBottomLeftRadius: radius.sm / 2 },
+  mineText: { color: color.onAccent, ...type.body },
+  theirsText: { color: color.text, ...type.body },
+  removed: { borderWidth: 1, borderColor: color.border, backgroundColor: color.bg },
+  removedText: { color: color.textMuted, ...type.body, fontStyle: "italic" },
+  meta: { color: color.textMuted, ...type.caption },
   retry: { gap: space.sm },
   composer: {
     gap: space.sm,

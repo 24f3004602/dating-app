@@ -49,3 +49,4 @@ Events and group hangouts,social,could,yes,skip,Out of MVP scope; offline operat
 Partner integrations (music; language apps),integrations,could,yes,skip,Their partner deals; not part of the product
 Attribute-based personalized pricing,monetization,could,yes,skip,Will not copy [20]
 API foundation (settings; RFC 9457 errors; request IDs; privacy-safe logs; health and readiness; migrations; CI),platform,must,no,yes,Stage 5 (2026-11-04); tests FND-* in test-plan.md
+"Accessible design system (WCAG AA colours, 48-point targets, focus rings, screen-reader names)",platform,must,no,partial,"Stage 13: tokens checked for contrast (26 pairs, 0 failing AA), components with every state, gallery with axe, focus and reflow checks; web verified, native device pass pending (NAT-1); dark mode deferred (D088)"

@@ -288,7 +288,7 @@ account.
 6. **Stage 10 (messaging):** messages, realtime, unread counts, nudge terms.
 7. **Stage 11 (safety):** blocks, reports, the moderation queue and audit trail.
 8. **Stage 12 (privacy):** privacy preferences, pause, the deletion workflow and retention jobs.
-9. **Stage 13 (mobile polish):** design system and flow integration on the mobile app.
+9. **Stage 13 (mobile polish):** design system and flow integration on the mobile app. Done: tokens and components in `replica/design/` (D088-D089), applied to every screen.
 10. **Stage 14 (web):** the Next.js landing page and admin console, with staff 2FA.
 11. **Stage 15 (audit):** check against `features.csv`; full test runs.
 12. **Stage 16 (optional, gated):** notifications and the single paid plan.

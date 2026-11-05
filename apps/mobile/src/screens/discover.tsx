@@ -3,22 +3,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { z } from "zod";
 
 import { ApiError } from "@/api/client";
-import { absoluteUrl, type Card, type Person, usePerson, usePreferences, useSavePreferences, useToday } from "@/api/hooks";
+import { absoluteUrl, type Card as DailyCard, type Person, usePerson, usePreferences, useSavePreferences, useToday } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
-import { color, radius, size, space } from "@/theme/tokens";
+import { color, radius, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
 import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
-import { Body, Button, ChoiceGroup, Heading, Loading, Notice, Screen, Title } from "@/ui/primitives";
+import { Body, Button, Card, CardTitle, ChoiceGroup, Loading, Notice, Screen, Stack, Thumb, Title } from "@/ui/primitives";
 
-function cardLabel(c: Card): string {
+function cardLabel(c: DailyCard): string {
   return fill(t.discover.card, {
     name: c.display_name,
     age: c.age,
@@ -67,22 +67,14 @@ export function DiscoverScreen() {
       <Title>{t.discover.title}</Title>
       {cards.length === 0 ? <Body>{fill(t.discover.empty, { time: timeInIndia(next_set_at) })}</Body> : null}
       {cards.map((c) => (
-        <Pressable
-          key={c.user_id}
-          role="button"
-          aria-label={`${t.discover.view}: ${cardLabel(c)}`}
-          onPress={() => router.push(`/person/${c.user_id}`)}
-          style={styles.card}
-        >
-          {c.photos[0] ? (
-            <Image source={{ uri: absoluteUrl(API_URL, c.photos[0].urls.small) }} style={styles.cover} aria-hidden />
-          ) : null}
-          <View style={styles.cardText}>
-            <Heading>{`${c.display_name}, ${c.age}`}</Heading>
+        <Card key={c.user_id} label={`${t.discover.view}: ${cardLabel(c)}`} onPress={() => router.push(`/person/${c.user_id}`)}>
+          {c.photos[0] ? <Thumb uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
+          <Stack>
+            <CardTitle>{`${c.display_name}, ${c.age}`}</CardTitle>
             <Body>{t.intent[c.intent]}</Body>
             <Body muted>{`${c.area.name}, ${t.distance[c.distance]}`}</Body>
-          </View>
-        </Pressable>
+          </Stack>
+        </Card>
       ))}
     </Screen>
   );
@@ -212,17 +204,6 @@ export function PreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    gap: space.md,
-    padding: space.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    backgroundColor: color.surface,
-  },
-  cover: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
-  cardText: { flex: 1, gap: space.xs },
-  photo: { width: "100%", aspectRatio: 4 / 5, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
-  prompt: { gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: color.surfaceAlt },
+  photo: { width: "100%", aspectRatio: 4 / 5, borderRadius: radius.md, backgroundColor: color.surface },
+  prompt: { gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
 });

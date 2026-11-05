@@ -100,7 +100,8 @@ test("matches show the last message, unread and your turn, and open the chat", a
   });
   await renderWithApp(<MatchesScreen />, api);
   expect(await screen.findByText("Free on Sunday?")).toBeTruthy();
-  expect(screen.getByText("2 new · Your turn")).toBeTruthy();
+  expect(screen.getByText("2 new")).toBeTruthy(); // badges; the card's name says it all (below)
+  expect(screen.getByText(t.matches.yourTurn)).toBeTruthy();
   expect(screen.getByText("You: Hi!")).toBeTruthy();
   expect(screen.getByText("Matched 2026-11-05")).toBeTruthy(); // 19:00 UTC is the next day in India
   expect(screen.getByText(/^Waiting for your reply: 1\. /)).toBeTruthy();

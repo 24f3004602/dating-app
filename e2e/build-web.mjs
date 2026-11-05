@@ -7,6 +7,6 @@ const result = spawnSync("npx expo export --platform web", {
   cwd: mobile,
   shell: true,
   stdio: "inherit",
-  env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: "http://127.0.0.1:8771" },
+  env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: "http://127.0.0.1:8771", EXPO_PUBLIC_DESIGN_GALLERY: "1" },
 });
 process.exit(result.status ?? 1);

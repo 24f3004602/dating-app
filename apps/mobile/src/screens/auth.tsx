@@ -1,6 +1,6 @@
 /** Sign-up (age gate, consents), email verification, sign-in, password reset. */
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Href, Link, useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
@@ -12,7 +12,7 @@ import { DOCUMENT_VERSIONS } from "@/config";
 import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
-import { Body, Button, Checkbox, FieldError, Notice, Row, Screen, Title } from "@/ui/primitives";
+import { Body, Button, Checkbox, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
 import {
   birthdateIso,
   type CodeValues,
@@ -203,9 +203,7 @@ export function SignInScreen() {
       ) : (
         <Button label={t.signIn.submit} onPress={submit} busy={formState.isSubmitting} />
       )}
-      <Link href={"/reset" as Href} role="link">
-        <Body>{t.signIn.forgot}</Body>
-      </Link>
+      <TextLink label={t.signIn.forgot} href={"/reset" as Href} />
     </Screen>
   );
 }
