@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { BRAND } from "@/lib/config";
 import { requireStaff } from "@/lib/session";
 
 import { signOut } from "./actions";
@@ -18,7 +19,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
         Skip to content
       </a>
       <header className="console-header">
-        <span className="brand">Haanji staff</span>
+        <span className="brand">{BRAND} staff</span>
         <Nav admin={staff.role === "admin"} />
         <form action={signOut}>
           <span className="caption">

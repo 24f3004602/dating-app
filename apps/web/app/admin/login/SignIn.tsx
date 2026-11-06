@@ -14,14 +14,14 @@ function FormError({ message }: { message?: string }) {
 }
 
 /** One form per step; the server decides the next step. Works without client JS too (progressive forms). */
-export function SignIn() {
+export function SignIn({ brand }: { brand: string }) {
   const [step, act, pending] = useActionState<Step, FormData>(signInStep, { stage: "password" });
 
   if (step.stage === "codes") {
     return (
       <section aria-labelledby="codes-title">
         {/* The session cookie refreshes the route, which dropped the page title (axe); React hoists this one. */}
-        <title>Save your recovery codes · Haanji</title>
+        <title>{`Save your recovery codes · ${brand}`}</title>
         <h2 id="codes-title">Save your recovery codes</h2>
         <p>
           If you lose your phone, each of these codes signs you in once instead of an authenticator code. Keep them

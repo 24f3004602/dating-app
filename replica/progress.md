@@ -10,7 +10,8 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 - **18c:** the one-server kit (`infra/beta`) and the `beta-stack` workflow that starts it as the server will.
 - **CI:** api, mobile, images and beta-stack all passed (`deploy.md` steps; test-plan results).
 - **18d:** home mode (D097): the owner runs the beta on their own laptop first, through a Cloudflare Tunnel (no open ports), and moves to Lightsail when load grows. The notice names the hosting.
-- **Next (owner):** a domain on Cloudflare (free) and the tunnel token, the Gmail app password, then start it together (`deploy.md`, "Run it at home first"). Then the Expo account for the APK.
+- **Owner setup, 2026-11-06:** kinaara.online is on Cloudflare (active), the tunnel and its three hostnames exist (each answers Cloudflare's error 1033, "tunnel not connected", until the laptop runs it). `infra/beta/.env` is made on this laptop; the beta shows the name "Kinaara" (`BRAND_NAME`, a working name: the trademark search is still open). The website now reads the name from settings everywhere.
+- **Next:** the owner fills in `.env` (their name, contact, Gmail, tunnel token); then migrate, start, check, first admin, invites (`deploy.md`, "Run it at home first").
 - The launch gates in `deploy.md` (name, lawyer, bucket, stores) still apply to the public launch, not to the beta.
 
 ## Done

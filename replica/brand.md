@@ -39,7 +39,7 @@ A check marked "to run" has not been done.
 | India trademark search (IP India; classes 9, 38, 42, 45) | to run (owner: sign-in needed) | to run (owner) | to run (owner) |
 | WIPO Global Brand Database | to run (owner) | to run (owner) | to run (owner) |
 | US and EU marks (only if expanding) | to run | to run | to run |
-| domains (.in, .com, .app) | run 2026-11-05: all taken | run 2026-11-05: .in and .com taken; .app free | run 2026-11-05: .com taken; **.in and .app free** |
+| domains (.in, .com, .app) | run 2026-11-05: all taken | run 2026-11-05: .in and .com taken; .app free | run 2026-11-05: .com taken; **.in and .app free**. The owner registered **kinaara.online** (Hostinger, 2026-11-05; DNS on Cloudflare 2026-11-06) for the closed beta |
 | App Store and Google Play, exact name | run 2026-11-05: Radio Haanji (both stores) | run 2026-11-05: 3 small apps | run 2026-11-05: none exact; several "Kinara" apps |
 | handles: YouTube | run 2026-11-05: @haanji free | run 2026-11-05: @vaada taken, @vaadaapp free | run 2026-11-05: @kinaara taken, @kinaaraapp free |
 | handles: Instagram, X | to run (owner: sign-in needed) | to run (owner) | to run (owner) |
