@@ -4,7 +4,7 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 19 (motion and visual polish, D098) **built and tested locally; not yet on the live beta** (needs the owner's go to rebuild it).
+Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **Not yet on the live beta**: rebuilding it needs the owner's go.
 - **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.
 - **Website:** a drawn shoreline at dusk behind the landing hero, with a Pause button; the words rise in; feature cards rise in on scroll; feedback on links, buttons and fields.
 - **Rules kept:** everything follows reduce motion; no new libraries; nothing moves more than 5 seconds without a pause; no people or fake activity in visuals.
