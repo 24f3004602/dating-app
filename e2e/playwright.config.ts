@@ -16,6 +16,8 @@ export default defineConfig({
     channel: "chrome", // the installed Chrome: no browser download
     headless: true,
     viewport: { width: 390, height: 844 },
+    // Stage 19: the suite runs still, so no check races an animation; motion.spec.ts turns motion on.
+    reducedMotion: "reduce",
     trace: "retain-on-failure",
   },
   webServer: [

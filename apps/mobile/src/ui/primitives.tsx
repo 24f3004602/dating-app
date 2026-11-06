@@ -6,18 +6,21 @@
  * - On the web, keyboard focus shows a 2-point ring outside the control.
  * - Pressed and disabled states differ by colour, not just opacity.
  * - Only design tokens: no raw colours, sizes or fonts.
+ * - Motion (stage 19, D098) is small and follows reduce motion (ui/motion.tsx):
+ *   buttons and cards press in slightly, notices and badges fade in, photos fade
+ *   in as they load, and screens fade in on the web.
  */
 import { type Href, Link } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
-  Image,
+  Animated,
   Linking,
   Platform,
   Pressable,
   type PressableStateCallbackType,
-  ScrollView,
+  type StyleProp,
   StyleSheet,
   Text,
   TextInput,
@@ -28,7 +31,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { color, focusRing, radius, size, space, touch, type } from "@/theme/tokens";
+import { color, focusRing, motion, radius, size, space, touch, type } from "@/theme/tokens";
+import { FadeImage, Reveal, usePressScale, useScreenEntrance } from "@/ui/motion";
 
 /** React Native Web also reports focus and hover; native platforms report only `pressed`. */
 type PressState = PressableStateCallbackType & { focused?: boolean; hovered?: boolean };
@@ -59,12 +63,19 @@ function useAnnounce(message: ReactNode, active: boolean) {
 }
 
 export function Screen({ children }: { children: ReactNode }) {
+  const entrance = useScreenEntrance();
   return (
     <SafeAreaView style={styles.safe}>
       {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
-      <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled" focusable={Platform.OS === "web"}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.screen}
+        keyboardShouldPersistTaps="handled"
+        focusable={Platform.OS === "web"}
+        style={entrance.style}
+        {...entrance.data}
+      >
         {children}
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -105,31 +116,36 @@ type ButtonProps = {
 
 export function Button({ label, onPress, variant = "primary", disabled, busy, hint }: ButtonProps) {
   const inactive = !!(disabled || busy);
+  const press = usePressScale();
   return (
-    <Pressable
-      role="button"
-      aria-label={label}
-      accessibilityHint={hint}
-      aria-disabled={inactive}
-      aria-busy={!!busy}
-      disabled={inactive}
-      onPress={onPress}
-      style={(state) => [
-        styles.button,
-        styles[variant],
-        state.pressed && pressedButton[variant],
-        disabled && styles.buttonDisabled,
-        focusStyle(state),
-      ]}
-    >
-      {busy ? (
-        // The label stays the accessible name and aria-busy says it's working, so the
-        // spinner is hidden: on the web it is an unnamed progressbar (found by axe).
-        <ActivityIndicator color={variant === "primary" ? color.onAccent : color.accent} aria-hidden />
-      ) : (
-        <Text style={[styles.buttonText, buttonText[variant], disabled && styles.textDisabled]}>{label}</Text>
-      )}
-    </Pressable>
+    <Animated.View style={press.style}>
+      <Pressable
+        role="button"
+        aria-label={label}
+        accessibilityHint={hint}
+        aria-disabled={inactive}
+        aria-busy={!!busy}
+        disabled={inactive}
+        onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={(state) => [
+          styles.button,
+          styles[variant],
+          state.pressed && pressedButton[variant],
+          disabled && styles.buttonDisabled,
+          focusStyle(state),
+        ]}
+      >
+        {busy ? (
+          // The label stays the accessible name and aria-busy says it's working, so the
+          // spinner is hidden: on the web it is an unnamed progressbar (found by axe).
+          <ActivityIndicator color={variant === "primary" ? color.onAccent : color.accent} aria-hidden />
+        ) : (
+          <Text style={[styles.buttonText, buttonText[variant], disabled && styles.textDisabled]}>{label}</Text>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -273,20 +289,24 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
 export function Notice({ kind, children }: { kind: "error" | "info" | "success"; children: ReactNode }) {
   useAnnounce(children, kind === "error");
   return (
-    <View role={kind === "error" ? "alert" : undefined} aria-live="polite" style={[styles.notice, notice[kind]]}>
-      <Text style={styles.body}>{children}</Text>
-    </View>
+    <Reveal duration={motion.duration.fast}>
+      <View role={kind === "error" ? "alert" : undefined} aria-live="polite" style={[styles.notice, notice[kind]]}>
+        <Text style={styles.body}>{children}</Text>
+      </View>
+    </Reveal>
   );
 }
 
 type BadgeTone = "neutral" | "highlight" | "success" | "danger";
 
-/** A short status: "2 new", "Your turn", "Pending review". */
+/** A short status: "2 new", "Your turn", "Pending review". A new status fades in; badges never pulse. */
 export function Badge({ label, tone = "neutral" }: { label: string; tone?: BadgeTone }) {
   return (
-    <View style={[styles.badge, badge[tone]]}>
-      <Text style={styles.badgeText}>{label}</Text>
-    </View>
+    <Reveal key={label} rise={false} duration={motion.duration.fast} style={styles.badgeBox}>
+      <View style={[styles.badge, badge[tone]]}>
+        <Text style={styles.badgeText}>{label}</Text>
+      </View>
+    </Reveal>
   );
 }
 
@@ -295,15 +315,20 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: Badge
  * name; the children are what sighted people see, so they hold no headings.
  */
 export function Card({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
+  const press = usePressScale(0.99);
   return (
-    <Pressable
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      style={(state) => [styles.card, state.pressed && styles.cardPressed, focusStyle(state)]}
-    >
-      {children}
-    </Pressable>
+    <Animated.View style={press.style}>
+      <Pressable
+        role="button"
+        aria-label={label}
+        onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={(state) => [styles.card, state.pressed && styles.cardPressed, focusStyle(state)]}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -311,12 +336,28 @@ export function CardTitle({ children }: { children: ReactNode }) {
   return <Text style={styles.heading}>{children}</Text>;
 }
 
-/** A square photo. Decorative unless it has a label (the card or text beside it names the person). */
+/**
+ * A square photo. Decorative unless it has a label (the card or text beside it
+ * names the person). It fades in as it loads, over its placeholder colour.
+ */
 export function Thumb({ uri, label }: { uri: string; label?: string }) {
-  return label ? (
-    <Image source={{ uri }} style={styles.thumb} role="img" aria-label={label} />
-  ) : (
-    <Image source={{ uri }} style={styles.thumb} aria-hidden />
+  return (
+    <View style={styles.thumb}>
+      {label ? (
+        <FadeImage source={{ uri }} style={styles.fill} role="img" aria-label={label} />
+      ) : (
+        <FadeImage source={{ uri }} style={styles.fill} aria-hidden />
+      )}
+    </View>
+  );
+}
+
+/** A large photo (a person's profile). It fades in over its placeholder colour too. */
+export function Photo({ uri, label, style }: { uri: string; label: string; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.photoBox, style]}>
+      <FadeImage source={{ uri }} style={styles.fill} role="img" aria-label={label} />
+    </View>
   );
 }
 
@@ -418,7 +459,8 @@ const styles = StyleSheet.create({
 
   notice: { padding: space.md, borderRadius: radius.md, borderLeftWidth: 4 },
 
-  badge: { borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: space.xs / 2, alignSelf: "flex-start" },
+  badgeBox: { alignSelf: "flex-start" },
+  badge: { borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: space.xs / 2 },
   badgeText: { ...type.caption, fontWeight: "600", color: color.text },
 
   card: {
@@ -431,7 +473,9 @@ const styles = StyleSheet.create({
     backgroundColor: color.bg,
   },
   cardPressed: { backgroundColor: color.surface },
-  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surface },
+  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surface, overflow: "hidden" },
+  photoBox: { width: "100%", borderRadius: radius.md, backgroundColor: color.surface, overflow: "hidden" },
+  fill: { width: "100%", height: "100%" },
 
   center: { alignItems: "center", justifyContent: "center", gap: space.md, padding: space.xxl },
   row: { flexDirection: "row", gap: space.md, alignItems: "center", flexWrap: "wrap" },

@@ -13,7 +13,15 @@ Rules for all components:
 - **Keyboard focus (web):** a 2-point `focus` ring, 2 points outside the control, so it sits on `bg` or `surface`. Fields show focus with a 2-point accent border instead, and the browser's own ring is turned off.
 - **States:** pressed and disabled differ by colour, never by opacity alone. Selection is never shown by colour alone.
 - **Errors** are announced: `role="alert"` and `aria-live` on the web and Android, plus `AccessibilityInfo.announceForAccessibility` on iOS, which ignores live regions.
-- **No shadows, no motion** for now. If motion is added, it must follow the platform's reduce-motion setting.
+- **No shadows.**
+- **Motion (stage 19, D098)**, from the motion tokens (`fast` 150, `base` 240, `hero` 700, `loop` 2400 ms; easing `standard`, `decelerate`, `sway`, never linear):
+  - **It follows reduce motion** (the phone's setting, or `prefers-reduced-motion`): with it on, everything appears at rest. Until the setting is known, nothing moves.
+  - **Only opacity and transforms move** (native driver on phones).
+  - **One focal animation per view.** Functional screens (forms, chat, safety, the staff console) get feedback only.
+  - **Nothing pulses or nags.** Badges fade in when they change, never loop.
+  - **Nothing moves for more than 5 seconds without a pause control** (WCAG 2.2.2): the rings breathe twice and rest; the landing shoreline has a Pause button.
+  - **Decoration is hidden from screen readers**, and whatever it marks is said in text ("It's a match!" is a notice; the rings only decorate it).
+  - **No people and no pretend app activity** in any visual (CLAUDE.md: never manufacture users or activity).
 - **Light theme only** (dark mode deferred, D088).
 
 ```
@@ -22,6 +30,33 @@ Screen
              padding xl, gap lg, max width 560, centred
   tokens     bg
   a11y       reflows at 320 CSS px with nothing sticking out (e2e)
+
+Motion (apps/mobile/src/ui/motion.tsx, Rings.tsx)
+  Reveal      fades and rises (8 points) into place once, on mount; base duration,
+              decelerate; lists stagger 50 ms per item, at most 6 steps; `appear={false}`
+              for things already on screen (chat history)
+  press       buttons scale to 0.98, cards to 0.99, fast; colours change as before
+  FadeImage   photos (Thumb, Photo) fade in when loaded, over the surface placeholder
+  Screen      fades in (fast) on the web, where screens have no native transition;
+              phones use the platform's transition, none with reduce motion
+  Notice, Badge  fade in (fast); a badge fades again when its text changes
+  Rings       the mark: meet (welcome, once), breathe (an empty introductions day,
+              twice, then rest), join (a match, once, with a marigold glow); aria-hidden
+  web         each animated element says `data-motion="animated" | "still"` (e2e)
+
+Website motion (apps/web/app/globals.css, HeroBackdrop.tsx)
+  landing     a shoreline at dusk behind the hero: three waves sway (sway easing,
+              7-12 s, alternating) and a marigold glow warms and cools; Pause button
+              (aria-pressed); the words rise in once; feature cards rise in as they
+              scroll into view (CSS scroll-driven animations; static elsewhere)
+  video slot  off unless HERO_VIDEO_URL is set (lib/heroVideo.ts): autoplay, muted,
+              loop, playsinline, preload none, started when idle, skipped for reduced
+              motion, data saver, slow connections and small screens without a light
+              file; poster; scrim; the drawn shoreline is the fallback
+  feedback    links, buttons and fields change colour over 150 ms; buttons press to
+              0.98; notices and the 404 page rise in
+  reduced     all of it sits in `prefers-reduced-motion: no-preference`; with reduce,
+              the page is identical and still, and the Pause button is hidden
 
 Title / Heading / Body / Caption
   type       title 28/34 700 (h1, aria-level 1); heading 20/28 600 (aria-level 2);

@@ -12,7 +12,10 @@ import { BETA_DOCUMENTS, DOCUMENT_LINKS, DOCUMENT_VERSIONS, INVITE_ONLY } from "
 import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
+import { motion } from "@/theme/tokens";
+import { Reveal } from "@/ui/motion";
 import { Body, Button, Checkbox, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
+import { Rings } from "@/ui/Rings";
 import {
   birthdateIso,
   type CodeValues,
@@ -26,17 +29,31 @@ import {
   signInSchema,
 } from "@/validation/schemas";
 
+/** The app's first impression (stage 19): the rings meet, then the words and buttons rise into place. */
+const WELCOME_STEP = motion.stagger * 2;
+
 export function WelcomeScreen() {
   const router = useRouter();
   const { deletion } = useAuth();
   return (
     <Screen>
       {deletion ? <Notice kind="info">{deletionNotice(t.account.goodbye, deletion.purgeAfter)}</Notice> : null}
-      <Title>{t.welcome.title}</Title>
-      <Body>{t.welcome.body}</Body>
-      <Button label={t.welcome.signUp} onPress={() => router.push("/sign-up")} />
-      <Button label={t.welcome.signIn} variant="secondary" onPress={() => router.push("/sign-in")} />
-      <Body muted>{t.welcome.adults}</Body>
+      <Rings mode="meet" />
+      <Reveal delay={WELCOME_STEP}>
+        <Title>{t.welcome.title}</Title>
+      </Reveal>
+      <Reveal delay={WELCOME_STEP * 2}>
+        <Body>{t.welcome.body}</Body>
+      </Reveal>
+      <Reveal delay={WELCOME_STEP * 3}>
+        <Button label={t.welcome.signUp} onPress={() => router.push("/sign-up")} />
+      </Reveal>
+      <Reveal delay={WELCOME_STEP * 3}>
+        <Button label={t.welcome.signIn} variant="secondary" onPress={() => router.push("/sign-in")} />
+      </Reveal>
+      <Reveal delay={WELCOME_STEP * 4}>
+        <Body muted>{t.welcome.adults}</Body>
+      </Reveal>
     </Screen>
   );
 }

@@ -4,7 +4,7 @@
  * Run `python3 .claude/skills/replica-design/contrast.py replica/design/tokens.json`
  * for the full report; this test keeps CI honest about both.
  */
-import { color, focusRing, radius, space, touch, type } from "@/theme/tokens";
+import { color, focusRing, motion, radius, space, touch, type } from "@/theme/tokens";
 
 import design from "../../../../replica/design/tokens.json";
 
@@ -16,6 +16,7 @@ type Spec = {
   radius: Record<string, number>;
   touch: { min: number; chip: number };
   focus: { width: number; offset: number };
+  motion: { duration: Record<string, number>; easing: Record<string, number[]>; rise: number; stagger: number };
 };
 const spec = design as unknown as Spec;
 const camel = (name: string) => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -53,6 +54,17 @@ test("the type scale, spacing, radius, touch targets and focus ring match too", 
   expect(radius).toEqual(spec.radius);
   expect(touch).toEqual(spec.touch);
   expect(focusRing).toEqual({ width: spec.focus.width, offset: spec.focus.offset });
+});
+
+test("motion matches too, and no easing is linear", () => {
+  const { _note: _ignored, ...rest } = spec.motion as typeof spec.motion & { _note?: string };
+  expect(motion).toEqual(rest);
+  for (const curve of Object.values(motion.easing)) {
+    expect(curve).toHaveLength(4);
+    expect(curve).not.toEqual([0, 0, 1, 1]); // linear
+  }
+  // Ambient loops stop within 5 seconds (WCAG 2.2.2): the rings breathe twice.
+  expect(motion.duration.loop * 2).toBeLessThan(5000);
 });
 
 test("the checker's arithmetic: known WCAG values", () => {

@@ -18,7 +18,14 @@ export function tokensCss(spec) {
   spec.space.forEach((v, i) => lines.push(`  --space-${i}: ${v / 16}rem;`));
   for (const [name, v] of Object.entries(spec.radius)) lines.push(`  --radius-${name}: ${v}px;`);
   lines.push(`  --touch-min: ${spec.touch.min / 16}rem;`, `  --touch-chip: ${spec.touch.chip / 16}rem;`);
-  lines.push(`  --focus-width: ${spec.focus.width}px;`, `  --focus-offset: ${spec.focus.offset}px;`, "}", "");
+  lines.push(`  --focus-width: ${spec.focus.width}px;`, `  --focus-offset: ${spec.focus.offset}px;`);
+  // Motion (stage 19, D098): durations, easing curves, the rise distance and the list stagger.
+  if (spec.motion) {
+    for (const [name, ms] of Object.entries(spec.motion.duration)) lines.push(`  --motion-${name}: ${ms}ms;`);
+    for (const [name, c] of Object.entries(spec.motion.easing)) lines.push(`  --ease-${name}: cubic-bezier(${c.join(", ")});`);
+    lines.push(`  --motion-rise: ${spec.motion.rise / 16}rem;`, `  --motion-stagger: ${spec.motion.stagger}ms;`);
+  }
+  lines.push("}", "");
   return lines.join("\n");
 }
 

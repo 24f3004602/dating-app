@@ -45,4 +45,18 @@ export const radius = { sm: 6, md: 10, lg: 16, pill: 999 } as const;
 /** 48 points for buttons and fields (Android's guidance; above Apple's 44); chips and links at least 44. */
 export const touch = { min: 48, chip: 44 } as const;
 export const focusRing = { width: 2, offset: 2 } as const;
-export const size = { checkbox: 24, contentMax: 560, thumb: 96, multiline: 96 } as const;
+export const size = { checkbox: 24, contentMax: 560, thumb: 96, multiline: 96, mark: 96 } as const;
+
+/**
+ * Motion (stage 19, D098): milliseconds, and easing as cubic-bezier points (never
+ * linear). fast and base are interface feedback; hero is the first-impression
+ * moments; loop is one cycle of a gentle ambient movement, which stops within
+ * 5 seconds (WCAG 2.2.2). rise is how far things move up as they appear (points).
+ * Every animation follows the reduce-motion setting (ui/motion.tsx).
+ */
+export const motion = {
+  duration: { fast: 150, base: 240, hero: 700, loop: 2400 },
+  easing: { standard: [0.2, 0, 0, 1], decelerate: [0, 0, 0, 1], sway: [0.45, 0, 0.55, 1] },
+  rise: 8,
+  stagger: 50,
+} as const;

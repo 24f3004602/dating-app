@@ -6,7 +6,7 @@ import { connection } from "next/server";
 export default async function NotFound() {
   await connection();
   return (
-    <main className="page narrow">
+    <main className="page narrow fade-in">
       <h1>Page not found</h1>
       <p>There&apos;s nothing at this address.</p>
       <p>

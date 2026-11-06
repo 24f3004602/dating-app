@@ -1,3 +1,5 @@
+import { AccessibilityInfo } from "react-native";
+
 // expo-secure-store has no native module under Jest: keep values in memory.
 jest.mock("expo-secure-store", () => {
   const store = new Map<string, string>();
@@ -13,6 +15,11 @@ jest.mock("expo-secure-store", () => {
 jest.mock("expo-crypto", () => ({
   randomUUID: () => jest.requireActual<{ randomUUID: () => string }>("node:crypto").randomUUID(),
 }));
+
+// Screen tests run with reduce motion on, so everything renders in its final state
+// at once; src/ui/motion.test.tsx turns motion on and checks the animations (stage 19).
+// The preset's AccessibilityInfo stand-in answers "off" by default.
+AccessibilityInfo.isReduceMotionEnabled = jest.fn(async () => true);
 
 // expo-notifications has no native module under Jest: a controllable stand-in (stage 16).
 jest.mock("expo-notifications", () => ({

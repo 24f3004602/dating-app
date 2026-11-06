@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 
 import { ApiError } from "@/api/client";
@@ -16,7 +16,9 @@ import { color, radius, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
 import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
-import { Body, Button, Card, CardTitle, ChoiceGroup, Loading, Notice, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { Reveal, staggered } from "@/ui/motion";
+import { Body, Button, Card, CardTitle, ChoiceGroup, Loading, Notice, Photo, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { Rings } from "@/ui/Rings";
 
 function cardLabel(c: DailyCard): string {
   return fill(t.discover.card, {
@@ -65,16 +67,24 @@ export function DiscoverScreen() {
   return (
     <Screen>
       <Title>{t.discover.title}</Title>
-      {cards.length === 0 ? <Body>{fill(t.discover.empty, { time: timeInIndia(next_set_at) })}</Body> : null}
-      {cards.map((c) => (
-        <Card key={c.user_id} label={`${t.discover.view}: ${cardLabel(c)}`} onPress={() => router.push(`/person/${c.user_id}`)}>
-          {c.photos[0] ? <Thumb uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
-          <Stack>
-            <CardTitle>{`${c.display_name}, ${c.age}`}</CardTitle>
-            <Body>{t.intent[c.intent]}</Body>
-            <Body muted>{`${c.area.name}, ${t.distance[c.distance]}`}</Body>
-          </Stack>
-        </Card>
+      {cards.length === 0 ? (
+        <>
+          {/* The day's quiet moment: the rings breathe twice, then rest (stage 19). */}
+          <Rings mode="breathe" />
+          <Body>{fill(t.discover.empty, { time: timeInIndia(next_set_at) })}</Body>
+        </>
+      ) : null}
+      {cards.map((c, i) => (
+        <Reveal key={c.user_id} delay={staggered(i)}>
+          <Card label={`${t.discover.view}: ${cardLabel(c)}`} onPress={() => router.push(`/person/${c.user_id}`)}>
+            {c.photos[0] ? <Thumb uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
+            <Stack>
+              <CardTitle>{`${c.display_name}, ${c.age}`}</CardTitle>
+              <Body>{t.intent[c.intent]}</Body>
+              <Body muted>{`${c.area.name}, ${t.distance[c.distance]}`}</Body>
+            </Stack>
+          </Card>
+        </Reveal>
       ))}
     </Screen>
   );
@@ -103,12 +113,11 @@ function PersonView({ person }: { person: Person }) {
       <Body>{t.intent[person.intent]}</Body>
       <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>
       {person.photos.map((p, i) => (
-        <Image
+        <Photo
           key={p.id}
-          source={{ uri: absoluteUrl(API_URL, p.urls.large) }}
+          uri={absoluteUrl(API_URL, p.urls.large)}
           style={styles.photo}
-          role="img"
-          aria-label={fill(t.person.photo, { n: i + 1, total: person.photos.length, name: person.display_name })}
+          label={fill(t.person.photo, { n: i + 1, total: person.photos.length, name: person.display_name })}
         />
       ))}
       {person.bio ? <Body>{person.bio}</Body> : null}
@@ -204,6 +213,6 @@ export function PreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  photo: { width: "100%", aspectRatio: 4 / 5, borderRadius: radius.md, backgroundColor: color.surface },
+  photo: { aspectRatio: 4 / 5 },
   prompt: { gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
 });

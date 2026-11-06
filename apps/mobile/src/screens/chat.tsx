@@ -15,6 +15,7 @@ import { timeInIndia } from "@/i18n/time";
 import { useRealtimeStatus } from "@/realtime/RealtimeProvider";
 import { SafetyActions } from "@/screens/safety";
 import { color, radius, size, space, type } from "@/theme/tokens";
+import { Reveal } from "@/ui/motion";
 import { Body, Button, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
 
 const BODY_MAX = 2000;
@@ -22,8 +23,11 @@ const BODY_MAX = 2000;
 /** A message the server hasn't confirmed yet. Retries reuse its ID (idempotent). */
 type Pending = { clientId: string; body: string; failed: boolean };
 
-function Bubble({ mine, body, meta, tip, removed }: { mine: boolean; body: string; meta: string; tip?: boolean; removed?: boolean }) {
+type BubbleProps = { mine: boolean; body: string; meta: string; tip?: boolean; removed?: boolean; appear?: boolean };
+
+function Bubble({ mine, body, meta, tip, removed, appear = false }: BubbleProps) {
   return (
+    <Reveal appear={appear} style={mine ? styles.itemMine : styles.itemTheirs}>
     <View role="listitem" style={[styles.item, mine ? styles.itemMine : styles.itemTheirs]}>
       <View style={[styles.bubble, removed ? styles.removed : mine ? styles.mine : styles.theirs]}>
         <Text style={removed ? styles.removedText : mine ? styles.mineText : styles.theirsText}>
@@ -33,7 +37,25 @@ function Bubble({ mine, body, meta, tip, removed }: { mine: boolean; body: strin
       <Text style={styles.meta}>{meta}</Text>
       {tip ? <Notice kind="info">{t.chat.moneyTip}</Notice> : null}
     </View>
+    </Reveal>
   );
+}
+
+/** A message keeps the ID its sender's app gave it, so "sending" and "sent" are the same bubble. */
+const bubbleKey = (m: Message) => m.client_message_id ?? m.id;
+
+/**
+ * Which messages are new while the conversation is open (stage 19): those slide
+ * in; the history that was already there doesn't. A message keeps its client ID
+ * from "sending" to "sent", so it moves in once, not twice.
+ */
+function useArrivals(loaded: boolean, ids: string[]) {
+  const seen = useRef<Set<string> | null>(null);
+  if (seen.current === null && loaded) seen.current = new Set(ids);
+  useEffect(() => {
+    if (seen.current) for (const id of ids) seen.current.add(id);
+  });
+  return (id: string) => seen.current !== null && !seen.current.has(id);
 }
 
 export function ChatScreen({ matchId }: { matchId: string }) {
@@ -56,6 +78,7 @@ export function ChatScreen({ matchId }: { matchId: string }) {
   const latest = messages.at(-1)?.n;
   const unread = match.data?.unread ?? 0;
   const { mutate: read } = markRead;
+  const isNew = useArrivals(!convo.isPending, [...messages.map(bubbleKey), ...waiting.map((p) => p.clientId)]);
 
   // Seeing the conversation moves my read pointer (the other person isn't told).
   useEffect(() => {
@@ -130,12 +153,13 @@ export function ChatScreen({ matchId }: { matchId: string }) {
           <View role="list" style={styles.messages}>
             {messages.map((m) => (
               <Bubble
-                key={m.id}
+                key={bubbleKey(m)}
                 mine={m.from_me}
                 body={m.body}
                 meta={meta(m)}
                 tip={m.safety_tip === "money"}
                 removed={m.removed}
+                appear={isNew(bubbleKey(m))}
               />
             ))}
             {waiting.map((p) => (
@@ -144,6 +168,7 @@ export function ChatScreen({ matchId }: { matchId: string }) {
                 mine
                 body={p.body}
                 meta={p.failed ? t.chat.notSent : t.chat.sending}
+                appear={isNew(p.clientId)}
               />
             ))}
           </View>

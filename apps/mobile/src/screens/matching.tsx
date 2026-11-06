@@ -9,7 +9,9 @@ import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { dateInIndia } from "@/i18n/time";
 import { space } from "@/theme/tokens";
+import { Reveal, staggered } from "@/ui/motion";
 import { Badge, Body, Button, Card, CardTitle, Loading, Notice, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
+import { Rings } from "@/ui/Rings";
 
 /** Shown on another member's profile. Decisions are final (no undo). */
 export function DecisionBar({ targetId }: { targetId: string }) {
@@ -32,6 +34,8 @@ export function DecisionBar({ targetId }: { targetId: string }) {
     if (result.match) {
       return (
         <View style={styles.bar}>
+          {/* The one celebration (stage 19): the rings join, once. The words say it. */}
+          <Rings mode="join" />
           <Notice kind="success">{t.decide.match}</Notice>
           <Button label={t.decide.toMatches} onPress={() => router.push("/matches")} />
         </View>
@@ -76,19 +80,20 @@ export function LikesScreen() {
     <Screen>
       <Title>{t.likes.title}</Title>
       {likes.data.length === 0 ? <Body>{t.likes.empty}</Body> : null}
-      {likes.data.map((like) => (
-        <Card
-          key={like.person.user_id}
-          label={`${t.discover.view}: ${like.person.display_name}, ${like.person.age}`}
-          onPress={() => router.push(`/person/${like.person.user_id}`)}
-        >
-          {like.person.photos[0] ? <Thumb uri={absoluteUrl(API_URL, like.person.photos[0].urls.small)} /> : null}
-          <Stack>
-            <CardTitle>{`${like.person.display_name}, ${like.person.age}`}</CardTitle>
-            {like.about?.prompt_text ? <Body muted>{like.about.prompt_text}</Body> : null}
-            {like.comment ? <Body>{fill(t.likes.note, { note: like.comment })}</Body> : null}
-          </Stack>
-        </Card>
+      {likes.data.map((like, i) => (
+        <Reveal key={like.person.user_id} delay={staggered(i)}>
+          <Card
+            label={`${t.discover.view}: ${like.person.display_name}, ${like.person.age}`}
+            onPress={() => router.push(`/person/${like.person.user_id}`)}
+          >
+            {like.person.photos[0] ? <Thumb uri={absoluteUrl(API_URL, like.person.photos[0].urls.small)} /> : null}
+            <Stack>
+              <CardTitle>{`${like.person.display_name}, ${like.person.age}`}</CardTitle>
+              {like.about?.prompt_text ? <Body muted>{like.about.prompt_text}</Body> : null}
+              {like.comment ? <Body>{fill(t.likes.note, { note: like.comment })}</Body> : null}
+            </Stack>
+          </Card>
+        </Reveal>
       ))}
     </Screen>
   );
@@ -119,13 +124,13 @@ export function MatchesScreen() {
       {waiting > 0 ? (
         <Notice kind="info">{`${fill(t.matches.waiting, { n: waiting })}. ${t.matches.waitingHint}`}</Notice>
       ) : null}
-      {matches.data.map((m) => {
+      {matches.data.map((m, i) => {
         const unread = m.unread > 0 ? fill(t.matches.unread, { n: m.unread }) : null;
         const status = [unread, m.your_turn ? t.matches.yourTurn : null].filter((s): s is string => s !== null);
         const text = preview(m);
         return (
+          <Reveal key={m.id} delay={staggered(i)}>
           <Card
-            key={m.id}
             label={[fill(t.matches.chatWith, { name: `${m.person.display_name}, ${m.person.age}` }), ...status].join(". ")}
             onPress={() => router.push(`/chat/${m.id}`)}
           >
@@ -141,6 +146,7 @@ export function MatchesScreen() {
               ) : null}
             </Stack>
           </Card>
+          </Reveal>
         );
       })}
     </Screen>

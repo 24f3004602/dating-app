@@ -4,16 +4,18 @@ Updated: 2026-11-05
 
 ## Current phase
 
-Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants a small invite-only user test before any launch or scaling. Their choices (2026-11-05): one Lightsail server in Mumbai, a web link plus an Android app file, Gmail over SMTP for codes.
-- **18a:** SMTP email (TLS required), `APP_ENV=beta`, invite-only sign-up (`datingapp-api invite`); migration 0013.
-- **18b:** the tester notice (`/terms`, `/privacy`), linked at sign-up; the Android beta build settings.
-- **18c:** the one-server kit (`infra/beta`) and the `beta-stack` workflow that starts it as the server will.
-- **CI:** api, mobile, images and beta-stack all passed (`deploy.md` steps; test-plan results).
-- **18d:** home mode (D097): the owner runs the beta on their own laptop first, through a Cloudflare Tunnel (no open ports), and moves to Lightsail when load grows. The notice names the hosting.
-- **Owner setup, 2026-11-06:** kinaara.online is on Cloudflare (active), the tunnel and its three hostnames exist (each answers Cloudflare's error 1033, "tunnel not connected", until the laptop runs it). `infra/beta/.env` is made on this laptop; the beta shows the name "Kinaara" (`BRAND_NAME`, a working name: the trademark search is still open). The website now reads the name from settings everywhere.
-- **Running at home since 2026-11-06** (this laptop, home mode, migration 0013): the tunnel is connected (Cloudflare Delhi), and the live checks passed (BETA-4). Open sign-up is closed: invite-only, no invites yet.
-- **Next:** the Gmail app password in `.env` is 14 characters, not 16 (the owner is re-checking it; code emails fail until then). Then the first admin (the owner), daily backups, and the first testers' invites.
-- The launch gates in `deploy.md` (name, lawyer, bucket, stores) still apply to the public launch, not to the beta.
+Stage 19 (motion and visual polish, D098) **built and tested locally; not yet on the live beta** (needs the owner's go to rebuild it).
+- **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.
+- **Website:** a drawn shoreline at dusk behind the landing hero, with a Pause button; the words rise in; feature cards rise in on scroll; feedback on links, buttons and fields.
+- **Rules kept:** everything follows reduce motion; no new libraries; nothing moves more than 5 seconds without a pause; no people or fake activity in visuals.
+- **Video:** built but off. Cloudflare's free plan doesn't allow serving video from our own server (D098).
+- **Sizes:** app web JS +2 KB gzipped; website JS +12 KB, CSS +3 KB; no video.
+
+**The closed beta (D096, D097)** has been running on this laptop since 2026-11-06.
+- Gmail sending works (the app password was checked against Gmail).
+- The owner has a member account and a separate staff account (`+admin`), made admin through the runbook and audited. The authenticator enrolment is the owner's next step.
+- **This laptop is the live server.** It has 8 GB, and only 0.1-0.7 GB was free during test runs, so the WSL Redis used by tests stopped. Heavy local builds and test runs compete with the beta; prefer CI for them.
+- **Next (owner):** the authenticator, then a go to rebuild the live site with stage 19, daily backups, and the first testers' invites.
 
 ## Done
 
@@ -25,6 +27,7 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 | 4 | Architecture with verified dependency versions; threat model; privacy inventory; planned test cases; staged build plan | `architecture.md`, `security-threat-model.md`, `privacy-data-inventory.md`, `test-plan.md` |
 | — | Owner decisions recorded; histories merged (D030); Replica skills vendored (D031); standing rules in `CLAUDE.md` | `decision-log.md`, `.claude/skills/`, `CLAUDE.md` |
 | 5 | FastAPI app factory, settings, async SQLAlchemy, RFC 9457 errors, request IDs, privacy-safe logs, body limit, `/healthz`, `/readyz`, OpenAPI at `/v1/openapi.json`; Alembic baseline (4 tables, owner and runtime roles); dev seed; CI workflow; 69 tests. CI run 41823765056 passed | `apps/api/`, `.github/workflows/api.yml` |
+| 19 | Motion and visual polish: motion tokens, the app's motion module and ring mark, list staggers, chat arrivals, photo fade-in, the landing shoreline with a pause control, CSS micro-interactions, a dormant video slot with its CSP; everything follows reduce motion; e2e runs still by default plus a motion spec | `apps/mobile/src/ui/motion.tsx`, `apps/mobile/src/ui/Rings.tsx`, `apps/web/app/HeroBackdrop.tsx`, `apps/web/lib/heroVideo.ts`, `replica/design/components.md` |
 | 18d | Home mode: `compose.tunnel.yaml` (Cloudflare Tunnel, no open ports, only the tunnel may name the visitor), the notice's hosting wording, the `home-mode` CI job, the home guide in deploy.md | `infra/beta/compose.tunnel.yaml`, `apps/web/lib/documents.ts` |
 | 18c | One-server kit for the beta: compose (PostgreSQL, Redis, API, worker, web, Caddy with the app's web build), automatic HTTPS, only 80/443 published, secrets made on the server, backups; the app's CSP shared with e2e; the beta-stack CI workflow | `infra/beta/`, `.github/workflows/beta.yml`, deploy.md |
 | 18b | Tester notice (terms and privacy for the beta, website pages, linked at sign-up); Android beta build settings that refuse placeholders; invite-only hint | `apps/web/app/privacy`, `apps/web/app/terms`, `apps/mobile/app.config.ts`, `apps/mobile/eas.json` |
@@ -48,6 +51,20 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 | 7b | Expo SDK 58 app (`apps/mobile`): typed API client from the OpenAPI spec (`packages/api-types`), keystore session, accessible primitives and provisional tokens, 9 screens; web e2e with axe (`e2e/`); CORS allow-list; mobile CI workflow | `apps/mobile/`, `packages/api-types/`, `e2e/`, `.github/workflows/mobile.yml` |
 | 7a | Profiles and media API: areas (seeded, no coordinates out), profile create/replace with prompts, privacy (visibility, pause), the one-per-day area limit, the access policy (404 for anything not allowed), safe photo pipeline, private storage with signed URLs, reorder, delete through a queued job; migration 0004 | `app/modules/profiles/`, `app/modules/media/`, `app/policies/`, `app/providers/storage.py` |
 | 6 | Auth API: register (age gate, NIST passwords, consents), verify email (code + password, D045), resend, login, logout, logout-all, password reset, `/v1/me` with honest labels; Redis rate limits (fail closed); lockout; procrastinate worker with transactional jobs; email, SMS and identity provider interfaces; migrations 0002-0003 | `apps/api/app/modules/auth/`, `app/providers/`, `app/jobs.py`, `app/ratelimit.py` |
+
+## Stage 19 status
+
+- **Implemented and tested:**
+  - MOT-1..8 (app), WEB-6 and VID-1..4 (web), E2E-9..12 (browser).
+  - Mutation checks: ignoring reduce motion, and an endless breathing loop, each fail a test.
+- **Checked by eye:** the screenshots at 390 and 1280 px (landing) and of the welcome screen. The words never sit on the waves.
+- **Found and fixed:**
+  - The landing hero's words needed space reserved below them, so the waves never overlap text at any width.
+  - The website's CSP needed `media-src` before any video could be allowed.
+- **Not done:**
+  - Real video (dormant, D098).
+  - Motion on a physical phone (part of NAT-1).
+  - Updating the live beta (owner's go).
 
 ## Stage 17 status
 
@@ -337,7 +354,8 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
   - PostgreSQL 17.5: a private cluster on port 55432, data in `%LOCALAPPDATA%\datingapp-dev\pg17`. Start it with `pg_ctl -D <dir> -l <dir>\..\pg17.log start` (PostgreSQL 17 `bin`).
   - Redis 7.0.15: in WSL2 on port 6380, `wsl -e redis-server --port 6380 --bind 127.0.0.1 --save '' --appendonly no --daemonize yes`. Neither starts automatically.
 - **Untouched:** the owner's own PostgreSQL 17 and 18 services (5432, 5433).
-- **Not running / not installed:** the Docker daemon, Playwright, and the Android SDK on PATH.
+- **Docker Desktop** now runs the closed beta (home mode, D097). Playwright drives the installed Chrome. The Android SDK is still not on PATH.
+- **Memory:** 8 GB, and the beta, Docker's VM and test runs share it. On 2026-11-06 the WSL distro holding the test Redis stopped starting (`Wsl/Service/WSAETIMEDOUT`) with 0.1 GB free. A throwaway container (`docker run --rm -d --name e2e-test-redis -p 127.0.0.1:6380:6379 redis:7`) served the tests instead.
 - **Tools:** Replica vendored (D031). REA `rea-agents` 6.8.0 is connected; only for our own builds (D005).
 - **GitHub:** repo public (D032). Secret scanning and push protection are enabled. Dependabot alerts are **disabled**.
 

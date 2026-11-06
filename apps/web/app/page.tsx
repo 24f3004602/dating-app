@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { connection } from "next/server";
 
+import { HeroBackdrop } from "@/app/HeroBackdrop";
+import { MotionToggle } from "@/app/MotionToggle";
 import { BRAND } from "@/lib/config";
+import { heroVideoConfig } from "@/lib/heroVideo";
 
 // Every claim here is something the app already does and tests check (features.csv);
 // nothing about members, numbers or reviews, because there are none yet.
@@ -51,31 +54,43 @@ export default async function Landing() {
         <span className="brand">{BRAND}</span>
         <span className="badge highlight">Not open yet</span>
       </header>
-      <main id="main" className="page">
-        <section className="hero" aria-labelledby="hero-title">
-          <h1 id="hero-title">Fewer, better introductions</h1>
-          <p>A short daily set of people who want what you want. No endless swiping.</p>
-          <p className="muted">
-            We&apos;re building and testing for Delhi NCR first. For adults aged 18 and over.
-          </p>
+      <main id="main">
+        {/* The first impression (stage 19, D098): a shoreline at dusk behind the words. */}
+        <section className="hero" id="hero" aria-labelledby="hero-title">
+          <HeroBackdrop video={heroVideoConfig(process.env)} />
+          <div className="page hero-inner">
+            <h1 id="hero-title">Fewer, better introductions</h1>
+            <p>
+              A short daily set of people who want what you want. No endless
+              swiping.
+            </p>
+            <p className="muted">
+              We&apos;re building and testing for Delhi NCR first. For adults
+              aged 18 and over.
+            </p>
+          </div>
+          <MotionToggle target="hero" />
         </section>
-        <section aria-labelledby="how-title">
-          <h2 id="how-title">How it works</h2>
-          <ul className="features">
-            {FEATURES.map((f) => (
-              <li key={f.title}>
-                <h3>{f.title}</h3>
-                <p>{f.body}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <div className="page">
+          <section aria-labelledby="how-title">
+            <h2 id="how-title">How it works</h2>
+            <ul className="features">
+              {FEATURES.map((f) => (
+                <li key={f.title}>
+                  <h3>{f.title}</h3>
+                  <p>{f.body}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </main>
       <footer>
         <p className="caption">
-          {BRAND} is a working name. For the invite-only test: <Link href="/terms">terms for testers</Link> and{" "}
-          <Link href="/privacy">privacy notice for testers</Link>. Full documents will follow before any public
-          launch.
+          {BRAND} is a working name. For the invite-only test:{" "}
+          <Link href="/terms">terms for testers</Link> and{" "}
+          <Link href="/privacy">privacy notice for testers</Link>. Full
+          documents will follow before any public launch.
         </p>
       </footer>
     </>

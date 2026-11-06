@@ -47,4 +47,13 @@
   --touch-chip: 2.75rem;
   --focus-width: 2px;
   --focus-offset: 2px;
+  --motion-fast: 150ms;
+  --motion-base: 240ms;
+  --motion-hero: 700ms;
+  --motion-loop: 2400ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-sway: cubic-bezier(0.45, 0, 0.55, 1);
+  --motion-rise: 0.5rem;
+  --motion-stagger: 50ms;
 }

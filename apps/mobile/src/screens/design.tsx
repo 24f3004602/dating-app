@@ -7,6 +7,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { color, radius, space, type } from "@/theme/tokens";
+import { Reveal, staggered } from "@/ui/motion";
 import {
   Badge,
   Body,
@@ -26,6 +27,7 @@ import {
   TextLink,
   Title,
 } from "@/ui/primitives";
+import { Rings } from "@/ui/Rings";
 
 const SWATCHES = Object.entries(color) as [keyof typeof color, string][];
 const noop = () => undefined;
@@ -35,6 +37,7 @@ export function DesignGallery() {
   const [many, setMany] = useState<("a" | "b" | "c")[]>(["a"]);
   const [checked, setChecked] = useState(true);
   const [text, setText] = useState("");
+  const [replay, setReplay] = useState(0);
 
   return (
     <Screen>
@@ -106,6 +109,31 @@ export function DesignGallery() {
 
       <Heading>Loading</Heading>
       <Loading label="Loading" />
+
+      <Heading>Motion</Heading>
+      <Body muted>
+        Each plays once when it appears; Replay shows it again. With reduce motion on, everything is drawn at rest.
+      </Body>
+      <Button label="Replay" variant="secondary" onPress={() => setReplay((n) => n + 1)} />
+      <View key={replay} style={styles.motion}>
+        <Caption>Meet: the welcome screen</Caption>
+        <Rings mode="meet" />
+        <Caption>Breathe: a day with no new introductions (twice, then rest)</Caption>
+        <Rings mode="breathe" />
+        <Caption>Join: a match</Caption>
+        <Rings mode="join" />
+        <Caption>Reveal: list items rise in, a little apart</Caption>
+        {["First", "Second", "Third"].map((label, i) => (
+          <Reveal key={label} delay={staggered(i)}>
+            <Card label={`Sample card: ${label}`} onPress={noop}>
+              <Stack>
+                <CardTitle>{label}</CardTitle>
+                <Body>Rises into place.</Body>
+              </Stack>
+            </Card>
+          </Reveal>
+        ))}
+      </View>
     </Screen>
   );
 }
@@ -116,4 +144,5 @@ const styles = StyleSheet.create({
   swatch: { width: space.xxl, height: space.xxl, borderRadius: radius.sm, borderWidth: 1, borderColor: color.border },
   sample: { color: color.text },
   thumb: { width: space.xxxl, height: space.xxxl, borderRadius: radius.md, backgroundColor: color.surface },
+  motion: { gap: space.md },
 });
