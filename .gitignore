@@ -64,3 +64,10 @@ dating-app.bundle
 
 # --- e2e run artefacts ---
 e2e/.run/
+
+# Raw videos dropped in the project folder are never committed: stock licences limit
+# redistributing them (stage 19). Web-ready files are added deliberately, by path.
+/*.mp4
+/*.mov
+/*.webm
+/*.mkv
