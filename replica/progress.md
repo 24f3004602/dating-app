@@ -11,7 +11,8 @@ Stage 18 (closed beta, D096) **built and tested; not deployed.** The owner wants
 - **CI:** api, mobile, images and beta-stack all passed (`deploy.md` steps; test-plan results).
 - **18d:** home mode (D097): the owner runs the beta on their own laptop first, through a Cloudflare Tunnel (no open ports), and moves to Lightsail when load grows. The notice names the hosting.
 - **Owner setup, 2026-11-06:** kinaara.online is on Cloudflare (active), the tunnel and its three hostnames exist (each answers Cloudflare's error 1033, "tunnel not connected", until the laptop runs it). `infra/beta/.env` is made on this laptop; the beta shows the name "Kinaara" (`BRAND_NAME`, a working name: the trademark search is still open). The website now reads the name from settings everywhere.
-- **Next:** the owner fills in `.env` (their name, contact, Gmail, tunnel token); then migrate, start, check, first admin, invites (`deploy.md`, "Run it at home first").
+- **Running at home since 2026-11-06** (this laptop, home mode, migration 0013): the tunnel is connected (Cloudflare Delhi), and the live checks passed (BETA-4). Open sign-up is closed: invite-only, no invites yet.
+- **Next:** the Gmail app password in `.env` is 14 characters, not 16 (the owner is re-checking it; code emails fail until then). Then the first admin (the owner), daily backups, and the first testers' invites.
 - The launch gates in `deploy.md` (name, lawyer, bucket, stores) still apply to the public launch, not to the beta.
 
 ## Done
