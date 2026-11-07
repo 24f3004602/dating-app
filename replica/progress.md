@@ -8,7 +8,11 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 - **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.
 - **Website:** a drawn shoreline at dusk behind the landing hero, with a Pause button; the words rise in; feature cards rise in on scroll; feedback on links, buttons and fields.
 - **Rules kept:** everything follows reduce motion; no new libraries; nothing moves more than 5 seconds without a pause; no people or fake activity in visuals.
-- **Video:** built but off. Cloudflare's free plan doesn't allow serving video from our own server (D098).
+- **Video (D099, 2026-11-07):**
+  - **The owner's Canva couple clip was refused:** Canva's licence bars people in promotional material for dating services.
+  - **What's used instead:** a people-free candlelight loop (5.5 s, about 470 KB for every size and format).
+  - **Where:** a story card on the landing page, and full-screen under a dark overlay behind the app's welcome screen. The overlay has new checked tokens.
+  - **Served through Cloudflare** by the owner's explicit choice, despite the CDN terms; it can be switched off (deploy.md).
 - **Sizes:** app web JS +2 KB gzipped; website JS +12 KB, CSS +3 KB; no video.
 
 **The closed beta (D096, D097)** has been running on this laptop since 2026-11-06.

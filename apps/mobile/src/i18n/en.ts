@@ -20,6 +20,7 @@ export const en = {
     signUp: "Create an account",
     signIn: "I already have an account",
     adults: "For adults aged 18 and over.",
+    pauseVideo: "Pause video",
   },
   signUp: {
     title: "Create your account",

@@ -11,7 +11,7 @@
  *   in as they load, and screens fade in on the web.
  */
 import { type Href, Link } from "expo-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -43,8 +43,22 @@ const ring: ViewStyle =
     ? { outlineColor: color.focus, outlineStyle: "solid", outlineWidth: focusRing.width, outlineOffset: focusRing.offset }
     : {};
 
-function focusStyle(state: PressableStateCallbackType): ViewStyle | false {
-  return !!(state as PressState).focused && ring;
+/**
+ * Inside an overlay screen (the welcome screen over its video, stage 19, D099):
+ * text is light and the focus ring is marigold, the pairs checked on the
+ * overlay's brightest point (tokens.json, overlay-floor).
+ */
+const OnOverlay = createContext(false);
+export const useOnOverlay = () => useContext(OnOverlay);
+
+const overlayRing: ViewStyle = Platform.OS === "web" ? { ...ring, outlineColor: color.highlight } : {};
+
+function useRing(): ViewStyle {
+  return useOnOverlay() ? overlayRing : ring;
+}
+
+function focusStyle(state: PressableStateCallbackType, focusRingStyle: ViewStyle = ring): ViewStyle | false {
+  return !!(state as PressState).focused && focusRingStyle;
 }
 
 /**
@@ -62,10 +76,12 @@ function useAnnounce(message: ReactNode, active: boolean) {
   }, [message, active]);
 }
 
-export function Screen({ children }: { children: ReactNode }) {
+/** `overlay`: the screen sits over a dark backdrop (its own background is clear). */
+export function Screen({ children, overlay = false }: { children: ReactNode; overlay?: boolean }) {
   const entrance = useScreenEntrance();
   return (
-    <SafeAreaView style={styles.safe}>
+    <OnOverlay.Provider value={overlay}>
+    <SafeAreaView style={[styles.safe, overlay && styles.clear]}>
       {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
       <Animated.ScrollView
         contentContainerStyle={styles.screen}
@@ -77,12 +93,13 @@ export function Screen({ children }: { children: ReactNode }) {
         {children}
       </Animated.ScrollView>
     </SafeAreaView>
+    </OnOverlay.Provider>
   );
 }
 
 export function Title({ children }: { children: ReactNode }) {
   return (
-    <Text role="heading" aria-level={1} style={styles.title}>
+    <Text role="heading" aria-level={1} style={[styles.title, useOnOverlay() && styles.onOverlay]}>
       {children}
     </Text>
   );
@@ -90,19 +107,20 @@ export function Title({ children }: { children: ReactNode }) {
 
 export function Heading({ children }: { children: ReactNode }) {
   return (
-    <Text role="heading" aria-level={2} style={styles.heading}>
+    <Text role="heading" aria-level={2} style={[styles.heading, useOnOverlay() && styles.onOverlay]}>
       {children}
     </Text>
   );
 }
 
 export function Body({ children, muted }: { children: ReactNode; muted?: boolean }) {
-  return <Text style={[styles.body, muted && styles.muted]}>{children}</Text>;
+  // On the overlay there's no muted grey that keeps its contrast: everything is light.
+  return <Text style={[styles.body, muted && styles.muted, useOnOverlay() && styles.onOverlay]}>{children}</Text>;
 }
 
 /** Small supporting text: times, hints, counts. */
 export function Caption({ children }: { children: ReactNode }) {
-  return <Text style={styles.caption}>{children}</Text>;
+  return <Text style={[styles.caption, useOnOverlay() && styles.onOverlay]}>{children}</Text>;
 }
 
 type ButtonProps = {
@@ -117,6 +135,7 @@ type ButtonProps = {
 export function Button({ label, onPress, variant = "primary", disabled, busy, hint }: ButtonProps) {
   const inactive = !!(disabled || busy);
   const press = usePressScale();
+  const focusRingStyle = useRing();
   return (
     <Animated.View style={press.style}>
       <Pressable
@@ -134,7 +153,7 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
           styles[variant],
           state.pressed && pressedButton[variant],
           disabled && styles.buttonDisabled,
-          focusStyle(state),
+          focusStyle(state, focusRingStyle),
         ]}
       >
         {busy ? (
@@ -151,9 +170,10 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
 
 /** Navigation inside text: a real link on the web, underlined, with a 44-point target. */
 export function TextLink({ label, href }: { label: string; href: Href }) {
+  const focusRingStyle = useRing();
   return (
     <Link href={href} asChild>
-      <Pressable role="link" aria-label={label} style={(state) => [styles.link, focusStyle(state)]}>
+      <Pressable role="link" aria-label={label} style={(state) => [styles.link, focusStyle(state, focusRingStyle)]}>
         {({ pressed }) => <Text style={[styles.linkText, pressed && styles.linkPressed]}>{label}</Text>}
       </Pressable>
     </Link>
@@ -163,9 +183,10 @@ export function TextLink({ label, href }: { label: string; href: Href }) {
 /** A link to a web page outside the app (the documents): the browser opens it,
  *  in a new tab on the web, so a half-filled form isn't lost. */
 export function ExternalLink({ label, url }: { label: string; url: string }) {
+  const focusRingStyle = useRing();
   return (
     <Pressable role="link" aria-label={label} onPress={() => void Linking.openURL(url)}
-      style={(state) => [styles.link, focusStyle(state)]}>
+      style={(state) => [styles.link, focusStyle(state, focusRingStyle)]}>
       {({ pressed }) => <Text style={[styles.linkText, pressed && styles.linkPressed]}>{label}</Text>}
     </Pressable>
   );
@@ -221,6 +242,7 @@ export function FieldError({ message }: { message?: string }) {
 }
 
 export function Checkbox({ label, checked, onChange, error }: { label: string; checked: boolean; onChange: (v: boolean) => void; error?: string }) {
+  const focusRingStyle = useRing();
   return (
     <View style={styles.field}>
       <Pressable
@@ -228,7 +250,7 @@ export function Checkbox({ label, checked, onChange, error }: { label: string; c
         aria-label={label}
         aria-checked={checked}
         onPress={() => onChange(!checked)}
-        style={(state) => [styles.choiceRow, focusStyle(state)]}
+        style={(state) => [styles.choiceRow, focusStyle(state, focusRingStyle)]}
       >
         {({ pressed }) => (
           <>
@@ -251,6 +273,7 @@ type ChoiceProps<T extends string> = {
 } & ({ multiple?: false; value: T | undefined; onChange: (v: T) => void } | { multiple: true; value: T[]; onChange: (v: T[]) => void });
 
 export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
+  const focusRingStyle = useRing();
   const selected = (v: T) => (props.multiple ? props.value.includes(v) : props.value === v);
   const toggle = (v: T) => {
     if (props.multiple) {
@@ -272,7 +295,7 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
               aria-label={o.label}
               aria-checked={on}
               onPress={() => toggle(o.value)}
-              style={(state) => [styles.chip, on && styles.chipOn, state.pressed && !on && styles.chipPressed, focusStyle(state)]}
+              style={(state) => [styles.chip, on && styles.chipOn, state.pressed && !on && styles.chipPressed, focusStyle(state, focusRingStyle)]}
             >
               {/* A tick as well as the fill: the choice isn't shown by colour alone (WCAG 1.4.1). */}
               {on ? <Text style={styles.chipTextOn} aria-hidden>✓</Text> : null}
@@ -316,6 +339,7 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: Badge
  */
 export function Card({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
   const press = usePressScale(0.99);
+  const focusRingStyle = useRing();
   return (
     <Animated.View style={press.style}>
       <Pressable
@@ -324,7 +348,7 @@ export function Card({ label, onPress, children }: { label: string; onPress: () 
         onPress={onPress}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        style={(state) => [styles.card, state.pressed && styles.cardPressed, focusStyle(state)]}
+        style={(state) => [styles.card, state.pressed && styles.cardPressed, focusStyle(state, focusRingStyle)]}
       >
         {children}
       </Pressable>
@@ -381,6 +405,8 @@ export function Stack({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: color.bg },
+  clear: { backgroundColor: "transparent" },
+  onOverlay: { color: color.onAccent },
   screen: { padding: space.xl, gap: space.lg, maxWidth: size.contentMax, width: "100%", alignSelf: "center" },
   title: { ...type.title, color: color.text },
   heading: { ...type.heading, color: color.text },

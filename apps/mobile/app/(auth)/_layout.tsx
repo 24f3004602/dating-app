@@ -8,5 +8,10 @@ export default function AuthLayout() {
   const { status } = useAuth();
   const reduced = useReducedMotion();
   if (status === "signedIn") return <Redirect href="/profile" />;
-  return <Stack screenOptions={{ headerShown: true, title: "", animation: reduced ? "none" : "default" }} />;
+  return (
+    <Stack screenOptions={{ headerShown: true, title: "", animation: reduced ? "none" : "default" }}>
+      {/* The welcome screen fills the screen with its video (stage 19): no empty header bar on top. */}
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
+    </Stack>
+  );
 }

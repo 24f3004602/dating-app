@@ -116,6 +116,11 @@ docker compose up -d && docker compose ps
 - Run `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` daily, by hand or from Windows Task Scheduler.
 - Copy the backups weekly to a drive kept somewhere safe: one computer is one point of failure.
 
+**The background video (D099):** the candlelight loop is served through Cloudflare by the owner's choice, although Cloudflare's CDN terms don't allow video from your own server on the free plan. If Cloudflare objects, or to save bandwidth, switch it off:
+- **Website:** add `HERO_VIDEO=off` to the web service's environment in `compose.yaml`, then `docker compose up -d web`. The still stays.
+- **App:** add `EXPO_PUBLIC_WELCOME_VIDEO=off` to the edge service's build args, then `docker compose build edge && docker compose up -d edge`.
+- **CSP:** after changing `app-csp.txt`, rewrite `APP_CSP` in `.env` the way `make-env.sh` does.
+
 **Moving to a server later:**
 1. Set up the server (steps 1–2 below) and clone the repo.
 2. Copy `.env` across securely, without the two home lines. It holds the database passwords and the app key; the invites and staff authenticators depend on that key.

@@ -15,6 +15,7 @@ import { Animated, Platform, StyleSheet, View } from "react-native";
 
 import { color, motion, size } from "@/theme/tokens";
 import { easing, nativeDriver, useMotionSetting } from "@/ui/motion";
+import { useOnOverlay } from "@/ui/primitives";
 
 export type RingsMode = "meet" | "breathe" | "join";
 
@@ -30,6 +31,8 @@ const height = (mode: RingsMode) => (mode === "join" ? GLOW * 1.1 : D * 1.1);
 
 export function Rings({ mode }: { mode: RingsMode }) {
   const setting = useMotionSetting();
+  // Over the welcome screen's dark overlay, the teal ring would vanish: it turns white.
+  const first = useOnOverlay() ? color.onAccent : color.accent;
   // together: 0 apart, 1 at rest. pulse: 0 to 1 and back (the breath, the glow).
   const together = useRef(new Animated.Value(mode === "breathe" ? 1 : 0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -94,7 +97,7 @@ export function Rings({ mode }: { mode: RingsMode }) {
           ]}
         />
       ) : null}
-      {ring(-1, color.accent)}
+      {ring(-1, first)}
       {ring(1, color.highlight)}
     </View>
   );

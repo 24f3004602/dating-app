@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, View } from "react-native";
 
 import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
@@ -12,10 +13,11 @@ import { BETA_DOCUMENTS, DOCUMENT_LINKS, DOCUMENT_VERSIONS, INVITE_ONLY } from "
 import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
-import { motion } from "@/theme/tokens";
+import { color, motion } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
 import { Body, Button, Checkbox, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
 import { Rings } from "@/ui/Rings";
+import { WelcomeBackdrop } from "@/ui/WelcomeBackdrop";
 import {
   birthdateIso,
   type CodeValues,
@@ -29,14 +31,20 @@ import {
   signInSchema,
 } from "@/validation/schemas";
 
-/** The app's first impression (stage 19): the rings meet, then the words and buttons rise into place. */
+/**
+ * The app's first impression (stage 19, D098-D099): the candlelight loop behind
+ * a dark overlay, then the rings meet and the words and buttons rise into place.
+ */
 const WELCOME_STEP = motion.stagger * 2;
 
 export function WelcomeScreen() {
   const router = useRouter();
   const { deletion } = useAuth();
   return (
-    <Screen>
+    <View style={welcomeStyles.root}>
+      <StatusBar style="light" />
+      <WelcomeBackdrop />
+    <Screen overlay>
       {deletion ? <Notice kind="info">{deletionNotice(t.account.goodbye, deletion.purgeAfter)}</Notice> : null}
       <Rings mode="meet" />
       <Reveal delay={WELCOME_STEP}>
@@ -55,8 +63,11 @@ export function WelcomeScreen() {
         <Body muted>{t.welcome.adults}</Body>
       </Reveal>
     </Screen>
+    </View>
   );
 }
+
+const welcomeStyles = StyleSheet.create({ root: { flex: 1, backgroundColor: color.overlay } });
 
 export function SignUpScreen({ now }: { now?: () => Date }) {
   const { api, setPending } = useAuth();

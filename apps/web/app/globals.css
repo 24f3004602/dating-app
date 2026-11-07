@@ -71,7 +71,16 @@ nav a[aria-current="page"] { background: var(--color-accent-soft); font-weight: 
   /* Room for the waves below the words, so text never sits on them (any width). */
   padding: var(--space-7) 0 clamp(7rem, 16vw, 11rem);
 }
-.hero-inner { padding-top: 0; padding-bottom: 0; }
+.hero-inner { padding-top: 0; padding-bottom: 0; display: grid; gap: var(--space-6); align-items: center; }
+@media (min-width: 48rem) { .hero-inner { grid-template-columns: minmax(0, 1fr) auto; } }
+/* The story card (stage 19, D099): a portrait frame for the candlelight loop. Its box
+   is reserved by aspect-ratio, so the poster and the video never shift the page. */
+.hero-story {
+  position: relative; margin: 0; justify-self: center;
+  width: clamp(12rem, 60vw, 18rem); aspect-ratio: 9 / 16;
+  border-radius: var(--radius-lg); overflow: hidden; background: var(--color-text);
+}
+.hero-story-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .document { max-width: 44rem; }
 .document h2 { margin-top: var(--space-6); }
 .document li { margin-bottom: var(--space-2); }
@@ -112,10 +121,6 @@ th { font-size: var(--type-caption-size); color: var(--color-text-muted); }
   background: radial-gradient(closest-side, var(--color-highlight), transparent);
   opacity: 0.3;
 }
-/* Only when a video is configured and playing (app/HeroVideo.tsx). */
-.hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.scrim { position: absolute; inset: 0; background: linear-gradient(to right, var(--color-bg) 40%, transparent 85%); }
-@media (max-width: 40rem) { .scrim { background: linear-gradient(to bottom, var(--color-bg) 60%, transparent); } }
 
 .motion-toggle {
   position: absolute; right: var(--space-4); bottom: var(--space-3); z-index: 1;
@@ -144,10 +149,11 @@ th { font-size: var(--type-caption-size); color: var(--color-text-muted); }
   .dusk { animation: dusk-glow calc(var(--motion-loop) * 5) var(--ease-sway) infinite alternate both; }
   .hero[data-paused] .wave, .hero[data-paused] .dusk { animation-play-state: paused; }
 
-  /* The hero's words rise into place once, a beat apart. */
-  .hero-inner > * { animation: rise-in var(--motion-hero) var(--ease-decelerate) both; }
-  .hero-inner > :nth-child(2) { animation-delay: calc(var(--motion-stagger) * 2); }
-  .hero-inner > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 4); }
+  /* The hero's words rise into place once, a beat apart, then the story card. */
+  .hero-text > *, .hero-story { animation: rise-in var(--motion-hero) var(--ease-decelerate) both; }
+  .hero-text > :nth-child(2) { animation-delay: calc(var(--motion-stagger) * 2); }
+  .hero-text > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 4); }
+  .hero-story { animation-delay: calc(var(--motion-stagger) * 6); }
 
   /* Feature cards rise in as they scroll into view: CSS only, no script. Browsers
      without scroll-driven animations simply show them. */

@@ -29,7 +29,14 @@ export const color = {
   successSoft: "#e7f3ec",
   /** The keyboard focus ring (web), drawn outside the control over bg or surface. */
   focus: "#2453c4",
+  /** The dark layer over the welcome screen's video (stage 19, D099), at `overlay.opacity`. */
+  overlay: "#1c1b19",
+  /** The brightest the overlay gets (over a white pixel): contrast pairs are checked on it. */
+  overlayFloor: "#605f5e",
 } as const;
+
+/** On the overlay, text is `onAccent` and the focus ring is `highlight` (tokens.json pairs). */
+export const overlay = { opacity: 0.7 } as const;
 
 /** System fonts: no font files to license or download. Line heights scale with the user's text size. */
 export const type = {

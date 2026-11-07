@@ -1,66 +1,70 @@
 /**
- * The landing page's background video (stage 19, D098): off unless configured.
- *
- * While the site is served through Cloudflare's free plan, it must stay off:
- * Cloudflare's terms (Service-Specific Terms, CDN, read 2026-11-06) don't allow
- * serving video through the CDN from your own server without a paid Cloudflare
- * service. Turn it on when the site is served directly (the Lightsail plan,
- * deploy.md), or with video hosted on Cloudflare Stream or R2.
+ * The site's looping background video (stage 19, D098-D099): candlelight, with
+ * no people in it. The source is Pexels clip 6283476, flames only from 6.6 s,
+ * made into a seamless 5.5-second loop by scripts/encode-loop.sh. It plays in
+ * the landing page's story card and, from this site's /media, behind the app's
+ * welcome screen.
  *
  * Settings (the web server's environment):
- *   HERO_VIDEO_URL         the wide video (WebM or MP4), https or a path on this site
- *   HERO_VIDEO_MOBILE_URL  optional, a lighter one for small screens (none: no video there)
- *   HERO_VIDEO_POSTER      optional, the still shown while it loads
+ *   HERO_VIDEO=off   no video (the still posters stay)
+ *   MEDIA_BASE_URL   an https origin (and optional path) serving the same files,
+ *                    e.g. Cloudflare R2; unset: this site's own /media
  *
- * Pure functions with no Next.js imports: the page, the CSP (proxy.ts) and
- * the unit tests (tests/heroVideo.test.mjs) all use them.
+ * Pure functions with no Next.js imports: the page, the CSP (proxy.ts) and the
+ * unit tests (tests/heroVideo.test.mjs) all use them.
  */
 
-export type HeroVideo = {
-  src: string;
-  mobileSrc: string | null;
-  poster: string | null;
-};
+export const LOOP_NAME = "candles-v1";
 
-/** https URLs, or paths on this site; anything else is ignored (never `javascript:` or `http:`). */
-function usable(value: string | undefined): string | null {
+export type VideoSource = { src: string; type: "video/webm" | "video/mp4" };
+export type VideoSet = { poster: string; sources: VideoSource[] };
+export type HeroVideo = { large: VideoSet; small: VideoSet; play: boolean };
+
+/** "" (this site), or an https origin with an optional path; anything else falls back to this site. */
+function mediaBase(value: string | undefined): string {
   const v = value?.trim();
-  if (!v) return null;
-  if (v.startsWith("/") && !v.startsWith("//")) return v;
+  if (!v) return "";
   try {
-    return new URL(v).protocol === "https:" ? v : null;
+    const url = new URL(v);
+    return url.protocol === "https:"
+      ? `${url.origin}${url.pathname.replace(/\/$/, "")}`
+      : "";
   } catch {
-    return null;
+    return "";
   }
+}
+
+function videoSet(base: string, width: 480 | 720): VideoSet {
+  const file = (ext: string) => `${base}/media/${LOOP_NAME}-${width}.${ext}`;
+  // WebM (VP9) first, as it's smaller; MP4 (H.264) for browsers without VP9.
+  return {
+    poster: file("webp"),
+    sources: [
+      { src: file("webm"), type: "video/webm" },
+      { src: file("mp4"), type: "video/mp4" },
+    ],
+  };
 }
 
 export function heroVideoConfig(
   env: Record<string, string | undefined>,
-): HeroVideo | null {
-  const src = usable(env.HERO_VIDEO_URL);
-  if (!src) return null;
+): HeroVideo {
+  const base = mediaBase(env.MEDIA_BASE_URL);
   return {
-    src,
-    mobileSrc: usable(env.HERO_VIDEO_MOBILE_URL),
-    poster: usable(env.HERO_VIDEO_POSTER),
+    large: videoSet(base, 720),
+    small: videoSet(base, 480),
+    play: env.HERO_VIDEO?.trim().toLowerCase() !== "off",
   };
 }
 
-/** The origins the CSP must allow for the video and its poster (paths on this site need none). */
-export function heroVideoOrigins(video: HeroVideo | null): {
+/** The origins the CSP must allow for the video and its posters (this site's own need none). */
+export function heroVideoOrigins(env: Record<string, string | undefined>): {
   media: string[];
   img: string[];
 } {
-  const origin = (u: string | null) =>
-    u && !u.startsWith("/") ? new URL(u).origin : null;
-  const media = [
-    origin(video?.src ?? null),
-    origin(video?.mobileSrc ?? null),
-  ].filter((o): o is string => o !== null);
-  const img = [origin(video?.poster ?? null)].filter(
-    (o): o is string => o !== null,
-  );
-  return { media: [...new Set(media)], img };
+  const base = mediaBase(env.MEDIA_BASE_URL);
+  const origins = base ? [new URL(base).origin] : [];
+  return { media: origins, img: origins };
 }
 
 export type Viewing = {
@@ -76,15 +80,15 @@ export type Viewing = {
 const SLOW = new Set(["slow-2g", "2g", "3g"]);
 
 /**
- * Which file to play, or null for none: the drawn shoreline stays. No video when
- * motion is reduced, the data saver is on, or the connection is slow; small
- * screens only ever get the lighter file.
+ * Which files to play, or null for none (the still poster stays): no video when
+ * it's switched off, motion is reduced, the data saver is on or the connection
+ * is slow; small screens get the lighter files.
  */
 export function chooseHeroVideo(
   video: HeroVideo,
   viewing: Viewing,
-): string | null {
-  if (viewing.reducedMotion || viewing.saveData) return null;
+): VideoSet | null {
+  if (!video.play || viewing.reducedMotion || viewing.saveData) return null;
   if (viewing.effectiveType && SLOW.has(viewing.effectiveType)) return null;
-  return viewing.narrow ? video.mobileSrc : video.src;
+  return viewing.narrow ? video.small : video.large;
 }

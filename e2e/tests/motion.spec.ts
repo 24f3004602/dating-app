@@ -30,6 +30,24 @@ function shown(locator: Locator): Promise<number> {
   });
 }
 
+/** Whether a video element is playing (not paused, and its clock has moved). */
+function playing(video: Locator): Promise<boolean> {
+  return video.evaluate((v: HTMLVideoElement) => !v.paused && v.currentTime > 0);
+}
+
+/** Collects the page's layout shifts from the start (Core Web Vitals CLS), in window.__cls. */
+async function measureLayoutShift(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __cls: number };
+    w.__cls = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
+        if (!entry.hadRecentInput) w.__cls += entry.value;
+      }
+    }).observe({ type: "layout-shift", buffered: true });
+  });
+}
+
 async function fitsEveryWidth(page: Page) {
   for (const width of [320, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -42,28 +60,43 @@ test.describe("with motion", () => {
 
   test("landing: the shoreline sways and can be paused, the words and cards rise in, axe once settled", async ({ page }) => {
     const errors = watchErrors(page);
+    await measureLayoutShift(page);
     await page.goto(`${CONSOLE_URL}/`);
     await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
     await expect.poll(() => running(page, ".wave")).toBe(3);
     expect(await running(page, ".dusk")).toBe(1);
 
-    // WCAG 2.2.2: the moving background can be paused, and started again.
+    // The story card (stage 19, D099): the still first, then the candlelight loop once
+    // the browser is idle. A 390 px screen gets the light files; WebM first, MP4 second.
+    await expect(page.locator(".hero-story img")).toHaveAttribute("alt", "");
+    const video = page.locator(".hero-story video");
+    await expect(video).toHaveCount(1);
+    expect(await video.evaluate((v: HTMLVideoElement) => [v.muted, v.loop, v.autoplay, v.playsInline])).toEqual([true, true, true, true]);
+    expect(await video.locator("source").evaluateAll((list) => list.map((s) => [s.getAttribute("type"), s.getAttribute("src")]))).toEqual([
+      ["video/webm", "/media/candles-v1-480.webm"],
+      ["video/mp4", "/media/candles-v1-480.mp4"],
+    ]);
+    await expect.poll(() => playing(video)).toBe(true);
+    // Nothing moved while the still and then the video arrived (CLS well under 0.1).
+    expect(await page.evaluate(() => (window as unknown as { __cls: number }).__cls)).toBeLessThan(0.05);
+
+    // WCAG 2.2.2: the moving background and the video can be paused, and started again.
     const toggle = page.getByRole("button", { name: "Pause animation" });
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await expect.poll(() => running(page, ".wave, .dusk")).toBe(0);
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect.poll(() => running(page, ".wave")).toBe(3);
+    await expect.poll(() => playing(video)).toBe(true);
 
     // The words end fully shown; so do the feature cards once scrolled to.
-    await expect.poll(() => shown(page.locator(".hero-inner > p").first())).toBe(1);
+    await expect.poll(() => shown(page.locator(".hero-text > p").first())).toBe(1);
     const last = page.locator(".features li").last();
     await last.scrollIntoViewIfNeeded();
     await expect.poll(() => shown(last)).toBeGreaterThan(0.99);
 
-    // No video here: none is configured (and the site is behind Cloudflare's free plan).
-    await expect(page.locator("video")).toHaveCount(0);
     await page.screenshot({ path: "test-results/landing-motion.png", fullPage: true }); // for review
     await checkA11y(page, "landing (motion)");
     await fitsEveryWidth(page);
@@ -72,13 +105,34 @@ test.describe("with motion", () => {
     expect(errors.console).toEqual([]);
   });
 
-  test("app welcome: the rings meet, then the words and buttons rise into place", async ({ page }) => {
+  test("app welcome: the candlelight loop under the overlay, the rings meet, the words rise in", async ({ page }) => {
     const errors = watchErrors(page);
     await page.goto(`${WEB_URL}/welcome`);
     await expect(page.locator('[data-rings="meet"]')).toHaveAttribute("data-motion", "animated");
     const title = page.getByRole("heading", { name: "Fewer, better introductions" });
     await expect.poll(() => shown(title)).toBe(1);
-    await expect.poll(() => shown(page.getByRole("button", { name: "Create an account" }))).toBe(1);
+    const signUp = page.getByRole("button", { name: "Create an account" });
+    await expect.poll(() => shown(signUp)).toBe(1);
+
+    // The loop comes from the website (another origin, allowed by the app's CSP).
+    await expect(page.locator('[data-welcome-video="playing"]')).toBeAttached();
+    const video = page.locator('[data-welcome-video] video');
+    expect(await video.locator("source").first().getAttribute("src")).toBe(`${CONSOLE_URL}/media/candles-v1-480.webm`);
+    await expect.poll(() => playing(video)).toBe(true);
+    // Light words on the dark overlay, and a marigold focus ring there (tokens: overlay-floor pairs).
+    expect(await title.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(255, 255, 255)");
+    await signUp.focus();
+    expect(await signUp.evaluate((el) => [getComputedStyle(el).outlineStyle, getComputedStyle(el).outlineColor])).toEqual([
+      "solid",
+      "rgb(245, 181, 68)",
+    ]);
+    // WCAG 2.2.2: the video can be paused.
+    const pause = page.getByRole("button", { name: "Pause video" });
+    await pause.click();
+    await expect(pause).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+    await pause.click();
+    await expect.poll(() => playing(video)).toBe(true);
     await page.screenshot({ path: "test-results/welcome-motion.png" }); // for review
     await checkA11y(page, "welcome (motion)");
     await fitsEveryWidth(page);
@@ -109,10 +163,18 @@ test.describe("with reduced motion", () => {
     await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
     expect(await page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").length)).toBe(0);
     await expect(page.getByRole("button", { name: "Pause animation" })).toBeHidden(); // nothing to pause
+    // The candlelight still, never the video.
+    await expect(page.locator(".hero-story img")).toBeVisible();
+    await page.waitForTimeout(2500); // longer than the idle wait before a video would start
+    await expect(page.locator("video")).toHaveCount(0);
 
     await page.goto(`${WEB_URL}/welcome`);
     await expect(page.locator('[data-rings="meet"]')).toHaveAttribute("data-motion", "still");
     await expect(page.locator('[data-motion="animated"]')).toHaveCount(0);
     expect(await shown(page.getByRole("heading", { name: "Fewer, better introductions" }))).toBe(1);
+    await expect(page.locator('[data-welcome-video="still"] img')).toBeAttached();
+    await page.waitForTimeout(2500);
+    await expect(page.locator("video")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Pause video" })).toHaveCount(0);
   });
 });

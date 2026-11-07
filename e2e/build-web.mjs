@@ -7,7 +7,14 @@ const result = spawnSync("npx expo export --platform web", {
   cwd: mobile,
   shell: true,
   stdio: "inherit",
-  env: { ...process.env, CI: "1", EXPO_PUBLIC_API_URL: "http://127.0.0.1:8771", EXPO_PUBLIC_DESIGN_GALLERY: "1" },
+  env: {
+    ...process.env,
+    CI: "1",
+    EXPO_PUBLIC_API_URL: "http://127.0.0.1:8771",
+    // The website (next start in the e2e): the documents and the welcome loop's /media.
+    EXPO_PUBLIC_WEB_URL: "http://127.0.0.1:8773",
+    EXPO_PUBLIC_DESIGN_GALLERY: "1",
+  },
 });
 if (result.status !== 0) process.exit(result.status ?? 1);
 

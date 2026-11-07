@@ -15,7 +15,8 @@ if [ -e .env ]; then
   exit 2
 fi
 secret() { openssl rand -hex 32; }
-csp=$(sed -e "s#{API_ORIGIN}#https://api.$domain#g" -e "s#{API_WS_ORIGIN}#wss://api.$domain#g" app-csp.txt)
+csp=$(sed -e "s#{API_ORIGIN}#https://api.$domain#g" -e "s#{API_WS_ORIGIN}#wss://api.$domain#g" \
+  -e "s#{MEDIA_ORIGIN}#https://$domain#g" app-csp.txt)
 
 umask 077
 cat > .env <<EOF

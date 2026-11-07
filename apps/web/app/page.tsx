@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 
 import { HeroBackdrop } from "@/app/HeroBackdrop";
+import { HeroStory } from "@/app/HeroStory";
 import { MotionToggle } from "@/app/MotionToggle";
 import { BRAND } from "@/lib/config";
 import { heroVideoConfig } from "@/lib/heroVideo";
@@ -55,19 +56,23 @@ export default async function Landing() {
         <span className="badge highlight">Not open yet</span>
       </header>
       <main id="main">
-        {/* The first impression (stage 19, D098): a shoreline at dusk behind the words. */}
+        {/* The first impression (stage 19, D098-D099): a shoreline at dusk behind the
+            words, and a candlelight story card beside them (below them on phones). */}
         <section className="hero" id="hero" aria-labelledby="hero-title">
-          <HeroBackdrop video={heroVideoConfig(process.env)} />
+          <HeroBackdrop />
           <div className="page hero-inner">
-            <h1 id="hero-title">Fewer, better introductions</h1>
-            <p>
-              A short daily set of people who want what you want. No endless
-              swiping.
-            </p>
-            <p className="muted">
-              We&apos;re building and testing for Delhi NCR first. For adults
-              aged 18 and over.
-            </p>
+            <div className="hero-text">
+              <h1 id="hero-title">Fewer, better introductions</h1>
+              <p>
+                A short daily set of people who want what you want. No endless
+                swiping.
+              </p>
+              <p className="muted">
+                We&apos;re building and testing for Delhi NCR first. For adults
+                aged 18 and over.
+              </p>
+            </div>
+            <HeroStory video={heroVideoConfig(process.env)} />
           </div>
           <MotionToggle target="hero" />
         </section>

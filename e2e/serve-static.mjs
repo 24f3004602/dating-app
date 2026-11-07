@@ -6,11 +6,14 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 const root = resolve(process.argv[2] ?? "dist");
 const port = Number(process.argv[3] ?? 8772);
 const api = new URL(process.argv[4] ?? "http://127.0.0.1:8771");
+// The website serves the welcome screen's loop video and its still (stage 19, D099).
+const media = new URL(process.argv[5] ?? "http://127.0.0.1:8773");
 // The beta server's policy for the app (infra/beta/app-csp.txt, D096), so the
 // whole e2e suite checks that the app works under it.
 const csp = readFileSync(new URL("../infra/beta/app-csp.txt", import.meta.url), "utf8")
   .trim()
   .replaceAll("{API_ORIGIN}", api.origin)
+  .replaceAll("{MEDIA_ORIGIN}", media.origin)
   .replaceAll("{API_WS_ORIGIN}", `${api.protocol === "https:" ? "wss:" : "ws:"}//${api.host}`);
 const types = {
   ".html": "text/html",

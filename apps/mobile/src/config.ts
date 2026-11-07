@@ -16,6 +16,12 @@ export const BETA_DOCUMENTS = DOCUMENT_VERSIONS.terms.startsWith("beta-");
 export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 export const DOCUMENT_LINKS = { terms: `${WEB_URL}/terms`, privacy: `${WEB_URL}/privacy` };
 
+// The welcome screen's background loop (stage 19, D099) comes from the website's
+// /media, like the landing page's (EXPO_PUBLIC_MEDIA_URL if served elsewhere).
+// EXPO_PUBLIC_WELCOME_VIDEO=off keeps only the still.
+export const MEDIA_URL = (process.env.EXPO_PUBLIC_MEDIA_URL ?? WEB_URL).replace(/\/$/, "");
+export const WELCOME_VIDEO = process.env.EXPO_PUBLIC_WELCOME_VIDEO !== "off";
+
 // Invite-only sign-up (the beta, D096): the verify screen explains a missing code.
 export const INVITE_ONLY = process.env.EXPO_PUBLIC_INVITE_ONLY === "1";
 

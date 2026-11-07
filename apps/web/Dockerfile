@@ -16,8 +16,11 @@ RUN --mount=type=cache,target=/root/.npm npm ci --workspace @datingapp/web --inc
 COPY apps/web apps/web
 COPY replica/design/tokens.json replica/design/tokens.json
 ENV NEXT_TELEMETRY_DISABLED=1 NEXT_OUTPUT=standalone
+# The standalone server serves .next/static and public/ (the loop video, stage 19)
+# only from inside its own folder, so both are copied in.
 RUN npm run build -w @datingapp/web \
- && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+ && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static \
+ && cp -r apps/web/public apps/web/.next/standalone/apps/web/public
 
 FROM node:22-slim
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0

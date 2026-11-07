@@ -41,7 +41,12 @@ Motion (apps/mobile/src/ui/motion.tsx, Rings.tsx)
               phones use the platform's transition, none with reduce motion
   Notice, Badge  fade in (fast); a badge fades again when its text changes
   Rings       the mark: meet (welcome, once), breathe (an empty introductions day,
-              twice, then rest), join (a match, once, with a marigold glow); aria-hidden
+              twice, then rest), join (a match, once, with a marigold glow); aria-hidden;
+              on the overlay the teal ring turns white
+  Welcome     full screen over the candlelight loop (web) or its still (phones), under
+              the overlay (overlay colour at 0.7); text turns on-accent and the focus
+              ring highlight inside `<Screen overlay>`; a Pause video button (web);
+              no header bar; light status bar
   web         each animated element says `data-motion="animated" | "still"` (e2e)
 
 Website motion (apps/web/app/globals.css, HeroBackdrop.tsx)
@@ -49,10 +54,11 @@ Website motion (apps/web/app/globals.css, HeroBackdrop.tsx)
               7-12 s, alternating) and a marigold glow warms and cools; Pause button
               (aria-pressed); the words rise in once; feature cards rise in as they
               scroll into view (CSS scroll-driven animations; static elsewhere)
-  video slot  off unless HERO_VIDEO_URL is set (lib/heroVideo.ts): autoplay, muted,
-              loop, playsinline, preload none, started when idle, skipped for reduced
-              motion, data saver, slow connections and small screens without a light
-              file; poster; scrim; the drawn shoreline is the fallback
+  story card  a portrait frame beside the headline (below it on phones) with the
+              candlelight loop (D099): the WebP still from the first paint (box reserved,
+              no layout shift), the video after the browser is idle; WebM then MP4;
+              light files on small screens; none for reduced motion, data saver, slow
+              connections or HERO_VIDEO=off; the Pause button stops it too
   feedback    links, buttons and fields change colour over 150 ms; buttons press to
               0.98; notices and the 404 page rise in
   reduced     all of it sits in `prefers-reduced-motion: no-preference`; with reduce,

@@ -1,25 +1,17 @@
-import { HeroVideo } from "@/app/HeroVideo";
-import type { HeroVideo as Config } from "@/lib/heroVideo";
-
 /**
  * The landing hero's backdrop (stage 19, D098): a shoreline at dusk, because
  * "Kinaara" means shore. Drawn in code (about 1 KB), so there's nothing to
- * download; three waves sway slowly and a marigold glow warms and cools. No
- * people and no pretend app activity.
+ * download; three waves sway slowly and a marigold glow warms and cools behind
+ * the story card. No people and no pretend app activity.
  *
  * It sits below the words, which never overlap the waves (the hero keeps room
- * for them), so the text keeps its normal contrast. With a video configured,
- * the video plays over the drawing and a scrim keeps the text side readable.
- * Everything here is decoration, hidden from screen readers. The motion lives
- * in globals.css, only for visitors who haven't asked for reduced motion.
+ * for them), so the text keeps its normal contrast. Everything here is
+ * decoration, hidden from screen readers. The motion lives in globals.css, only
+ * for visitors who haven't asked for reduced motion.
  */
-export function HeroBackdrop({ video }: { video: Config | null }) {
+export function HeroBackdrop() {
   return (
-    <div
-      className="hero-backdrop"
-      aria-hidden="true"
-      data-video={video ? "on" : undefined}
-    >
+    <div className="hero-backdrop" aria-hidden="true">
       <div className="dusk" />
       <svg
         className="shore"
@@ -41,7 +33,6 @@ export function HeroBackdrop({ video }: { video: Config | null }) {
           d="M-120 186 C200 150 440 222 720 186 C1000 150 1240 222 1560 186 L1560 240 L-120 240 Z"
         />
       </svg>
-      {video ? <HeroVideo video={video} /> : null}
     </div>
   );
 }

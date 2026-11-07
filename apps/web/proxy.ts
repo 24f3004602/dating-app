@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { heroVideoConfig, heroVideoOrigins } from "@/lib/heroVideo";
+import { heroVideoOrigins } from "@/lib/heroVideo";
 
 /**
  * A strict Content-Security-Policy with a fresh nonce per request (Next.js CSP
@@ -16,8 +16,8 @@ export function proxy(request: NextRequest) {
       process.env.API_URL ??
       "http://127.0.0.1:8000",
   ).origin;
-  // The landing hero's video, only if one is configured (stage 19, D098; off by default).
-  const video = heroVideoOrigins(heroVideoConfig(process.env));
+  // The loop video's origin, when it's served from elsewhere (MEDIA_BASE_URL; stage 19, D099).
+  const video = heroVideoOrigins(process.env);
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
@@ -43,7 +43,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!_next/static|_next/image|favicon.ico).*)",
+      // Static files need no policy of their own: Next's assets, the icon and /media (the loop video).
+      source: "/((?!_next/static|_next/image|favicon.ico|media/).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

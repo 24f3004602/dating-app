@@ -72,6 +72,7 @@ jobs:
           grep -q '<div id="root">' app.html
           grep -qi "^content-security-policy: default-src 'self'; script-src 'self';" app.h
           grep -qi "connect-src 'self' blob: data: https://api.beta.test wss://api.beta.test;" app.h
+          grep -qi "media-src 'self' https://beta.test;" app.h
           grep -qi "^strict-transport-security: max-age=31536000" app.h
           grep -qi "^x-frame-options: DENY" app.h
           if grep -qi "^server:" app.h; then echo "Server header present" && exit 1; fi
@@ -82,6 +83,16 @@ jobs:
           grep -q 'https://api.beta.test' bundle.js
           grep -q 'https://beta.test' bundle.js
           grep -q 'beta-2026-11' bundle.js
+          grep -q 'candles-v1' bundle.js   # the welcome loop
+
+          # The loop video and its stills: served by the website, cached for a year.
+          for f in candles-v1-720.webm candles-v1-720.mp4 candles-v1-480.webm candles-v1-480.mp4 candles-v1-720.webp; do
+            c -sf -D media.h -o /dev/null "https://beta.test/media/$f"
+            grep -qi '^cache-control: public, max-age=31536000, immutable' media.h
+          done
+          c -s -D - -o /dev/null https://beta.test/media/candles-v1-720.webm | grep -qi '^content-type: video/webm'
+          # Ranges, which some browsers need for video.
+          test "$(c -s -o /dev/null -w '%{http_code}' -H 'Range: bytes=0-99' https://beta.test/media/candles-v1-720.mp4)" = 206
 
           c -f https://beta.test/privacy > privacy.html
           grep -q 'Privacy notice for testers' privacy.html
