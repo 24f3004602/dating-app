@@ -3,7 +3,7 @@
 // whenever the visitor's settings or connection say so. (Node strips the types from
 // lib/heroVideo.ts.)
 import assert from "node:assert/strict";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
@@ -61,4 +61,9 @@ test("no video for reduced motion, the data saver or a slow connection; small sc
   assert.equal(chooseHeroVideo(video, { ...roomy, saveData: true }), null);
   for (const slow of ["slow-2g", "2g", "3g"]) assert.equal(chooseHeroVideo(video, { ...roomy, effectiveType: slow }), null);
   assert.equal(chooseHeroVideo(video, { ...roomy, effectiveType: undefined }), video.large);
+});
+
+test("the app's welcome screen plays the same loop (apps/mobile/src/ui/loopVideo.ts)", () => {
+  const app = readFileSync(resolve(import.meta.dirname, "../../mobile/src/ui/loopVideo.ts"), "utf8");
+  assert.ok(app.includes(`export const LOOP_NAME = "${LOOP_NAME}";`), "the app's LOOP_NAME differs from the website's");
 });
