@@ -113,7 +113,8 @@ docker compose up -d && docker compose ps
 - **The token and `.env`** stay on this computer. Never send them in chat.
 
 **3. Then, as on a server:** follow steps 4–7 below (first admin, testers, running it day to day, the APK). Two things differ for backups:
-- Run `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` daily, by hand or from Windows Task Scheduler.
+- Schedule it once: `powershell -NoProfile -ExecutionPolicy Bypass -File infra/beta/schedule-backup.ps1`. That runs `backup.sh` at 03:00 every day (or as soon as the laptop is next on), keeps 7 days in `%USERPROFILE%\datingapp-backups`, logs to `backup.log` there, and runs once straight away. By hand: `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` from Git Bash.
+- Glance at `backup.log` now and then: one line a day, with no `tar:` or `error`.
 - Copy the backups weekly to a drive kept somewhere safe: one computer is one point of failure.
 
 **The background video (D099):** the candlelight loop is served through Cloudflare by the owner's choice, although Cloudflare's CDN terms don't allow video from your own server on the free plan. If Cloudflare objects, or to save bandwidth, switch it off:

@@ -1,10 +1,10 @@
 # Progress
 
-Updated: 2026-11-05
+Updated: 2026-11-08
 
 ## Current phase
 
-Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **Not yet on the live beta**: rebuilding it needs the owner's go.
+Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).
 - **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.
 - **Website:** a drawn shoreline at dusk behind the landing hero, with a Pause button; the words rise in; feature cards rise in on scroll; feedback on links, buttons and fields.
 - **Rules kept:** everything follows reduce motion; no new libraries; nothing moves more than 5 seconds without a pause; no people or fake activity in visuals.
@@ -17,9 +17,11 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 
 **The closed beta (D096, D097)** has been running on this laptop since 2026-11-06.
 - Gmail sending works (the app password was checked against Gmail).
-- The owner has a member account and a separate staff account (`+admin`), made admin through the runbook and audited. The authenticator enrolment is the owner's next step.
+- The owner has a member account and a separate staff account (`+admin`), made admin through the runbook and audited. The staff authenticator is enrolled and has been used to sign in (checked 2026-11-08).
 - **This laptop is the live server.** It has 8 GB, and only 0.1-0.7 GB was free during test runs, so the WSL Redis used by tests stopped. Heavy local builds and test runs compete with the beta; prefer CI for them.
-- **Next (owner):** the authenticator, then a go to rebuild the live site with stage 19, daily backups, and the first testers' invites.
+- **Outage, 2026-11-07 19:10-19:15 IST:** after the laptop restarted, the site returned Cloudflare 530 because Docker Desktop didn't start. Its "Start Docker Desktop when you sign in" setting is off (deploy.md asks for it on). Starting Docker brought every container back healthy. The owner has since turned the setting on (checked 2026-11-08).
+- **Backups (BETA-5, 2026-11-08):** the first backups exist in `%USERPROFILE%\datingapp-backups`, and a restore into a scratch database matched every table's row count. The home run had never saved photos (BUG-003, fixed in `backup.sh`). Photo restore stays untested until there are photos. The owner registered the daily 03:00 task (`infra/beta/schedule-backup.ps1`); its first run (06:01) returned 0 and logged a good backup.
+- **Next (owner):** copy the backups off the laptop weekly; the first testers' invites.
 
 ## Done
 
@@ -66,9 +68,9 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
   - The landing hero's words needed space reserved below them, so the waves never overlap text at any width.
   - The website's CSP needed `media-src` before any video could be allowed.
 - **Not done:**
-  - Real video (dormant, D098).
+  - Real video: done (D099).
   - Motion on a physical phone (part of NAT-1).
-  - Updating the live beta (owner's go).
+  - Updating the live beta: done 2026-11-07.
 
 ## Stage 17 status
 
