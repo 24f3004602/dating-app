@@ -20,7 +20,7 @@ Updated: 2026-11-10
   - **Endpoints:** `POST /v1/waitlist`, `/confirm` and `/leave`, plus a confirmation job, migration 0014 (`waitlist_entries`), three retention rules in the sweep, `SITE_URL`, a counts-only CLI, and a waitlist section in the privacy notice.
   - **Tests:** WL-1..14 pass; the full API suite passes (391); 4 mutation checks were caught; ruff and strict mypy are clean; the OpenAPI types were regenerated (additive only).
   - **Not yet:** CI on a push; the website's form and its confirm and leave pages (20d); the opening email (launch).
-- **20d, the Interchange landing page: built, reviewed (impeccable's finish review gave ship for its scored fixes), DESIGN.md being written (2026-11-10; D103, D104).**
+- **20d, the Interchange landing page: done and tested (2026-11-10; D103, D104).** impeccable's finish review gave ship for its scored fixes; `apps/web/DESIGN.md` and `.impeccable/design.json` record the system; CI is green on `c0fc08c` (e2e 16/16, including the waitlist).
   - **What:**
     - self-hosted Anek (Latin variable 103 KB; Devanagari static 62 KB);
     - a sign band, a tall map on desktop whose line runs unbroken into the stations, and bilingual enamel sign plates;
@@ -28,7 +28,6 @@ Updated: 2026-11-10
     - the waitlist form twice, and the confirm and leave pages; the notice renamed.
   - **Checks:** web `tsc` and 16 Node tests pass; `detect` finds 0 issues on the rendered pages. CI on the first commit passed api, mobile (web build plus every e2e test, including the waitlist spec) and images. beta-stack failed on the old notice title; fixed in `3efa92c`.
   - **Not yet:**
-    - committing the review fixes and DESIGN.md, then CI on them;
     - a native Hindi speaker for every string in `apps/web/scripts/devanagari-text.txt`;
     - the live site (needs a rebuild and the owner's go).
 

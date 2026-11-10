@@ -1,3 +1,45 @@
 {
-  "buildPath": "code"
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "apps/web/.impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-10T13:04:07.023Z",
+        "reason": "Claude, D100-D101: a decision-round sketch of another direction (git-ignored, never shipped); it keeps the fonts of the world it pictured"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "apps/web/.impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-10T13:04:07.634Z",
+        "reason": "Claude, D100-D101: a decision-round sketch of another direction (git-ignored, never shipped); it keeps the fonts of the world it pictured"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "apps/web/.impeccable/mocks/decision/challenger-seven-segment.html"
+        ],
+        "createdAt": "2026-11-10T13:04:08.259Z",
+        "reason": "Claude, D100-D101: a decision-round sketch of another direction (git-ignored, never shipped); it keeps the fonts of the world it pictured"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "apps/web/.impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-10T13:04:08.880Z",
+        "reason": "Claude, D100-D101: a decision-round sketch of another direction (git-ignored, never shipped); it keeps the fonts of the world it pictured"
+      }
+    ]
+  }
 }
