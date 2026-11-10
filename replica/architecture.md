@@ -183,6 +183,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
 | PUT, DELETE /v1/me/push-device; GET, PUT /v1/me/notifications; GET /v1/me/notices; POST /v1/me/notices/{id}/read | this session's phone for pushes; which kinds to push; notices from the team (D093) | M | notifications |
 | GET, POST /v1/me/subscription; POST /v1/me/subscription/cancel; POST /v1/webhooks/razorpay | the plan: status and entitlement; start a Razorpay subscription (website, sandbox); stop renewing; provider webhooks (D094) | M / provider | billing |
+| POST /v1/waitlist; POST /v1/waitlist/confirm; POST /v1/waitlist/leave | join (email, the 18+ answer, the notice version; the same 202 for every address), confirm with the emailed token (once, 7 days), leave with the signed link (always 204; deletes the entry); called by the website's server, which forwards the visitor's IP (D101) | P | waitlist |
 
 **Webhooks in:** `POST /v1/webhooks/razorpay` (stage 16b, sandbox): signature over the raw body, each event ID applied once, stale and unknown events ignored (D094). App Store and Google Play server notifications come with in-app purchase. **Webhooks out:** none.
 
@@ -198,6 +199,7 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | `privacy:remove_old_jobs` | daily 21:15 UTC | finished, failed, cancelled and aborted job rows after 30 days |
 | `notify:send` | on demand | one discreet push to a member's live devices, if they want that kind; arguments are a user ID and a kind (D093) |
 | `notify:check_receipts` | every 15 minutes | push receipts after 15 minutes; dead tokens and checked tickets removed; tickets older than a day removed |
+| `waitlist:send_confirmation` | on demand | makes a fresh confirmation token (only its SHA-256 is stored) and emails the confirm and leave links to `SITE_URL`; the argument is the entry's ID only |
 | `billing:cancel_for_deletion` | on demand | cancels a member's subscription at once when they ask to delete the account; retried while the provider is down |
 
 ## Key mechanisms

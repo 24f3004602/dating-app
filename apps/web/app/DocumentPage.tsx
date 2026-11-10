@@ -34,7 +34,7 @@ export function DocumentPage({
       <main id="main" className="page document">
         <h1>{title}</h1>
         <p className="muted">
-          Version {BETA_VERSION}, {BETA_DATE}. For a small, invite-only test.
+          Version {BETA_VERSION}, {BETA_DATE}. For a small, invite-only test and its waitlist.
           Full documents will follow before any public launch.
         </p>
         {children}
@@ -42,7 +42,7 @@ export function DocumentPage({
       <footer>
         <p className="caption">
           <Link href="/terms">Terms for testers</Link> ·{" "}
-          <Link href="/privacy">Privacy notice for testers</Link>
+          <Link href="/privacy">Privacy notice</Link>
         </p>
       </footer>
     </>

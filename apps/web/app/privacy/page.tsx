@@ -5,13 +5,13 @@ import { Contact, DocumentPage } from "@/app/DocumentPage";
 import { BRAND } from "@/lib/config";
 import { BETA_HOSTING, OPERATOR } from "@/lib/documents";
 
-export const metadata: Metadata = { title: "Privacy notice for testers" };
+export const metadata: Metadata = { title: "Privacy notice" };
 
 // Every statement matches what the app does today (privacy-data-inventory.md, D096).
 export default async function Privacy() {
   await connection(); // rendered per request, so the CSP nonce applies
   return (
-    <DocumentPage title="Privacy notice for testers">
+    <DocumentPage title="Privacy notice">
       <h2>Who we are</h2>
       <p>
         {BRAND} is a dating app in development. This test is run by {OPERATOR},
@@ -55,6 +55,30 @@ export default async function Privacy() {
         range, never where you are. We don&apos;t sell your data or use it for
         ads.
       </p>
+
+      <h2>If you join the waitlist</h2>
+      <ul>
+        <li>
+          <strong>What we keep</strong>: your email address, when you joined and
+          confirmed it, and which version of this notice you saw. You tell us
+          you&apos;re 18 or over; we ask for nothing else.
+        </li>
+        <li>
+          <strong>Why</strong>: to send you a link to confirm the address, and
+          then one email when {BRAND} opens. Nothing else: no newsletters, no
+          ads, and we never share or sell it. Google (Gmail) sends these emails.
+        </li>
+        <li>
+          <strong>How long</strong>: if you don&apos;t confirm, the address is
+          deleted when the link expires, after 7 days. Once confirmed, we keep
+          it until 30 days after the opening email, and never longer than a
+          year.
+        </li>
+        <li>
+          <strong>Leaving</strong>: every waitlist email has a link that deletes
+          your address at once. You can also write to <Contact />.
+        </li>
+      </ul>
 
       <h2>Who can see what</h2>
       <ul>

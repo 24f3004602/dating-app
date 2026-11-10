@@ -17,6 +17,9 @@ export const PHOTO = resolve(RUN_DIR, "photo-with-gps.jpg");
 // earlier runs' members never crowd today's introductions, and the
 // developer's database is left alone.
 export const E2E_DATABASE = "datingapp_e2e_test";
+// The privacy notice version the API expects in this run, and the one the website's
+// waitlist form sends (D101): the app's sign-up uses the same default.
+export const E2E_PRIVACY_VERSION = "draft-2026-11";
 
 function dotenv(path: string): Record<string, string> {
   if (!existsSync(path)) return {};
@@ -50,6 +53,7 @@ export function apiEnv(runId: string): Record<string, string> {
   return {
     ...databaseEnv(),
     CORS_ORIGINS: JSON.stringify([WEB_URL]),
+    PRIVACY_VERSION: E2E_PRIVACY_VERSION,
     RATE_LIMIT_PREFIX: `rl-e2e-${runId}`,
     EMAIL_BACKEND: "console",
     STORAGE_BACKEND: "local",

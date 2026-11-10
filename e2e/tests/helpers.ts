@@ -21,6 +21,19 @@ export async function codeFromWorkerMail(email: string, kind: "sign-up" | "reset
   throw new Error(`no code mailed to ${email}`);
 }
 
+/** The path of the confirm or leave link in the latest waitlist email to `email` (D101). */
+export async function waitlistLinkFromWorkerMail(email: string, kind: "confirm" | "leave"): Promise<string> {
+  const pattern = new RegExp(`(/waitlist/${kind}[?]t=[A-Za-z0-9_.-]+)`);
+  for (let i = 0; i < 80; i++) {
+    const log = readFileSync(WORKER_LOG, "utf8");
+    const block = log.split("----- DEV EMAIL (not sent) -----").reverse().find((b) => b.includes(`To: ${email}`));
+    const path = block?.match(pattern)?.[1];
+    if (path) return path;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`no waitlist ${kind} link mailed to ${email}`);
+}
+
 /** Serious and critical WCAG A/AA issues fail the test. */
 export async function checkA11y(page: Page, screen: string) {
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();

@@ -30,7 +30,8 @@ test("the landing page says only what the app does", async ({ page }) => {
   const res = await page.goto("/");
   await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
   await expect(page.getByText("Not open yet")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "The same likes for everyone" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ten likes a day, for everyone" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Join the waitlist" })).toHaveCount(2); // first screen and last stop
   const csp = res?.headers()["content-security-policy"] ?? "";
   expect(csp).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
   expect(csp).toContain("frame-ancestors 'none'");
@@ -46,8 +47,8 @@ test("the landing page says only what the app does", async ({ page }) => {
 test("the tester notice pages are linked, readable and accessible", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/");
-  await page.getByRole("link", { name: "privacy notice for testers" }).click();
-  await expect(page.getByRole("heading", { name: "Privacy notice for testers", level: 1 })).toBeVisible();
+  await page.getByRole("link", { name: "privacy notice", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
   await expect(page.getByText(/Version beta-2026-11/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
   await checkA11y(page, "privacy");

@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 
 /**
- * Pauses the landing hero's moving background, and its video if there is one
- * (stage 19, D098). The shoreline keeps moving for more than 5 seconds, so it
+ * Pauses the motion inside `target`: its CSS animations and any video (stage 19,
+ * D098; the landing's candlelight loop since stage 20d). The shoreline keeps moving for more than 5 seconds, so it
  * needs a way to stop it (WCAG 2.2.2 Pause, Stop, Hide). Hidden when the
  * visitor asks for reduced motion: then nothing moves at all.
  */
-export function MotionToggle({ target }: { target: string }) {
+export function MotionToggle({ target, label = "Pause animation" }: { target: string; label?: string }) {
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function MotionToggle({ target }: { target: string }) {
       aria-pressed={paused}
       onClick={() => setPaused((p) => !p)}
     >
-      Pause animation
+      {label}
     </button>
   );
 }

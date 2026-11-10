@@ -65,14 +65,6 @@ nav ul { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; 
 nav a { display: inline-flex; align-items: center; min-height: var(--touch-chip); padding: 0 var(--space-3); border-radius: var(--radius-md); }
 nav a[aria-current="page"] { background: var(--color-accent-soft); font-weight: 600; }
 
-/* The landing hero spans the page; its words sit in a .page column above the shoreline. */
-.hero {
-  position: relative; isolation: isolate; overflow: hidden;
-  /* Room for the waves below the words, so text never sits on them (any width). */
-  padding: var(--space-7) 0 clamp(7rem, 16vw, 11rem);
-}
-.hero-inner { padding-top: 0; padding-bottom: 0; display: grid; gap: var(--space-6); align-items: center; }
-@media (min-width: 48rem) { .hero-inner { grid-template-columns: minmax(0, 1fr) auto; } }
 /* The story card (stage 19, D099): a portrait frame for the candlelight loop. Its box
    is reserved by aspect-ratio, so the poster and the video never shift the page. */
 .hero-story {
@@ -84,11 +76,6 @@ nav a[aria-current="page"] { background: var(--color-accent-soft); font-weight: 
 .document { max-width: 44rem; }
 .document h2 { margin-top: var(--space-6); }
 .document li { margin-bottom: var(--space-2); }
-.hero p { font-size: 1.25rem; max-width: 40rem; }
-.features { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); padding: 0; list-style: none; }
-.features li { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-5); }
-.features h3 { margin: 0 0 var(--space-2); font-size: var(--type-label-size); }
-.features p { margin: 0; }
 footer { border-top: 1px solid var(--color-border); margin-top: var(--space-7); padding: var(--space-5); }
 
 table { width: 100%; border-collapse: collapse; }
@@ -102,26 +89,11 @@ th { font-size: var(--type-caption-size); color: var(--color-text-muted); }
 .inline-form .field { margin-bottom: 0; flex: 1 1 12rem; }
 @media (max-width: 40rem) { .codes { columns: 1; } table { font-size: var(--type-caption-size); } }
 
-/* --- Motion (stage 19, D098) ---------------------------------------------------
-   Built from the motion tokens (tokens.css). Only opacity and transforms move,
-   with easing, never linear. All of it sits in the no-preference block below, so
-   visitors who ask for reduced motion get the same page, still. The shoreline
-   keeps moving for more than 5 seconds, so it has a pause button (WCAG 2.2.2). */
-
-.hero-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.shore { position: absolute; left: 0; bottom: 0; width: 100%; height: clamp(6rem, 15vw, 10rem); }
-.wave { fill: var(--color-accent); }
-.wave-back { fill: var(--color-accent-soft); }
-.wave-mid { fill-opacity: 0.16; }
-.wave-front { fill-opacity: 0.28; }
-/* A warm dusk glow behind the words: text on it keeps at least 4.5:1 (marigold at a third on white). */
-.dusk {
-  position: absolute; top: -12%; right: -6%;
-  width: clamp(14rem, 42vw, 30rem); aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(closest-side, var(--color-highlight), transparent);
-  opacity: 0.3;
-}
-
+/* --- Motion (stage 19, D098; the shoreline went with stage 20d) ------------------
+   Built from the motion tokens (tokens.css). Only opacity and transforms move, with
+   easing. All of it sits in the no-preference block below, so visitors who ask for
+   reduced motion get the same page, still. The landing's own motion is in
+   landing.module.css. */
 .motion-toggle {
   position: absolute; right: var(--space-4); bottom: var(--space-3); z-index: 1;
   min-height: var(--touch-chip); padding: 0 var(--space-3);
@@ -130,40 +102,9 @@ th { font-size: var(--type-caption-size); color: var(--color-text-muted); }
   font: inherit; font-size: var(--type-caption-size); cursor: pointer;
 }
 .motion-toggle[aria-pressed="true"] { background: var(--color-accent-soft); }
-
 @keyframes rise-in { from { opacity: 0; transform: translateY(var(--motion-rise)); } }
-@keyframes shore-sway {
-  from { transform: translateX(-24px) translateY(2px); }
-  to { transform: translateX(24px) translateY(-2px); }
-}
-@keyframes dusk-glow {
-  from { opacity: 0.22; transform: scale(1); }
-  to { opacity: 0.36; transform: scale(1.06); }
-}
 
 @media (prefers-reduced-motion: no-preference) {
-  /* The shoreline: three waves at different speeds, swaying back and forth. */
-  .wave { animation: shore-sway calc(var(--motion-loop) * 4) var(--ease-sway) infinite alternate both; }
-  .wave-back { animation-duration: calc(var(--motion-loop) * 5); animation-delay: calc(var(--motion-loop) * -2); }
-  .wave-front { animation-duration: calc(var(--motion-loop) * 3); animation-delay: calc(var(--motion-loop) * -1); }
-  .dusk { animation: dusk-glow calc(var(--motion-loop) * 5) var(--ease-sway) infinite alternate both; }
-  .hero[data-paused] .wave, .hero[data-paused] .dusk { animation-play-state: paused; }
-
-  /* The hero's words rise into place once, a beat apart, then the story card. */
-  .hero-text > *, .hero-story { animation: rise-in var(--motion-hero) var(--ease-decelerate) both; }
-  .hero-text > :nth-child(2) { animation-delay: calc(var(--motion-stagger) * 2); }
-  .hero-text > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 4); }
-  .hero-story { animation-delay: calc(var(--motion-stagger) * 6); }
-
-  /* Feature cards rise in as they scroll into view: CSS only, no script. Browsers
-     without scroll-driven animations simply show them. */
-  @supports (animation-timeline: view()) {
-    .features li {
-      animation: rise-in var(--ease-decelerate) both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 30%;
-    }
-  }
 
   /* Messages that appear after an action, and a page that loads on its own (404). */
   .notice, .fade-in { animation: rise-in var(--motion-base) var(--ease-decelerate) both; }

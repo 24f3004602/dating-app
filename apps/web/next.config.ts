@@ -34,6 +34,16 @@ const nextConfig: NextConfig = {
         source: "/admin/:path*",
         headers: [{ key: "Cache-Control", value: "no-store" }],
       },
+      // Waitlist links carry a single-use token in the address (D102): never cached.
+      {
+        source: "/waitlist/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
+      // The self-hosted fonts (stage 20d, D101): versioned names (anek-latin-v1...).
+      {
+        source: "/fonts/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       // The loop video and its posters (stage 19, D099): versioned file names
       // (candles-v1-...), so browsers and Cloudflare may keep them for a year.
       {

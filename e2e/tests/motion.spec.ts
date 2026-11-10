@@ -58,16 +58,24 @@ async function fitsEveryWidth(page: Page) {
 test.describe("with motion", () => {
   test.use({ reducedMotion: "no-preference" });
 
-  test("landing: the shoreline sways and can be paused, the words and cards rise in, axe once settled", async ({ page }) => {
+  test("landing: the line draws as you travel down it, the loop at its end can be paused, axe once settled", async ({ page }) => {
     const errors = watchErrors(page);
     await measureLayoutShift(page);
     await page.goto(`${CONSOLE_URL}/`);
     await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
-    await expect.poll(() => running(page, ".wave")).toBe(3);
-    expect(await running(page, ".dusk")).toBe(1);
 
-    // The story card (stage 19, D099): the still first, then the candlelight loop once
-    // the browser is idle. A 390 px screen gets the light files; WebM first, MP4 second.
+    // The signature (D101): each station's rail draws as it scrolls into view, driven
+    // by scrolling alone (no script). Before the visitor gets there it isn't drawn.
+    const end = page.locator("#destination");
+    const drawn = () => end.evaluate((el) => new DOMMatrix(getComputedStyle(el, "::before").transform).d);
+    expect(await drawn()).toBeLessThan(0.5);
+    await end.evaluate((el) => el.scrollIntoView({ block: "start" }));
+    await expect.poll(drawn).toBeGreaterThan(0.99);
+    // Every word was on the page all along: only the rails move.
+    expect(await shown(end.getByRole("heading", { name: "Then, a conversation" }))).toBe(1);
+
+    // The candlelight loop at the end of the line (D099): the still first, then the
+    // loop once the browser is idle; a 390 px screen gets the light files.
     await expect(page.locator(".hero-story img")).toHaveAttribute("alt", "");
     const video = page.locator(".hero-story video");
     await expect(video).toHaveCount(1);
@@ -77,25 +85,17 @@ test.describe("with motion", () => {
       ["video/mp4", "/media/candles-v1-480.mp4"],
     ]);
     await expect.poll(() => playing(video)).toBe(true);
-    // Nothing moved while the still and then the video arrived (CLS well under 0.1).
+    // Nothing moved while the fonts, the still and then the video arrived.
     expect(await page.evaluate(() => (window as unknown as { __cls: number }).__cls)).toBeLessThan(0.05);
 
-    // WCAG 2.2.2: the moving background and the video can be paused, and started again.
-    const toggle = page.getByRole("button", { name: "Pause animation" });
+    // WCAG 2.2.2: the loop can be paused, and started again.
+    const toggle = page.getByRole("button", { name: "Pause video" });
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await expect.poll(() => running(page, ".wave, .dusk")).toBe(0);
     await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
-    await expect.poll(() => running(page, ".wave")).toBe(3);
     await expect.poll(() => playing(video)).toBe(true);
-
-    // The words end fully shown; so do the feature cards once scrolled to.
-    await expect.poll(() => shown(page.locator(".hero-text > p").first())).toBe(1);
-    const last = page.locator(".features li").last();
-    await last.scrollIntoViewIfNeeded();
-    await expect.poll(() => shown(last)).toBeGreaterThan(0.99);
 
     await page.screenshot({ path: "test-results/landing-motion.png", fullPage: true }); // for review
     await checkA11y(page, "landing (motion)");
@@ -162,7 +162,9 @@ test.describe("with reduced motion", () => {
     await page.goto(`${CONSOLE_URL}/`);
     await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
     expect(await page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").length)).toBe(0);
-    await expect(page.getByRole("button", { name: "Pause animation" })).toBeHidden(); // nothing to pause
+    await expect(page.getByRole("button", { name: "Pause video" })).toBeHidden(); // nothing to pause
+    // The line is simply drawn: no scroll-driven rails either.
+    expect(await page.locator("#destination").evaluate((el) => new DOMMatrix(getComputedStyle(el, "::before").transform).d)).toBe(1);
     // The candlelight still, never the video.
     await expect(page.locator(".hero-story img")).toBeVisible();
     await page.waitForTimeout(2500); // longer than the idle wait before a video would start

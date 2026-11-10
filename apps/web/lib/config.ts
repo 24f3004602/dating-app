@@ -8,6 +8,9 @@ import "server-only";
 export const API_URL = (process.env.API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 export const API_PUBLIC_URL = (process.env.API_PUBLIC_URL ?? API_URL).replace(/\/$/, "");
 export const BRAND = process.env.BRAND_NAME ?? "Haanji";
+// The name in Devanagari, shown beside the Latin one when set (D101). Its letters must
+// be in scripts/devanagari-text.txt (the font is subset to that text).
+export const BRAND_DEVANAGARI = process.env.BRAND_NAME_DEVANAGARI?.trim() || null;
 
 // `__Host-` cookies are Secure, Path=/ and host-only: no subdomain can set or read them.
 export const STAFF_COOKIE = "__Host-staff";

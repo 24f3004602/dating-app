@@ -13,7 +13,7 @@ export default async function Terms() {
     <DocumentPage title="Terms for testers">
       <p>
         Thanks for helping us test {BRAND}. By creating an account you agree to
-        these terms. Our <Link href="/privacy">privacy notice for testers</Link>{" "}
+        these terms. Our <Link href="/privacy">privacy notice</Link>{" "}
         explains what happens to your data.
       </p>
 

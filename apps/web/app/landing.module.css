@@ -1,0 +1,286 @@
+/* The Interchange (stage 20d, D101): Delhi Metro-style wayfinding in our own colours.
+   Your line is peacock teal, theirs is marigold; they meet only where both fit.
+   Graphite sign bands, a white enamel ground, Anek (fonts.css). The direction
+   contract is in .impeccable/surfaces/app-page-tsx.md. Colours are the shared
+   tokens (tokens.css); only the page's own measurements live here. */
+
+.landing {
+  --sign: var(--color-text);
+  --on-sign: #ffffff;
+  --on-sign-muted: #d6d2cb; /* 11.6:1 on the sign */
+  --line-you: var(--color-accent);
+  --line-them: var(--color-highlight);
+  --rail: 0.375rem;
+  --rail-gap: 0.1875rem;
+  --rail-x: 1.25rem;
+  --stop: 1.625rem;
+  --error-on-sign: #ffb0a3; /* 9.6:1 on the sign */
+  font-family: "Anek", "Nirmala UI", "Noto Sans Devanagari", system-ui, sans-serif;
+  font-stretch: 100%;
+  color: var(--color-text);
+  background: var(--color-bg);
+  caret-color: var(--line-you);
+}
+
+.landing ::selection { background: var(--line-them); color: var(--sign); }
+
+.landing a { color: var(--line-you); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.landing a:hover { text-decoration-thickness: 2px; }
+
+/* One focus ring for light and dark grounds: marigold inside graphite. */
+.landing :focus-visible {
+  outline: 3px solid var(--line-them);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--sign);
+}
+
+/* --- The station sign --------------------------------------------------------- */
+
+.sign {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--sign);
+  color: var(--on-sign);
+}
+
+.name { display: flex; align-items: center; gap: var(--space-3); margin: 0; }
+.mark { flex: none; width: 3rem; height: 2rem; }
+.latin { font-size: 1.75rem; line-height: 1; font-weight: 700; font-stretch: 87.5%; letter-spacing: 0.04em; text-transform: uppercase; }
+.devanagari { display: block; font-size: 1.125rem; line-height: 1.2; font-weight: 600; color: var(--on-sign-muted); }
+
+.status {
+  margin: 0 0 0 auto;
+  padding: var(--space-1) var(--space-3);
+  background: var(--line-them);
+  color: var(--sign);
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+}
+
+.lines { display: flex; height: 0.5rem; }
+.lines span { flex: 1; }
+.lines span:first-child { background: var(--line-you); }
+.lines span:last-child { background: var(--line-them); }
+
+/* --- The first screen ----------------------------------------------------------- */
+
+.hero {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5) var(--space-7);
+}
+
+.headline {
+  margin: 0;
+  font-size: clamp(2.5rem, 3.6vw + 1.6rem, 5rem);
+  line-height: 0.98;
+  font-weight: 760;
+  font-stretch: 87.5%;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.lede { margin: 0; max-width: 34ch; font-size: clamp(1.125rem, 0.4vw + 1rem, 1.375rem); line-height: 1.45; text-wrap: pretty; }
+
+.map { width: 100%; height: auto; max-width: 34rem; overflow: visible; }
+.map text { font-family: inherit; fill: var(--sign); }
+.mapSmall { font-size: 15px; font-weight: 600; fill: var(--color-text-muted); }
+.mapLabel { font-size: 21px; font-weight: 700; font-stretch: 87.5%; }
+.mapHindi { font-size: 18px; font-weight: 600; }
+
+/* --- The waitlist: the next stop ----------------------------------------------- */
+
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--sign);
+  color: var(--on-sign);
+}
+
+.panel h2 { margin: 0; font-size: clamp(1.5rem, 1vw + 1.25rem, 2rem); line-height: 1.1; font-weight: 700; font-stretch: 87.5%; }
+.panel a { color: var(--line-them); }
+
+.form { display: grid; gap: var(--space-4); }
+.field { display: grid; gap: var(--space-2); }
+.field label { font-weight: 600; }
+.field input {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--on-sign);
+  border-radius: 0;
+  background: var(--on-sign);
+  color: var(--sign);
+  font: inherit;
+  font-size: 1.0625rem;
+}
+.field input[aria-invalid] { border-color: var(--error-on-sign); }
+
+.check { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--space-2) var(--space-3); }
+.check input { width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--line-them); }
+.check label { font-weight: 600; min-height: var(--touch-chip); display: flex; align-items: center; }
+.check .fieldError { grid-column: 1 / -1; }
+
+.consent { margin: 0; color: var(--on-sign-muted); font-size: 0.9375rem; line-height: 1.5; max-width: 52ch; }
+
+/* A sign plate, not a pill. */
+.plate {
+  justify-self: start;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: 0;
+  background: var(--line-them);
+  color: var(--sign);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+  cursor: pointer;
+}
+.plate:hover { background: #f7c467; }
+.plate:active { background: #e9a632; }
+.plate:disabled { background: var(--on-sign-muted); cursor: progress; }
+
+.fieldError { margin: 0; color: var(--error-on-sign); font-weight: 600; }
+.result:empty { display: none; }
+.result p { margin: 0; }
+.done { padding-left: var(--space-5); position: relative; font-weight: 600; }
+/* A station roundel marks the confirmation: shape, not colour, carries it. */
+.done::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 3px solid var(--line-them);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* --- The line: one station per rule ------------------------------------------ */
+
+.route { max-width: 76rem; margin: 0 auto; padding: var(--space-7) var(--space-5); }
+.route h2 { margin: 0 0 var(--space-6); font-size: clamp(1.75rem, 1.6vw + 1.25rem, 2.75rem); line-height: 1.05; font-weight: 750; font-stretch: 87.5%; }
+
+.stations { list-style: none; margin: 0; padding: 0; }
+
+.station { position: relative; padding: 0 0 var(--space-6) calc(var(--rail-x) + var(--space-7)); }
+.station h3 { margin: 0 0 var(--space-2); font-size: clamp(1.25rem, 0.6vw + 1.1rem, 1.625rem); line-height: 1.15; font-weight: 700; font-stretch: 87.5%; }
+.station p { margin: 0; max-width: 60ch; font-size: 1.0625rem; line-height: 1.55; text-wrap: pretty; }
+
+/* The rails: yours on every station, theirs from the interchange on. */
+.station::before,
+.station::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--rail);
+  transform-origin: top;
+}
+.station::before { left: var(--rail-x); background: var(--line-you); }
+.joined::after { left: calc(var(--rail-x) + var(--rail) + var(--rail-gap)); background: var(--line-them); }
+.interchange::after { top: 0.8rem; }
+.terminus::before,
+.terminus::after { bottom: auto; height: 0.8rem; }
+
+/* The stop itself: a white roundel on the rail(s). */
+.stop {
+  position: absolute;
+  top: 0.15rem;
+  left: calc(var(--rail-x) + var(--rail) / 2 - var(--stop) / 2);
+  z-index: 1;
+  width: var(--stop);
+  height: var(--stop);
+  border: 4px solid var(--sign);
+  border-radius: 50%;
+  background: var(--color-bg);
+  box-sizing: border-box;
+}
+.joined .stop { left: calc(var(--rail-x) + var(--rail) + var(--rail-gap) / 2 - var(--stop) / 2); }
+.terminus .stop { background: var(--sign); }
+/* The interchange: the two rings, the brand's own mark. */
+.interchange .stop { width: calc(var(--stop) * 1.6); left: calc(var(--rail-x) - var(--stop) * 0.55); border: 0; background: none; }
+.interchange .stop::before,
+.interchange .stop::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--stop);
+  height: var(--stop);
+  border: 4px solid var(--sign);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.interchange .stop::before { left: 0; background: var(--color-bg); }
+.interchange .stop::after { right: 0; }
+
+.hindi { display: block; font-size: 1.125rem; font-weight: 600; color: var(--color-text-muted); }
+
+/* The end of the line: where it leads, with the candlelight loop. */
+.destination { display: grid; gap: var(--space-5); align-items: start; justify-items: start; }
+.story { position: relative; width: min(16rem, 70vw); }
+
+/* The confirm and leave pages: one panel, one button. */
+.linkMain { max-width: 44rem; margin: 0 auto; padding: var(--space-7) var(--space-5); }
+.linkTitle { margin: 0; font-size: clamp(2rem, 2vw + 1.5rem, 3rem); line-height: 1.02; font-weight: 750; font-stretch: 87.5%; }
+.landing a.home { color: inherit; text-decoration: none; }
+
+/* The close: a full-width graphite band holding the last stop and the footer. */
+.closing { background: var(--sign); color: var(--on-sign); padding: var(--space-7) var(--space-5) var(--space-5); }
+.last { max-width: 44rem; margin: 0 auto var(--space-7); padding: 0; }
+.footer { max-width: 76rem; margin: 0 auto; padding-top: var(--space-5); border-top: 1px solid #4a4743; color: var(--on-sign-muted); font-size: 0.9375rem; }
+.footer p { margin: 0; max-width: 72ch; }
+.footer a { color: var(--line-them); }
+
+/* --- Wider screens -------------------------------------------------------------- */
+
+@media (min-width: 40rem) {
+  .landing { --rail-x: 1.5rem; }
+  .form { grid-template-columns: minmax(0, 1fr); }
+  .destination { grid-template-columns: minmax(0, 1fr) auto; }
+}
+
+@media (min-width: 64rem) {
+  .sign { padding-inline: var(--space-7); }
+  .hero {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-areas: "headline map" "lede map" "panel map";
+    align-items: start;
+    column-gap: var(--space-7);
+    padding: var(--space-7);
+  }
+  .headline { grid-area: headline; }
+  .lede { grid-area: lede; }
+  .map { grid-area: map; align-self: center; max-width: none; }
+  .hero .panel { grid-area: panel; }
+  .route, .closing { padding-inline: var(--space-7); }
+  .station { display: grid; grid-template-columns: 20rem minmax(0, 1fr); column-gap: var(--space-6); }
+  .station h3 { margin: 0; }
+}
+
+/* --- The one moving idea: the line draws as you travel down it ---------------- */
+/* Scroll-driven (no script). Without support, or with reduced motion, the line is
+   simply drawn. Only the rails move; every word is visible from the start. */
+@keyframes draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .station::before,
+    .joined::after {
+      animation: draw linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 55%;
+    }
+  }
+  .plate { transition: background-color var(--motion-fast) var(--ease-standard); }
+}

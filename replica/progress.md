@@ -1,8 +1,33 @@
 # Progress
 
-Updated: 2026-11-08
+Updated: 2026-11-10
 
 ## Current phase
+
+**Stage 20 (bold new visual direction, D100) has started.** It covers the landing website and the member app, in stages.
+- **20a, tooling and baseline: done (2026-11-10).**
+  - impeccable 4.8.2 is installed for this project with its design hook. The engine's checksum was verified; the engine is git-ignored; impeccable's telemetry is off.
+  - `PRODUCT.md` (root, web) and `apps/mobile/PRODUCT.md` (android) are written from confirmed facts. Impeccable reads only the child file inside `apps/mobile`, so the two must change together.
+  - `.impeccable/config.json` records code-first.
+  - Baseline detector: website source 1 warning (a thick left accent border, `globals.css:52`); the live landing page 2 advisories (a lone last word in two lines); the app's source and live welcome screen none.
+  - Baseline screenshots in `replica/design/baseline-2026-11-10/`, taken with playwright-cli 0.1.24 and the installed Chrome.
+- **20b, the landing page's direction: done (2026-11-10).**
+  - **The questions:** the owner chose a waitlist as the page's action, rewritten copy with the same facts, and 'too quiet or plain' as the thing to avoid.
+  - **The roll:** it assigned the Ghat Steps, with one competitive challenger (the Segment Count) and five declined. Four first-screen sketches were checked by the hook and in screenshots: 2 contrast failures, a glow, kicker labels, stripes and 3 layout bugs, all fixed.
+  - **The choice:** the owner took **The Interchange** (D101) through the question tool, after the decision page closed unanswered.
+  - **The contract:** in `apps/web/.impeccable/surfaces/app-page-tsx.md`. Type: Anek, self-hosted.
+- **20c, the waitlist API: done and tested locally (2026-11-10; D101, D102).**
+  - **Endpoints:** `POST /v1/waitlist`, `/confirm` and `/leave`, plus a confirmation job, migration 0014 (`waitlist_entries`), three retention rules in the sweep, `SITE_URL`, a counts-only CLI, and a waitlist section in the privacy notice.
+  - **Tests:** WL-1..14 pass; the full API suite passes (391); 4 mutation checks were caught; ruff and strict mypy are clean; the OpenAPI types were regenerated (additive only).
+  - **Not yet:** CI on a push; the website's form and its confirm and leave pages (20d); the opening email (launch).
+- **20d, the Interchange landing page: built, checked locally, waiting for review (2026-11-10; D103).**
+  - **What:** self-hosted, subset Anek; the sign band, map, stations and a graphite close; the waitlist form twice; the confirm and leave pages; the notice renamed; the shoreline removed.
+  - **Checks:** web `tsc` and 16 Node tests pass. impeccable's hook found nothing; `detect` found one lone last word (fixed) and the old side-tab border in `globals.css`. Two screenshot rounds fixed 4 layout defects.
+  - **Not yet:**
+    - e2e and `next build` (CI, after a commit);
+    - impeccable's finish review and DESIGN.md;
+    - the owner's copy review, and a native reviewer for the Hindi;
+    - the live site (needs a rebuild and the owner's go).
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).
 - **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.
@@ -21,6 +46,9 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 - **This laptop is the live server.** It has 8 GB, and only 0.1-0.7 GB was free during test runs, so the WSL Redis used by tests stopped. Heavy local builds and test runs compete with the beta; prefer CI for them.
 - **Outage, 2026-11-07 19:10-19:15 IST:** after the laptop restarted, the site returned Cloudflare 530 because Docker Desktop didn't start. Its "Start Docker Desktop when you sign in" setting is off (deploy.md asks for it on). Starting Docker brought every container back healthy. The owner has since turned the setting on (checked 2026-11-08).
 - **Backups (BETA-5, 2026-11-08):** the first backups exist in `%USERPROFILE%\datingapp-backups`, and a restore into a scratch database matched every table's row count. The home run had never saved photos (BUG-003, fixed in `backup.sh`). Photo restore stays untested until there are photos. The owner registered the daily 03:00 task (`infra/beta/schedule-backup.ps1`); its first run (06:01) returned 0 and logged a good backup.
+- **Outage, 2026-11-08 to 2026-11-10 (about 44 hours or more):** the laptop ran on battery with the lid closed. It went into standby at 08:01 on Nov 8 (reason: lid), then hibernated at 14:16 when its 6-hour battery timer ran out, and only woke at 10:04 on Nov 10. The containers were back at 10:28. Both nightly backups were missed.
+  - The 10:10 catch-up backup wrote a good dump (292 objects), but its photo step was killed (`0xC000013A`). Docker was still recovering then, and restarted every container at 10:28. Its 0-byte archive was deleted, and a complete backup was taken at 11:42.
+  - Settings on mains power are right (never sleep or hibernate). The cause is running unplugged: the beta needs the laptop plugged in with the lid open, or a real server (gate 5).
 - **Next (owner):** copy the backups off the laptop weekly; the first testers' invites.
 
 ## Done
@@ -363,12 +391,12 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 - **Docker Desktop** now runs the closed beta (home mode, D097). Playwright drives the installed Chrome. The Android SDK is still not on PATH.
 - **Memory:** 8 GB, and the beta, Docker's VM and test runs share it. On 2026-11-06 the WSL distro holding the test Redis stopped starting (`Wsl/Service/WSAETIMEDOUT`) with 0.1 GB free. A throwaway container (`docker run --rm -d --name e2e-test-redis -p 127.0.0.1:6380:6379 redis:7`) served the tests instead.
 - **Tools:** Replica vendored (D031). REA `rea-agents` 6.8.0 is connected; only for our own builds (D005).
-- **GitHub:** repo public (D032). Secret scanning and push protection are enabled. Dependabot alerts are **disabled**.
+- **GitHub:** repo public (D032). Secret scanning and push protection are enabled. Dependabot alerts are on (seen 2026-11-10): 3 open in npm packages, `minimatch` and `glob` (moderate, fixes available) and `deepmerge` (low, development only, no fix).
 
 ## Blockers / owner actions
 
 0. **Before any deployment:** see `deploy.md` (release gates). Staff two-factor sign-in and the console are done (D090-D091) and need TLS in front of them. The first admin's bootstrap is in the deploy runbooks.
-1. Turn on Dependabot alerts and security updates (repo Settings → Code security).
+1. Dependabot alerts are on; 3 are open (Environment). Security updates: unchecked.
 2. **Email provider** (needed before any real sign-up; not blocking development):
    - choose one, for example Amazon SES in ap-south-1, Postmark or Resend;
    - verify a sending domain with SPF, DKIM and DMARC;

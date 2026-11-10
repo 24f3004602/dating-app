@@ -159,6 +159,30 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | INV-5 | invites | retention | remove, count, the sweep at the expiry boundary | counts right; expired invites swept | API | pass |
 | INV-6 | invites | default | invite-only off (development, production default) | anyone can sign up | API | pass |
 | INV-7 | invites | CLI | `invite add` with a bad address or none | exit 2 | unit | pass |
+| WL-1 | waitlist | flow | join | 202 `accepted`; one job holding only the entry's ID; one email with a confirm and a leave link to `SITE_URL`; only the token's SHA-256 stored | API | pass |
+| WL-2 | waitlist | flow | confirm with the emailed token | 204; confirmed; the token cleared; a second use 400 `invalid_link` (mutation-checked) | API | pass |
+| WL-3 | waitlist | expiry | a link past 7 days; a made-up token | 400; nothing confirmed (mutation-checked) | API | pass |
+| WL-4 | waitlist | privacy | joining again with a confirmed address | the same 202 and body as a new address; no job, no email (mutation-checked) | API | pass |
+| WL-5 | waitlist | abuse | repeat joins while unconfirmed | no new link before 5 minutes; after that a new link that replaces the old one | API | pass |
+| WL-6 | waitlist | validation | the 18+ answer false or missing; an old notice version; an unknown field | 422 `underage` / `consent_required` (with the version required) / 422; nothing stored or queued | API | pass |
+| WL-7 | waitlist | flow | leave with the emailed link | 204; that entry deleted, others kept; a second use 204 | API | pass |
+| WL-8 | waitlist | security | leave links signed with another key, made up, or malformed | 204 and nothing deleted (mutation-checked) | API | pass |
+| WL-9 | waitlist | abuse | 6 joins a day for one address | the 6th is 429 with Retry-After, whether or not the address is listed | API | pass |
+| WL-10 | waitlist | abuse | 11 joins an hour from one IP | the 11th is 429 | API | pass |
+| WL-11 | waitlist | retention | the sweep: an expired unconfirmed link; 30 days after the opening email | deleted at each boundary, not a second before; confirmed entries kept | API | pass |
+| WL-12 | waitlist | retention | the sweep: a year | every entry deleted after 365 days | API | pass |
+| WL-13 | waitlist | retention | the sweep: an entry whose email never went out | deleted 7 days after joining | API | pass |
+| WL-14 | waitlist | privacy | the CLI's numbers | confirmed and waiting counts only, never addresses | API | pass |
+| WEB-WL-1 | website | waitlist | the form's checks | an address and the 18+ box both needed; what was typed is kept | unit (node) | pass |
+| WEB-WL-2 | website | privacy | the success words | never claim an email was sent; true for an already-confirmed address | unit (node) | pass |
+| WEB-WL-3 | website | errors | each API error | names the problem and the recovery (field, reload, wait, try again) | unit (node) | pass |
+| WEB-WL-4 | website | waitlist | confirm and leave outcomes | the right words for 204, an used or expired link, and failures | unit (node) | pass |
+| WEB-WL-5 | website | security | the token from the link | only a well-formed token is used | unit (node) | pass |
+| WEB-FONT-1 | website | fonts | the files fonts.css loads | present, each under 128 KB, the OFL beside them, the Latin face preloaded | unit (node) | pass |
+| WEB-FONT-2 | website | fonts | Devanagari in the source | every letter is in the subset's text | unit (node) | pass |
+| E2E-WL-1 | website | waitlist | join, open the confirm link, reload, press, use the link again, leave | nothing happens until the press; on the list; "already used"; deleted; axe on both pages | e2e | **not run yet** (CI) |
+| E2E-WL-2 | website | errors | a bad address; no 18+ box | `aria-invalid` and the message as the field's description; the address kept; axe | e2e | **not run yet** (CI) |
+| E2E-WL-3 | website | security | a link without its token | says so, no button, `no-store` | e2e | **not run yet** (CI) |
 | BIL-1 | billing | guard | live keys without `PAYMENTS_LIVE`; the Razorpay backend without its secrets | the server refuses to start | unit | pass |
 | BIL-2 | billing | negative | payments not set up: checkout 503; webhooks refused | as listed | api | pass |
 | BIL-3 | billing | happy | checkout, then activated: entitled and renewing; a second checkout 409; a duplicate event and a late event change nothing; cancel stops renewal once and keeps what was paid; cancelled after the period: not entitled; cancel again 409 | as listed (mutation: no stale check caught) | api | pass |
@@ -322,3 +346,6 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-07 | owner's laptop, stage 19 video (D099) | app Jest (126); web `npm test` (8); contrast.py (29 pairs); `tsc`; both builds; e2e (13 tests in 7 specs) | 126 passed; 8 passed; 0 failing pairs; builds clean; e2e 13 passed (a throwaway Redis container stood in for WSL's again). Screenshots checked at 390 and 1280 px: the card, the welcome overlay |
 | 2026-11-07 | GitHub Actions on `0da7ff1` and `eb80094` (stage 19 video) | mobile, beta-stack, images | `0da7ff1`: mobile failed its type-check (the new app test read a file with Node's `fs`; the app has no Node types in CI), beta-stack 42374877086 and images 42374877081 passed. `eb80094` (the check moved to the website's Node tests): mobile 42375280857 passed (126 tests; e2e 13 passed), beta-stack 42375280843 passed (the media checks included), images 42375281357 passed |
 | 2026-11-08 | owner's laptop, live beta (BETA-5) | the first backup; a restore into a throwaway database with no network; row counts per table; the task's command run from Windows | the first run failed to archive photos (BUG-003) and was deleted; after the fix, 2 good backups (131 KB dump; photo archive holds an empty `media/`, as the beta has no photos yet); restore exit 0; 34 tables and 83 rows match exactly; migration 0013; the scratch copy deleted. Restoring photos is untested until there are photos |
+| 2026-11-10 | GitHub Actions on `cea635b` (backups) | beta-stack (stack, home-mode) | 42766561074 passed: on Linux, `backup.sh` wrote the dump and an archive listing `media/` |
+| 2026-11-10 | owner's laptop, stage 20c (waitlist API) | ruff, ruff format, mypy (strict); the 14 waitlist tests; the full API suite; 4 mutation checks; the OpenAPI types regenerated; web `tsc` and `npm test` | clean; 14 passed; 391 passed in 3.5 min; all 4 mutations caught; types additive only (460 lines); web clean, 9 passed. A throwaway Redis container stood in for WSL's |
+| 2026-11-10 | owner's laptop, stage 20d (the Interchange landing page) | web `tsc`; web `npm test`; impeccable's hook on every edit and `detect` on the source and the rendered landing and confirm pages; two screenshot rounds at 390 and 1280 px against `next dev` (no API) | clean; 16 passed (5 waitlist, 2 fonts); the hook found nothing; `detect`: one lone last word, fixed with `text-wrap: pretty`, and the side-tab border in `globals.css` (the console's notices, from before); round 1 found the Join button below the phone's first screen, the end-of-line station broken on desktop, the closing panel without padding, and the rings crowding a heading, all fixed and seen fixed in round 2; both Anek faces loaded, no overflow, no console errors. **Not run:** e2e (the updated landing and motion tests, and the new waitlist spec) and `next build`: left to CI, because the laptop serves the beta |
