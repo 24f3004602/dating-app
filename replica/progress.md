@@ -38,11 +38,17 @@ Updated: 2026-11-10
     - the welcome screen: a name sign (Latin, and Devanagari when configured), the display headline, and a route map built from Views on a white enamel panel, with the rings as its interchange (one accessible image).
   - **Checks:** app `tsc` clean; Jest 128 passed (2 new: MOB-16, MOB-17); web 16 passed.
   - **Not yet:**
-    - the check on the owner's phone (waiting for USB debugging and Expo Go);
     - the sign-up, verify, sign-in and reset screens' own pass (they have the new primitives already);
     - e2e on the web build (CI, after a commit);
     - impeccable's finish review and the app's DESIGN.md;
     - the bottom bar (next slice).
+  - **Device pass, slice 1 (2026-11-10):** the owner's Pixel 8 Pro (Android 17), over wireless adb, running the app in Expo Go 58.0.5 against the live beta's API (nothing submitted).
+    - **Seen:** welcome, sign-up, sign-in, reset and verify, at text size 1.0 and 1.3. Anek renders; the Devanagari name renders; nothing clips; the map fits at 395 dp.
+    - **Fixed on the device:** the map's station roundels overlapped at 395 dp; the interchange is now centred.
+    - **Measured:** at 1.3, labels and hints grow 27-34% and the 28 sp headings about 3%. That is Android 14+'s nonlinear font scaling, as designed; the app caps nothing.
+    - **Privacy:** demo mode was on and the status bar was cropped from every kept capture. One capture that showed another app was deleted unseen; captures since are taken only with the app in front. The phone's settings were restored afterwards (font scale 1.0, demo off, no port forwards).
+    - **This starts NAT-1 (partial).** Not yet: TalkBack, the keystore, the photo picker, push (Expo Go has no remote push on Android), realtime on mobile data.
+    - **Also:** a dev server started with `CI=1` doesn't watch files, so the first recapture showed stale code; and `expo start` rewrote `tsconfig.json`, which was restored.
   - **Found and fixed:** Prettier, run without a project config, rewrapped six files (about 800 lines). Restored from the commit, with only the real edits re-applied (104/44 lines). The map wasn't one accessible element until `accessible` was set; the welcome test caught it.
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).

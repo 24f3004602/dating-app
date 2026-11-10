@@ -58,7 +58,8 @@ export function RouteMap() {
   const [w, setW] = useState(0);
   const onLayout = (e: LayoutChangeEvent) =>
     setW(Math.round(e.nativeEvent.layout.width));
-  const cx = w * 0.45;
+  // The interchange in the middle gives both lines room for two stations each, even at 320 dp.
+  const cx = w * 0.5;
   // Your line comes in high and turns down to the left ring; theirs, lower, to the right one.
   const youY = 28;
   const themY = 44;
