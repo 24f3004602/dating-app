@@ -22,7 +22,7 @@ APP_TABLES = {
     "preferences", "daily_picks", "interactions", "blocks", "matches", "messages", "match_reads", "reports",
     "moderation_actions", "deleted_accounts", "staff_mfa", "staff_recovery_codes", "staff_enrollments",
     "push_devices", "notification_prefs", "member_notices", "push_tickets", "subscriptions", "payment_events",
-    "signup_invites",
+    "signup_invites", "waitlist_entries",
 }  # fmt: skip
 JOB_TABLES = {"procrastinate_jobs", "procrastinate_events", "procrastinate_periodic_defers", "procrastinate_workers"}
 HEAD = APP_TABLES | JOB_TABLES | {"alembic_version"}
@@ -66,7 +66,7 @@ def test_upgrade_downgrade_upgrade(scratch: tuple[str, Engine], base_settings: S
     command.upgrade(cfg, "head")
     assert tables(engine) == HEAD
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0013"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0014"
 
 
 def test_migrated_schema_matches_the_models(scratch: tuple[str, Engine], base_settings: Settings) -> None:
@@ -89,7 +89,7 @@ def test_runtime_role_grants(scratch: tuple[str, Engine], base_settings: Setting
             "preferences", "daily_picks", "interactions", "blocks", "matches", "messages", "match_reads", "reports",
             "staff_mfa", "staff_recovery_codes", "staff_enrollments",
             "push_devices", "notification_prefs", "member_notices", "push_tickets",
-            "subscriptions", "payment_events", "signup_invites",
+            "subscriptions", "payment_events", "signup_invites", "waitlist_entries",
         )  # fmt: skip
         for table in (*dml_tables, *sorted(JOB_TABLES)):
             for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):

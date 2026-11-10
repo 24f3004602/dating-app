@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # Empty means forwarded headers are ignored and the client IP is the socket's.
     trusted_proxies: list[str] = Field(default_factory=list)
 
+    # The public website's origin (stage 20c, D101): links in waitlist emails
+    # point here. https on a server people use.
+    site_url: str = "http://localhost:3000"
+
     # Server secret for keyed hashes (one-time codes, rate-limit keys). At
     # least 32 characters; rotating it invalidates live codes only.
     app_secret_key: SecretStr = Field(min_length=32)
@@ -173,6 +177,13 @@ class Settings(BaseSettings):
                 raise ValueError("CORS origins must be exact http(s) origins, never '*'")
         return v
 
+    @field_validator("site_url")
+    @classmethod
+    def _site_origin(cls, v: str) -> str:
+        if not v.startswith(("http://", "https://")) or v.rstrip("/") != v or "?" in v or "#" in v:
+            raise ValueError("SITE_URL must be an http(s) URL with no trailing slash")
+        return v
+
     @field_validator("trusted_proxies")
     @classmethod
     def _proxy_addresses(cls, v: list[str]) -> list[str]:
@@ -241,6 +252,7 @@ class Settings(BaseSettings):
                 any(not origin.startswith("https://") for origin in self.cors_origins),
                 f"CORS origins must be https in {env}",
             ),
+            (not self.site_url.startswith("https://"), f"SITE_URL must be https in {env}"),
             (env == "beta" and not self.signup_invite_only, "the beta is invite-only (SIGNUP_INVITE_ONLY=true)"),
             (env == "beta" and self.payments_live, "no live payments in the beta"),
         ]

@@ -32,6 +32,9 @@ PUBLIC = {
     ("POST", "/v1/admin/auth/enroll"),  # needs the challenge from login
     ("POST", "/v1/admin/auth/verify"),  # needs the challenge from login
     ("POST", "/v1/webhooks/razorpay"),  # HMAC-signed by the provider; checked before anything else
+    ("POST", "/v1/waitlist"),  # the same answer for every address; limited per IP and per address
+    ("POST", "/v1/waitlist/confirm"),  # a single-use emailed token
+    ("POST", "/v1/waitlist/leave"),  # an HMAC-signed emailed link
 }
 
 

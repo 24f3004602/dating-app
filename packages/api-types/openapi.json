@@ -714,6 +714,35 @@
         "title": "InteractionOut",
         "type": "object"
       },
+      "JoinIn": {
+        "additionalProperties": false,
+        "properties": {
+          "adult": {
+            "description": "The person confirms they are 18 or over.",
+            "title": "Adult",
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "privacy": {
+            "description": "The privacy notice version shown with the form.",
+            "maxLength": 32,
+            "title": "Privacy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "adult",
+          "privacy"
+        ],
+        "title": "JoinIn",
+        "type": "object"
+      },
       "LastMessage": {
         "additionalProperties": false,
         "properties": {
@@ -2679,6 +2708,23 @@
           "next_set_at"
         ],
         "title": "TodayOut",
+        "type": "object"
+      },
+      "TokenIn": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "description": "The token from the emailed link.",
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "TokenIn",
         "type": "object"
       },
       "UserStatus": {
@@ -6968,6 +7014,185 @@
         "summary": "Words that trigger a pre-send nudge or a safety tip",
         "tags": [
           "messaging"
+        ]
+      }
+    },
+    "/v1/waitlist": {
+      "post": {
+        "operationId": "join_v1_waitlist_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Join the waitlist; a confirmation link is emailed (the same answer for every address)",
+        "tags": [
+          "waitlist"
+        ]
+      }
+    },
+    "/v1/waitlist/confirm": {
+      "post": {
+        "operationId": "confirm_v1_waitlist_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rejected (see `code`)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Confirm a place with the token from the emailed link (works once, for 7 days)",
+        "tags": [
+          "waitlist"
+        ]
+      }
+    },
+    "/v1/waitlist/leave": {
+      "post": {
+        "operationId": "leave_v1_waitlist_leave_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Leave the waitlist with the link from any waitlist email; the address is deleted",
+        "tags": [
+          "waitlist"
         ]
       }
     },

@@ -13,6 +13,7 @@ from app.modules.privacy.models import DeletedAccount
 from app.modules.profiles.models import Area, Profile, ProfilePrompt
 from app.modules.safety.models import ModerationAction, Report
 from app.modules.staff.models import StaffEnrollment, StaffMfa, StaffRecoveryCode
+from app.modules.waitlist.models import WaitlistEntry
 
 __all__ = [
     "Area",
@@ -44,4 +45,5 @@ __all__ = [
     "StaffRecoveryCode",
     "Subscription",
     "User",
+    "WaitlistEntry",
 ]

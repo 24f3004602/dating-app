@@ -47,6 +47,7 @@ def get_job_app() -> procrastinate.App:
         from app.modules.media.tasks import blueprint as media_tasks  # noqa: PLC0415
         from app.modules.notifications.tasks import blueprint as notify_tasks  # noqa: PLC0415
         from app.modules.privacy.tasks import blueprint as privacy_tasks  # noqa: PLC0415
+        from app.modules.waitlist.tasks import blueprint as waitlist_tasks  # noqa: PLC0415
 
         app = procrastinate.App(connector=procrastinate.PsycopgConnector())
         app.add_tasks_from(auth_tasks, namespace="auth")
@@ -54,6 +55,7 @@ def get_job_app() -> procrastinate.App:
         app.add_tasks_from(notify_tasks, namespace="notify")
         app.add_tasks_from(billing_tasks, namespace="billing")
         app.add_tasks_from(privacy_tasks, namespace="privacy")
+        app.add_tasks_from(waitlist_tasks, namespace="waitlist")
         _job_app = app
     return _job_app
 

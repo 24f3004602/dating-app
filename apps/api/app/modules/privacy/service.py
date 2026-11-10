@@ -50,6 +50,7 @@ from app.modules.privacy import retention
 from app.modules.privacy.models import DeletedAccount
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
 from app.modules.staff.models import StaffEnrollment
+from app.modules.waitlist.models import WaitlistEntry
 from app.providers.storage import photo_keys
 from app.ratelimit import Limit
 
@@ -219,6 +220,25 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
     )
     counts["payment_events"] = await billing.purge_events(session, now)
     counts["signup_invites"] = await _count(session, delete(SignupInvite).where(SignupInvite.expires_at < now))
+    counts["waitlist_entries"] = await _count(
+        session,
+        delete(WaitlistEntry).where(
+            or_(
+                and_(
+                    WaitlistEntry.confirmed_at.is_(None),
+                    or_(
+                        WaitlistEntry.confirm_expires_at < now,
+                        and_(
+                            WaitlistEntry.confirm_expires_at.is_(None),
+                            WaitlistEntry.created_at < now - retention.WAITLIST_UNSENT,
+                        ),
+                    ),
+                ),
+                WaitlistEntry.notified_at < now - retention.WAITLIST_AFTER_OPENING,
+                WaitlistEntry.created_at < now - retention.WAITLIST_MAX,
+            )
+        ),
+    )
     ended_token = now - retention.ENDED_ENROLLMENT
     counts["staff_enrollments"] = await _count(
         session,

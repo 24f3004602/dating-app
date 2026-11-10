@@ -56,6 +56,7 @@ BETA = {
     "TERMS_VERSION": "beta-2026-11",
     "PRIVACY_VERSION": "beta-2026-11",
     "CORS_ORIGINS": ["https://app.example.in"],
+    "SITE_URL": "https://example.in",
 }
 
 
@@ -77,6 +78,7 @@ def test_a_beta_server_may_keep_photos_on_its_disk_and_use_the_beta_notice() -> 
         ({"PAYMENTS_LIVE": True}, "no live payments in the beta"),
         ({"PUSH_BACKEND": "memory"}, "the memory push backend is for tests only"),
         ({"CORS_ORIGINS": ["http://app.example.in"]}, "CORS origins must be https in beta"),
+        ({"SITE_URL": "http://example.in"}, "SITE_URL must be https in beta"),
         ({"LOG_LEVEL": "DEBUG"}, "DEBUG logging is not allowed in beta"),
     ],
 )
@@ -95,6 +97,13 @@ def test_a_beta_server_keeps_every_other_production_rule(change: dict[str, objec
 def test_production_refuses_the_beta_allowances(change: dict[str, object], problem: str) -> None:
     with pytest.raises(ValidationError, match=problem):
         settings_from({**BETA, "APP_ENV": "production", **change})
+
+
+@pytest.mark.parametrize("url", ["example.in", "https://example.in/", "https://example.in/?x=1", "ftp://example.in"])
+def test_site_url_is_a_plain_http_url(url: str) -> None:
+    """Waitlist links are built as SITE_URL + path (D101)."""
+    with pytest.raises(ValidationError, match="SITE_URL must be an http"):
+        settings_from({"SITE_URL": url})
 
 
 @pytest.mark.parametrize("role", ["App", "drop table", "x;y", ""])

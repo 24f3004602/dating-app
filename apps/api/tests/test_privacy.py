@@ -500,7 +500,7 @@ async def test_the_retention_sweep_applies_each_rule_at_its_boundary(
     assert counts == {
         "closed_matches": 1, "daily_picks": 1, "sessions": 2, "codes": 1, "unverified_accounts": 1,
         "reporter_links": 1, "reports": 1, "deleted_account_records": 1, "audit_records": 2, "staff_enrollments": 0,
-        "payment_events": 0, "signup_invites": 1,
+        "payment_events": 0, "signup_invites": 1, "waitlist_entries": 0,
     }  # fmt: skip
 
     assert await count(db, Match, Match.id == old) == 0

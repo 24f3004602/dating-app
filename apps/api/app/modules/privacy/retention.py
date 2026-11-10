@@ -26,6 +26,11 @@ DAILY_PICKS_DAYS = 7
 ENDED_SESSION = timedelta(days=30)  # after expiry or revocation
 EXPIRED_CODE = timedelta(days=1)
 ENDED_ENROLLMENT = timedelta(days=30)  # staff enrolment tokens, after use or expiry
+# Waitlist (stage 20c, D101): an unconfirmed entry goes when its link expires
+# (7 days, or 7 days after joining if no link was sent yet).
+WAITLIST_UNSENT = timedelta(days=7)
+WAITLIST_AFTER_OPENING = timedelta(days=30)  # after the one opening email
+WAITLIST_MAX = timedelta(days=365)  # (R) every entry, whatever its state
 
 # Safety.
 REPORTER_LINK = timedelta(days=90)  # (R) after resolution, the report no longer names its reporter

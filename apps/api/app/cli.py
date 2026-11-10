@@ -1,4 +1,4 @@
-"""Command line: `datingapp-api serve | worker | seed-dev | staff-enrollment | invite`."""
+"""Command line: `datingapp-api serve | worker | seed-dev | staff-enrollment | invite | waitlist`."""
 
 from __future__ import annotations
 
@@ -196,6 +196,25 @@ def _invite_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _waitlist_command(_: argparse.Namespace) -> int:
+    """How many are on the waitlist (D101): counts only, never the addresses."""
+    from app.modules.waitlist import service  # noqa: PLC0415 - command-only imports
+
+    settings = get_settings()
+
+    async def go() -> tuple[int, int]:
+        engine = create_engine(settings)
+        try:
+            async with create_session_factory(engine)() as session:
+                return await service.counts(session)
+        finally:
+            await engine.dispose()
+
+    confirmed, waiting = run_async(go)
+    print(f"waitlist: {confirmed} confirmed, {waiting} waiting for confirmation")
+    return 0
+
+
 def _worker_command(_: argparse.Namespace) -> int:
     from app.clock import system_clock  # noqa: PLC0415 - worker-only imports
     from app.jobs import WorkerContext, get_job_app, open_worker_pool, set_worker_context  # noqa: PLC0415
@@ -297,6 +316,8 @@ def main(argv: list[str] | None = None) -> int:
     invite.add_argument("action", choices=["add", "remove", "count"])
     invite.add_argument("emails", nargs="*")
     invite.set_defaults(func=_invite_command)
+    waitlist = sub.add_parser("waitlist", help="count the waitlist (confirmed and waiting)")
+    waitlist.set_defaults(func=_waitlist_command)
     args = parser.parse_args(argv)
     result: int = args.func(args)
     return result

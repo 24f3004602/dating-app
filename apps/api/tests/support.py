@@ -17,6 +17,7 @@ from app.modules.auth.models import CodePurpose
 from app.modules.billing import service as billing
 from app.modules.media import service as media_service
 from app.modules.notifications import service as notify
+from app.modules.waitlist import service as waitlist
 from app.providers.email import EmailMessage, MemoryEmailSender
 from app.providers.payments import FakePayments
 from app.providers.push import MemoryPushSender
@@ -63,6 +64,7 @@ class JobRunner:
         self.push = MemoryPushSender()
         self.payments = FakePayments()
         self.codes: list[str] = []
+        self.waitlist_tokens: list[str] = []
 
     async def pending(self) -> list[tuple[int, str, dict[str, Any]]]:
         async with self.db() as s:
@@ -98,6 +100,12 @@ class JobRunner:
                         s, self.push, self.settings.brand_name,
                         user_id=uuid.UUID(args["user_id"]), kind=notify.Kind(args["kind"]), now=self.clock(),
                     )  # fmt: skip
+                elif name == waitlist.SEND_CONFIRMATION:
+                    token = await waitlist.send_confirmation(
+                        s, self.settings, self.mail, now=self.clock(), entry_id=uuid.UUID(args["entry_id"])
+                    )
+                    if token:
+                        self.waitlist_tokens.append(token)
                 elif name == service.SEND_NOTICE:
                     await service.send_notice(
                         s, self.settings, self.mail, uuid.UUID(args["user_id"]), service.Notice(args["kind"])

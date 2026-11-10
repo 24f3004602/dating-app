@@ -27,6 +27,8 @@ x-app-env: &app-env
   CORS_ORIGINS: '["https://app.${DOMAIN:?run make-env.sh}"]'
   # Caddy and the console's server, on this private network only.
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
+  # Waitlist emails link to the website (D101).
+  SITE_URL: https://${DOMAIN}
   TERMS_VERSION: beta-2026-11
   PRIVACY_VERSION: beta-2026-11
   SIGNUP_INVITE_ONLY: "true"
@@ -122,6 +124,9 @@ services:
       API_URL: http://api:8000
       API_PUBLIC_URL: https://api.${DOMAIN}
       BRAND_NAME: ${BRAND_NAME:-Haanji}
+      # The name in Devanagari beside the Latin one (D101); its letters must be in
+      # apps/web/scripts/devanagari-text.txt. Empty: only the Latin name.
+      BRAND_NAME_DEVANAGARI: ${BRAND_NAME_DEVANAGARI:-}
       OPERATOR_NAME: ${OPERATOR_NAME:-}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}
       # Where the data lives, for the privacy notice: lightsail | home (D097).

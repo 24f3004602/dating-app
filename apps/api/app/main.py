@@ -35,6 +35,7 @@ from app.modules.realtime.router import router as realtime_router
 from app.modules.safety.router import router as safety_router
 from app.modules.staff.challenges import Challenges
 from app.modules.staff.router import router as staff_router
+from app.modules.waitlist.router import router as waitlist_router
 from app.openapi import install_openapi
 from app.providers.identity import NoIdentityVerifier
 from app.providers.payments import create_payments
@@ -130,5 +131,6 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(notifications_router)
     app.include_router(billing_router)
     app.include_router(staff_router)
+    app.include_router(waitlist_router)
     install_openapi(app)
     return app
