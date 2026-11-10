@@ -22,6 +22,12 @@ export const DOCUMENT_LINKS = { terms: `${WEB_URL}/terms`, privacy: `${WEB_URL}/
 export const MEDIA_URL = (process.env.EXPO_PUBLIC_MEDIA_URL ?? WEB_URL).replace(/\/$/, "");
 export const WELCOME_VIDEO = process.env.EXPO_PUBLIC_WELCOME_VIDEO !== "off";
 
+// The working name on the welcome screen's sign (D019: configuration, not code), and
+// optionally the same name in Devanagari (D105). Its letters must be in
+// assets/fonts/devanagari-text.txt (the font is subset to that list).
+export const BRAND = process.env.EXPO_PUBLIC_BRAND_NAME ?? "Haanji";
+export const BRAND_DEVANAGARI = process.env.EXPO_PUBLIC_BRAND_NAME_DEVANAGARI?.trim() || null;
+
 // Invite-only sign-up (the beta, D096): the verify screen explains a missing code.
 export const INVITE_ONLY = process.env.EXPO_PUBLIC_INVITE_ONLY === "1";
 

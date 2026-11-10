@@ -148,6 +148,8 @@ services:
         EXPO_PUBLIC_API_URL: https://api.${DOMAIN}
         EXPO_PUBLIC_WEB_URL: https://${DOMAIN}
         BRAND_NAME: ${BRAND_NAME:-Haanji}
+        # The welcome sign's Devanagari name (D105); empty: Latin only.
+        BRAND_NAME_DEVANAGARI: ${BRAND_NAME_DEVANAGARI:-}
     restart: unless-stopped
     logging: *logging
     environment:

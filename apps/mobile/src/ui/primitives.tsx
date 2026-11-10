@@ -31,7 +31,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { color, focusRing, motion, radius, size, space, touch, type } from "@/theme/tokens";
+import { color, focusRing, font, motion, radius, size, space, touch, type } from "@/theme/tokens";
 import { FadeImage, Reveal, usePressScale, useScreenEntrance } from "@/ui/motion";
 
 /** React Native Web also reports focus and hover; native platforms report only `pressed`. */
@@ -97,11 +97,24 @@ export function Screen({ children, overlay = false }: { children: ReactNode; ove
   );
 }
 
-export function Title({ children }: { children: ReactNode }) {
+/** `display`: the welcome screen's headline size (the Interchange's display voice). */
+export function Title({ children, display }: { children: ReactNode; display?: boolean }) {
   return (
-    <Text role="heading" aria-level={1} style={[styles.title, useOnOverlay() && styles.onOverlay]}>
+    <Text role="heading" aria-level={1} style={[styles.title, display && styles.display, useOnOverlay() && styles.onOverlay]}>
       {children}
     </Text>
+  );
+}
+
+/**
+ * A white enamel panel on a dark screen (the welcome screen's route map, D105): what's
+ * inside reads as on the page, so the rings keep their teal and text its colour.
+ */
+export function Enamel({ children }: { children: ReactNode }) {
+  return (
+    <OnOverlay.Provider value={false}>
+      <View style={styles.enamel}>{children}</View>
+    </OnOverlay.Provider>
   );
 }
 
@@ -159,7 +172,7 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
         {busy ? (
           // The label stays the accessible name and aria-busy says it's working, so the
           // spinner is hidden: on the web it is an unnamed progressbar (found by axe).
-          <ActivityIndicator color={variant === "primary" ? color.onAccent : color.accent} aria-hidden />
+          <ActivityIndicator color={variant === "danger" ? color.danger : color.sign} aria-hidden />
         ) : (
           <Text style={[styles.buttonText, buttonText[variant], disabled && styles.textDisabled]}>{label}</Text>
         )}
@@ -409,24 +422,28 @@ const styles = StyleSheet.create({
   onOverlay: { color: color.onAccent },
   screen: { padding: space.xl, gap: space.lg, maxWidth: size.contentMax, width: "100%", alignSelf: "center" },
   title: { ...type.title, color: color.text },
+  display: { ...type.display },
+  enamel: { backgroundColor: color.bg, padding: space.lg, borderRadius: radius.plate },
   heading: { ...type.heading, color: color.text },
   body: { ...type.body, color: color.text, flexShrink: 1 },
   muted: { color: color.textMuted },
   caption: { ...type.caption, color: color.textMuted },
 
+  // Buttons are sign plates (the Interchange, D105): square, the primary one marigold
+  // lettered in graphite, the others outlined in their colour.
   button: {
     minHeight: touch.min,
-    borderRadius: radius.md,
+    borderRadius: radius.plate,
     paddingHorizontal: space.lg,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: 2,
   },
-  primary: { backgroundColor: color.accent, borderColor: color.accent },
-  secondary: { backgroundColor: color.bg, borderColor: color.accent },
+  primary: { backgroundColor: color.highlight, borderColor: color.highlight },
+  secondary: { backgroundColor: color.bg, borderColor: color.sign },
   danger: { backgroundColor: color.bg, borderColor: color.danger },
   buttonDisabled: { backgroundColor: color.surface, borderColor: color.border },
-  buttonText: { ...type.label },
+  buttonText: { ...type.label, fontFamily: font.sign },
   textDisabled: { color: color.textMuted },
 
   link: { minHeight: touch.chip, justifyContent: "center", alignSelf: "flex-start" },
@@ -439,7 +456,7 @@ const styles = StyleSheet.create({
     minHeight: touch.min,
     borderWidth: 1,
     borderColor: color.borderInput,
-    borderRadius: radius.sm,
+    borderRadius: radius.plate,
     paddingHorizontal: space.md,
     ...type.body,
     color: color.text,
@@ -455,22 +472,22 @@ const styles = StyleSheet.create({
   box: {
     width: size.checkbox,
     height: size.checkbox,
-    borderRadius: radius.sm,
+    borderRadius: radius.plate,
     borderWidth: 2,
     borderColor: color.borderInput,
     backgroundColor: color.bg,
     alignItems: "center",
     justifyContent: "center",
   },
-  boxOn: { backgroundColor: color.accent, borderColor: color.accent },
-  boxPressed: { borderColor: color.accentPressed },
-  tick: { ...type.label, color: color.onAccent },
+  boxOn: { backgroundColor: color.sign, borderColor: color.sign },
+  boxPressed: { borderColor: color.accent },
+  tick: { ...type.label, color: color.onSign },
 
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   chip: {
     minHeight: touch.chip,
     paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
+    borderRadius: radius.plate,
     borderWidth: 1,
     borderColor: color.borderInput,
     backgroundColor: color.bg,
@@ -478,29 +495,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: space.xs,
   },
-  chipOn: { backgroundColor: color.accent, borderColor: color.accent },
-  chipPressed: { backgroundColor: color.accentSoft },
+  chipOn: { backgroundColor: color.sign, borderColor: color.sign },
+  chipPressed: { backgroundColor: color.surface },
   chipText: { ...type.body, color: color.text },
-  chipTextOn: { ...type.label, color: color.onAccent },
+  chipTextOn: { ...type.label, color: color.onSign },
 
-  notice: { padding: space.md, borderRadius: radius.md, borderLeftWidth: 4 },
+  notice: { padding: space.md, borderRadius: radius.plate, borderWidth: 2 },
 
   badgeBox: { alignSelf: "flex-start" },
-  badge: { borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: space.xs / 2 },
-  badgeText: { ...type.caption, fontWeight: "600", color: color.text },
+  badge: { borderRadius: radius.plate, paddingHorizontal: space.sm, paddingVertical: space.xs / 2 },
+  badgeText: { ...type.caption, fontFamily: font.textSemibold, color: color.text },
 
   card: {
     flexDirection: "row",
     gap: space.md,
     padding: space.md,
-    borderRadius: radius.md,
+    borderRadius: radius.plate,
     borderWidth: 1,
     borderColor: color.borderInput,
     backgroundColor: color.bg,
   },
   cardPressed: { backgroundColor: color.surface },
-  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.md, backgroundColor: color.surface, overflow: "hidden" },
-  photoBox: { width: "100%", borderRadius: radius.md, backgroundColor: color.surface, overflow: "hidden" },
+  thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
+  photoBox: { width: "100%", borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
   fill: { width: "100%", height: "100%" },
 
   center: { alignItems: "center", justifyContent: "center", gap: space.md, padding: space.xxl },
@@ -509,21 +526,21 @@ const styles = StyleSheet.create({
 });
 
 const pressedButton = StyleSheet.create({
-  primary: { backgroundColor: color.accentPressed, borderColor: color.accentPressed },
-  secondary: { backgroundColor: color.accentSoft },
+  primary: { backgroundColor: color.highlightPressed, borderColor: color.highlightPressed },
+  secondary: { backgroundColor: color.surface },
   danger: { backgroundColor: color.dangerSoft },
 });
 
 const buttonText = StyleSheet.create({
-  primary: { color: color.onAccent },
-  secondary: { color: color.accent },
+  primary: { color: color.sign },
+  secondary: { color: color.sign },
   danger: { color: color.danger },
 });
 
 const notice = StyleSheet.create({
-  info: { backgroundColor: color.accentSoft, borderLeftColor: color.accent },
-  success: { backgroundColor: color.successSoft, borderLeftColor: color.success },
-  error: { backgroundColor: color.dangerSoft, borderLeftColor: color.danger },
+  info: { backgroundColor: color.accentSoft, borderColor: color.accent },
+  success: { backgroundColor: color.successSoft, borderColor: color.success },
+  error: { backgroundColor: color.dangerSoft, borderColor: color.danger },
 });
 
 const badge = StyleSheet.create({

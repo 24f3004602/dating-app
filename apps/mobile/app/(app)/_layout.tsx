@@ -1,10 +1,12 @@
 import { Redirect, Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 import { useAuth } from "@/auth/AuthProvider";
 import { useReducedMotion } from "@/ui/motion";
 import { t } from "@/i18n/en";
 import { NotificationRouter } from "@/notifications/NotificationRouter";
 import { RealtimeProvider } from "@/realtime/RealtimeProvider";
+import { signHeader } from "@/ui/header";
 import { Loading } from "@/ui/primitives";
 
 // Every screen in this group needs a session; the API checks it again.
@@ -16,7 +18,8 @@ export default function AppLayout() {
   return (
     <RealtimeProvider>
       <NotificationRouter />
-      <Stack screenOptions={{ headerShown: true, title: "", animation: reduced ? "none" : "default" }} />
+      <StatusBar style="light" />
+      <Stack screenOptions={{ ...signHeader, headerShown: true, title: "", animation: reduced ? "none" : "default" }} />
     </RealtimeProvider>
   );
 }

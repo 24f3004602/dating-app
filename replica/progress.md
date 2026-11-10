@@ -30,6 +30,20 @@ Updated: 2026-11-10
   - **Not yet:**
     - a native Hindi speaker for every string in `apps/web/scripts/devanagari-text.txt`;
     - the live site (needs a rebuild and the owner's go).
+- **20e, the member app in the Interchange world: started (2026-11-10; D105).** The owner's choices: a bottom bar (Today · Likes · Matches · You), checks on the owner's Android phone, light only, welcome and sign-up first.
+  - **Done (not on a device yet):**
+    - static Anek TTFs for the app (four Latin voices at about 44 KB each; Devanagari 2.7 KB for the name only), built reproducibly (`build_fonts.py`, two builds byte-identical) and loaded with expo-font (declared at the SDK's 58.0.11);
+    - shared tokens: graphite sign colours, font families per type role (no weights in styles, so Android never fakes a bold), display and sign roles, a square plate radius, a pressed marigold; 36 contrast pairs, 0 failing;
+    - primitives as sign plates (marigold primary, graphite-outlined secondary, square fields, checkboxes, chips and badges; notices without the side stripe); graphite app bars with a light status bar;
+    - the welcome screen: a name sign (Latin, and Devanagari when configured), the display headline, and a route map built from Views on a white enamel panel, with the rings as its interchange (one accessible image).
+  - **Checks:** app `tsc` clean; Jest 128 passed (2 new: MOB-16, MOB-17); web 16 passed.
+  - **Not yet:**
+    - the check on the owner's phone (waiting for USB debugging and Expo Go);
+    - the sign-up, verify, sign-in and reset screens' own pass (they have the new primitives already);
+    - e2e on the web build (CI, after a commit);
+    - impeccable's finish review and the app's DESIGN.md;
+    - the bottom bar (next slice).
+  - **Found and fixed:** Prettier, run without a project config, rewrapped six files (about 800 lines). Restored from the commit, with only the real edits re-applied (104/44 lines). The map wasn't one accessible element until `accessible` was set; the welcome test caught it.
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).
 - **App:** a motion module (Reveal, press feedback, photo fade-in, screen fade on the web) on React Native's own Animated; the two-ring mark (meet, breathe, join) on the welcome screen, an empty introductions day and a match; list staggers; new chat messages slide in.

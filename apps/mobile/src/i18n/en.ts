@@ -21,6 +21,12 @@ export const en = {
     signIn: "I already have an account",
     adults: "For adults aged 18 and over.",
     pauseVideo: "Pause video",
+    map: {
+      label: "A route map: your line and someone else's meet at one interchange, only where both of you fit.",
+      you: "Your line",
+      them: "Theirs",
+      both: "Fit both ways",
+    },
   },
   signUp: {
     title: "Create your account",

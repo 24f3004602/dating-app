@@ -4,13 +4,17 @@ import { useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthProvider } from "@/auth/AuthProvider";
+import { useAppFonts } from "@/theme/fonts";
 import { useReducedMotion } from "@/ui/motion";
 
 export default function RootLayout() {
   const reduced = useReducedMotion();
+  const fontsReady = useAppFonts();
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } }),
   );
+  // A moment's wait on first start, so text never jumps from one font to another.
+  if (!fontsReady) return null;
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={client}>

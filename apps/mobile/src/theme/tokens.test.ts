@@ -4,14 +4,15 @@
  * Run `python3 .claude/skills/replica-design/contrast.py replica/design/tokens.json`
  * for the full report; this test keeps CI honest about both.
  */
-import { color, focusRing, motion, overlay, radius, space, touch, type } from "@/theme/tokens";
+import { font, color, focusRing, motion, overlay, radius, space, touch, type } from "@/theme/tokens";
 
 import design from "../../../../replica/design/tokens.json";
 
 type Spec = {
   color: Record<string, string>;
   pairs: [string, string, ("large" | "ui")?][];
-  type: Record<string, { size: number; line: number; weight: number }>;
+  font: Record<string, string>;
+  type: Record<string, { size: number; line: number; weight: number; family: string }>;
   space: number[];
   radius: Record<string, number>;
   touch: { min: number; chip: number };
@@ -48,9 +49,16 @@ test("every listed pair passes WCAG AA (4.5:1 text, 3:1 large text and UI parts)
 });
 
 test("the type scale, spacing, radius, touch targets and focus ring match too", () => {
+  // Each role names its font file; the weight is in the file, never set in styles (D105).
   for (const [name, t] of Object.entries(spec.type)) {
-    expect(type[name as keyof typeof type]).toEqual({ fontSize: t.size, lineHeight: t.line, fontWeight: String(t.weight) });
+    expect(type[name as keyof typeof type]).toEqual({
+      fontFamily: spec.font[t.family],
+      fontSize: t.size,
+      lineHeight: t.line,
+    });
   }
+  const families = Object.entries(spec.font).filter(([k]) => k !== "sans" && !k.startsWith("_"));
+  expect(Object.fromEntries(families.map(([k, v]) => [camel(k), v]))).toEqual(font);
   expect(Object.values(space)).toEqual(spec.space.slice(1));
   expect(radius).toEqual(spec.radius);
   expect(touch).toEqual(spec.touch);

@@ -4,19 +4,19 @@ import { type Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
-import { BETA_DOCUMENTS, DOCUMENT_LINKS, DOCUMENT_VERSIONS, INVITE_ONLY } from "@/config";
+import { BETA_DOCUMENTS, BRAND, BRAND_DEVANAGARI, DOCUMENT_LINKS, DOCUMENT_VERSIONS, INVITE_ONLY } from "@/config";
 import { deletionNotice } from "@/screens/account";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
-import { color, motion } from "@/theme/tokens";
+import { color, font, motion, space } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
-import { Body, Button, Checkbox, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
-import { Rings } from "@/ui/Rings";
+import { Body, Button, Checkbox, Enamel, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
+import { RouteMap } from "@/ui/RouteMap";
 import { WelcomeBackdrop } from "@/ui/WelcomeBackdrop";
 import {
   birthdateIso,
@@ -46,13 +46,17 @@ export function WelcomeScreen() {
       <WelcomeBackdrop />
     <Screen overlay>
       {deletion ? <Notice kind="info">{deletionNotice(t.account.goodbye, deletion.purgeAfter)}</Notice> : null}
-      <Rings mode="meet" />
+      <NameSign />
       <Reveal delay={WELCOME_STEP}>
-        <Title>{t.welcome.title}</Title>
+        <Title display>{t.welcome.title}</Title>
       </Reveal>
       <Reveal delay={WELCOME_STEP * 2}>
         <Body>{t.welcome.body}</Body>
       </Reveal>
+      {/* The route map on a white enamel panel: the rings meet at its interchange. */}
+      <Enamel>
+        <RouteMap />
+      </Enamel>
       <Reveal delay={WELCOME_STEP * 3}>
         <Button label={t.welcome.signUp} onPress={() => router.push("/sign-up")} />
       </Reveal>
@@ -67,7 +71,26 @@ export function WelcomeScreen() {
   );
 }
 
-const welcomeStyles = StyleSheet.create({ root: { flex: 1, backgroundColor: color.overlay } });
+/** The station sign: the working name, and in Devanagari when configured (D105). */
+function NameSign() {
+  return (
+    <View style={welcomeStyles.sign}>
+      <Text style={welcomeStyles.brand}>{BRAND}</Text>
+      {BRAND_DEVANAGARI ? (
+        <Text style={welcomeStyles.brandHindi} accessibilityLanguage="hi">
+          {BRAND_DEVANAGARI}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+const welcomeStyles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: color.overlay },
+  sign: { gap: space.xs / 2 },
+  brand: { fontFamily: font.sign, fontSize: 24, lineHeight: 28, letterSpacing: 1, textTransform: "uppercase", color: color.onSign },
+  brandHindi: { fontFamily: font.devanagari, fontSize: 20, lineHeight: 26, color: color.onSign },
+});
 
 export function SignUpScreen({ now }: { now?: () => Date }) {
   const { api, setPending } = useAuth();
