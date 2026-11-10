@@ -95,7 +95,8 @@ jobs:
           test "$(c -s -o /dev/null -w '%{http_code}' -H 'Range: bytes=0-99' https://beta.test/media/candles-v1-720.mp4)" = 206
 
           c -f https://beta.test/privacy > privacy.html
-          grep -q 'Privacy notice for testers' privacy.html
+          grep -q '<h1>Privacy notice</h1>' privacy.html
+          grep -q 'If you join the waitlist' privacy.html
           grep -q 'CI operator' privacy.html
           grep -q 'contact@example.com' privacy.html
           c -f https://beta.test/terms | grep -q 'Terms for testers'
