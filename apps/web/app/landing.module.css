@@ -1,8 +1,9 @@
-/* The Interchange (stage 20d, D101): Delhi Metro-style wayfinding in our own colours.
-   Your line is peacock teal, theirs is marigold; they meet only where both fit.
-   Graphite sign bands, a white enamel ground, Anek (fonts.css). The direction
-   contract is in .impeccable/surfaces/app-page-tsx.md. Colours are the shared
-   tokens (tokens.css); only the page's own measurements live here. */
+/* The Interchange (stage 20d, D101, D103): Delhi Metro-style wayfinding in our own
+   colours. Your line is peacock teal, theirs is marigold; they meet only where both
+   fit. Graphite sign bands and enamel sign plates on a white enamel ground, Anek
+   (fonts.css). The direction contract is in .impeccable/surfaces/app-page-tsx.md.
+   Colours are the shared tokens (tokens.css); only the page's own measurements
+   live here. */
 
 .landing {
   --sign: var(--color-text);
@@ -17,6 +18,7 @@
   --error-on-sign: #ffb0a3; /* 9.6:1 on the sign */
   font-family: "Anek", "Nirmala UI", "Noto Sans Devanagari", system-ui, sans-serif;
   font-stretch: 100%;
+  font-synthesis: none;
   color: var(--color-text);
   background: var(--color-bg);
   caret-color: var(--line-you);
@@ -49,7 +51,7 @@
 .name { display: flex; align-items: center; gap: var(--space-3); margin: 0; }
 .mark { flex: none; width: 3rem; height: 2rem; }
 .latin { font-size: 1.75rem; line-height: 1; font-weight: 700; font-stretch: 87.5%; letter-spacing: 0.04em; text-transform: uppercase; }
-.devanagari { display: block; font-size: 1.125rem; line-height: 1.2; font-weight: 600; color: var(--on-sign-muted); }
+.devanagari { display: block; margin-top: 0.125rem; font-size: 1.375rem; line-height: 1.15; }
 
 .status {
   margin: 0 0 0 auto;
@@ -88,11 +90,15 @@
 
 .lede { margin: 0; max-width: 34ch; font-size: clamp(1.125rem, 0.4vw + 1rem, 1.375rem); line-height: 1.45; text-wrap: pretty; }
 
-.map { width: 100%; height: auto; max-width: 34rem; overflow: visible; }
+.map { width: 100%; height: auto; overflow: visible; }
+.mapCompact { max-width: 34rem; }
+.mapTall { display: none; }
 .map text { font-family: inherit; fill: var(--sign); }
 .mapSmall { font-size: 15px; font-weight: 600; fill: var(--color-text-muted); }
 .mapLabel { font-size: 21px; font-weight: 700; font-stretch: 87.5%; }
-.mapHindi { font-size: 18px; font-weight: 600; }
+.mapHindi { font-size: 18px; }
+.mapLabelTall { font-size: 30px; font-weight: 760; font-stretch: 87.5%; }
+.mapHindiTall { font-size: 24px; }
 
 /* --- The waitlist: the next stop ----------------------------------------------- */
 
@@ -166,18 +172,71 @@
   box-sizing: border-box;
 }
 
+/* Hindi under the English on a sign, at sign size (the contract, D103). */
+.plateHindi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; }
+
 /* --- The line: one station per rule ------------------------------------------ */
 
 .route { max-width: 76rem; margin: 0 auto; padding: var(--space-7) var(--space-5); }
-.route h2 { margin: 0 0 var(--space-6); font-size: clamp(1.75rem, 1.6vw + 1.25rem, 2.75rem); line-height: 1.05; font-weight: 750; font-stretch: 87.5%; }
+.routeSide { margin-bottom: var(--space-6); }
+.routeSide h2 { margin: 0 0 var(--space-4); font-size: clamp(1.75rem, 1.6vw + 1.25rem, 2.75rem); line-height: 1.05; font-weight: 750; font-stretch: 87.5%; }
+
+/* A direction sign: the way to the last stop. */
+.landing a.towards {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-4);
+  background: var(--line-you);
+  color: var(--on-sign);
+  font-weight: 700;
+  font-stretch: 87.5%;
+  text-decoration: none;
+}
+.towards svg { width: 1.25rem; height: 1.25rem; }
+.landing a.towards:hover { background: var(--color-accent-pressed); }
+
+/* The key, like the one beside a route map. */
+.legend { list-style: none; margin: 0 0 var(--space-6); padding: 0; display: grid; gap: var(--space-2); color: var(--color-text-muted); font-weight: 600; }
+.legend li { display: flex; align-items: center; gap: var(--space-3); }
+.keyYou, .keyThem { flex: none; width: 2rem; height: var(--rail); }
+.keyYou { background: var(--line-you); }
+.keyThem { background: var(--line-them); }
+.keyRings, .keyEnd { flex: none; position: relative; width: 2rem; height: 1.125rem; }
+.keyRings::before, .keyRings::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 3px solid var(--sign);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.keyRings::before { left: 0.125rem; }
+.keyRings::after { left: 0.75rem; }
+.keyEnd::before { content: ""; position: absolute; left: 0.4375rem; top: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%; background: var(--sign); }
 
 .stations { list-style: none; margin: 0; padding: 0; }
 
 .station { position: relative; padding: 0 0 var(--space-6) calc(var(--rail-x) + var(--space-7)); }
-.station h3 { margin: 0 0 var(--space-2); font-size: clamp(1.25rem, 0.6vw + 1.1rem, 1.625rem); line-height: 1.15; font-weight: 700; font-stretch: 87.5%; }
-.station p { margin: 0; max-width: 60ch; font-size: 1.0625rem; line-height: 1.55; text-wrap: pretty; }
+.station p { margin: var(--space-3) 0 0; max-width: 60ch; font-size: 1.0625rem; line-height: 1.55; text-wrap: pretty; }
 
-/* The rails: yours on every station, theirs from the interchange on. */
+/* The station's name on an enamel plate: graphite, lettered in white. */
+.plate3 {
+  display: inline-block;
+  margin: 0;
+  padding: 0.5rem 0.875rem 0.5625rem;
+  background: var(--sign);
+  color: var(--on-sign);
+  font-size: clamp(1.25rem, 0.6vw + 1.1rem, 1.625rem);
+  line-height: 1.15;
+  font-weight: 700;
+  font-stretch: 87.5%;
+}
+
+/* The rails: both lines run on together from the interchange. */
 .station::before,
 .station::after {
   content: "";
@@ -188,16 +247,17 @@
   transform-origin: top;
 }
 .station::before { left: var(--rail-x); background: var(--line-you); }
-.joined::after { left: calc(var(--rail-x) + var(--rail) + var(--rail-gap)); background: var(--line-them); }
-.interchange::after { top: 0.8rem; }
+.station::after { left: calc(var(--rail-x) + var(--rail) + var(--rail-gap)); background: var(--line-them); }
+.interchange::before,
+.interchange::after { top: 0.9rem; }
 .terminus::before,
-.terminus::after { bottom: auto; height: 0.8rem; }
+.terminus::after { bottom: auto; height: 0.9rem; }
 
-/* The stop itself: a white roundel on the rail(s). */
+/* The stop itself: a white roundel across both rails. */
 .stop {
   position: absolute;
-  top: 0.15rem;
-  left: calc(var(--rail-x) + var(--rail) / 2 - var(--stop) / 2);
+  top: 0.45rem;
+  left: calc(var(--rail-x) + var(--rail) + var(--rail-gap) / 2 - var(--stop) / 2);
   z-index: 1;
   width: var(--stop);
   height: var(--stop);
@@ -206,10 +266,9 @@
   background: var(--color-bg);
   box-sizing: border-box;
 }
-.joined .stop { left: calc(var(--rail-x) + var(--rail) + var(--rail-gap) / 2 - var(--stop) / 2); }
 .terminus .stop { background: var(--sign); }
 /* The interchange: the two rings, the brand's own mark. */
-.interchange .stop { width: calc(var(--stop) * 1.6); left: calc(var(--rail-x) - var(--stop) * 0.55); border: 0; background: none; }
+.interchange .stop { width: calc(var(--stop) * 1.6); left: calc(var(--rail-x) + var(--rail) + var(--rail-gap) / 2 - var(--stop) * 0.8); border: 0; background: none; }
 .interchange .stop::before,
 .interchange .stop::after {
   content: "";
@@ -224,16 +283,21 @@
 .interchange .stop::before { left: 0; background: var(--color-bg); }
 .interchange .stop::after { right: 0; }
 
-.hindi { display: block; font-size: 1.125rem; font-weight: 600; color: var(--color-text-muted); }
-
-/* The end of the line: where it leads, with the candlelight loop. */
-.destination { display: grid; gap: var(--space-5); align-items: start; justify-items: start; }
-.story { position: relative; width: min(16rem, 70vw); }
-
-/* The confirm and leave pages: one panel, one button. */
-.linkMain { max-width: 44rem; margin: 0 auto; padding: var(--space-7) var(--space-5); }
-.linkTitle { margin: 0; font-size: clamp(2rem, 2vw + 1.5rem, 3rem); line-height: 1.02; font-weight: 750; font-stretch: 87.5%; }
-.landing a.home { color: inherit; text-decoration: none; }
+/* The end of the line: the candlelight loop (D099) in a square frame, cropped to the
+   candles, with a rectangular pause plate. */
+.terminusImage { position: relative; margin-top: var(--space-4); max-width: 34rem; }
+.terminusImage :global(.hero-story) { width: 100%; aspect-ratio: 4 / 3; border-radius: 0; justify-self: auto; }
+.terminusImage :global(.hero-story-media) { object-position: 66% 74%; }
+.terminusImage :global(.motion-toggle) {
+  right: 0;
+  bottom: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--sign);
+  color: var(--on-sign);
+  font-weight: 700;
+}
+.terminusImage :global(.motion-toggle[aria-pressed="true"]) { background: var(--line-them); color: var(--sign); }
 
 /* The close: a full-width graphite band holding the last stop and the footer. */
 .closing { background: var(--sign); color: var(--on-sign); padding: var(--space-7) var(--space-5) var(--space-5); }
@@ -242,30 +306,54 @@
 .footer p { margin: 0; max-width: 72ch; }
 .footer a { color: var(--line-them); }
 
+/* The confirm and leave pages: one panel, one button. */
+.linkMain { max-width: 44rem; margin: 0 auto; padding: var(--space-7) var(--space-5); }
+.linkTitle { margin: 0; font-size: clamp(2rem, 2vw + 1.5rem, 3rem); line-height: 1.02; font-weight: 750; font-stretch: 87.5%; }
+.landing a.home { color: inherit; text-decoration: none; }
+
 /* --- Wider screens -------------------------------------------------------------- */
 
 @media (min-width: 40rem) {
   .landing { --rail-x: 1.5rem; }
-  .form { grid-template-columns: minmax(0, 1fr); }
-  .destination { grid-template-columns: minmax(0, 1fr) auto; }
 }
 
 @media (min-width: 64rem) {
   .sign { padding-inline: var(--space-7); }
-  .hero {
+
+  /* The hero and the route share one grid, so the stations sit under the map. */
+  .hero,
+  .route {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    column-gap: var(--space-7);
+    padding-inline: var(--space-7);
+  }
+  .hero {
     grid-template-areas: "headline map" "lede map" "panel map";
     align-items: start;
-    column-gap: var(--space-7);
-    padding: var(--space-7);
+    padding-top: var(--space-7);
+    padding-bottom: var(--space-5);
   }
   .headline { grid-area: headline; }
   .lede { grid-area: lede; }
-  .map { grid-area: map; align-self: center; max-width: none; }
   .hero .panel { grid-area: panel; }
-  .route, .closing { padding-inline: var(--space-7); }
-  .station { display: grid; grid-template-columns: 20rem minmax(0, 1fr); column-gap: var(--space-6); }
-  .station h3 { margin: 0; }
+  .mapCompact { display: none; }
+  .mapTall { display: block; grid-area: map; align-self: end; }
+
+  .route { display: grid; padding-top: 0; }
+  .routeSide { position: sticky; top: var(--space-6); align-self: start; padding-top: var(--space-6); margin-bottom: 0; }
+
+  /* The map's joined rails sit at 12.5% and 14.75% of this column (RouteDiagram);
+     so do these, 1.6% wide, and the line runs on unbroken from the first screen. */
+  .station { padding-left: calc(16% + var(--space-5)); }
+  .station::before { left: calc(12.5% - 0.8%); width: 1.6%; }
+  .station::after { left: calc(14.75% - 0.8%); width: 1.6%; }
+  .interchange::before,
+  .interchange::after { top: 0; }
+  .stop { left: calc(13.625% - var(--stop) / 2); }
+  /* The map's rings just above are this station's mark, so no second pair here; its
+     sign starts level with the section's heading, which leads the section. */
+  .interchange .stop { display: none; }
+  .interchange { padding-top: var(--space-6); }
 }
 
 /* --- The one moving idea: the line draws as you travel down it ---------------- */
@@ -276,7 +364,7 @@
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .station::before,
-    .joined::after {
+    .station::after {
       animation: draw linear both;
       animation-timeline: view();
       animation-range: entry 30% cover 55%;

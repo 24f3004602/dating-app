@@ -39,6 +39,6 @@ STORY: The visitor sees in one screen that this is a short daily set matched bot
 
 FIRST VIEWPORT: Phone: a graphite sign band with the rings and KINAARA / किनारा; a teal and marigold strip; the headline at full width; the route diagram below it, teal entering left, marigold right, meeting at the ring interchange labelled "Fit both ways / दोनों तरफ़ से"; a graphite "Next stop: Delhi NCR" panel at the bottom with the email field and the Join the waitlist plate. Desktop: the sign band across the top; headline and the waitlist panel in the left column; the route diagram large on the right.
 
-FORM: Delhi Metro wayfinding, position 1 on the ordered list (impeccable's pick, chosen by the owner over the roll's assignment, candidate 7). Signature interaction: as the visitor scrolls, the teal line draws down the page station by station and the marigold line joins at the interchange; with reduced motion the full line is drawn at once. seed: 366e93b948f4624b
+FORM: Delhi Metro wayfinding, position 1 on the ordered list (impeccable's pick, chosen by the owner over the roll's assignment, candidate 7). Signature interaction: as the visitor scrolls, the teal line draws down the page station by station and the marigold line joins at the interchange; with reduced motion the full line is drawn at once. seed:366e93b948f4624b
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

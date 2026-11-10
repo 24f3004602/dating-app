@@ -20,13 +20,16 @@ Updated: 2026-11-10
   - **Endpoints:** `POST /v1/waitlist`, `/confirm` and `/leave`, plus a confirmation job, migration 0014 (`waitlist_entries`), three retention rules in the sweep, `SITE_URL`, a counts-only CLI, and a waitlist section in the privacy notice.
   - **Tests:** WL-1..14 pass; the full API suite passes (391); 4 mutation checks were caught; ruff and strict mypy are clean; the OpenAPI types were regenerated (additive only).
   - **Not yet:** CI on a push; the website's form and its confirm and leave pages (20d); the opening email (launch).
-- **20d, the Interchange landing page: built, checked locally, waiting for review (2026-11-10; D103).**
-  - **What:** self-hosted, subset Anek; the sign band, map, stations and a graphite close; the waitlist form twice; the confirm and leave pages; the notice renamed; the shoreline removed.
-  - **Checks:** web `tsc` and 16 Node tests pass. impeccable's hook found nothing; `detect` found one lone last word (fixed) and the old side-tab border in `globals.css`. Two screenshot rounds fixed 4 layout defects.
+- **20d, the Interchange landing page: built, reviewed (impeccable's finish review gave ship for its scored fixes), DESIGN.md being written (2026-11-10; D103, D104).**
+  - **What:**
+    - self-hosted Anek (Latin variable 103 KB; Devanagari static 62 KB);
+    - a sign band, a tall map on desktop whose line runs unbroken into the stations, and bilingual enamel sign plates;
+    - a route key and a direction sign; the candlelight loop in a square frame at the end of the line; a graphite close;
+    - the waitlist form twice, and the confirm and leave pages; the notice renamed.
+  - **Checks:** web `tsc` and 16 Node tests pass; `detect` finds 0 issues on the rendered pages. CI on the first commit passed api, mobile (web build plus every e2e test, including the waitlist spec) and images. beta-stack failed on the old notice title; fixed in `3efa92c`.
   - **Not yet:**
-    - e2e and `next build` (CI, after a commit);
-    - impeccable's finish review and DESIGN.md;
-    - the owner's copy review, and a native reviewer for the Hindi;
+    - committing the review fixes and DESIGN.md, then CI on them;
+    - a native Hindi speaker for every string in `apps/web/scripts/devanagari-text.txt`;
     - the live site (needs a rebuild and the owner's go).
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).

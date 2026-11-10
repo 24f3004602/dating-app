@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T00:00:00Z",
+  "title": "Design System: Kinaara (website)",
+  "extensions": {
+    "colorMeta": {
+      "line-you": { "role": "primary", "displayName": "Peacock Teal", "canonical": "#0e6670", "tonalRamp": ["#000f13", "#002a2f", "#0e484f", "#236971", "#478c96", "#78afb7", "#a8d4da", "#d5f6fa"] },
+      "line-you-pressed": { "role": "primary", "displayName": "Deep Teal", "canonical": "#08535a", "tonalRamp": ["#000f11", "#05292d", "#19474c", "#2f676e", "#518b92", "#7faeb4", "#add3d7", "#d8f5f8"] },
+      "line-them": { "role": "secondary", "displayName": "Marigold", "canonical": "#f5b544", "tonalRamp": ["#190500", "#3a1c00", "#5e3500", "#855100", "#ac7400", "#cb9b4d", "#eac489", "#ffeabd"] },
+      "line-them-hover": { "role": "secondary", "displayName": "Light Marigold", "canonical": "#f7c467", "tonalRamp": ["#190500", "#3a1c00", "#5e3500", "#855100", "#ac7400", "#cb9b4d", "#eac489", "#ffeabd"] },
+      "line-them-pressed": { "role": "secondary", "displayName": "Burnt Marigold", "canonical": "#e9a632", "tonalRamp": ["#190500", "#3a1c00", "#5e3500", "#855100", "#ac7400", "#cb9b4d", "#eac489", "#ffeabd"] },
+      "sign-graphite": { "role": "neutral", "displayName": "Sign Graphite", "canonical": "#1c1b19", "tonalRamp": ["#0b0b0a", "#252423", "#40403e", "#5e5d5b", "#81807e", "#a5a4a2", "#cbcac9", "#efeeed"] },
+      "enamel-white": { "role": "neutral", "displayName": "Enamel White", "canonical": "#ffffff", "tonalRamp": ["#0b0b0b", "#242424", "#404040", "#5d5d5d", "#808080", "#a4a4a4", "#cacaca", "#eeeeee"] },
+      "ink-muted": { "role": "neutral", "displayName": "Station Grey", "canonical": "#5c5852", "tonalRamp": ["#0c0b09", "#262421", "#423f3b", "#615d58", "#84807a", "#a7a49f", "#cdcac6", "#f0eeeb"] },
+      "on-sign-muted": { "role": "neutral", "displayName": "Sign Grey", "canonical": "#d6d2cb", "tonalRamp": ["#0c0b09", "#262421", "#423f3b", "#605d58", "#83807a", "#a7a49f", "#cccac6", "#f0eeeb"] },
+      "error-on-sign": { "role": "error", "displayName": "Signal Coral", "canonical": "#ffb0a3", "tonalRamp": ["#1a0402", "#3b1813", "#603029", "#874a40", "#af6b61", "#ce948a", "#eebdb5", "#ffe4de"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The first-screen headline only." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings; the confirm and leave page titles use a 2 to 3rem variant." },
+      "title": { "displayName": "Title", "purpose": "Headings inside graphite panels." },
+      "sign": { "displayName": "Sign", "purpose": "Station names on enamel plates, with Devanagari beneath at 0.875em." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "The brand name in the sign band, uppercase." },
+      "lede": { "displayName": "Lede", "purpose": "The one line under the headline, max 34ch." },
+      "body": { "displayName": "Body", "purpose": "Station descriptions, max 60ch." },
+      "label": { "displayName": "Label", "purpose": "Form labels and legend entries; plates use 700 at 1.0625rem, semi-condensed." },
+      "small": { "displayName": "Small", "purpose": "Consent lines and the footer, in the muted grey of their ground." }
+    },
+    "fonts": [
+      { "family": "Anek", "file": "/fonts/anek-latin-v1.woff2", "axes": "wght 100-800, wdth 75-125%", "note": "Variable, preloaded in app/layout.tsx." },
+      { "family": "Anek", "file": "/fonts/anek-devanagari-v1.woff2", "axes": "static wght 650, wdth 90", "note": "Subset to scripts/devanagari-text.txt; declared for every weight and width so bold is never synthesized." }
+    ],
+    "shadows": [
+      { "name": "focus-ring", "value": "outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19", "purpose": "The only box-shadow in the world: the solid graphite outer ring of the focus indicator, on white and graphite grounds alike." }
+    ],
+    "motion": [
+      { "name": "rail-draw", "value": "@keyframes draw { from { transform: scaleY(0) } to { transform: scaleY(1) } } animation: draw linear both; animation-timeline: view(); animation-range: entry 30% cover 55%", "purpose": "The one authored motion: station rails draw as the visitor scrolls. Only under prefers-reduced-motion: no-preference and @supports (animation-timeline: view()); otherwise fully drawn." },
+      { "name": "plate-state", "value": "background-color 150ms cubic-bezier(0.2, 0, 0, 1)", "purpose": "Button plate hover and press, only when motion is allowed." },
+      { "name": "terminus-loop", "value": "video loop with a pause plate (aria-pressed)", "purpose": "End-of-line candlelight loop; the pause plate satisfies WCAG 2.2.2 and is hidden under reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "rail-shift", "value": "40rem" },
+      { "name": "two-column", "value": "64rem" }
+    ],
+    "geometry": [
+      { "name": "rail", "value": "0.375rem wide, 0.1875rem gap, 1.25rem from the edge (1.5rem from 40rem)", "purpose": "Station rails below 64rem." },
+      { "name": "shared-rails-desktop", "value": "centres at 12.5% and 14.75% of the right column, 1.6% wide", "purpose": "From 64rem the map's joined rails and the station rails are one line (RouteDiagram.tsx and landing.module.css)." },
+      { "name": "stop", "value": "1.625rem roundel, 4px graphite outline, white fill", "purpose": "Station stop; terminus filled graphite; interchange is the two rings." }
+    ],
+    "openItems": [
+      "All Hindi copy is pending a native reviewer before the site goes live; it is not approved copy."
+    ]
+  },
+  "components": [
+    {
+      "name": "Button Plate",
+      "kind": "button",
+      "refersTo": "button-plate",
+      "description": "The primary action: a marigold sign plate, never a pill.",
+      "html": "<button class=\"ds-plate\">Join the waitlist</button>",
+      "css": ".ds-plate { min-height: 3rem; padding: 0 1.5rem; border: 0; border-radius: 0; background: #f5b544; color: #1c1b19; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: 1.0625rem; font-weight: 700; font-stretch: 87.5%; cursor: pointer; transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-plate:hover { background: #f7c467; } .ds-plate:active { background: #e9a632; } .ds-plate:focus-visible { outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19; } .ds-plate:disabled { background: #d6d2cb; cursor: progress; }"
+    },
+    {
+      "name": "Direction Sign",
+      "kind": "button",
+      "refersTo": "direction-sign",
+      "description": "In-page wayfinding: a teal plate with an arrow and its Devanagari beneath.",
+      "html": "<a class=\"ds-towards\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 12h14M12 5l7 7-7 7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/></svg><span>Towards the waitlist<span class=\"ds-hi\" lang=\"hi\">वेटलिस्ट की ओर</span></span></a>",
+      "css": ".ds-towards { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 3rem; padding: 0.5rem 1rem; background: #0e6670; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; text-decoration: none; } .ds-towards svg { width: 1.25rem; height: 1.25rem; } .ds-towards .ds-hi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; } .ds-towards:hover { background: #08535a; } .ds-towards:focus-visible { outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19; }"
+    },
+    {
+      "name": "Station Plate",
+      "kind": "custom",
+      "refersTo": "station-plate",
+      "description": "A rule's name on a graphite enamel plate, bilingual.",
+      "html": "<h3 class=\"ds-station-plate\">Safety tools are free<span class=\"ds-hi\" lang=\"hi\">सुरक्षा के टूल मुफ़्त</span></h3>",
+      "css": ".ds-station-plate { display: inline-block; margin: 0; padding: 0.5rem 0.875rem 0.5625rem; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: clamp(1.25rem, 0.6vw + 1.1rem, 1.625rem); line-height: 1.15; font-weight: 700; font-stretch: 87.5%; } .ds-station-plate .ds-hi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; }"
+    },
+    {
+      "name": "Email Field on Sign",
+      "kind": "input",
+      "refersTo": "input-on-sign",
+      "description": "A square white field inside a graphite panel; coral border and message on error.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-email\">Your email address</label><input id=\"ds-email\" type=\"email\"></div>",
+      "css": ".ds-field { display: grid; gap: 0.5rem; padding: 1.5rem; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; } .ds-field label { font-weight: 600; } .ds-field input { min-height: 3rem; padding: 0 0.75rem; border: 2px solid #ffffff; border-radius: 0; background: #ffffff; color: #1c1b19; font: inherit; font-size: 1.0625rem; } .ds-field input:focus-visible { outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19; } .ds-field input[aria-invalid] { border-color: #ffb0a3; }"
+    },
+    {
+      "name": "Sign Band",
+      "kind": "nav",
+      "refersTo": "sign-band",
+      "description": "The graphite header: two-ring mark, bilingual wordmark, status plate, then the teal and marigold strip.",
+      "html": "<div><header class=\"ds-sign\"><p class=\"ds-name\"><svg viewBox=\"0 0 48 32\" width=\"48\" height=\"32\" aria-hidden=\"true\"><circle cx=\"17\" cy=\"16\" r=\"12\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"4.5\"/><circle cx=\"31\" cy=\"16\" r=\"12\" fill=\"none\" stroke=\"#f5b544\" stroke-width=\"4.5\"/></svg><span><span class=\"ds-latin\">Kinaara</span><span class=\"ds-dev\" lang=\"hi\">किनारा</span></span></p><p class=\"ds-status\">Not open yet</p></header><div class=\"ds-lines\"><span></span><span></span></div></div>",
+      "css": ".ds-sign { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; padding: 0.75rem 1.5rem; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; } .ds-name { display: flex; align-items: center; gap: 0.75rem; margin: 0; } .ds-latin { font-size: 1.75rem; line-height: 1; font-weight: 700; font-stretch: 87.5%; letter-spacing: 0.04em; text-transform: uppercase; } .ds-dev { display: block; margin-top: 0.125rem; font-size: 1.375rem; line-height: 1.15; } .ds-status { margin: 0 0 0 auto; padding: 0.25rem 0.75rem; background: #f5b544; color: #1c1b19; font-size: 0.875rem; font-weight: 700; font-stretch: 87.5%; } .ds-lines { display: flex; height: 0.5rem; } .ds-lines span { flex: 1; } .ds-lines span:first-child { background: #0e6670; } .ds-lines span:last-child { background: #f5b544; }"
+    },
+    {
+      "name": "Station Line",
+      "kind": "custom",
+      "refersTo": "station-plate",
+      "description": "The signature: rules hung on two rails with a roundel per stop; the rails draw on scroll when motion is allowed.",
+      "html": "<ol class=\"ds-stations\"><li class=\"ds-station\"><span class=\"ds-stop\"></span><h3 class=\"ds-sp\">Up to 15 introductions a day<span class=\"ds-hi\" lang=\"hi\">रोज़ 15 तक परिचय</span></h3><p>The same set all day, a new one each day.</p></li><li class=\"ds-station\"><span class=\"ds-stop\"></span><h3 class=\"ds-sp\">Ten likes a day, for everyone<span class=\"ds-hi\" lang=\"hi\">रोज़ दस लाइक, सबके लिए</span></h3><p>Every member gets the same ten.</p></li></ol>",
+      "css": ".ds-stations { list-style: none; margin: 0; padding: 0; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; color: #1c1b19; background: #ffffff; } .ds-station { position: relative; padding: 0 0 2rem 4.25rem; } .ds-station p { margin: 0.75rem 0 0; max-width: 60ch; font-size: 1.0625rem; line-height: 1.55; } .ds-station::before, .ds-station::after { content: ''; position: absolute; top: 0; bottom: 0; width: 0.375rem; transform-origin: top; } .ds-station::before { left: 1.25rem; background: #0e6670; } .ds-station::after { left: 1.8125rem; background: #f5b544; } .ds-stop { position: absolute; top: 0.45rem; left: 0.84375rem; z-index: 1; width: 1.625rem; height: 1.625rem; border: 4px solid #1c1b19; border-radius: 50%; background: #ffffff; box-sizing: border-box; } .ds-sp { display: inline-block; margin: 0; padding: 0.5rem 0.875rem 0.5625rem; background: #1c1b19; color: #ffffff; font-size: 1.375rem; line-height: 1.15; font-weight: 700; font-stretch: 87.5%; } .ds-hi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; } @keyframes ds-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } } @media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view()) { .ds-station::before, .ds-station::after { animation: ds-draw linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; } } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Interchange",
+    "overview": "The website is a metro route map in the brand's own colours. Your line is peacock teal, the other person's is marigold, and they meet at an interchange drawn as the brand's two rings, only where both fit. After the interchange the two rails run on side by side, and each rule of the product is a station on that line. The language is Delhi Metro-style wayfinding: graphite sign bands across the top and the close, enamel sign plates lettered in white, thick route lines and white station roundels outlined in graphite, all on a white enamel ground. DMRC's identity (its logo, line colours and signage artwork) is never copied; the system borrows the grammar of wayfinding, not anyone's marks.\n\nDensity is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Every sign that names a place or a rule is bilingual, Devanagari under the Latin. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: the only authored movement is the line drawing itself as you travel down the page.\n\nRejected (confirmed in the direction contract): the category's swipe-card phone mockup and gradients, and the calm cream page. Pills, gradients and glow are out.",
+    "keyCharacteristics": [
+      "Two line colours with fixed meanings: teal is yours, marigold is theirs.",
+      "Graphite sign bands and plates on a white enamel ground.",
+      "Anek throughout: semi-condensed bold (wdth 87.5) for signs, normal width for text.",
+      "Bilingual signs, Devanagari under the Latin.",
+      "Square-cornered plates; the only curves are roundels and the two-ring mark.",
+      "One authored motion: the rails draw on scroll."
+    ],
+    "rules": [
+      { "name": "The Two Lines Rule", "body": "Teal always means you and marigold always means the other person. Never swap them, never add a third line colour, and never use them as decoration detached from that meaning (the button plate and focus ring are marigold because they are the step toward someone else).", "section": "colors" },
+      { "name": "The Rails Are Not Text Rule", "body": "Marigold on white is for rails, plates and fills only, never for text on the white ground; marigold text appears only on graphite.", "section": "colors" },
+      { "name": "The Bilingual Sign Rule", "body": "Every sign that names a place or a rule carries its Devanagari directly beneath the Latin, as a block, at 0.875em of the sign's size with line-height 1.2, marked `lang=\"hi\"`. This covers station plates, panel headings and the direction sign. The wordmark and the map labels set their Hindi at their own fixed sizes. Running text is English only. Open item: all Hindi copy is pending a native reviewer before the site goes live; it is not approved copy, and new Hindi must be added to `scripts/devanagari-text.txt` so the subset font contains it.", "section": "typography" },
+      { "name": "The Condensed Means Sign Rule", "body": "Semi-condensed bold is for things that work as signs (names, headings, plates, buttons). Paragraphs are never condensed.", "section": "typography" },
+      { "name": "The One Geometry Rule", "body": "On desktop the map's joined rails and the station rails share one geometry: centred at 12.5% and 14.75% of the right grid column, each 1.6% of it wide, so the line runs unbroken from the first screen to the last stop. Change one and you must change the other (`RouteDiagram.tsx` and `landing.module.css`).", "section": "layout" },
+      { "name": "The Enamel Rule", "body": "Surfaces are flat painted planes. Separation is by colour block, never by shadow.", "section": "elevation" },
+      { "name": "The Sign Plate Rule", "body": "If it is pressed or read as a sign, it is a rectangle. No pills, no rounded cards.", "section": "shapes" },
+      { "name": "The One Moving Idea Rule", "body": "The rails draw downward as the visitor scrolls (a `scaleY` 0 to 1 keyframe, linear, on a CSS scroll-driven `view()` timeline, range entry 30% to cover 55%; no script). It runs only under `prefers-reduced-motion: no-preference` and `@supports (animation-timeline: view())`; otherwise the line is fully drawn from the start. Only the rails move; every word is visible from first paint. This is the world's only authored motion. The end-of-line video loops longer than 5 seconds, so it carries a rectangular graphite pause plate in its bottom-right corner (marigold when pressed) to satisfy WCAG 2.2.2, and the plate is hidden when reduced motion is requested.", "section": "components" }
+    ],
+    "dos": [
+      "Do keep teal for your line and marigold for theirs, everywhere, including the two-ring mark.",
+      "Do set every sign that names a place or a rule bilingual, Devanagari beneath at 0.875em, and route new Hindi through a native reviewer before it ships.",
+      "Do make anything pressable a square-cornered plate at least 3rem tall, with the marigold-in-graphite focus ring.",
+      "Do put marigold text only on graphite; on white, marigold is a rail or a fill.",
+      "Do keep the map rails and station rails on one geometry (12.5% and 14.75% of the column, 1.6% wide) at desktop widths.",
+      "Do draw map symbols as inline SVG with real text labels, never as images of words.",
+      "Do give anything that moves for more than 5 seconds a pause plate, and draw the finished state when motion is reduced or unsupported."
+    ],
+    "donts": [
+      "Don't use pills, rounded cards, gradients, glow or drop shadows.",
+      "Don't copy DMRC's logo, line colours or signage artwork; the grammar is borrowed, the marks are our own.",
+      "Don't add motion beyond the drawing rails and the pausable end-of-line loop.",
+      "Don't condense paragraphs; semi-condensed bold is for signs.",
+      "Don't use the shared blue focus colour, the shared radius scale or the staff console's coloured left-border notice inside this world.",
+      "Don't show people in imagery; the end-of-line loop is people-free footage."
+    ]
+  }
+}
