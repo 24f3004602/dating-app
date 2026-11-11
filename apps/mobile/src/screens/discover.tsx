@@ -1,7 +1,7 @@
 /** Today's introductions, a person's profile, and discovery preferences. */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { z } from "zod";
@@ -115,30 +115,55 @@ export function PersonScreen({ id }: { id: string }) {
   return <PersonView person={person.data} />;
 }
 
+/**
+ * The person first, then the decision (D106): their name on a sign plate, what they want and
+ * where, their first photo and bio; then their own words and photos take turns. Like and Pass
+ * come after all of it, and Block and Report at the very end.
+ */
 function PersonView({ person }: { person: Person }) {
   const router = useRouter();
+  const [first, ...more] = person.photos;
+  const photo = (p: Person["photos"][number], i: number) => (
+    <Photo
+      key={p.id}
+      uri={absoluteUrl(API_URL, p.urls.large)}
+      style={styles.photo}
+      label={fill(t.person.photo, { n: i + 1, total: person.photos.length, name: person.display_name })}
+    />
+  );
+  const turns = Math.max(more.length, person.prompts.length);
   return (
     <Screen>
-      <DecisionBar targetId={person.user_id} />
-      <Title>{`${person.display_name}, ${person.age}`}</Title>
-      <Body>{t.intent[person.intent]}</Body>
-      <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>
-      {person.photos.map((p, i) => (
-        <Photo
-          key={p.id}
-          uri={absoluteUrl(API_URL, p.urls.large)}
-          style={styles.photo}
-          label={fill(t.person.photo, { n: i + 1, total: person.photos.length, name: person.display_name })}
-        />
-      ))}
+      <View style={styles.facts}>
+        <Plate heading>{`${person.display_name}, ${person.age}`}</Plate>
+        <Body>{t.intent[person.intent]}</Body>
+        <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>
+      </View>
+      {first ? photo(first, 0) : null}
       {person.bio ? <Body>{person.bio}</Body> : null}
-      {person.prompts.map((p) => (
-        <View key={p.key} style={styles.prompt}>
-          <Body muted>{p.text}</Body>
-          <Body>{p.answer}</Body>
-        </View>
-      ))}
-      <SafetyActions userId={person.user_id} name={person.display_name} onEnded={() => router.back()} />
+      {Array.from({ length: turns }, (_, i) => {
+        const prompt = person.prompts[i];
+        const next = more[i];
+        return (
+          <Fragment key={i}>
+            {prompt ? (
+              <View style={styles.prompt}>
+                <Body muted>{prompt.text}</Body>
+                <Body>{prompt.answer}</Body>
+              </View>
+            ) : null}
+            {next ? photo(next, i + 1) : null}
+          </Fragment>
+        );
+      })}
+      {/* The edge of the platform: the decision is set apart from the person. */}
+      <View style={styles.decision}>
+        <DecisionBar targetId={person.user_id} />
+      </View>
+      {/* Safety in its own place, not in the decision's grid: Block was right under Like (seen on the phone). */}
+      <View style={styles.safety}>
+        <SafetyActions userId={person.user_id} name={person.display_name} onEnded={() => router.back()} />
+      </View>
     </Screen>
   );
 }
@@ -225,7 +250,10 @@ export function PreferencesScreen() {
 
 const styles = StyleSheet.create({
   photo: { aspectRatio: 4 / 5 },
-  prompt: { gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
+  facts: { gap: space.xs },
+  prompt: { gap: space.xs, padding: space.md, borderRadius: radius.plate, backgroundColor: color.surface },
+  decision: { borderTopWidth: 2, borderTopColor: color.sign, paddingTop: space.lg, marginTop: space.sm },
+  safety: { borderTopWidth: 1, borderTopColor: color.border, paddingTop: space.lg, marginTop: space.xl },
   end: { flexDirection: "row", alignItems: "center", gap: space.md, paddingTop: space.sm },
   // The same stop as the bottom bar's, filled: the last one on today's line.
   terminus: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: color.sign, backgroundColor: color.sign },

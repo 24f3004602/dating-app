@@ -58,12 +58,6 @@ Evidence: the first backup of the live beta, 2026-11-08.
 Suspected cause: Git Bash rewrites arguments that look like paths (`/app/var`) into Windows paths before `docker` sees them. CI runs the script on Linux, where this can't happen.
 Status: fixed. `backup.sh` sets `MSYS_NO_PATHCONV=1` (ignored on Linux) and now fails unless the archive lists `media/`; the rerun passed (BETA-5).
 
-## To check
-
-- **Native platforms:** VoiceOver and TalkBack reading order, iOS error announcements, 200% system text, the keystore, the photo picker and realtime reconnection on mobile networks (NAT-1).
-- **Cross-site POSTs to console server actions:** no test sends one. Protection: SameSite=Strict cookies and Next.js's Origin-against-Host check.
-- **Deletion jobs:** what happens to a photo file whose deletion job fails 8 times (no reconciliation sweep yet).
-
 ### BUG-004: on Android, every API call fails as "We couldn't reach the server"
 
 - Severity: S1 (core flow blocked), native builds only. No native build has shipped; testers use the web build, which is unaffected.
@@ -96,3 +90,10 @@ Actual: 68 dp. Measured from view bounds: the band ends at 287 px and the title 
 Evidence: uiautomator view bounds and the window's `statusBars` inset (151 px); the captures in `apps/mobile/.impeccable/review/slice2/` (git-ignored).
 Suspected cause: confirmed. `Screen` padded all four edges with SafeAreaView, so the inset the bar already covers was added again. The web build's top inset is 0, so the browser tests couldn't see it.
 Status: fixed (stage 20e slice 2, not yet committed). A `ScreenEdges` context: the stacks leave the top to their bar, the tabs leave the top to the band and the bottom to the line bar, and the welcome screen pads every edge. MOB-20 mutation-checked: removing the fix fails all 3 cases. Measured on the phone afterwards: 24 dp.
+
+## To check
+
+- **A dev-only "NAVIGATE … was not handled by any navigator" console error** (2026-11-11, Expo Go 58.0.5 on the owner's Pixel 8 Pro). It appeared once, when an `exp://…/--/discover` link was sent to an app still running a bundle from a dev server that had just been stopped. The app still opened on Today. Not reproduced on a cold start with the same link. Check in a development build: open a deep link (a notification, a reset email) while the app is starting.
+- **Native platforms:** VoiceOver and TalkBack reading order, iOS error announcements, 200% system text, the keystore, the photo picker and realtime reconnection on mobile networks (NAT-1).
+- **Cross-site POSTs to console server actions:** no test sends one. Protection: SameSite=Strict cookies and Next.js's Origin-against-Host check.
+- **Deletion jobs:** what happens to a photo file whose deletion job fails 8 times (no reconciliation sweep yet).

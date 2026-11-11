@@ -73,6 +73,56 @@ test("a person's profile, and a clear state when it is no longer available", asy
   expect(await screen.findByText(t.person.gone)).toBeTruthy();
 });
 
+/** Every text and accessible name on screen, in reading order. */
+function readingOrder(): string[] {
+  const out: string[] = [];
+  const walk = (node: unknown): void => {
+    if (typeof node === "string") out.push(node);
+    else if (Array.isArray(node)) node.forEach(walk);
+    else if (node && typeof node === "object") {
+      const n = node as { props?: Record<string, unknown>; children?: unknown };
+      const name = n.props?.["aria-label"] ?? n.props?.accessibilityLabel;
+      if (typeof name === "string") out.push(name);
+      walk(n.children);
+    }
+  };
+  walk(screen.toJSON());
+  return out;
+}
+
+test("the person comes first and the decision after (D106): name, facts, photo, bio, then words and photos in turn", async () => {
+  const person = {
+    ...card("u1", "Aarav", "under_5_km", 1),
+    photos: [photo("a"), photo("b")],
+    prompts: [
+      { key: "festival", text: "The festival I look forward to all year", answer: "Holi." },
+      { key: "sunday", text: "A perfect Sunday", answer: "Chai and a long walk." },
+    ],
+  };
+  const { api } = fakeApi({ "GET /v1/profiles/u1": () => ({ status: 200, body: person }) });
+  await renderWithApp(<PersonScreen id="u1" />, api);
+  // The name is the page's heading, lettered on a graphite plate.
+  const heading = await screen.findByRole("heading", { name: "Aarav, 29" });
+  expect(StyleSheet.flatten(heading.props.style).color).toBe(color.onSign);
+  const order = readingOrder();
+  const at = (text: string) => {
+    const i = order.indexOf(text);
+    expect(i).toBeGreaterThanOrEqual(0);
+    return i;
+  };
+  const sequence = [
+    at("Aarav, 29"),
+    at("Photo 1 of 2 of Aarav"),
+    at("Hello."), // the bio
+    at("Holi."),
+    at("Photo 2 of 2 of Aarav"),
+    at("Chai and a long walk."),
+    at(t.decide.like),
+    at(t.chat.block),
+  ];
+  expect([...sequence].sort((a, b) => a - b)).toEqual(sequence);
+});
+
 test("preferences: load, validate, save the API's shape", async () => {
   const { api, calls } = fakeApi({
     "GET /v1/me/preferences": () => ({ status: 200, body: { age_min: 18, age_max: 99, max_distance_km: null, applies_from: "next_set" } }),

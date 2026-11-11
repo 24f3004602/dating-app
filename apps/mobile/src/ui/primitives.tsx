@@ -384,11 +384,20 @@ export function CardTitle({ children }: { children: ReactNode }) {
   return <Text style={styles.heading}>{children}</Text>;
 }
 
-/** A name on a graphite sign plate, as the Interchange letters its station names (D105). */
-export function Plate({ children }: { children: ReactNode }) {
+/**
+ * A name on a graphite sign plate, as the Interchange letters its station names (D105).
+ * `heading`: the page's own heading, at title size (a person's profile).
+ */
+export function Plate({ children, heading }: { children: ReactNode; heading?: boolean }) {
   return (
     <View style={styles.plate}>
-      <Text style={styles.plateText}>{children}</Text>
+      <Text
+        role={heading ? "heading" : undefined}
+        aria-level={heading ? 1 : undefined}
+        style={[styles.plateText, heading && styles.plateTitle]}
+      >
+        {children}
+      </Text>
     </View>
   );
 }
@@ -541,6 +550,7 @@ const styles = StyleSheet.create({
   portrait: { height: (size.thumb * 5) / 4 },
   plate: { alignSelf: "flex-start", backgroundColor: color.sign, paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radius.plate },
   plateText: { ...type.sign, color: color.onSign },
+  plateTitle: { ...type.title },
   photoBox: { width: "100%", borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
   fill: { width: "100%", height: "100%" },
 
