@@ -63,3 +63,36 @@ Status: fixed. `backup.sh` sets `MSYS_NO_PATHCONV=1` (ignored on Linux) and now 
 - **Native platforms:** VoiceOver and TalkBack reading order, iOS error announcements, 200% system text, the keystore, the photo picker and realtime reconnection on mobile networks (NAT-1).
 - **Cross-site POSTs to console server actions:** no test sends one. Protection: SameSite=Strict cookies and Next.js's Origin-against-Host check.
 - **Deletion jobs:** what happens to a photo file whose deletion job fails 8 times (no reconciliation sweep yet).
+
+### BUG-004: on Android, every API call fails as "We couldn't reach the server"
+
+- Severity: S1 (core flow blocked), native builds only. No native build has shipped; testers use the web build, which is unaffected.
+- Flow / case: the native app, sign-in (and every other call)
+- Screen: Sign in
+- Build: working tree on `7210214` (stage 20e slice 2)  Browser / device: Pixel 8 Pro, Android 17, Expo Go 58.0.5, local API over adb port forwarding
+
+Steps
+1. Run the app in Expo Go against a local API.
+2. Sign in with a valid member's email and password.
+
+Expected: signed in, the You screen.
+Actual: "We couldn't reach the server", although the API logged `POST /v1/auth/login` 200 each time. It reproduced three times.
+Evidence: a temporary log in the client's catch showed openapi-fetch 0.17.0's own error: "onResponse: must return new Response() when modifying the response".
+Suspected cause: confirmed. Our `onResponse` middleware returned the response it was given. openapi-fetch requires anything returned there to be `instanceof Response`, and React Native's fetch responses aren't. The Jest tests use a fake fetch with real `Response` objects, and the first device pass never submitted anything.
+Status: fixed (stage 20e slice 2, not yet committed). The middleware returns nothing, which leaves the response unchanged. A new test with a non-`Response` response object failed before the fix and passes after it. Signed in on the phone afterwards.
+
+### BUG-005: every screen under a bar has 44 dp of empty space at the top
+
+- Severity: S4
+- Flow / case: the native app, any screen under the stack's top bar or the sign band
+- Screen: all but welcome
+- Build: working tree on `7210214` (stage 20e slice 2)  Browser / device: Pixel 8 Pro, Android 17, Expo Go 58.0.5, density 544
+
+Steps
+1. Open any screen with a top bar (sign in) or a tab (You).
+
+Expected: the screen's 24 dp padding below the bar.
+Actual: 68 dp. Measured from view bounds: the band ends at 287 px and the title starts at 519 px. The extra 151 px equals the status bar inset.
+Evidence: uiautomator view bounds and the window's `statusBars` inset (151 px); the captures in `apps/mobile/.impeccable/review/slice2/` (git-ignored).
+Suspected cause: confirmed. `Screen` padded all four edges with SafeAreaView, so the inset the bar already covers was added again. The web build's top inset is 0, so the browser tests couldn't see it.
+Status: fixed (stage 20e slice 2, not yet committed). A `ScreenEdges` context: the stacks leave the top to their bar, the tabs leave the top to the band and the bottom to the line bar, and the welcome screen pads every edge. MOB-20 mutation-checked: removing the fix fails all 3 cases. Measured on the phone afterwards: 24 dp.

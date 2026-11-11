@@ -41,7 +41,7 @@ Updated: 2026-11-10
     - the sign-up, verify, sign-in and reset screens' own pass (they have the new primitives already);
     - e2e on the web build (CI, after a commit);
     - impeccable's finish review and the app's DESIGN.md;
-    - the bottom bar (next slice).
+    - slice 2 on the phone (below).
   - **Device pass, slice 1 (2026-11-10):** the owner's Pixel 8 Pro (Android 17), over wireless adb, running the app in Expo Go 58.0.5 against the live beta's API (nothing submitted).
     - **Seen:** welcome, sign-up, sign-in, reset and verify, at text size 1.0 and 1.3. Anek renders; the Devanagari name renders; nothing clips; the map fits at 395 dp.
     - **Fixed on the device:** the map's station roundels overlapped at 395 dp; the interchange is now centred.
@@ -49,6 +49,16 @@ Updated: 2026-11-10
     - **Privacy:** demo mode was on and the status bar was cropped from every kept capture. One capture that showed another app was deleted unseen; captures since are taken only with the app in front. The phone's settings were restored afterwards (font scale 1.0, demo off, no port forwards).
     - **This starts NAT-1 (partial).** Not yet: TalkBack, the keystore, the photo picker, push (Expo Go has no remote push on Android), realtime on mobile data.
     - **Also:** a dev server started with `CI=1` doesn't watch files, so the first recapture showed stale code; and `expo start` rewrote `tsconfig.json`, which was restored.
+  - **Slice 2, the bottom bar and Today (2026-11-10; not on a device yet, not committed):**
+    - **Navigation:** the four main places moved into an `(app)/(tabs)` group (URLs unchanged) under expo-router's headless tabs. The bar is drawn as the line: your rail and theirs, a station roundel per place, and the current place filled with its name on a graphite plate. A graphite sign band with the name sits above. Every other screen still opens above the tabs in the stack, so system Back works as before. The You screen lost its Today, Likes and Matches buttons. The e2e specs now go through the tabs.
+    - **Today:** a 4:5 photo for each person (the shape photos are kept in) and the name on a graphite plate (a new `Plate` primitive). A finite set now ends with a last stop saying when the next set arrives (a fixed time, not a countdown).
+    - **Checks:** app `tsc` clean; Jest 134 passed (MOB-18 the bar; MOB-19 the plate and the end of the set; MOB-20 and MOB-2b the two bugs below). **Not run:** e2e (CI after a commit).
+    - **Device pass, slice 2 (2026-11-11), the owner's Pixel 8 Pro:**
+      - **Setup:** signed in as a labelled "Device Check" member on a local API with its own `_e2e_test` database and the labelled fixtures; never the live beta or the owner's account. The first attempt (2026-11-10) was stopped for low memory, so this time the stack was started only once the phone was ready, without the worker.
+      - **Seen at 1.0 and 1.3:** all four tabs, a person, system Back (from a tab to Today, from a person to Today). Nothing clips at 1.3.
+      - **Found and fixed on the device:** BUG-004 (S1, native only): no API call worked on Android, because openapi-fetch rejected our middleware's returned response. BUG-005 (S4): 44 dp of empty space under every bar, because the status bar inset was added twice. Both are in `bugs.md` with tests and were rechecked on the phone.
+      - **Privacy:** Android's password manager offered to save the throwaway login, and one capture showed the owner's Google address. It was declined and the capture deleted; the capture guard now also requires the app to have focus. The phone was restored afterwards (text size 1.0, demo mode off, no port forwards).
+      - **Noted for the person-screen slice:** the note and Like/Pass sit above the person's name and photos, so you decide before you see them.
   - **Found and fixed:** Prettier, run without a project config, rewrapped six files (about 800 lines). Restored from the commit, with only the real edits re-applied (104/44 lines). The map wasn't one accessible element until `accessible` was set; the welcome test caught it.
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).

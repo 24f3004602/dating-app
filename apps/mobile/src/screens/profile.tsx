@@ -75,9 +75,7 @@ export function ProfileScreen() {
       {labels.length ? <Body muted>{labels.filter(Boolean).join(" · ")}</Body> : null}
       {p ? (
         <>
-          <Button label={t.discover.open} onPress={() => router.push("/discover")} />
-          <Button label={t.likes.open} variant="secondary" onPress={() => router.push("/likes")} />
-          <Button label={t.matches.open} variant="secondary" onPress={() => router.push("/matches")} />
+          {/* Today, Likes and Matches are on the bottom bar now (stage 20e, D105). */}
           <Button label={t.preferences.open} variant="secondary" onPress={() => router.push("/preferences")} />
           <Button label={t.profile.edit} variant="secondary" onPress={() => router.push("/profile/edit")} />
           <Button label={t.profile.photos} variant="secondary" onPress={() => router.push("/photos")} />

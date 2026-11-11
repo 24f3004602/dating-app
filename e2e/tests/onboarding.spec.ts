@@ -102,7 +102,7 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   // Today's introductions: labelled fixtures, distance as a bucket only.
   await page.goBack();
   await expect(page.getByText("Ready to be introduced")).toBeVisible();
-  await page.getByRole("button", { name: "Today's introductions" }).click();
+  await page.getByRole("tab", { name: "Today" }).click(); // the bottom bar (stage 20e)
   await expect(page.getByRole("heading", { name: "Today's introductions" })).toBeVisible();
   const cards = page.getByRole("button", { name: /^View profile: Fixture / });
   await expect(cards.first()).toBeVisible();
@@ -122,18 +122,16 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await expect(page.getByText(/^Liked\. \d+ likes left today\.$/)).toBeVisible();
 
   // Matches and likes: honest empty states.
-  await page.goBack();
-  await page.goBack();
-  await page.getByRole("button", { name: "Matches", exact: true }).click();
+  await page.goBack(); // the person, back to the bottom bar
+  await page.getByRole("tab", { name: "Matches" }).click();
   await expect(page.getByText("No matches yet. When you both like each other, they appear here.")).toBeVisible();
   await checkA11y(page, "matches");
-  await page.goBack();
-  await page.getByRole("button", { name: "Likes", exact: true }).click();
+  await page.getByRole("tab", { name: "Likes" }).click();
   await expect(page.getByText("No new likes yet. Likes appear here until you decide.")).toBeVisible();
   await checkA11y(page, "likes");
 
-  // Preferences apply from the next set.
-  await page.goBack();
+  // Preferences apply from the next set (under You).
+  await page.getByRole("tab", { name: "You" }).click();
   await page.getByRole("button", { name: "Preferences" }).click();
   await page.getByRole("radio", { name: "Within 15 km", exact: true }).click();
   await page.getByRole("button", { name: "Save" }).click();

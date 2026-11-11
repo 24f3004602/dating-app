@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { t } from "@/i18n/en";
+import { color } from "@/theme/tokens";
 import { DiscoverScreen, PersonScreen, PreferencesScreen } from "@/screens/discover";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -31,6 +33,10 @@ test("today's cards show a distance bucket and open the person", async () => {
   expect(screen.getByText("Saket, under 5 km away")).toBeTruthy();
   expect(screen.getByText("Saket, 15 to 50 km away")).toBeTruthy();
   expect(screen.queryByText(/\d+\.\d+\s?km/)).toBeNull(); // never an exact distance
+  // The name is lettered on a graphite plate (stage 20e, D105).
+  expect(StyleSheet.flatten(screen.getByText("Aarav, 29").props.style).color).toBe(color.onSign);
+  // The set is finite: it ends by saying when the next one arrives (India time).
+  expect(screen.getByText(t.discover.end.replace("{time}", "00:00"))).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: /Aarav, 29/ }));
   expect(mockRouter.push).toHaveBeenCalledWith("/person/u1");
 });
@@ -39,6 +45,7 @@ test("an empty set says when the next one arrives (India time)", async () => {
   const { api } = fakeApi({ "GET /v1/discovery/today": () => ({ status: 200, body: TODAY([]) }) });
   await renderWithApp(<DiscoverScreen />, api);
   expect(await screen.findByText(t.discover.empty.replace("{time}", "00:00"))).toBeTruthy();
+  expect(screen.queryByText(t.discover.end.replace("{time}", "00:00"))).toBeNull(); // said once, not twice
 });
 
 test.each([

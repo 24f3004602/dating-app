@@ -29,7 +29,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
 import { color, focusRing, font, motion, radius, size, space, touch, type } from "@/theme/tokens";
 import { FadeImage, Reveal, usePressScale, useScreenEntrance } from "@/ui/motion";
@@ -48,6 +48,16 @@ const ring: ViewStyle =
  * text is light and the focus ring is marigold, the pairs checked on the
  * overlay's brightest point (tokens.json, overlay-floor).
  */
+/**
+ * The edges a `Screen` still pads for the system bars. A layout that draws its own bar over
+ * an edge (the stack's top bar, the sign band, the bottom bar) takes that edge off, so the
+ * inset isn't added twice (BUG-005, measured on a device: 44 dp of empty space under every bar).
+ */
+export const ALL_EDGES: readonly Edge[] = ["top", "right", "bottom", "left"];
+export const UNDER_TOP_BAR: readonly Edge[] = ["right", "bottom", "left"];
+export const BETWEEN_BARS: readonly Edge[] = ["right", "left"];
+export const ScreenEdges = createContext<readonly Edge[]>(ALL_EDGES);
+
 const OnOverlay = createContext(false);
 export const useOnOverlay = () => useContext(OnOverlay);
 
@@ -79,9 +89,10 @@ function useAnnounce(message: ReactNode, active: boolean) {
 /** `overlay`: the screen sits over a dark backdrop (its own background is clear). */
 export function Screen({ children, overlay = false }: { children: ReactNode; overlay?: boolean }) {
   const entrance = useScreenEntrance();
+  const edges = useContext(ScreenEdges);
   return (
     <OnOverlay.Provider value={overlay}>
-    <SafeAreaView style={[styles.safe, overlay && styles.clear]}>
+    <SafeAreaView edges={edges} style={[styles.safe, overlay && styles.clear]}>
       {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
       <Animated.ScrollView
         contentContainerStyle={styles.screen}
@@ -373,13 +384,23 @@ export function CardTitle({ children }: { children: ReactNode }) {
   return <Text style={styles.heading}>{children}</Text>;
 }
 
-/**
- * A square photo. Decorative unless it has a label (the card or text beside it
- * names the person). It fades in as it loads, over its placeholder colour.
- */
-export function Thumb({ uri, label }: { uri: string; label?: string }) {
+/** A name on a graphite sign plate, as the Interchange letters its station names (D105). */
+export function Plate({ children }: { children: ReactNode }) {
   return (
-    <View style={styles.thumb}>
+    <View style={styles.plate}>
+      <Text style={styles.plateText}>{children}</Text>
+    </View>
+  );
+}
+
+/**
+ * A small photo: square, or `portrait` (4:5, the shape members' photos are kept in).
+ * Decorative unless it has a label (the card or text beside it names the person).
+ * It fades in as it loads, over its placeholder colour.
+ */
+export function Thumb({ uri, label, portrait }: { uri: string; label?: string; portrait?: boolean }) {
+  return (
+    <View style={[styles.thumb, portrait && styles.portrait]}>
       {label ? (
         <FadeImage source={{ uri }} style={styles.fill} role="img" aria-label={label} />
       ) : (
@@ -517,6 +538,9 @@ const styles = StyleSheet.create({
   },
   cardPressed: { backgroundColor: color.surface },
   thumb: { width: size.thumb, height: size.thumb, borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
+  portrait: { height: (size.thumb * 5) / 4 },
+  plate: { alignSelf: "flex-start", backgroundColor: color.sign, paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radius.plate },
+  plateText: { ...type.sign, color: color.onSign },
   photoBox: { width: "100%", borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
   fill: { width: "100%", height: "100%" },
 

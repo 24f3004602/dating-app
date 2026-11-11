@@ -31,13 +31,13 @@ test("two people match and chat, live", async ({ browser }) => {
   await readyProfile(meera, { name: "Meera", gender: "Woman", seeking: "Man" });
 
   // Meera is introduced to Kabir and likes him.
-  await meera.getByRole("button", { name: "Today's introductions" }).click();
+  await meera.getByRole("tab", { name: "Today" }).click(); // the bottom bar (stage 20e)
   await meera.getByRole("button", { name: /^View profile: Kabir, 27./ }).click();
   await meera.getByRole("button", { name: "Like", exact: true }).click();
   await expect(meera.getByText(/^Liked\. \d+ likes left today\.$/)).toBeVisible();
 
   // Kabir finds her in his likes and likes back: a match.
-  await kabir.getByRole("button", { name: "Likes", exact: true }).click();
+  await kabir.getByRole("tab", { name: "Likes" }).click();
   await kabir.getByRole("button", { name: "View profile: Meera, 27" }).click();
   await kabir.getByRole("button", { name: "Like", exact: true }).click();
   await expect(kabir.getByText("It's a match! You both said yes.")).toBeVisible();
@@ -46,9 +46,8 @@ test("two people match and chat, live", async ({ browser }) => {
   await expect(meeraRow).toBeVisible();
 
   // Meera opens the chat: an empty conversation that says how messages are stored.
-  await meera.goBack();
-  await meera.goBack();
-  await meera.getByRole("button", { name: "Matches", exact: true }).click();
+  await meera.goBack(); // the person, back to the bottom bar
+  await meera.getByRole("tab", { name: "Matches" }).click();
   await meera.getByRole("button", { name: /^Chat with Kabir, 27/ }).click();
   await expect(meera.getByText(/not end-to-end encrypted/)).toBeVisible();
   await meera.getByLabel("Message", { exact: true }).fill("Hi Kabir! Any Holi plans?");

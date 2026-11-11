@@ -59,6 +59,34 @@ test("network failures are reported as such", async () => {
   expect(messageFor(error)).toBe(t.common.networkError);
 });
 
+test("works with a native fetch whose responses aren't the global Response (BUG-004, found on a device)", async () => {
+  // React Native's fetch on Android returns its own response objects; openapi-fetch rejects
+  // any middleware result that isn't `instanceof Response`, so the app reported a network error.
+  const nativeLike = (status: number, body: unknown): unknown => {
+    const text = JSON.stringify(body);
+    return {
+      status,
+      ok: status >= 200 && status < 300,
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => JSON.parse(text),
+      text: async () => text,
+      clone: () => nativeLike(status, body),
+    };
+  };
+  expect(nativeLike(200, {})).not.toBeInstanceOf(Response);
+  const onUnauthorized = jest.fn();
+  const api = createApi({
+    getToken: () => "tok",
+    onUnauthorized,
+    baseUrl: "http://api.test",
+    fetch: (async (req: Request) =>
+      req.url.endsWith("/v1/me") ? nativeLike(200, { id: "u1" }) : nativeLike(401, { code: "unauthenticated" })) as unknown as typeof fetch,
+  });
+  await expect(unwrap(api.GET("/v1/me"))).resolves.toEqual({ id: "u1" });
+  await expect(unwrap(api.GET("/v1/areas"))).rejects.toMatchObject({ status: 401, code: "unauthenticated" });
+  expect(onUnauthorized).toHaveBeenCalledTimes(1); // the 401 handling still runs
+});
+
 test("server text is never shown: codes map to the app's own words", () => {
   expect(messageFor(new ApiError(422, "weak_password", "server wording"))).toBe(t.errors.weak_password);
   expect(messageFor(new ApiError(403, "account_banned"))).toBe(t.signIn.blocked);

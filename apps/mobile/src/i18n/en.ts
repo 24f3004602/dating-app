@@ -3,6 +3,14 @@
  * same shape arrives before public launch (features.csv: English and Hindi).
  */
 export const en = {
+  // The bottom bar (stage 20e, D105): the four main places, as stops on one line.
+  tabs: {
+    label: "Main places",
+    today: "Today",
+    likes: "Likes",
+    matches: "Matches",
+    you: "You",
+  },
   common: {
     continue: "Continue",
     save: "Save",
@@ -138,6 +146,7 @@ export const en = {
     open: "Today's introductions",
     view: "View profile",
     empty: "No new introductions today. Your next set arrives at {time}.",
+    end: "That's everyone for today. Your next set arrives at {time}.",
     incompleteTitle: "Almost there",
     incomplete: "You'll see introductions once your profile has 2 approved photos. New photos are reviewed first.",
     pausedTitle: "Introductions are paused",

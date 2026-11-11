@@ -17,7 +17,7 @@ import { DecisionBar } from "@/screens/matching";
 import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
 import { Reveal, staggered } from "@/ui/motion";
-import { Body, Button, Card, CardTitle, ChoiceGroup, Loading, Notice, Photo, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { Body, Button, Card, ChoiceGroup, Loading, Notice, Photo, Plate, Screen, Stack, Thumb, Title } from "@/ui/primitives";
 import { Rings } from "@/ui/Rings";
 
 function cardLabel(c: DailyCard): string {
@@ -77,16 +77,27 @@ export function DiscoverScreen() {
       {cards.map((c, i) => (
         <Reveal key={c.user_id} delay={staggered(i)}>
           <Card label={`${t.discover.view}: ${cardLabel(c)}`} onPress={() => router.push(`/person/${c.user_id}`)}>
-            {c.photos[0] ? <Thumb uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
+            {c.photos[0] ? <Thumb portrait uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
             <Stack>
-              <CardTitle>{`${c.display_name}, ${c.age}`}</CardTitle>
+              <Plate>{`${c.display_name}, ${c.age}`}</Plate>
               <Body>{t.intent[c.intent]}</Body>
               <Body muted>{`${c.area.name}, ${t.distance[c.distance]}`}</Body>
             </Stack>
           </Card>
         </Reveal>
       ))}
+      {cards.length > 0 ? <EndOfLine>{fill(t.discover.end, { time: timeInIndia(next_set_at) })}</EndOfLine> : null}
     </Screen>
+  );
+}
+
+/** The set is finite (fewer, better): it ends like a line, at a last stop that says when the next set arrives. */
+function EndOfLine({ children }: { children: string }) {
+  return (
+    <View style={styles.end}>
+      <View style={styles.terminus} aria-hidden />
+      <Body muted>{children}</Body>
+    </View>
   );
 }
 
@@ -215,4 +226,7 @@ export function PreferencesScreen() {
 const styles = StyleSheet.create({
   photo: { aspectRatio: 4 / 5 },
   prompt: { gap: space.xs, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
+  end: { flexDirection: "row", alignItems: "center", gap: space.md, paddingTop: space.sm },
+  // The same stop as the bottom bar's, filled: the last one on today's line.
+  terminus: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: color.sign, backgroundColor: color.sign },
 });
