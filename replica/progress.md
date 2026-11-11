@@ -1,6 +1,6 @@
 # Progress
 
-Updated: 2026-11-10
+Updated: 2026-11-12
 
 ## Current phase
 
@@ -69,6 +69,10 @@ Updated: 2026-11-10
     - Checks: `tsc` clean; Jest 136 passed (MOB-22, MOB-23 mutation-checked). **Not run:** e2e (CI after a commit).
     - **On the phone (2026-11-11):** as designed at 1.0 and 1.3, through a real match between two labelled local members (the second made through the API). Their like and note on Likes; liking back on their profile made the match (the rings join); Matches; a message sent on the phone and their reply through the API, on teal and marigold. Back goes chat, Matches, Today. Nothing clips at 1.3.
     - **Seen, not changed here:** Unmatch, Block and Report are three heavy outlined buttons between the name and the conversation, the loudest thing on the chat screen. "Matched 2026-11-11" reads like a database date. Local runs show the default working name Haanji unless `EXPO_PUBLIC_BRAND_NAME` is set (the beta sets Kinaara).
+  - **Slice 4 committed and pushed as `15812cd`; CI passed.**
+  - **Slice 5, the chat's More options (2026-11-11; D107; not committed):** Unmatch, Block and Report leave the top of the conversation for a sheet behind a drawn three-dot button in the top bar. The sheet is headed by the name on a plate; Unmatch and Block ask first inside it. The person screen keeps its visible section. New: `ui/Sheet.tsx`, `ui/MoreButton.tsx`, the `scrim` token (0.4); screen tests get the app's safe-area provider and render top-bar actions in place (`test/expoRouter.ts`). E2E-4 opens the menu first, with axe on the sheet.
+    - Checks: `tsc` clean; Jest 139 passed (MOB-24, mutation-checked twice). **Not run:** e2e (CI after a commit).
+    - **On the phone (2026-11-11):** as designed at 1.0 and 1.3. The conversation now starts at the name; the sheet slides up over the dimmed chat with the name plate, three rows and Close above the navigation bar. Unmatch asks first in the sheet; Cancel, Back and a tap outside each close it, and nothing reached the API. Report opens the form with the sheet closed; Back returns to the chat. More options is a 48 dp button announced as "More options". Expo Go's own Tools bubble covers the top-right corner in development (moved aside for the captures; not in real builds). TalkBack itself wasn't switched on: the reading order was read from the accessibility tree (the sheet is its own window: name, Unmatch, Block, Report, Close).
   - **Found and fixed:** Prettier, run without a project config, rewrapped six files (about 800 lines). Restored from the commit, with only the real edits re-applied (104/44 lines). The map wasn't one accessible element until `accessible` was set; the welcome test caught it.
 
 Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobile 42210375883 with e2e 13/13, beta-stack 42210375876, images 42210375717). **On the live beta since 2026-11-07** (owner's go). The web image was built from `0da7ff1`; the only later change to the website is a test, which isn't shipped. The edge image was built from `eb80094`. Checked through Cloudflare: the landing page names the loop files; the media return 200 with their committed sizes; the CSPs allow the media (website `'self'`, app the website's origin); the app bundle names the loop. In headless Chrome (1280 and 390 px), both videos play and loop with no console errors; the app reports one blocked `eval` from Zod's probe (BUG-002, S4, existed before).

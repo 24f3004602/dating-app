@@ -86,6 +86,10 @@ test("two people match and chat, live", async ({ browser }) => {
   await expect(kabir.getByText(/^Safety tip: never send money/)).toHaveCount(0); // the tip is for the recipient
 
   // Meera reports that message (blocking him, the default): his open chat closes live.
+  // The safety actions wait behind the top bar's More options, in a sheet (stage 20e).
+  await meera.getByRole("button", { name: "More options", exact: true }).click();
+  await expect(meera.getByRole("dialog", { name: "Options for Kabir" })).toBeVisible();
+  await checkA11y(meera, "chat options");
   await meera.getByRole("button", { name: "Report", exact: true }).click();
   await expect(meera.getByRole("heading", { name: "Report Kabir" })).toBeVisible();
   await meera.getByRole("radio", { name: "Scam, or asking for money", exact: true }).click();

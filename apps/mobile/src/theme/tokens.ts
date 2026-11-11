@@ -45,6 +45,8 @@ export const color = {
 
 /** On the overlay, text is `onAccent` and the focus ring is `highlight` (tokens.json pairs). */
 export const overlay = { opacity: 0.7 } as const;
+/** Behind a bottom sheet (stage 20e): the sign's graphite at this opacity. Nothing is read on it. */
+export const scrim = { opacity: 0.4 } as const;
 
 /**
  * Anek (Ek Type, OFL-1.1; assets/fonts), one static file per voice, loaded under these

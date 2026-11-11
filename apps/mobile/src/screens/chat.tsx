@@ -1,7 +1,7 @@
 /** A conversation with one match (F05). REST is the source of truth; the
  * realtime provider refreshes this screen when something changes. */
 import { randomUUID } from "expo-crypto";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { type ComponentRef, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,8 +13,9 @@ import { nudgeFor } from "@/chat/nudge";
 import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
 import { useRealtimeStatus } from "@/realtime/RealtimeProvider";
-import { SafetyActions } from "@/screens/safety";
+import { SafetyMenu } from "@/screens/safety";
 import { color, radius, size, space, type } from "@/theme/tokens";
+import { MoreButton } from "@/ui/MoreButton";
 import { Reveal } from "@/ui/motion";
 import { Body, Button, Loading, Notice, Plate, Row, Screen, TextField } from "@/ui/primitives";
 
@@ -70,6 +71,7 @@ export function ChatScreen({ matchId }: { matchId: string }) {
   const [pending, setPending] = useState<Pending[]>([]);
   const [nudging, setNudging] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const [menu, setMenu] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
 
   const messages = useMemo(() => flattenPages(convo.data?.pages), [convo.data]);
@@ -124,6 +126,16 @@ export function ChatScreen({ matchId }: { matchId: string }) {
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
+      {/* The conversation leads; Unmatch, Block and Report wait behind the top bar's More options (stage 20e). */}
+      <Stack.Screen options={{ headerRight: () => <MoreButton label={t.chat.more} onPress={() => setMenu(true)} /> }} />
+      <SafetyMenu
+        open={menu}
+        onClose={() => setMenu(false)}
+        userId={match.data.person.user_id}
+        name={name}
+        matchId={matchId}
+        onEnded={() => router.replace("/matches")}
+      />
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           ref={scroll}
@@ -132,12 +144,6 @@ export function ChatScreen({ matchId }: { matchId: string }) {
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
         >
           <Plate heading>{name}</Plate>
-          <SafetyActions
-            userId={match.data.person.user_id}
-            name={name}
-            matchId={matchId}
-            onEnded={() => router.replace("/matches")}
-          />
           {realtime === "offline" ? <Body muted>{t.chat.offline}</Body> : null}
           {convo.hasNextPage ? (
             <Button

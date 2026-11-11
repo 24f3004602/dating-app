@@ -1,11 +1,17 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 
-import { t } from "@/i18n/en";
+import { fill, t } from "@/i18n/en";
 import { color, radius } from "@/theme/tokens";
 import { ChatScreen } from "@/screens/chat";
+import { reportHref } from "@/screens/safety";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
+
+const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
+// The top bar's More options renders in place (jest.setup.ts); the router is a stand-in.
+jest.mock("expo-router", () => ({ ...require("@/test/expoRouter").expoRouterInPlace(), useRouter: () => mockRouter }));
+beforeEach(() => jest.clearAllMocks());
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const match = (unread = 0) => ({
@@ -159,11 +165,49 @@ test("a conversation that has gone says so", async () => {
   expect(await screen.findByText(t.chat.gone)).toBeTruthy();
 });
 
-test("a removed message shows as removed, and the safety actions are there", async () => {
+test("a removed message shows as removed", async () => {
   const { api } = fakeApi(routes([msg(1, false, "", { removed: true }), msg(2, false, "Still here")]));
   await renderWithApp(<ChatScreen matchId="m1" />, api);
   expect(await screen.findByText(t.chat.removed)).toBeTruthy();
-  for (const name of [t.chat.unmatch, t.chat.block, t.chat.report]) {
-    expect(screen.getByRole("button", { name })).toBeTruthy();
-  }
+  expect(screen.getByText("Still here")).toBeTruthy();
+});
+
+const SAFETY = [t.chat.unmatch, t.chat.block, t.chat.report];
+
+test("Unmatch, Block and Report wait behind More options (stage 20e); ending things still asks first", async () => {
+  const { api, calls } = fakeApi(routes([msg(1, false, "Still here")], { "POST /v1/matches/m1/unmatch": () => ({ status: 204 }) }));
+  await renderWithApp(<ChatScreen matchId="m1" />, api);
+  expect(await screen.findByText("Still here")).toBeTruthy();
+  for (const name of SAFETY) expect(screen.queryByRole("button", { name })).toBeNull(); // the conversation leads
+
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.more }));
+  expect(screen.getByLabelText(fill(t.chat.options, { name: "Kabir" }))).toBeTruthy();
+  for (const name of SAFETY) expect(screen.getByRole("button", { name })).toBeTruthy();
+
+  // At the question, Cancel closes the sheet and nothing is sent.
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.unmatch }));
+  expect(screen.getByText(t.chat.confirmUnmatch)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.keep }));
+  for (const name of SAFETY) expect(screen.queryByRole("button", { name })).toBeNull();
+
+  // Confirmed, the match ends and the screen leaves for Matches.
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.more }));
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.unmatch }));
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.unmatch }));
+  await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith("/matches"));
+  expect(calls.filter((c) => c.method === "POST" && c.path === "/v1/matches/m1/unmatch")).toHaveLength(1);
+});
+
+test("Block from the menu names who; Report opens the report form for this conversation", async () => {
+  const { api } = fakeApi(routes([msg(1, false, "Still here")]));
+  await renderWithApp(<ChatScreen matchId="m1" />, api);
+  await fireEvent.press(await screen.findByRole("button", { name: t.chat.more }));
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.block }));
+  expect(screen.getByText(fill(t.chat.confirmBlock, { name: "Kabir" }))).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.keep }));
+
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.more }));
+  await fireEvent.press(screen.getByRole("button", { name: t.chat.report }));
+  expect(mockRouter.push).toHaveBeenCalledWith(reportHref("u2", "Kabir", "m1"));
+  expect(screen.queryByRole("button", { name: t.chat.report })).toBeNull(); // the sheet closed behind it
 });

@@ -130,11 +130,27 @@ Thumb
 Loading
   a11y       one named progressbar ("Loading"); the spinner inside is hidden
 
-Chat bubble (chat screen)
-  look       mine: accent fill, on-accent text, small corner bottom right;
-             theirs: surface, text, small corner bottom left;
-             removed: bg with a border line, italic text-muted
+Chat bubble (chat screen; the Interchange, stage 20e)
+  look       square plates in each line's colour: mine accent fill, on-accent text;
+             theirs highlight (marigold), text; removed: bg with a border line,
+             text-muted, no italic (Anek has none; Android would fake one)
   a11y       list of list items; each shows who and when (India time)
+
+More options (top bar; stage 20e, D107)
+  look       three drawn dots (space.xs) in on-sign on a 48 target; pressed: the dots
+             go on-sign-muted, with Android's ripple
+  a11y       one button named "More options"; the dots are hidden; web focus: a
+             marigold ring inside the target (highlight on sign, checked)
+
+Sheet (modal bottom sheet; stage 20e, D107)
+  look       bg, square, a 2-point sign rule on top, padding xl, content max width;
+             over the sign at scrim.opacity (0.4); slides up from the bottom edge
+             (base, decelerate) as the scrim fades in; with reduce motion it's just there
+  parts      what it's about on a plate; SheetAction rows (56 high, heading type, a
+             border line under each, pressed: surface); Close
+  a11y       a modal dialog named for its content ("Options for Kabir"); Back,
+             Escape (web), a tap on the scrim and Close dismiss it; the scrim is hidden
+             from screen readers; padded above the navigation bar
 ```
 
 ## Checked on

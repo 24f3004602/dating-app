@@ -31,3 +31,7 @@ jest.mock("expo-notifications", () => ({
   getExpoPushTokenAsync: jest.fn(async () => ({ data: "ExponentPushToken[test-device-0001]" })),
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
+
+// A screen's top-bar actions render in place under Jest (no navigator; src/test/expoRouter.ts).
+// Files that mock expo-router themselves win.
+jest.mock("expo-router", () => require("@/test/expoRouter").expoRouterInPlace());

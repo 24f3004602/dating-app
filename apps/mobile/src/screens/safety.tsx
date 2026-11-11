@@ -21,7 +21,8 @@ import { messageFor } from "@/api/messages";
 import { dateInIndia } from "@/i18n/time";
 import { fill, t } from "@/i18n/en";
 import { space } from "@/theme/tokens";
-import { Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { Sheet, SheetAction } from "@/ui/Sheet";
 
 type Reason = ReportBody["reason"];
 const REASONS = Object.keys(t.report.reasons) as Reason[];
@@ -31,15 +32,20 @@ export function reportHref(userId: string, name: string, matchId?: string): stri
   return `/report/${userId}?${query}`;
 }
 
-/** Unmatch (in a match), Block and Report. The two that end things ask first. */
-export function SafetyActions({ userId, name, matchId, onEnded }: { userId: string; name: string; matchId?: string; onEnded: () => void }) {
-  const router = useRouter();
+type Ending = "unmatch" | "block";
+
+/** Unmatch and Block end things, so each asks first; once done, `onEnded` leaves the screen. */
+function useEnding(userId: string, matchId: string | undefined, onEnded: () => void) {
   const block = useBlock();
   const unmatch = useUnmatch();
-  const [confirming, setConfirming] = useState<"unmatch" | "block" | null>(null);
+  const [confirming, setConfirming] = useState<Ending | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
-  const run = async (kind: "unmatch" | "block") => {
+  const ask = (kind: Ending | null) => {
+    setFailure(null);
+    setConfirming(kind);
+  };
+  const run = async (kind: Ending) => {
     setFailure(null);
     try {
       if (kind === "unmatch" && matchId) await unmatch.mutateAsync(matchId);
@@ -50,42 +56,96 @@ export function SafetyActions({ userId, name, matchId, onEnded }: { userId: stri
       setFailure(messageFor(err));
     }
   };
+  return { confirming, ask, run, failure, busy: block.isPending || unmatch.isPending };
+}
 
-  if (confirming) {
-    return (
-      <View style={styles.box}>
-        <Notice kind="info">{confirming === "unmatch" ? t.chat.confirmUnmatch : fill(t.chat.confirmBlock, { name })}</Notice>
-        {failure ? <Notice kind="error">{failure}</Notice> : null}
-        <Row>
-          <View style={styles.grow}>
-            <Button
-              label={confirming === "unmatch" ? t.chat.unmatch : t.chat.block}
-              variant="danger"
-              busy={block.isPending || unmatch.isPending}
-              onPress={() => void run(confirming)}
-            />
-          </View>
-          <View style={styles.grow}>
-            <Button label={t.chat.keep} variant="secondary" onPress={() => setConfirming(null)} />
-          </View>
-        </Row>
-      </View>
-    );
-  }
+function ConfirmEnding({ ending, name, onKeep }: { ending: ReturnType<typeof useEnding>; name: string; onKeep: () => void }) {
+  const kind = ending.confirming;
+  if (!kind) return null;
+  return (
+    <View style={styles.box}>
+      <Notice kind="info">{kind === "unmatch" ? t.chat.confirmUnmatch : fill(t.chat.confirmBlock, { name })}</Notice>
+      {ending.failure ? <Notice kind="error">{ending.failure}</Notice> : null}
+      <Row>
+        <View style={styles.grow}>
+          <Button
+            label={kind === "unmatch" ? t.chat.unmatch : t.chat.block}
+            variant="danger"
+            busy={ending.busy}
+            onPress={() => void ending.run(kind)}
+          />
+        </View>
+        <View style={styles.grow}>
+          <Button label={t.chat.keep} variant="secondary" onPress={onKeep} />
+        </View>
+      </Row>
+    </View>
+  );
+}
+
+type SafetyProps = { userId: string; name: string; matchId?: string; onEnded: () => void };
+
+/** Unmatch (in a match), Block and Report, in view (a person's profile, in its own section). */
+export function SafetyActions({ userId, name, matchId, onEnded }: SafetyProps) {
+  const router = useRouter();
+  const ending = useEnding(userId, matchId, onEnded);
+
+  if (ending.confirming) return <ConfirmEnding ending={ending} name={name} onKeep={() => ending.ask(null)} />;
   return (
     <Row>
       {matchId ? (
         <View style={styles.grow}>
-          <Button label={t.chat.unmatch} variant="secondary" onPress={() => setConfirming("unmatch")} />
+          <Button label={t.chat.unmatch} variant="secondary" onPress={() => ending.ask("unmatch")} />
         </View>
       ) : null}
       <View style={styles.grow}>
-        <Button label={t.chat.block} variant="secondary" onPress={() => setConfirming("block")} />
+        <Button label={t.chat.block} variant="secondary" onPress={() => ending.ask("block")} />
       </View>
       <View style={styles.grow}>
         <Button label={t.chat.report} variant="secondary" onPress={() => router.push(reportHref(userId, name, matchId))} />
       </View>
     </Row>
+  );
+}
+
+/**
+ * The same actions behind a conversation's More options (stage 20e): the conversation leads,
+ * and Unmatch, Block and Report are two taps away in a sheet headed by the person's name.
+ * Ending things still asks first, in the sheet; Cancel closes it.
+ */
+export function SafetyMenu({ open, onClose, userId, name, matchId, onEnded }: SafetyProps & { open: boolean; onClose: () => void }) {
+  const router = useRouter();
+  const ending = useEnding(userId, matchId, () => {
+    onClose();
+    onEnded();
+  });
+  const close = () => {
+    ending.ask(null);
+    onClose();
+  };
+
+  return (
+    <Sheet visible={open} onClose={close} label={fill(t.chat.options, { name })}>
+      <Plate>{name}</Plate>
+      {ending.confirming ? (
+        <ConfirmEnding ending={ending} name={name} onKeep={close} />
+      ) : (
+        <>
+          <View>
+            {matchId ? <SheetAction label={t.chat.unmatch} onPress={() => ending.ask("unmatch")} /> : null}
+            <SheetAction label={t.chat.block} onPress={() => ending.ask("block")} />
+            <SheetAction
+              label={t.chat.report}
+              onPress={() => {
+                close();
+                router.push(reportHref(userId, name, matchId));
+              }}
+            />
+          </View>
+          <Button label={t.common.close} variant="secondary" onPress={close} />
+        </>
+      )}
+    </Sheet>
   );
 }
 
