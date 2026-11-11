@@ -10,7 +10,7 @@ import { fill, t } from "@/i18n/en";
 import { dateInIndia } from "@/i18n/time";
 import { space } from "@/theme/tokens";
 import { Reveal, staggered } from "@/ui/motion";
-import { Badge, Body, Button, Card, CardTitle, Loading, Notice, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
+import { Badge, Body, Button, Card, Loading, Notice, Plate, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
 import { Rings } from "@/ui/Rings";
 
 /** Shown on another member's profile. Decisions are final (no undo). */
@@ -86,9 +86,10 @@ export function LikesScreen() {
             label={`${t.discover.view}: ${like.person.display_name}, ${like.person.age}`}
             onPress={() => router.push(`/person/${like.person.user_id}`)}
           >
-            {like.person.photos[0] ? <Thumb uri={absoluteUrl(API_URL, like.person.photos[0].urls.small)} /> : null}
+            {/* People to decide on look as they do on Today: a 4:5 photo and a name plate (D105). */}
+            {like.person.photos[0] ? <Thumb portrait uri={absoluteUrl(API_URL, like.person.photos[0].urls.small)} /> : null}
             <Stack>
-              <CardTitle>{`${like.person.display_name}, ${like.person.age}`}</CardTitle>
+              <Plate>{`${like.person.display_name}, ${like.person.age}`}</Plate>
               {like.about?.prompt_text ? <Body muted>{like.about.prompt_text}</Body> : null}
               {like.comment ? <Body>{fill(t.likes.note, { note: like.comment })}</Body> : null}
             </Stack>
@@ -134,9 +135,10 @@ export function MatchesScreen() {
             label={[fill(t.matches.chatWith, { name: `${m.person.display_name}, ${m.person.age}` }), ...status].join(". ")}
             onPress={() => router.push(`/chat/${m.id}`)}
           >
+            {/* A conversation list stays compact: a square photo, the name on its plate. */}
             {m.person.photo ? <Thumb uri={absoluteUrl(API_URL, m.person.photo.urls.small)} /> : null}
             <Stack>
-              <CardTitle>{`${m.person.display_name}, ${m.person.age}`}</CardTitle>
+              <Plate>{`${m.person.display_name}, ${m.person.age}`}</Plate>
               {text ? <Body>{text}</Body> : <Body muted>{fill(t.matches.since, { date: dateInIndia(m.matched_at) })}</Body>}
               {status.length > 0 ? (
                 <Row>

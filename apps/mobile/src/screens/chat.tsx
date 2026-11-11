@@ -16,7 +16,7 @@ import { useRealtimeStatus } from "@/realtime/RealtimeProvider";
 import { SafetyActions } from "@/screens/safety";
 import { color, radius, size, space, type } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
-import { Body, Button, Loading, Notice, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { Body, Button, Loading, Notice, Plate, Row, Screen, TextField } from "@/ui/primitives";
 
 const BODY_MAX = 2000;
 
@@ -131,7 +131,7 @@ export function ChatScreen({ matchId }: { matchId: string }) {
           focusable={Platform.OS === "web"}
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
         >
-          <Title>{name}</Title>
+          <Plate heading>{name}</Plate>
           <SafetyActions
             userId={match.data.person.user_id}
             name={name}
@@ -222,13 +222,15 @@ const styles = StyleSheet.create({
   item: { gap: space.xs, maxWidth: "85%" },
   itemMine: { alignSelf: "flex-end", alignItems: "flex-end" },
   itemTheirs: { alignSelf: "flex-start", alignItems: "flex-start" },
-  bubble: { paddingVertical: space.sm, paddingHorizontal: space.md, borderRadius: radius.md },
-  mine: { backgroundColor: color.accent, borderBottomRightRadius: radius.sm / 2 },
-  theirs: { backgroundColor: color.surface, borderBottomLeftRadius: radius.sm / 2 },
+  // Square plates in each line's colour (the Interchange, D105): yours teal, theirs marigold.
+  bubble: { paddingVertical: space.sm, paddingHorizontal: space.md, borderRadius: radius.plate },
+  mine: { backgroundColor: color.accent },
+  theirs: { backgroundColor: color.highlight },
   mineText: { color: color.onAccent, ...type.body },
   theirsText: { color: color.text, ...type.body },
   removed: { borderWidth: 1, borderColor: color.border, backgroundColor: color.bg },
-  removedText: { color: color.textMuted, ...type.body, fontStyle: "italic" },
+  // No italic: Anek has none, and Android would fake one.
+  removedText: { color: color.textMuted, ...type.body },
   meta: { color: color.textMuted, ...type.caption },
   retry: { gap: space.sm },
   composer: {

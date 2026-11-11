@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { t } from "@/i18n/en";
+import { color } from "@/theme/tokens";
 import { DecisionBar, LikesScreen, MatchesScreen } from "@/screens/matching";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -67,6 +69,8 @@ test("likes received show the note and open the person", async () => {
   });
   await renderWithApp(<LikesScreen />, api);
   expect(await screen.findByText("Kiara, 26")).toBeTruthy();
+  // The name on a graphite plate, as on Today (stage 20e).
+  expect(StyleSheet.flatten(screen.getByText("Kiara, 26").props.style).color).toBe(color.onSign);
   expect(screen.getByText("Their note: Hi!")).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: /Kiara, 26/ }));
   expect(mockRouter.push).toHaveBeenCalledWith("/person/u3");
@@ -81,6 +85,7 @@ test("matches: empty state, then a list", async () => {
   list = [{ id: "m1", matched_at: "2026-11-04T09:00:00Z", person: brief }];
   await renderWithApp(<MatchesScreen />, api);
   await waitFor(() => expect(screen.getByText("Aarav, 29")).toBeTruthy());
+  expect(StyleSheet.flatten(screen.getByText("Aarav, 29").props.style).color).toBe(color.onSign); // the plate
   expect(screen.getByText("Matched 2026-11-04")).toBeTruthy();
 });
 

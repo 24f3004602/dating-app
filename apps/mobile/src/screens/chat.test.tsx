@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { t } from "@/i18n/en";
+import { color, radius } from "@/theme/tokens";
 import { ChatScreen } from "@/screens/chat";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -38,6 +40,29 @@ test("history, whose message is whose, and the money safety tip", async () => {
   expect(screen.getByText("Kabir · 14:30")).toBeTruthy(); // India time
   expect(screen.getByText("You · 14:30")).toBeTruthy();
   expect(screen.getAllByText(t.chat.moneyTip)).toHaveLength(1);
+});
+
+/** The nearest background behind a piece of text: the message's plate. */
+function plateBehind(text: string) {
+  let node = screen.getByText(text).parent;
+  while (node) {
+    const style = StyleSheet.flatten(node.props.style);
+    if (style?.backgroundColor) return style;
+    node = node.parent;
+  }
+  return undefined;
+}
+
+test("each line in its colour (stage 20e): yours teal, theirs marigold, square; the name is the heading on a plate", async () => {
+  const { api } = fakeApi(routes([msg(1, false, "Chai on Sunday?"), msg(2, true, "Yes, after the market")]));
+  await renderWithApp(<ChatScreen matchId="m1" />, api);
+  expect(await screen.findByText("Chai on Sunday?")).toBeTruthy();
+  expect(plateBehind("Chai on Sunday?")).toMatchObject({ backgroundColor: color.highlight, borderRadius: radius.plate });
+  expect(plateBehind("Yes, after the market")).toMatchObject({ backgroundColor: color.accent, borderRadius: radius.plate });
+  expect(StyleSheet.flatten(screen.getByText("Chai on Sunday?").props.style).color).toBe(color.text);
+  expect(StyleSheet.flatten(screen.getByText("Yes, after the market").props.style).color).toBe(color.onAccent);
+  const heading = screen.getByRole("heading", { name: "Kabir" });
+  expect(StyleSheet.flatten(heading.props.style).color).toBe(color.onSign);
 });
 
 test("an empty conversation says how messages are stored", async () => {
