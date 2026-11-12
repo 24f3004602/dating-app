@@ -127,6 +127,27 @@ test("edit profile: the area limit gets a clear message", async () => {
   expect(await screen.findByText(t.editProfile.areaLimited)).toBeTruthy();
 });
 
+test("edit profile: the area list narrows as you type, and says when nothing matches (MOB-29)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => problem(404, "profile_not_found"),
+    "GET /v1/areas": () => ({ status: 200, body: AREAS }),
+    "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
+  });
+  await renderWithApp(<EditProfileScreen />, api);
+  expect(await screen.findByRole("radio", { name: "Saket, Delhi" })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
+  const find = screen.getByLabelText(t.editProfile.areaSearch);
+  await fireEvent.changeText(find, "noi"); // a city, in any case
+  expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull();
+  expect(screen.getByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
+  await fireEvent.changeText(find, "zzz");
+  expect(screen.queryAllByRole("radio", { name: /, (Delhi|Noida)$/ })).toHaveLength(0); // no area chips left; the other chip groups keep theirs
+  expect(screen.getByText(t.editProfile.areaNone)).toBeTruthy();
+  await fireEvent.changeText(find, "");
+  expect(screen.getAllByRole("radio", { name: /, (Delhi|Noida)$/ })).toHaveLength(2); // every area again
+  expect(screen.queryByText(t.editProfile.areaNone)).toBeNull();
+});
+
 test("photos: list, upload from the picker, then move and delete behind each photo's options (MOB-27)", async () => {
   let photos = [photo("p1", 0), photo("p2", 1, "approved")];
   const { api, calls } = fakeApi({

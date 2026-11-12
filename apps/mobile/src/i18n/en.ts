@@ -126,6 +126,10 @@ export const en = {
     bioHint: "Up to 500 characters.",
     area: "Area",
     areaHint: "You can change your area once a day.",
+    // The area list is filtered as you type (D111).
+    areaSearch: "Find your area",
+    areaSearchHint: "A few letters of the area or its city.",
+    areaNone: "No area matches that. Try the city's name.",
     prompts: "Prompts (up to 3)",
     addPrompt: "Answer a prompt",
     removePrompt: "Remove",

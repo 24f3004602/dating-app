@@ -27,7 +27,7 @@ import { fill, t } from "@/i18n/en";
 import { color, radius, space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
 import { MoreButton } from "@/ui/MoreButton";
-import { Body, Button, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { Body, Button, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
 import { Sheet } from "@/ui/Sheet";
 import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
@@ -151,6 +151,7 @@ export function EditProfileScreen() {
   const prompts = usePrompts();
   const save = useSaveProfile();
   const [failure, setFailure] = useState<string | null>(null);
+  const [areaQuery, setAreaQuery] = useState("");
   const form = useForm<ProfileValues>({ resolver: zodResolver(profileSchema), defaultValues: toFormValues(null) });
   const promptFields = useFieldArray({ control: form.control, name: "prompts" });
   const { reset } = form;
@@ -173,6 +174,9 @@ export function EditProfileScreen() {
   const chosenKeys = form.watch("prompts").map((p) => p.key);
   const unused = (prompts.data ?? []).filter((p) => !chosenKeys.includes(p.key));
   const promptText = new Map((prompts.data ?? []).map((p) => [p.key, p.text]));
+  // The area list filtered by a few typed letters of the area or its city (D111); empty shows all.
+  const areaNeedle = areaQuery.trim().toLowerCase();
+  const shownAreas = (areas.data ?? []).filter((a) => !areaNeedle || `${a.name} ${a.city}`.toLowerCase().includes(areaNeedle));
 
   const submit = form.handleSubmit(async (v) => {
     setFailure(null);
@@ -208,10 +212,13 @@ export function EditProfileScreen() {
       )} />
       <FormField control={form.control} name="bio" label={t.editProfile.bio} hint={t.editProfile.bioHint} error={e.bio?.message}
         multiline numberOfLines={4} maxLength={500} />
+      <TextField label={t.editProfile.areaSearch} hint={`${t.editProfile.areaSearchHint} ${t.editProfile.areaHint}`} value={areaQuery}
+        onChangeText={setAreaQuery} autoCorrect={false} autoCapitalize="none" returnKeyType="search" />
       <Controller control={form.control} name="areaId" render={({ field }) => (
-        <ChoiceGroup label={`${t.editProfile.area}. ${t.editProfile.areaHint}`} value={field.value} onChange={field.onChange} error={e.areaId?.message}
-          options={(areas.data ?? []).map((a) => ({ value: a.id, label: `${a.name}, ${a.city}` }))} />
+        <ChoiceGroup label={t.editProfile.area} value={field.value} onChange={field.onChange} error={e.areaId?.message}
+          options={shownAreas.map((a) => ({ value: a.id, label: `${a.name}, ${a.city}` }))} />
       )} />
+      {shownAreas.length === 0 ? <Body muted>{t.editProfile.areaNone}</Body> : null}
       <Heading>{t.editProfile.prompts}</Heading>
       {promptFields.fields.map((f, index) => (
         <View key={f.id} style={styles.prompt}>
@@ -412,7 +419,8 @@ const styles = StyleSheet.create({
   list: { borderTopWidth: 1, borderTopColor: color.border },
   // The account rows start after a gap, not a second line (seen on the phone as an empty row).
   account: { marginTop: space.lg },
-  prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
+  // Square, as the person screen shows prompts (the Interchange, D105).
+  prompt: { gap: space.sm, padding: space.md, borderRadius: radius.plate, backgroundColor: color.surface },
   photoRow: { flexDirection: "row", gap: space.md, alignItems: "center" },
   question: { gap: space.md },
   grow: { flex: 1 },
