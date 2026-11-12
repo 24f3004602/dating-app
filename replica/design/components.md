@@ -124,7 +124,8 @@ Card
   used on    introductions, likes, matches
 
 Thumb
-  size       96 square, radius md, surface placeholder
+  size       96 square, or `portrait` 96 by 120 (4:5, the shape photos are kept in);
+             radius plate, surface placeholder
   a11y       decorative (aria-hidden) unless labelled ("Your photo 1 of 2")
 
 Loading
@@ -139,8 +140,11 @@ Chat bubble (chat screen; the Interchange, stage 20e)
 More options (top bar; stage 20e, D107)
   look       three drawn dots (space.xs) in on-sign on a 48 target; pressed: the dots
              go on-sign-muted, with Android's ripple
-  a11y       one button named "More options"; the dots are hidden; web focus: a
-             marigold ring inside the target (highlight on sign, checked)
+  tones      onSign (the top bar; default); sign: graphite dots on the page, dimmed
+             when pressed, the page's focus ring (Your photos, D109)
+  a11y       one button named "More options" (or "Options for photo 2 of 6"); the dots
+             are hidden; web focus: a marigold ring inside the target (highlight on
+             sign, checked), the page's ring for the sign tone
 
 Sheet (modal bottom sheet; stage 20e, D107)
   look       bg, square, a 2-point sign rule on top, padding xl, content max width;

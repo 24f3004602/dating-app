@@ -127,7 +127,7 @@ test("edit profile: the area limit gets a clear message", async () => {
   expect(await screen.findByText(t.editProfile.areaLimited)).toBeTruthy();
 });
 
-test("photos: list, upload from the picker, reorder and delete", async () => {
+test("photos: list, upload from the picker, then move and delete behind each photo's options (MOB-27)", async () => {
   let photos = [photo("p1", 0), photo("p2", 1, "approved")];
   const { api, calls } = fakeApi({
     "GET /v1/me/photos": () => ({ status: 200, body: photos }),
@@ -150,19 +150,37 @@ test("photos: list, upload from the picker, reorder and delete", async () => {
   expect(await screen.findByLabelText("Your photo 1 of 2")).toBeTruthy();
   expect(screen.getByText(t.photos.pending)).toBeTruthy();
   expect(screen.getByText(t.photos.approved)).toBeTruthy();
+  expect(screen.getAllByText(t.photos.first)).toHaveLength(1); // only the cover is marked
+  // Moving and deleting wait behind each photo's options (D109); the page holds only the photos.
+  for (const name of [t.photos.moveUp, t.photos.moveDown, t.photos.remove]) expect(screen.queryByRole("button", { name })).toBeNull();
 
   await fireEvent.press(screen.getByRole("button", { name: t.photos.add }));
   await waitFor(() => expect(calls.some((c) => c.method === "POST" && c.path === "/v1/me/photos")).toBe(true));
   expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalledWith(expect.objectContaining({ exif: false }));
   expect(await screen.findByLabelText("Your photo 3 of 3")).toBeTruthy();
 
-  await fireEvent.press(screen.getAllByRole("button", { name: t.photos.moveDown })[0]!);
+  // The first photo can only move later; moving closes the sheet.
+  await fireEvent.press(screen.getByRole("button", { name: "Options for photo 1 of 3" }));
+  expect(screen.getByText("Your photo 1 of 3")).toBeTruthy(); // the sheet's plate
+  expect(screen.queryByRole("button", { name: t.photos.moveUp })).toBeNull();
+  await fireEvent.press(screen.getByRole("button", { name: t.photos.moveDown }));
   await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ photo_ids: ["p2", "p1", "p3"] }));
+  expect(screen.queryByRole("button", { name: t.photos.moveDown })).toBeNull();
 
-  const deleteButtons = await screen.findAllByRole("button", { name: t.photos.remove });
-  await fireEvent.press(deleteButtons[1]!); // p1 is now second
+  // Delete asks first; Cancel closes the sheet with nothing sent.
+  await fireEvent.press(await screen.findByRole("button", { name: "Options for photo 2 of 3" })); // p1 is second now
+  await fireEvent.press(screen.getByRole("button", { name: t.photos.remove }));
+  expect(screen.getByText(t.photos.confirmDelete)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.common.cancel }));
+  expect(screen.queryByText(t.photos.confirmDelete)).toBeNull();
+  expect(calls.some((c) => c.method === "DELETE")).toBe(false);
+
+  await fireEvent.press(screen.getByRole("button", { name: "Options for photo 2 of 3" }));
+  await fireEvent.press(screen.getByRole("button", { name: t.photos.remove }));
+  await fireEvent.press(screen.getByRole("button", { name: t.photos.remove })); // the question's own Delete
   await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.path === "/v1/me/photos/p1")).toBe(true));
   expect(await screen.findByLabelText("Your photo 2 of 2")).toBeTruthy();
+  expect(screen.queryByText(t.photos.confirmDelete)).toBeNull(); // the sheet closed behind it
 });
 
 test("photos: a refused upload shows why", async () => {

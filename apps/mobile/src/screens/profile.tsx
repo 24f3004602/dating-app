@@ -26,7 +26,9 @@ import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, radius, space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
-import { Badge, Body, Button, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { MoreButton } from "@/ui/MoreButton";
+import { Body, Button, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, Thumb, Title } from "@/ui/primitives";
+import { Sheet } from "@/ui/Sheet";
 import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
 const genderOptions = GENDERS.map((g) => ({ value: g, label: t.gender[g] }));
@@ -107,8 +109,6 @@ function privacyHint(p: MyProfile): string {
   if (p.discovery_paused) return t.profile.paused;
   return p.visibility === "everyone" ? t.privacy.everyone : t.privacy.likedOnly;
 }
-
-const PHOTO_TONE = { pending: "neutral", approved: "success", rejected: "danger" } as const;
 
 function ProfileSummary({ profile }: { profile: MyProfile }) {
   const cover = profile.photos[0];
@@ -237,6 +237,7 @@ export function PhotosScreen() {
   const remove = useDeletePhoto();
   const reorder = useReorderPhotos();
   const [failure, setFailure] = useState<string | null>(null);
+  const [menu, setMenu] = useState<number | null>(null); // the photo whose options are open
 
   if (photos.isPending) return <Loading label={t.common.loading} />;
   if (photos.isError) {
@@ -272,22 +273,22 @@ export function PhotosScreen() {
     reorder.mutate(ids, { onError: (err) => setFailure(messageFor(err)) });
   };
 
+  const open = menu === null ? undefined : list[menu];
+  const nth = (index: number) => ({ n: index + 1, total: list.length });
+
   return (
     <Screen>
       <Title>{t.photos.title}</Title>
       {list.length === 0 ? <Body>{t.photos.empty}</Body> : null}
+      {/* Each photo as it's kept (4:5), its review state, and its options behind More (D109). */}
       {list.map((photo, index) => (
         <View key={photo.id} style={styles.photoRow}>
-          <Thumb uri={absoluteUrl(API_URL, photo.urls.small)} label={fill(t.photos.alt, { n: index + 1, total: list.length })} />
-          <View style={styles.photoActions}>
-            <Badge label={t.photos[photo.moderation_state]} tone={PHOTO_TONE[photo.moderation_state]} />
-            <Row>
-              <Button label={t.photos.moveUp} variant="secondary" disabled={index === 0 || reorder.isPending} onPress={() => move(index, -1)} />
-              <Button label={t.photos.moveDown} variant="secondary" disabled={index === list.length - 1 || reorder.isPending} onPress={() => move(index, 1)} />
-              <Button label={t.photos.remove} variant="danger" disabled={remove.isPending}
-                onPress={() => remove.mutate(photo.id, { onError: (err) => setFailure(messageFor(err)) })} />
-            </Row>
-          </View>
+          <Thumb portrait uri={absoluteUrl(API_URL, photo.urls.small)} label={fill(t.photos.alt, nth(index))} />
+          <Stack>
+            <CardTitle>{t.photos[photo.moderation_state]}</CardTitle>
+            {index === 0 ? <Body muted>{t.photos.first}</Body> : null}
+          </Stack>
+          <MoreButton tone="sign" label={fill(t.photos.options, nth(index))} onPress={() => setMenu(index)} />
         </View>
       ))}
       {failure ? <Notice kind="error">{failure}</Notice> : null}
@@ -296,7 +297,77 @@ export function PhotosScreen() {
       ) : (
         <Body muted>{t.photos.limit}</Body>
       )}
+      <PhotoMenu
+        open={open !== undefined}
+        name={menu === null ? "" : fill(t.photos.alt, nth(menu))}
+        label={menu === null ? "" : fill(t.photos.options, nth(menu))}
+        canMoveEarlier={menu !== null && menu > 0}
+        canMoveLater={menu !== null && menu < list.length - 1}
+        busy={remove.isPending}
+        onClose={() => setMenu(null)}
+        onMove={(by) => {
+          if (menu === null) return;
+          setMenu(null);
+          move(menu, by);
+        }}
+        onDelete={() => {
+          if (!open) return;
+          remove.mutate(open.id, {
+            onSettled: (_data, err) => {
+              setMenu(null);
+              if (err) setFailure(messageFor(err));
+            },
+          });
+        }}
+      />
     </Screen>
+  );
+}
+
+type PhotoMenuProps = {
+  open: boolean;
+  name: string;
+  label: string;
+  canMoveEarlier: boolean;
+  canMoveLater: boolean;
+  busy: boolean;
+  onClose: () => void;
+  onMove: (by: -1 | 1) => void;
+  onDelete: () => void;
+};
+
+/** A photo's options in a sheet headed by which photo it is: move it, or delete it (asked first; Cancel closes). */
+function PhotoMenu({ open, name, label, canMoveEarlier, canMoveLater, busy, onClose, onMove, onDelete }: PhotoMenuProps) {
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => {
+    if (!open) setConfirming(false);
+  }, [open]);
+  return (
+    <Sheet visible={open} onClose={onClose} label={label}>
+      <Plate>{name}</Plate>
+      {confirming ? (
+        <View style={styles.question}>
+          <Notice kind="info">{t.photos.confirmDelete}</Notice>
+          <Row>
+            <View style={styles.grow}>
+              <Button label={t.photos.remove} variant="danger" busy={busy} onPress={onDelete} />
+            </View>
+            <View style={styles.grow}>
+              <Button label={t.common.cancel} variant="secondary" onPress={onClose} />
+            </View>
+          </Row>
+        </View>
+      ) : (
+        <>
+          <View>
+            {canMoveEarlier ? <ListRow label={t.photos.moveUp} onPress={() => onMove(-1)} /> : null}
+            {canMoveLater ? <ListRow label={t.photos.moveDown} onPress={() => onMove(1)} /> : null}
+            <ListRow label={t.photos.remove} onPress={() => setConfirming(true)} />
+          </View>
+          <Button label={t.common.close} variant="secondary" onPress={onClose} />
+        </>
+      )}
+    </Sheet>
   );
 }
 
@@ -342,6 +413,7 @@ const styles = StyleSheet.create({
   // The account rows start after a gap, not a second line (seen on the phone as an empty row).
   account: { marginTop: space.lg },
   prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
-  photoRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
-  photoActions: { flex: 1, gap: space.sm },
+  photoRow: { flexDirection: "row", gap: space.md, alignItems: "center" },
+  question: { gap: space.md },
+  grow: { flex: 1 },
 });

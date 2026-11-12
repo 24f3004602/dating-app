@@ -151,6 +151,10 @@ export const en = {
     alt: "Your photo {n} of {total}",
     coverAlt: "Your main photo",
     permission: "Allow photo access to choose a picture.",
+    // Each photo's options wait behind More (stage 20e, D109).
+    first: "Shown first",
+    options: "Options for photo {n} of {total}",
+    confirmDelete: "Delete this photo? It leaves your profile at once.",
   },
   discover: {
     title: "Today's introductions",
