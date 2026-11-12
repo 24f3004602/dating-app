@@ -187,7 +187,8 @@ List row (stage 20e, D108)
 ## Checked on
 
 - **Web (Chrome):**
-  - axe on every screen of the four e2e specs, plus the gallery;
+  - axe on every screen of the four e2e specs, plus the gallery (which shows the stage 20e primitives too: plates,
+    list rows, the choice list, More options in both tones, a sample sheet);
   - keyboard Tab focus ring, focused-field border, reflow at 320 px;
   - a visual review of the gallery screenshot, which found the browser ring on fields and the accent and danger clash (D089).
 - **Not yet on devices** (NAT-1): VoiceOver and TalkBack reading order, the iOS announcements, and 200% system text size on iOS and Android.

@@ -18,8 +18,10 @@ import {
   Checkbox,
   ChoiceGroup,
   Heading,
+  ListRow,
   Loading,
   Notice,
+  Plate,
   Row,
   Screen,
   Stack,
@@ -27,7 +29,9 @@ import {
   TextLink,
   Title,
 } from "@/ui/primitives";
+import { MoreButton } from "@/ui/MoreButton";
 import { Rings } from "@/ui/Rings";
+import { Sheet } from "@/ui/Sheet";
 
 const SWATCHES = Object.entries(color) as [keyof typeof color, string][];
 const noop = () => undefined;
@@ -38,6 +42,9 @@ export function DesignGallery() {
   const [checked, setChecked] = useState(true);
   const [text, setText] = useState("");
   const [replay, setReplay] = useState(0);
+  const [sentence, setSentence] = useState<"short" | "long" | undefined>("short");
+  const [sentences, setSentences] = useState<("first" | "next")[]>(["first"]);
+  const [sheet, setSheet] = useState(false);
 
   return (
     <Screen>
@@ -85,6 +92,14 @@ export function DesignGallery() {
         options={[{ value: "a", label: "First" }, { value: "b", label: "Second" }, { value: "c", label: "Third" }]} />
       <ChoiceGroup label="With an error" value={undefined} onChange={noop} error="Choose one."
         options={[{ value: "x", label: "Choice" }]} />
+      {/* Choices that are sentences: a list with the line's station roundel (stage 20e, D112). */}
+      <ChoiceGroup layout="list" label="One of these sentences" value={sentence} onChange={setSentence}
+        options={[
+          { value: "short", label: "A short sentence to choose" },
+          { value: "long", label: "A longer sentence to choose, long enough to wrap onto a second line on a phone" },
+        ]} />
+      <ChoiceGroup layout="list" multiple label="Any of these sentences" value={sentences} onChange={setSentences}
+        options={[{ value: "first", label: "The first sentence to tick" }, { value: "next", label: "The next sentence to tick" }]} />
 
       <Heading>Notices and badges</Heading>
       <Notice kind="info">An informational notice.</Notice>
@@ -106,6 +121,30 @@ export function DesignGallery() {
           <Badge label="Status" tone="highlight" />
         </Stack>
       </Card>
+
+      {/* The Interchange's signs and lists (stage 20e): plates, list rows, More options, a sheet. */}
+      <Heading>Signs and lists</Heading>
+      <Plate>Sample name, 27</Plate>
+      <Plate heading level={2}>A heading on a plate</Plate>
+      <View style={styles.list}>
+        <ListRow label="A place" opens onPress={noop} />
+        <ListRow label="A place with a hint" hint="What the row holds" opens onPress={noop} />
+        <ListRow label="An action" onPress={noop} />
+      </View>
+      <View style={styles.more}>
+        <MoreButton tone="sign" label="More options, on the page" onPress={noop} />
+        <View style={styles.signBand}>
+          <MoreButton label="More options, on the sign" onPress={noop} />
+        </View>
+      </View>
+      <Button label="Open a sample sheet" variant="secondary" onPress={() => setSheet(true)} />
+      <Sheet visible={sheet} onClose={() => setSheet(false)} label="A sample sheet">
+        <Plate>Sample sheet</Plate>
+        <View>
+          <ListRow label="An action in the sheet" onPress={noop} />
+        </View>
+        <Button label="Close" variant="secondary" onPress={() => setSheet(false)} />
+      </Sheet>
 
       <Heading>Loading</Heading>
       <Loading label="Loading" />
@@ -141,8 +180,11 @@ export function DesignGallery() {
 const styles = StyleSheet.create({
   swatches: { gap: space.sm },
   swatchRow: { flexDirection: "row", alignItems: "center", gap: space.md },
-  swatch: { width: space.xxl, height: space.xxl, borderRadius: radius.sm, borderWidth: 1, borderColor: color.border },
+  swatch: { width: space.xxl, height: space.xxl, borderRadius: radius.plate, borderWidth: 1, borderColor: color.border },
   sample: { color: color.text },
-  thumb: { width: space.xxxl, height: space.xxxl, borderRadius: radius.md, backgroundColor: color.surface },
+  thumb: { width: space.xxxl, height: space.xxxl, borderRadius: radius.plate, backgroundColor: color.surface },
   motion: { gap: space.md },
+  list: { borderTopWidth: 1, borderTopColor: color.border },
+  more: { flexDirection: "row", alignItems: "center", gap: space.md },
+  signBand: { backgroundColor: color.sign, paddingHorizontal: space.sm },
 });
