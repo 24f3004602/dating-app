@@ -247,6 +247,11 @@ test("a setting that takes effect at once is a switch named by its label, and th
   await fireEvent.press(screen.getByText("Pause new introductions", { includeHiddenElements: true }));
   expect(onChange).toHaveBeenLastCalledWith(true);
   expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+  // The thumb shows its place in both states: graphite when off (white vanished on the page), white on teal when on.
+  const thumb = () => screen.getByRole("switch", { name: "Pause new introductions" }).props.thumbTintColor;
+  expect(thumb()).toBe(color.sign);
+  await screen.rerender(<SwitchRow label="Pause new introductions" value onChange={onChange} />);
+  expect(thumb()).toBe(color.bg);
 });
 
 test("destructive rows are in the error colour, and a box's edge is the roundel's graphite stroke (MOB-37)", async () => {

@@ -214,9 +214,12 @@ export function EditProfileScreen() {
       )} />
       <FormField control={form.control} name="bio" label={t.editProfile.bio} hint={t.editProfile.bioHint} error={e.bio?.message}
         multiline numberOfLines={4} maxLength={500} />
-      {chosenArea ? <Body>{fill(t.editProfile.areaChosen, { area: `${chosenArea.name}, ${chosenArea.city}` })}</Body> : null}
-      <TextField label={t.editProfile.areaSearch} hint={`${t.editProfile.areaSearchHint} ${t.editProfile.areaHint}`} value={areaQuery}
-        onChangeText={setAreaQuery} autoCorrect={false} autoCapitalize="none" returnKeyType="search" />
+      {/* The chosen area heads its own section, close to the search, not under About me (the review's verdict pass). */}
+      <View style={styles.areaGroup}>
+        {chosenArea ? <Body>{fill(t.editProfile.areaChosen, { area: `${chosenArea.name}, ${chosenArea.city}` })}</Body> : null}
+        <TextField label={t.editProfile.areaSearch} hint={`${t.editProfile.areaSearchHint} ${t.editProfile.areaHint}`} value={areaQuery}
+          onChangeText={setAreaQuery} autoCorrect={false} autoCapitalize="none" returnKeyType="search" />
+      </View>
       <Controller control={form.control} name="areaId" render={({ field }) => (
         <ChoiceGroup label={t.editProfile.area} value={field.value} onChange={field.onChange} error={e.areaId?.message}
           options={shownAreas.map((a) => ({ value: a.id, label: `${a.name}, ${a.city}` }))} />
@@ -417,6 +420,7 @@ export function PrivacyScreen() {
 
 const styles = StyleSheet.create({
   summary: { gap: space.md },
+  areaGroup: { gap: space.xs },
   card: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
   // The rows draw a line under each; a list closes its top with one too.
   list: { borderTopWidth: 1, borderTopColor: color.border },

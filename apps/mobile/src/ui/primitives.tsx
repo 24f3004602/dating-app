@@ -385,7 +385,9 @@ export function SwitchRow({ label, value, onChange }: { label: string; value: bo
         value={value}
         onValueChange={onChange}
         trackColor={{ false: color.borderInput, true: color.accent }}
-        thumbColor={color.bg}
+        // A graphite thumb when off: a white one vanished on the white page (WCAG 1.4.11, the
+        // review's verdict pass); white on the teal track when on. The web reads it as the off thumb.
+        thumbColor={value ? color.bg : color.sign}
         // The web's switch is a checkbox input with the switch role that carries its own state.
         {...(Platform.OS === "web" ? { activeThumbColor: color.bg, style: styles.switchWeb } : { accessibilityState: { checked: value } })}
       />

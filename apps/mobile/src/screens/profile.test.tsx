@@ -3,7 +3,7 @@ import * as ImagePicker from "expo-image-picker";
 import { StyleSheet } from "react-native";
 
 import { fill, t } from "@/i18n/en";
-import { color } from "@/theme/tokens";
+import { color, space } from "@/theme/tokens";
 import { EditProfileScreen, PhotosScreen, PrivacyScreen, ProfileScreen } from "@/screens/profile";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -161,6 +161,12 @@ test("edit profile: the chosen area stays in view while the filter hides it (MOB
   await fireEvent.changeText(screen.getByLabelText(t.editProfile.areaSearch), "noi");
   expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull(); // filtered out of the chips
   expect(screen.getByText(chosen)).toBeTruthy(); // and still in view
+  // It heads the area's own group, close to the search, not the end of About me (the review's verdict pass).
+  let group = screen.getByText(chosen).parent;
+  while (group && typeof group.type !== "string") group = group.parent;
+  expect(group).not.toBeNull();
+  expect(StyleSheet.flatten(group!.props.style).gap).toBe(space.xs);
+  expect(within(group!).getByLabelText(t.editProfile.areaSearch)).toBeTruthy();
 });
 
 test("photos: list, upload from the picker, then move and delete behind each photo's options (MOB-27)", async () => {

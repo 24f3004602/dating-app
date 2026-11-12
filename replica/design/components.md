@@ -197,7 +197,8 @@ List row (stage 20e, D108)
 
 Switch row (stage 20e, D116)
   look       the label in body type, then Android's own switch (React Native's `Switch`):
-             teal track when on, the input grey when off, white thumb; 48 high or more;
+             teal track and white thumb when on, the input grey and a graphite thumb when
+             off (a white thumb vanished on the page, WCAG 1.4.11); 48 high or more;
              on the web a 24-point switch (48 wide)
   a11y       one control: a switch named by the label, with its on/off state; tapping the
              label flips it too, without a second stop for screen readers or the keyboard
