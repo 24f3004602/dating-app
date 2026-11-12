@@ -339,7 +339,8 @@ const styles = StyleSheet.create({
   card: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
   // The rows draw a line under each; a list closes its top with one too.
   list: { borderTopWidth: 1, borderTopColor: color.border },
-  account: { borderTopWidth: 1, borderTopColor: color.border, marginTop: space.lg },
+  // The account rows start after a gap, not a second line (seen on the phone as an empty row).
+  account: { marginTop: space.lg },
   prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
   photoRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
   photoActions: { flex: 1, gap: space.sm },

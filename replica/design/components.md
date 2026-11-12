@@ -159,7 +159,8 @@ Plate (a name on a sign plate; stage 20e, D105)
 
 List row (stage 20e, D108)
   look       full width, 56 high, the label in heading type with a caption hint under it,
-             a line under each row (a list closes its top with one); pressed: surface;
+             a line under each row (after text a list closes its top with one; after
+             another list it starts after a gap, never a second line); pressed: surface;
              `opens`: a drawn arrow (two sides of a small square, turned) at the end
   a11y       one button named by its label; the hint is its accessibility hint (read
              after the name on Android) and visible text; the arrow is hidden
