@@ -21,8 +21,8 @@ import { messageFor } from "@/api/messages";
 import { dateInIndia } from "@/i18n/time";
 import { fill, t } from "@/i18n/en";
 import { space } from "@/theme/tokens";
-import { Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
-import { Sheet, SheetAction } from "@/ui/Sheet";
+import { Body, Button, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { Sheet } from "@/ui/Sheet";
 
 type Reason = ReportBody["reason"];
 const REASONS = Object.keys(t.report.reasons) as Reason[];
@@ -132,10 +132,11 @@ export function SafetyMenu({ open, onClose, userId, name, matchId, onEnded }: Sa
       ) : (
         <>
           <View>
-            {matchId ? <SheetAction label={t.chat.unmatch} onPress={() => ending.ask("unmatch")} /> : null}
-            <SheetAction label={t.chat.block} onPress={() => ending.ask("block")} />
-            <SheetAction
+            {matchId ? <ListRow label={t.chat.unmatch} onPress={() => ending.ask("unmatch")} /> : null}
+            <ListRow label={t.chat.block} onPress={() => ending.ask("block")} />
+            <ListRow
               label={t.chat.report}
+              opens
               onPress={() => {
                 close();
                 router.push(reportHref(userId, name, matchId));

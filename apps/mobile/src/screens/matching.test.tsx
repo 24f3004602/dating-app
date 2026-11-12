@@ -82,16 +82,16 @@ test("matches: empty state, then a list", async () => {
   await renderWithApp(<MatchesScreen />, api);
   expect(await screen.findByText(t.matches.empty)).toBeTruthy();
   await screen.unmount();
-  list = [{ id: "m1", matched_at: "2026-11-04T09:00:00Z", person: brief }];
+  list = [{ id: "m1", matched_at: "2024-11-04T09:00:00Z", person: brief }];
   await renderWithApp(<MatchesScreen />, api);
   await waitFor(() => expect(screen.getByText("Aarav, 29")).toBeTruthy());
   expect(StyleSheet.flatten(screen.getByText("Aarav, 29").props.style).color).toBe(color.onSign); // the plate
-  expect(screen.getByText("Matched 2026-11-04")).toBeTruthy();
+  expect(screen.getByText("Matched 4 Nov 2024")).toBeTruthy(); // a day, with its year because it isn't this year
 });
 
 test("matches show the last message, unread and your turn, and open the chat", async () => {
   const item = (id: string, extra: object) => ({
-    id, matched_at: "2026-11-04T19:00:00Z", unread: 0, your_turn: false, last_message: null, person: brief, ...extra,
+    id, matched_at: "2024-11-04T19:00:00Z", unread: 0, your_turn: false, last_message: null, person: brief, ...extra,
   }); // prettier-ignore
   const { api } = fakeApi({
     "GET /v1/matches": () => ({
@@ -108,7 +108,7 @@ test("matches show the last message, unread and your turn, and open the chat", a
   expect(screen.getByText("2 new")).toBeTruthy(); // badges; the card's name says it all (below)
   expect(screen.getByText(t.matches.yourTurn)).toBeTruthy();
   expect(screen.getByText("You: Hi!")).toBeTruthy();
-  expect(screen.getByText("Matched 2026-11-05")).toBeTruthy(); // 19:00 UTC is the next day in India
+  expect(screen.getByText("Matched 5 Nov 2024")).toBeTruthy(); // 19:00 UTC is the next day in India
   expect(screen.getByText(/^Waiting for your reply: 1\. /)).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: "Chat with Aarav, 29. 2 new. Your turn" }));
   expect(mockRouter.push).toHaveBeenCalledWith("/chat/m1");

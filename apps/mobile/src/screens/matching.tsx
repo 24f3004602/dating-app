@@ -7,7 +7,7 @@ import { absoluteUrl, type Decision, type MatchItem, useDecide, useLikesReceived
 import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
-import { dateInIndia } from "@/i18n/time";
+import { dayInIndia } from "@/i18n/time";
 import { space } from "@/theme/tokens";
 import { Reveal, staggered } from "@/ui/motion";
 import { Badge, Body, Button, Card, Loading, Notice, Plate, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
@@ -139,7 +139,7 @@ export function MatchesScreen() {
             {m.person.photo ? <Thumb uri={absoluteUrl(API_URL, m.person.photo.urls.small)} /> : null}
             <Stack>
               <Plate>{`${m.person.display_name}, ${m.person.age}`}</Plate>
-              {text ? <Body>{text}</Body> : <Body muted>{fill(t.matches.since, { date: dateInIndia(m.matched_at) })}</Body>}
+              {text ? <Body>{text}</Body> : <Body muted>{fill(t.matches.since, { date: dayInIndia(m.matched_at) })}</Body>}
               {status.length > 0 ? (
                 <Row>
                   {unread ? <Badge label={unread} /> : null}

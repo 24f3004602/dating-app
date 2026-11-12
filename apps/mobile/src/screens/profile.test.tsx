@@ -1,7 +1,9 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react-native";
 import * as ImagePicker from "expo-image-picker";
+import { StyleSheet } from "react-native";
 
 import { t } from "@/i18n/en";
+import { color } from "@/theme/tokens";
 import { EditProfileScreen, PhotosScreen, PrivacyScreen, ProfileScreen } from "@/screens/profile";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -197,4 +199,46 @@ test("privacy: choosing a setting saves it at once", async () => {
   expect(screen.getByText(t.privacy.pauseHint)).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: t.privacy.deleteOpen }));
   expect(mockRouter.push).toHaveBeenCalledWith("/delete-account");
+});
+
+test("You is your card over a list of places, not a hub of buttons (MOB-25, stage 20e)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: PROFILE }),
+    "GET /v1/me": () => ({ status: 200, body: ME }),
+  });
+  await renderWithApp(<ProfileScreen />, api);
+  // The name on a plate beside the cover, as on Today.
+  expect(StyleSheet.flatten((await screen.findByText("Asha, 27")).props.style).color).toBe(color.onSign);
+  expect(screen.getByLabelText(t.photos.coverAlt).props.role).toBe("img");
+  // Each place is a row that says what it holds, and opens its screen.
+  expect(within(screen.getByRole("button", { name: t.profile.photos })).getByText("1 of 6 photos")).toBeTruthy();
+  expect(within(screen.getByRole("button", { name: t.profile.privacy })).getByText(t.privacy.everyone)).toBeTruthy();
+  const places = [
+    [t.profile.edit, "/profile/edit"],
+    [t.profile.photos, "/photos"],
+    [t.preferences.open, "/preferences"],
+    [t.profile.privacy, "/privacy"],
+    [t.safety.open, "/safety"],
+    [t.notifications.open, "/notifications"],
+    [t.profile.deleteAccount, "/delete-account"],
+  ] as const;
+  for (const [name, href] of places) {
+    await fireEvent.press(screen.getByRole("button", { name }));
+    expect(mockRouter.push).toHaveBeenLastCalledWith(href);
+  }
+  // Signing out everywhere is explained, and no longer dressed as a danger.
+  const everywhere = screen.getByRole("button", { name: t.profile.signOutAll });
+  expect(within(everywhere).getByText(t.profile.signOutAllHint)).toBeTruthy();
+  expect(StyleSheet.flatten(everywhere.props.style).borderColor).not.toBe(color.danger);
+});
+
+test("You says when you're paused, before the visibility choice", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: { ...PROFILE, discovery_paused: true, visibility: "liked_only" } }),
+    "GET /v1/me": () => ({ status: 200, body: ME }),
+  });
+  await renderWithApp(<ProfileScreen />, api);
+  const privacy = await screen.findByRole("button", { name: t.profile.privacy });
+  expect(within(privacy).getByText(t.profile.paused)).toBeTruthy();
+  expect(within(privacy).queryByText(t.privacy.likedOnly)).toBeNull();
 });

@@ -1,8 +1,8 @@
 /** The design system's components: roles, names and states for screen readers. */
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { AccessibilityInfo, Platform } from "react-native";
 
-import { Badge, Button, Card, CardTitle, Checkbox, ChoiceGroup, Notice, TextField, Thumb, Title } from "@/ui/primitives";
+import { Badge, Button, Card, CardTitle, Checkbox, ChoiceGroup, ListRow, Notice, TextField, Thumb, Title } from "@/ui/primitives";
 
 jest.mock("expo-router", () => ({ Link: ({ children }: { children: unknown }) => children }));
 
@@ -119,4 +119,15 @@ test("titles are level-1 headings; a labelled photo is an image", async () => {
   expect(screen.getByRole("heading", { name: "Safety" }).props["aria-level"]).toBe(1);
   const photo = screen.getByLabelText("Your cover photo");
   expect(photo.props.role).toBe("img");
+});
+
+test("a list row is one button named by its label; the hint is read after it, the arrow is hidden", async () => {
+  const onPress = jest.fn();
+  await render(<ListRow label="Photos" hint="1 of 6 photos" opens onPress={onPress} />);
+  const row = screen.getByRole("button", { name: "Photos" });
+  expect(row.props.accessibilityHint).toBe("1 of 6 photos");
+  expect(within(row).getByText("1 of 6 photos")).toBeTruthy();
+  expect(hostsWhere((p) => p["aria-hidden"] === true)).toHaveLength(1); // the arrow
+  await fireEvent.press(row);
+  expect(onPress).toHaveBeenCalled();
 });

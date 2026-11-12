@@ -26,7 +26,7 @@ import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, radius, space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
-import { Badge, Body, Button, Checkbox, ChoiceGroup, Heading, Loading, Notice, Row, Screen, Thumb, Title } from "@/ui/primitives";
+import { Badge, Body, Button, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, Thumb, Title } from "@/ui/primitives";
 import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
 const genderOptions = GENDERS.map((g) => ({ value: g, label: t.gender[g] }));
@@ -40,6 +40,9 @@ function QueryError({ error, retry }: { error: unknown; retry: () => void }) {
     </>
   );
 }
+
+/** Photos are kept to six (the API's limit too). */
+const MAX_PHOTOS = 6;
 
 export function ProfileScreen() {
   const router = useRouter();
@@ -73,22 +76,36 @@ export function ProfileScreen() {
         <ProfileSummary profile={p} />
       )}
       {labels.length ? <Body muted>{labels.filter(Boolean).join(" · ")}</Body> : null}
+      {/* The places under You, as stops down a list (D108); Today, Likes and Matches are on the bottom bar (D105). */}
       {p ? (
-        <>
-          {/* Today, Likes and Matches are on the bottom bar now (stage 20e, D105). */}
-          <Button label={t.preferences.open} variant="secondary" onPress={() => router.push("/preferences")} />
-          <Button label={t.profile.edit} variant="secondary" onPress={() => router.push("/profile/edit")} />
-          <Button label={t.profile.photos} variant="secondary" onPress={() => router.push("/photos")} />
-          <Button label={t.profile.privacy} variant="secondary" onPress={() => router.push("/privacy")} />
-          <Button label={t.safety.open} variant="secondary" onPress={() => router.push("/safety")} />
-          <Button label={t.notifications.open} variant="secondary" onPress={() => router.push("/notifications")} />
-        </>
+        <View style={styles.list}>
+          <ListRow label={t.profile.edit} opens onPress={() => router.push("/profile/edit")} />
+          <ListRow
+            label={t.profile.photos}
+            hint={fill(t.profile.photoCount, { n: p.photos.length, max: MAX_PHOTOS })}
+            opens
+            onPress={() => router.push("/photos")}
+          />
+          <ListRow label={t.preferences.open} opens onPress={() => router.push("/preferences")} />
+          <ListRow label={t.profile.privacy} hint={privacyHint(p)} opens onPress={() => router.push("/privacy")} />
+          <ListRow label={t.safety.open} opens onPress={() => router.push("/safety")} />
+          <ListRow label={t.notifications.open} opens onPress={() => router.push("/notifications")} />
+        </View>
       ) : null}
-      <Button label={t.profile.signOut} variant="secondary" onPress={() => void signOut()} />
-      <Button label={t.profile.signOutAll} variant="danger" onPress={() => void signOutEverywhere()} />
-      <Button label={t.profile.deleteAccount} variant="secondary" onPress={() => router.push("/delete-account")} />
+      {/* The account comes last and quiet: signing out ends sessions, not data; deleting asks on its own screen. */}
+      <View style={styles.account}>
+        <ListRow label={t.profile.signOut} onPress={() => void signOut()} />
+        <ListRow label={t.profile.signOutAll} hint={t.profile.signOutAllHint} onPress={() => void signOutEverywhere()} />
+        <ListRow label={t.profile.deleteAccount} opens onPress={() => router.push("/delete-account")} />
+      </View>
     </Screen>
   );
+}
+
+/** The Privacy row says what's chosen, in the Privacy screen's own words; paused comes first. */
+function privacyHint(p: MyProfile): string {
+  if (p.discovery_paused) return t.profile.paused;
+  return p.visibility === "everyone" ? t.privacy.everyone : t.privacy.likedOnly;
 }
 
 const PHOTO_TONE = { pending: "neutral", approved: "success", rejected: "danger" } as const;
@@ -97,12 +114,15 @@ function ProfileSummary({ profile }: { profile: MyProfile }) {
   const cover = profile.photos[0];
   return (
     <View style={styles.summary}>
-      {cover ? (
-        <Thumb uri={absoluteUrl(API_URL, cover.urls.small)} label={t.photos.coverAlt} />
-      ) : null}
-      <Heading>{`${profile.display_name}, ${profile.age}`}</Heading>
-      <Body>{t.intent[profile.intent]}</Body>
-      <Body muted>{`${profile.area.name}, ${profile.area.city}`}</Body>
+      {/* As you appear on Today: the 4:5 cover and your name on its plate (D105, D108). */}
+      <View style={styles.card}>
+        {cover ? <Thumb portrait uri={absoluteUrl(API_URL, cover.urls.small)} label={t.photos.coverAlt} /> : null}
+        <Stack>
+          <Plate>{`${profile.display_name}, ${profile.age}`}</Plate>
+          <Body>{t.intent[profile.intent]}</Body>
+          <Body muted>{`${profile.area.name}, ${profile.area.city}`}</Body>
+        </Stack>
+      </View>
       {profile.readiness.ready ? (
         <Notice kind="success">{t.profile.ready}</Notice>
       ) : (
@@ -271,7 +291,7 @@ export function PhotosScreen() {
         </View>
       ))}
       {failure ? <Notice kind="error">{failure}</Notice> : null}
-      {list.length < 6 ? (
+      {list.length < MAX_PHOTOS ? (
         <Button label={t.photos.add} onPress={() => void add()} busy={upload.isPending} />
       ) : (
         <Body muted>{t.photos.limit}</Body>
@@ -315,7 +335,11 @@ export function PrivacyScreen() {
 }
 
 const styles = StyleSheet.create({
-  summary: { gap: space.sm },
+  summary: { gap: space.md },
+  card: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
+  // The rows draw a line under each; a list closes its top with one too.
+  list: { borderTopWidth: 1, borderTopColor: color.border },
+  account: { borderTopWidth: 1, borderTopColor: color.border, marginTop: space.lg },
   prompt: { gap: space.sm, padding: space.md, borderRadius: radius.md, backgroundColor: color.surface },
   photoRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
   photoActions: { flex: 1, gap: space.sm },

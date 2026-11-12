@@ -11,6 +11,12 @@ export const en = {
     matches: "Matches",
     you: "You",
   },
+  // Days as people say them (dayInIndia).
+  time: {
+    today: "today",
+    yesterday: "yesterday",
+    months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  },
   common: {
     continue: "Continue",
     save: "Save",
@@ -92,6 +98,7 @@ export const en = {
     privacy: "Privacy",
     signOut: "Sign out",
     signOutAll: "Sign out everywhere",
+    signOutAllHint: "On this device and every other",
     // Reachable with or without a profile: deleting must never depend on finishing sign-up.
     deleteAccount: "Delete account",
     notReady: "Not visible to others yet",
@@ -103,6 +110,9 @@ export const en = {
     ageDeclared: "Age declared",
     emailVerified: "Email verified",
     identityNotChecked: "Identity not checked",
+    // The rows under You say what they hold (D108).
+    photoCount: "{n} of {max} photos",
+    paused: "Paused",
   },
   editProfile: {
     name: "First name",

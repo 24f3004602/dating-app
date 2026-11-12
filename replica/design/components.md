@@ -146,11 +146,23 @@ Sheet (modal bottom sheet; stage 20e, D107)
   look       bg, square, a 2-point sign rule on top, padding xl, content max width;
              over the sign at scrim.opacity (0.4); slides up from the bottom edge
              (base, decelerate) as the scrim fades in; with reduce motion it's just there
-  parts      what it's about on a plate; SheetAction rows (56 high, heading type, a
-             border line under each, pressed: surface); Close
+  parts      what it's about on a plate; list rows (below; Report carries the arrow); Close
   a11y       a modal dialog named for its content ("Options for Kabir"); Back,
              Escape (web), a tap on the scrim and Close dismiss it; the scrim is hidden
              from screen readers; padded above the navigation bar
+
+Plate (a name on a sign plate; stage 20e, D105)
+  look       sign fill, on-sign lettering in the sign face, square (radius plate), sized
+             to its text; `heading`: title size and the page's level-1 heading
+  used on    Today, Likes, Matches, a person, chat, the sheet, You
+
+List row (stage 20e, D108)
+  look       full width, 56 high, the label in heading type with a caption hint under it,
+             a line under each row (a list closes its top with one); pressed: surface;
+             `opens`: a drawn arrow (two sides of a small square, turned) at the end
+  a11y       one button named by its label; the hint is its accessibility hint (read
+             after the name on Android) and visible text; the arrow is hidden
+  used on    You (the places under it, then the account), the chat's sheet
 ```
 
 ## Checked on

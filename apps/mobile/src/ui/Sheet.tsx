@@ -2,24 +2,13 @@
  * A modal bottom sheet (Material's, in the Interchange, stage 20e): white and square under
  * a graphite rule, over the sign's graphite as a scrim. Back, Escape on the web, a tap on
  * the scrim and the sheet's own Close all dismiss it. It slides up from the bottom edge as
- * the scrim fades in; with reduce motion it is simply there.
+ * the scrim fades in; with reduce motion it is simply there. Its rows are `ListRow`s.
  */
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Modal,
-  Platform,
-  Pressable,
-  type PressableStateCallbackType,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Animated, Modal, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { color, focusRing, motion, scrim, size, space, touch, type } from "@/theme/tokens";
+import { color, motion, scrim, size, space } from "@/theme/tokens";
 import { easing, nativeDriver, useReducedMotion } from "@/ui/motion";
 
 type Props = { visible: boolean; onClose: () => void; label: string; children: ReactNode };
@@ -77,27 +66,6 @@ export function Sheet({ visible, onClose, label, children }: Props) {
   );
 }
 
-/** React Native Web also reports focus; native platforms report only `pressed`. */
-type PressState = PressableStateCallbackType & { focused?: boolean };
-const ring: ViewStyle =
-  Platform.OS === "web"
-    ? { outlineColor: color.focus, outlineStyle: "solid", outlineWidth: focusRing.width, outlineOffset: -focusRing.width }
-    : {};
-
-/** One action in a sheet: a full-width row, a 56-point target, its label in the sign face (lined up with a plate's lettering). */
-export function SheetAction({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      style={(state) => [styles.action, state.pressed && styles.actionPressed, !!(state as PressState).focused && ring]}
-    >
-      <Text style={styles.actionText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-end" },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: color.sign, opacity: scrim.opacity },
@@ -112,13 +80,4 @@ const styles = StyleSheet.create({
     maxWidth: size.contentMax,
     alignSelf: "center",
   },
-  action: {
-    minHeight: touch.min + space.sm,
-    justifyContent: "center",
-    paddingHorizontal: space.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: color.border,
-  },
-  actionPressed: { backgroundColor: color.surface },
-  actionText: { ...type.heading, color: color.text },
 });

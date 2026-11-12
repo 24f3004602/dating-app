@@ -428,6 +428,30 @@ export function Photo({ uri, label, style }: { uri: string; label: string; style
   );
 }
 
+/**
+ * One row in a list of places or actions (Material's list item, in the Interchange, stage
+ * 20e, D108): the label in heading type with a hint under it, a line under each row and a
+ * 56-point target; pressed: surface. `opens` draws an arrow: the row leads to another screen.
+ */
+export function ListRow({ label, hint, onPress, opens }: { label: string; hint?: string; onPress: () => void; opens?: boolean }) {
+  const focusRingStyle = useRing();
+  return (
+    <Pressable
+      role="button"
+      aria-label={label}
+      accessibilityHint={hint}
+      onPress={onPress}
+      style={(state) => [styles.listRow, state.pressed && styles.listRowPressed, focusStyle(state, focusRingStyle)]}
+    >
+      <View style={styles.listRowText}>
+        <Text style={styles.heading}>{label}</Text>
+        {hint ? <Text style={styles.caption}>{hint}</Text> : null}
+      </View>
+      {opens ? <View style={styles.arrow} aria-hidden /> : null}
+    </Pressable>
+  );
+}
+
 export function Loading({ label }: { label: string }) {
   return (
     <View style={styles.center} aria-label={label} role="progressbar" aria-busy>
@@ -553,6 +577,30 @@ const styles = StyleSheet.create({
   plateTitle: { ...type.title },
   photoBox: { width: "100%", borderRadius: radius.plate, backgroundColor: color.surface, overflow: "hidden" },
   fill: { width: "100%", height: "100%" },
+
+  // List rows (D108): a line under each, like the stops down a station list.
+  listRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    minHeight: touch.min + space.sm,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: color.border,
+  },
+  listRowPressed: { backgroundColor: color.surface },
+  listRowText: { flex: 1, gap: space.xs / 2 },
+  // A drawn arrow: two sides of a small square, turned to point on.
+  arrow: {
+    width: space.sm,
+    height: space.sm,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderColor: color.sign,
+    transform: [{ rotate: "45deg" }],
+    marginRight: space.xs,
+  },
 
   center: { alignItems: "center", justifyContent: "center", gap: space.md, padding: space.xxl },
   row: { flexDirection: "row", gap: space.md, alignItems: "center", flexWrap: "wrap" },
