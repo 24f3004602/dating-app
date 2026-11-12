@@ -386,15 +386,16 @@ export function CardTitle({ children }: { children: ReactNode }) {
 
 /**
  * A name on a graphite sign plate, as the Interchange letters its station names (D105).
- * `heading`: the page's own heading, at title size (a person's profile).
+ * `heading`: the page's own heading, at title size (a person's profile); with `level={2}`
+ * a section's heading in the plate's own size (your name under "Your profile").
  */
-export function Plate({ children, heading }: { children: ReactNode; heading?: boolean }) {
+export function Plate({ children, heading, level = 1 }: { children: ReactNode; heading?: boolean; level?: 1 | 2 }) {
   return (
     <View style={styles.plate}>
       <Text
         role={heading ? "heading" : undefined}
-        aria-level={heading ? 1 : undefined}
-        style={[styles.plateText, heading && styles.plateTitle]}
+        aria-level={heading ? level : undefined}
+        style={[styles.plateText, heading && level === 1 && styles.plateTitle]}
       >
         {children}
       </Text>

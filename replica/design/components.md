@@ -153,7 +153,8 @@ Sheet (modal bottom sheet; stage 20e, D107)
 
 Plate (a name on a sign plate; stage 20e, D105)
   look       sign fill, on-sign lettering in the sign face, square (radius plate), sized
-             to its text; `heading`: title size and the page's level-1 heading
+             to its text; `heading`: title size and the page's level-1 heading;
+             `heading level={2}`: a section heading in the plate's own size (You)
   used on    Today, Likes, Matches, a person, chat, the sheet, You
 
 List row (stage 20e, D108)

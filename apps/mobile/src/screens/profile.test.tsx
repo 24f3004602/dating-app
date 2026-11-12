@@ -207,8 +207,10 @@ test("You is your card over a list of places, not a hub of buttons (MOB-25, stag
     "GET /v1/me": () => ({ status: 200, body: ME }),
   });
   await renderWithApp(<ProfileScreen />, api);
-  // The name on a plate beside the cover, as on Today.
-  expect(StyleSheet.flatten((await screen.findByText("Asha, 27")).props.style).color).toBe(color.onSign);
+  // The name on a plate beside the cover, as on Today; still a heading under "Your profile" (the e2e reads it so).
+  const name = await screen.findByRole("heading", { name: "Asha, 27" });
+  expect(name.props["aria-level"]).toBe(2);
+  expect(StyleSheet.flatten(name.props.style).color).toBe(color.onSign);
   expect(screen.getByLabelText(t.photos.coverAlt).props.role).toBe("img");
   // Each place is a row that says what it holds, and opens its screen.
   expect(within(screen.getByRole("button", { name: t.profile.photos })).getByText("1 of 6 photos")).toBeTruthy();

@@ -118,7 +118,7 @@ function ProfileSummary({ profile }: { profile: MyProfile }) {
       <View style={styles.card}>
         {cover ? <Thumb portrait uri={absoluteUrl(API_URL, cover.urls.small)} label={t.photos.coverAlt} /> : null}
         <Stack>
-          <Plate>{`${profile.display_name}, ${profile.age}`}</Plate>
+          <Plate heading level={2}>{`${profile.display_name}, ${profile.age}`}</Plate>
           <Body>{t.intent[profile.intent]}</Body>
           <Body muted>{`${profile.area.name}, ${profile.area.city}`}</Body>
         </Stack>
