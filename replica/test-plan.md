@@ -398,3 +398,4 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | 2026-11-12 | owner's laptop, stage 20e slice 10 (choice lists; Unblock asks) | app `tsc`; app Jest; impeccable `detect` on the five files | clean; 147 passed (MOB-30 and MOB-31, mutation-checked four ways); 0 findings (regex rules only). **Not run:** e2e (CI after the commit); the phone (locked) |
 | 2026-11-12 | GitHub Actions on `8daa231` (stage 20e slice 10) | mobile (checks, e2e), beta-stack | all passed (mobile 43193834599, beta-stack 43193834525) |
 | 2026-11-12 | owner's laptop, the design gallery | app `tsc`; app Jest; impeccable `detect` on the gallery | clean; 148 passed (DS-4); 0 findings (regex rules only). **Not run:** e2e (CI after the commit) |
+| 2026-11-12 | GitHub Actions on `53ca3cb` (the design gallery) | mobile (checks, e2e with the gallery's axe, focus and 320 px reflow), beta-stack | all passed (mobile 43194661120, beta-stack 43194661152) |
