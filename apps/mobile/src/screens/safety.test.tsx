@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { fill, t } from "@/i18n/en";
+import { dayInIndia } from "@/i18n/time";
 import { ReportScreen, reportHref, SafetyActions, SafetyScreen } from "@/screens/safety";
 import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
@@ -56,6 +58,8 @@ test("a report needs a reason, can name one of their messages, and blocks by def
   expect(await screen.findByText(t.report.chooseReason)).toBeTruthy();
   expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
 
+  // Both questions are lists of rows, not chips (D112).
+  expect(StyleSheet.flatten(screen.getByRole("radio", { name: t.report.reasons.scam }).props.style).borderBottomWidth).toBe(1);
   await fireEvent.press(screen.getByRole("radio", { name: t.report.reasons.scam }));
   // Only their messages, newest first, never removed ones.
   const choices = screen.getAllByRole("radio", { name: /^Message: / });
@@ -105,7 +109,17 @@ test("the Safety screen lists blocks (with unblock) and report statuses", async 
   await renderWithApp(<SafetyScreen />, api);
   expect(await screen.findByText(`Kabir: ${t.report.reasons.scam}. ${t.safety.status.in_review}`)).toBeTruthy();
   expect(screen.getByText(t.safety.left)).toBeTruthy();
-  await fireEvent.press(screen.getByRole("button", { name: `${t.safety.unblock} Kabir` }));
-  await waitFor(() => expect(screen.queryByRole("button", { name: `${t.safety.unblock} Kabir` })).toBeNull());
-  expect(calls.some((c) => c.method === "DELETE" && c.path === "/v1/blocks/u2")).toBe(true);
+  // Each person is a row that says since when; Unblock asks first, and Cancel sends nothing (MOB-31, D113).
+  expect(screen.getAllByText(fill(t.safety.blockedOn, { day: dayInIndia("2026-11-05T09:00:00Z") }))).toHaveLength(2); // both on 5 Nov in India
+  const unblockKabir = fill(t.safety.unblockName, { name: "Kabir" });
+  await fireEvent.press(screen.getByRole("button", { name: unblockKabir }));
+  expect(screen.getByText(fill(t.safety.confirmUnblock, { name: "Kabir" }))).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.common.cancel }));
+  expect(screen.queryByText(fill(t.safety.confirmUnblock, { name: "Kabir" }))).toBeNull();
+  expect(calls.some((c) => c.method === "DELETE")).toBe(false);
+  // Confirmed, the block goes, and the row with it.
+  await fireEvent.press(screen.getByRole("button", { name: unblockKabir }));
+  await fireEvent.press(screen.getByRole("button", { name: unblockKabir })); // the question's own Unblock
+  await waitFor(() => expect(screen.queryByText("Kabir")).toBeNull());
+  expect(calls.filter((c) => c.method === "DELETE" && c.path === "/v1/blocks/u2")).toHaveLength(1);
 });

@@ -274,6 +274,10 @@ export const en = {
     noBlocked: "You haven't blocked anyone.",
     unblock: "Unblock",
     unblockHint: "Unblocking doesn't bring back a match.",
+    // Each person you've blocked is a row; Unblock asks first (D113), as Block does.
+    blockedOn: "Blocked {day}",
+    unblockName: "Unblock {name}",
+    confirmUnblock: "Unblock {name}? You could see each other again.",
     left: "Someone who has left",
     reports: "Your reports",
     noReports: "You haven't reported anyone.",

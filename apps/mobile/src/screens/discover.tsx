@@ -12,7 +12,7 @@ import { messageFor } from "@/api/messages";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
-import { color, radius, space } from "@/theme/tokens";
+import { color, radius, size, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
 import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
@@ -256,5 +256,12 @@ const styles = StyleSheet.create({
   safety: { borderTopWidth: 1, borderTopColor: color.border, paddingTop: space.lg, marginTop: space.xl },
   end: { flexDirection: "row", alignItems: "center", gap: space.md, paddingTop: space.sm },
   // The same stop as the bottom bar's, filled: the last one on today's line.
-  terminus: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: color.sign, backgroundColor: color.sign },
+  terminus: {
+    width: size.roundel,
+    height: size.roundel,
+    borderRadius: size.roundel / 2,
+    borderWidth: size.roundelStroke,
+    borderColor: color.sign,
+    backgroundColor: color.sign,
+  },
 });

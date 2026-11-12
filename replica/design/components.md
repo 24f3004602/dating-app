@@ -109,6 +109,15 @@ ChoiceGroup (chips)
   a11y       group named by its label; each chip's name is its label; the tick is
              aria-hidden (the checked state says it)
 
+Choice list (ChoiceGroup layout="list"; stage 20e, D112)
+  look       full-width rows (48 high or more) with a line under each and on top of the list;
+             the label in body type, wrapping in its row; on the left the line's station
+             roundel (size.roundel, a size.roundelStroke graphite stroke), filled when chosen;
+             several choices: the checkbox's square box with a tick; pressed: surface
+  a11y       a radiogroup of radios (or a group of checkboxes) named by the label, as the
+             chips are; the mark is hidden, the state says it
+  use        options that are sentences (Report, Privacy, intent, prompts); short ones stay chips
+
 Notice
   kinds      info (accent-soft, accent edge), success (success-soft, success edge),
              error (danger-soft, danger edge)

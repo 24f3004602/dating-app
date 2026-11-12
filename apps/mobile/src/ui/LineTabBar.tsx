@@ -9,9 +9,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { Pressable, type PressableProps, StyleSheet, Text, View, type ViewProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { color, font, space, touch } from "@/theme/tokens";
+import { color, font, size, space, touch } from "@/theme/tokens";
 
-const STOP = 18;
+const STOP = size.roundel;
 const RAIL = 4;
 const STOP_TOP = space.sm; // the roundels' top edge inside each stop
 
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     width: STOP,
     height: STOP,
     borderRadius: STOP / 2,
-    borderWidth: 3,
+    borderWidth: size.roundelStroke,
     borderColor: color.sign,
     backgroundColor: color.bg,
   },

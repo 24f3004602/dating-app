@@ -159,9 +159,11 @@ type ButtonProps = {
   disabled?: boolean;
   busy?: boolean;
   hint?: string;
+  /** The accessible name when the label needs its context ("Unblock" is read "Unblock Kabir"); it starts with the label (WCAG 2.5.3). */
+  accessibleName?: string;
 };
 
-export function Button({ label, onPress, variant = "primary", disabled, busy, hint }: ButtonProps) {
+export function Button({ label, onPress, variant = "primary", disabled, busy, hint, accessibleName }: ButtonProps) {
   const inactive = !!(disabled || busy);
   const press = usePressScale();
   const focusRingStyle = useRing();
@@ -169,7 +171,7 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
     <Animated.View style={press.style}>
       <Pressable
         role="button"
-        aria-label={label}
+        aria-label={accessibleName ?? label}
         accessibilityHint={hint}
         aria-disabled={inactive}
         aria-busy={!!busy}
@@ -299,6 +301,8 @@ type ChoiceProps<T extends string> = {
   label: string;
   options: readonly { value: T; label: string }[];
   error?: string;
+  /** "list" for choices that are sentences: rows with the line's station roundel (D112). Chips otherwise. */
+  layout?: "chips" | "list";
 } & ({ multiple?: false; value: T | undefined; onChange: (v: T) => void } | { multiple: true; value: T[]; onChange: (v: T[]) => void });
 
 export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
@@ -311,16 +315,37 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
       props.onChange(v);
     }
   };
+  const list = props.layout === "list";
   return (
     <View style={styles.field} role={props.multiple ? "group" : "radiogroup"} aria-label={props.label}>
       <Text style={styles.label}>{props.label}</Text>
-      <View style={styles.chips}>
+      <View style={list ? styles.choiceList : styles.chips}>
         {props.options.map((o) => {
           const on = selected(o.value);
+          const role = props.multiple ? "checkbox" : "radio";
+          if (list) {
+            return (
+              <Pressable
+                key={o.value}
+                role={role}
+                aria-label={o.label}
+                aria-checked={on}
+                onPress={() => toggle(o.value)}
+                style={(state) => [styles.choiceRow, styles.listChoice, state.pressed && styles.listChoicePressed, focusStyle(state, focusRingStyle)]}
+              >
+                {/* One choice: the line's station roundel, filled when chosen, as the bar marks where you are;
+                    several: a square box with a tick. Shape and fill, not colour alone (WCAG 1.4.1). */}
+                <View style={props.multiple ? [styles.box, on && styles.boxOn] : [styles.roundel, on && styles.roundelOn]} aria-hidden>
+                  {props.multiple && on ? <Text style={styles.tick}>✓</Text> : null}
+                </View>
+                <Text style={styles.body}>{o.label}</Text>
+              </Pressable>
+            );
+          }
           return (
             <Pressable
               key={o.value}
-              role={props.multiple ? "checkbox" : "radio"}
+              role={role}
               aria-label={o.label}
               aria-checked={on}
               onPress={() => toggle(o.value)}
@@ -559,6 +584,19 @@ const styles = StyleSheet.create({
   chipPressed: { backgroundColor: color.surface },
   chipText: { ...type.body, color: color.text },
   chipTextOn: { ...type.label, color: color.onSign },
+  // Choices that are sentences (D112): full-width rows with a line under each, like the other lists.
+  choiceList: { borderTopWidth: 1, borderTopColor: color.border },
+  listChoice: { paddingVertical: space.sm, paddingHorizontal: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  listChoicePressed: { backgroundColor: color.surface },
+  roundel: {
+    width: size.roundel,
+    height: size.roundel,
+    borderRadius: size.roundel / 2,
+    borderWidth: size.roundelStroke,
+    borderColor: color.sign,
+    backgroundColor: color.bg,
+  },
+  roundelOn: { backgroundColor: color.sign },
 
   notice: { padding: space.md, borderRadius: radius.plate, borderWidth: 2 },
 

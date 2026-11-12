@@ -102,6 +102,7 @@ test("edit profile: a complete form saves the API's shape", async () => {
   await fireEvent.changeText(await screen.findByLabelText(t.editProfile.name), "Asha");
   await fireEvent.press(screen.getAllByRole("radio", { name: t.gender.woman })[0]!);
   await fireEvent.press(screen.getByRole("checkbox", { name: t.gender.man }));
+  expect(StyleSheet.flatten(screen.getByRole("radio", { name: t.intent.figuring_out }).props.style).borderBottomWidth).toBe(1); // a list (D112)
   await fireEvent.press(screen.getByRole("radio", { name: t.intent.long_term }));
   await fireEvent.press(screen.getByRole("radio", { name: "Saket, Delhi" }));
   await fireEvent.press(screen.getByRole("radio", { name: PROMPTS[0]!.text }));
@@ -233,6 +234,7 @@ test("privacy: choosing a setting saves it at once", async () => {
     { discovery_paused: true },
   ]);
   expect(screen.getByRole("radio", { name: t.privacy.likedOnly })).toBeChecked();
+  expect(StyleSheet.flatten(screen.getByRole("radio", { name: t.privacy.likedOnly }).props.style).borderBottomWidth).toBe(1); // a list (D112)
   // What each setting does, and the way to delete the account.
   expect(screen.getByText(t.privacy.likedOnlyHint)).toBeTruthy();
   expect(screen.getByText(t.privacy.pauseHint)).toBeTruthy();

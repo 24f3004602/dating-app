@@ -18,10 +18,10 @@ import {
   useUnmatch,
 } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
-import { dateInIndia } from "@/i18n/time";
+import { dateInIndia, dayInIndia } from "@/i18n/time";
 import { fill, t } from "@/i18n/en";
-import { space } from "@/theme/tokens";
-import { Body, Button, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
+import { color, space } from "@/theme/tokens";
+import { Body, Button, Caption, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
 import { Sheet } from "@/ui/Sheet";
 
 type Reason = ReportBody["reason"];
@@ -202,7 +202,9 @@ export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; 
     <Screen>
       <Title>{fill(t.report.title, { name })}</Title>
       <Body muted>{fill(t.report.intro, { name })}</Body>
+      {/* Both questions are sentences, so they are lists, not chips (D112). */}
       <ChoiceGroup
+        layout="list"
         label={t.report.reason}
         value={reason}
         onChange={(v) => {
@@ -214,6 +216,7 @@ export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; 
       />
       {theirs.length > 0 ? (
         <ChoiceGroup
+          layout="list"
           label={t.report.about}
           value={about}
           onChange={setAbout}
@@ -251,10 +254,46 @@ function Notices() {
   );
 }
 
+/** Someone you've blocked: who, since when, and Unblock, which asks first (D113): the block stops protecting you. */
+function BlockedRow({ userId, name, blockedAt }: { userId: string; name: string; blockedAt: string }) {
+  const unblock = useUnblock();
+  const [asking, setAsking] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const unblockName = fill(t.safety.unblockName, { name });
+  const confirm = () => {
+    setFailure(null);
+    unblock.mutate(userId, { onError: (err) => setFailure(messageFor(err)) });
+  };
+  return (
+    <View style={styles.blocked}>
+      <View style={styles.blockedHead}>
+        <View style={styles.grow}>
+          <CardTitle>{name}</CardTitle>
+          <Caption>{fill(t.safety.blockedOn, { day: dayInIndia(blockedAt) })}</Caption>
+        </View>
+        {asking ? null : <Button label={t.safety.unblock} accessibleName={unblockName} variant="secondary" onPress={() => setAsking(true)} />}
+      </View>
+      {asking ? (
+        <View style={styles.box}>
+          <Notice kind="info">{fill(t.safety.confirmUnblock, { name })}</Notice>
+          {failure ? <Notice kind="error">{failure}</Notice> : null}
+          <Row>
+            <View style={styles.grow}>
+              <Button label={t.safety.unblock} accessibleName={unblockName} variant="danger" busy={unblock.isPending} onPress={confirm} />
+            </View>
+            <View style={styles.grow}>
+              <Button label={t.common.cancel} variant="secondary" onPress={() => setAsking(false)} />
+            </View>
+          </Row>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 export function SafetyScreen() {
   const blocks = useBlocks();
   const reports = useMyReports();
-  const unblock = useUnblock();
   if (blocks.isPending || reports.isPending) return <Loading label={t.common.loading} />;
   if (blocks.isError || reports.isError) {
     return (
@@ -269,20 +308,13 @@ export function SafetyScreen() {
       <Notices />
       <Heading>{t.safety.blocked}</Heading>
       {blocks.data.length === 0 ? <Body muted>{t.safety.noBlocked}</Body> : <Body muted>{t.safety.unblockHint}</Body>}
-      {blocks.data.map((b) => {
-        const name = b.display_name ?? t.safety.left;
-        return (
-          <View key={b.user_id} style={styles.item}>
-            <Body>{name}</Body>
-            <Button
-              label={`${t.safety.unblock} ${name}`}
-              variant="secondary"
-              busy={unblock.isPending && unblock.variables === b.user_id}
-              onPress={() => unblock.mutate(b.user_id)}
-            />
-          </View>
-        );
-      })}
+      {blocks.data.length > 0 ? (
+        <View style={styles.list}>
+          {blocks.data.map((b) => (
+            <BlockedRow key={b.user_id} userId={b.user_id} name={b.display_name ?? t.safety.left} blockedAt={b.blocked_at} />
+          ))}
+        </View>
+      ) : null}
       <Heading>{t.safety.reports}</Heading>
       {reports.data.length === 0 ? <Body muted>{t.safety.noReports}</Body> : null}
       {reports.data.map((r) => (
@@ -302,4 +334,8 @@ const styles = StyleSheet.create({
   box: { gap: space.sm },
   grow: { flex: 1 },
   item: { gap: space.sm },
+  // People you've blocked (D113): rows with a line under each, like the other lists.
+  list: { borderTopWidth: 1, borderTopColor: color.border },
+  blocked: { gap: space.sm, padding: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },
+  blockedHead: { flexDirection: "row", alignItems: "center", gap: space.md },
 });

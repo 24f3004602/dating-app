@@ -208,7 +208,7 @@ export function EditProfileScreen() {
         <ChoiceGroup multiple label={t.editProfile.interestedIn} options={genderOptions} value={field.value} onChange={field.onChange} error={e.interestedIn?.message} />
       )} />
       <Controller control={form.control} name="intent" render={({ field }) => (
-        <ChoiceGroup label={t.editProfile.intent} options={intentOptions} value={field.value} onChange={field.onChange} error={e.intent?.message} />
+        <ChoiceGroup layout="list" label={t.editProfile.intent} options={intentOptions} value={field.value} onChange={field.onChange} error={e.intent?.message} />
       )} />
       <FormField control={form.control} name="bio" label={t.editProfile.bio} hint={t.editProfile.bioHint} error={e.bio?.message}
         multiline numberOfLines={4} maxLength={500} />
@@ -229,7 +229,7 @@ export function EditProfileScreen() {
         </View>
       ))}
       {promptFields.fields.length < 3 ? (
-        <ChoiceGroup label={t.editProfile.addPrompt} value={undefined} onChange={(key) => promptFields.append({ key, answer: "" })}
+        <ChoiceGroup layout="list" label={t.editProfile.addPrompt} value={undefined} onChange={(key) => promptFields.append({ key, answer: "" })}
           options={unused.map((p) => ({ value: p.key, label: p.text }))} />
       ) : null}
       {failure ? <Notice kind="error">{failure}</Notice> : null}
@@ -399,7 +399,7 @@ export function PrivacyScreen() {
   return (
     <Screen>
       <Title>{t.privacy.title}</Title>
-      <ChoiceGroup label={t.privacy.visibility} value={p.visibility} onChange={(v) => update({ visibility: v })}
+      <ChoiceGroup layout="list" label={t.privacy.visibility} value={p.visibility} onChange={(v) => update({ visibility: v })}
         options={[{ value: "everyone", label: t.privacy.everyone }, { value: "liked_only", label: t.privacy.likedOnly }]} />
       <Body muted>{t.privacy.likedOnlyHint}</Body>
       <Checkbox label={t.privacy.pause} checked={p.discovery_paused} onChange={(v) => update({ discovery_paused: v })} />
