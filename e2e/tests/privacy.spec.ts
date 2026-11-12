@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 import { checkA11y, PASSWORD, signUp, watchErrors } from "./helpers";
 
 test("delete an account, keep it by signing in, delete it again", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const email = `e2e-leaving-${Date.now()}@example.com`; // a labelled test account
   await signUp(page, email);
 

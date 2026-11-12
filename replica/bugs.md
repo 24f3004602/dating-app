@@ -6,7 +6,7 @@ workaround, or visibly wrong; S4 cosmetic. Only reproduced bugs go here;
 suspicions go under "To check". Defects found and fixed inside a stage, before
 its commit, are listed in that stage's "Found and fixed" notes in `progress.md`.
 
-Open: S1 0, S2 0, S3 0, S4 1.
+Open: S1 0, S2 0, S3 0, S4 0.
 
 ### BUG-001: the 404 page's scripts and styles are blocked by the CSP
 
@@ -40,7 +40,7 @@ Expected: no CSP violations.
 Actual: one enforced `script-src` violation, blocked URI `eval`, from the shared bundle (`__common-*.js`, line 170). Nothing breaks and the console shows no error.
 Evidence: the 2026-11-07 live check after stage 19 went live; the code at that position is Zod 4.6.7's `allowsEval` probe: `try { new Function("") } catch { ... }`.
 Suspected cause: Zod probes for `new Function` unless `jitless` is set. The CSP rightly refuses it, and Zod falls back to its non-eval path. Present since Zod arrived in stage 7b; the app's e2e doesn't listen for CSP violations.
-Status: open. Fix: `z.config({ jitless: true })` before any schema runs, plus an e2e check for CSP violations on the app.
+Status: fixed (2026-11-12, D114; not live until the beta is rebuilt). `apps/mobile/src/validation/z.ts` sets `z.config({ jitless: true })`, and every module that builds a schema imports `z` from it. Zod 4.6.7 skips the probe under `jitless`, but reads the setting when each schema is created, so it must run before the first one. MOB-32 records every `Function` made while the app's schemas are built and used: none (without the setting, the probe and a compiled parser). E2E-8: `watchErrors` now reports each `securitypolicyviolation` as a console error, and every spec uses it (onboarding too). A scratch Playwright check under the app's policy in Chrome 156 showed why the suite missed this: the refused `eval` inside a try logged nothing to the console; with the helper it reported one violation, and nothing on a page that keeps the policy. The new check wasn't run against the unfixed build: CI runs it with the fix.
 
 ### BUG-003: the home-mode backup never saves the photos
 

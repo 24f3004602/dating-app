@@ -23,7 +23,7 @@ async function join(page: Page, email: string) {
 }
 
 test("join, confirm with a press, then leave", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const email = unique("join");
   await page.goto("/");
   await join(page, email);

@@ -10,19 +10,10 @@
 import { expect, test } from "@playwright/test";
 
 import { PHOTO } from "../env";
-import { checkA11y, codeFromWorkerMail, PASSWORD } from "./helpers";
+import { checkA11y, codeFromWorkerMail, PASSWORD, watchErrors } from "./helpers";
 
 test("sign up, verify, create a profile, add a photo, set privacy, sign out", async ({ page }) => {
-  const consoleErrors: string[] = [];
-  const serverErrors: string[] = [];
-  page.on("console", (m) => {
-    // Chrome logs expected 4xx answers (e.g. "no profile yet") as resource errors; those are checked below.
-    if (m.type() === "error" && !m.text().startsWith("Failed to load resource")) consoleErrors.push(m.text());
-  });
-  page.on("pageerror", (e) => consoleErrors.push(e.message));
-  page.on("response", (r) => {
-    if (r.status() >= 500) serverErrors.push(`${r.status()} ${r.url()}`);
-  });
+  const errors = await watchErrors(page); // console errors, policy breaches and 5xx answers
 
   const email = `e2e-${Date.now()}@example.com`; // labelled test account
 
@@ -162,6 +153,6 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Fewer, better introductions" })).toBeVisible();
 
-  expect(serverErrors).toEqual([]);
-  expect(consoleErrors).toEqual([]);
+  expect(errors.server).toEqual([]);
+  expect(errors.console).toEqual([]);
 });

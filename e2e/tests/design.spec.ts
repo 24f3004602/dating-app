@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 import { checkA11y, watchErrors } from "./helpers";
 
 test("the design gallery: axe, keyboard focus, screenshot", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   await page.goto("/design");
   await expect(page.getByRole("heading", { name: "Design system", level: 1 })).toBeVisible();
   await checkA11y(page, "design-gallery");

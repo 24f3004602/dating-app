@@ -23,7 +23,7 @@ test("two people match and chat, live", async ({ browser }) => {
   const stamp = Date.now();
   const kabir = await person(browser);
   const meera = await person(browser);
-  const errors = [watchErrors(kabir), watchErrors(meera)];
+  const errors = await Promise.all([watchErrors(kabir), watchErrors(meera)]);
 
   await signUp(kabir, `e2e-kabir-${stamp}@example.com`); // labelled test accounts
   await readyProfile(kabir, { name: "Kabir", gender: "Man", seeking: "Woman" });

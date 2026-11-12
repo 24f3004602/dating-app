@@ -2,7 +2,7 @@
  * Client-side checks mirroring the API (which stays the authority): early,
  * friendly feedback, and fewer requests that are bound to fail.
  */
-import { z } from "zod";
+import { z } from "./z";
 
 export const PASSWORD_MIN = 15;
 export const PASSWORD_MAX = 128;

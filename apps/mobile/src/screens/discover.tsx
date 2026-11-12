@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { Fragment, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
-import { z } from "zod";
 
 import { ApiError } from "@/api/client";
 import { absoluteUrl, type Card as DailyCard, type Person, usePerson, usePreferences, useSavePreferences, useToday } from "@/api/hooks";
@@ -19,6 +18,7 @@ import { FormField } from "@/ui/FormField";
 import { Reveal, staggered } from "@/ui/motion";
 import { Body, Button, Card, ChoiceGroup, Loading, Notice, Photo, Plate, Screen, Stack, Thumb, Title } from "@/ui/primitives";
 import { Rings } from "@/ui/Rings";
+import { z } from "@/validation/z";
 
 function cardLabel(c: DailyCard): string {
   return fill(t.discover.card, {

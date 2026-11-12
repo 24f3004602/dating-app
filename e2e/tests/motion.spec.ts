@@ -59,7 +59,7 @@ test.describe("with motion", () => {
   test.use({ reducedMotion: "no-preference" });
 
   test("landing: the line draws as you travel down it, the loop at its end can be paused, axe once settled", async ({ page }) => {
-    const errors = watchErrors(page);
+    const errors = await watchErrors(page);
     await measureLayoutShift(page);
     await page.goto(`${CONSOLE_URL}/`);
     await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
@@ -106,7 +106,7 @@ test.describe("with motion", () => {
   });
 
   test("app welcome: the candlelight loop under the overlay, the rings meet, the words rise in", async ({ page }) => {
-    const errors = watchErrors(page);
+    const errors = await watchErrors(page);
     await page.goto(`${WEB_URL}/welcome`);
     await expect(page.locator('[data-rings="meet"]')).toHaveAttribute("data-motion", "animated");
     const title = page.getByRole("heading", { name: "Fewer, better introductions" });
@@ -140,7 +140,7 @@ test.describe("with motion", () => {
   });
 
   test("design gallery: every motion pattern plays and ends at rest", async ({ page }) => {
-    const errors = watchErrors(page);
+    const errors = await watchErrors(page);
     await page.goto(`${WEB_URL}/design`);
     for (const mode of ["meet", "breathe", "join"]) {
       await expect(page.locator(`[data-rings="${mode}"]`)).toHaveAttribute("data-motion", "animated");

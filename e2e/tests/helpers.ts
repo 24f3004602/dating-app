@@ -43,8 +43,12 @@ export async function checkA11y(page: Page, screen: string) {
   ).toEqual([]);
 }
 
-/** Console errors and 5xx answers, to assert empty at the end of a spec. */
-export function watchErrors(page: Page) {
+/**
+ * Console errors and 5xx answers, to assert empty at the end of a spec. A breach of the
+ * content security policy counts as a console error: Chrome doesn't always log one (an
+ * `eval` refused inside a try is silent, BUG-002), so the page reports each itself.
+ */
+export async function watchErrors(page: Page) {
   const found = { console: [] as string[], server: [] as string[] };
   page.on("console", (m) => {
     // Chrome logs expected 4xx answers (e.g. "no profile yet") as resource errors; those are checked by the specs.
@@ -53,6 +57,12 @@ export function watchErrors(page: Page) {
   page.on("pageerror", (e) => found.console.push(e.message));
   page.on("response", (r) => {
     if (r.status() >= 500) found.server.push(`${r.status()} ${r.url()}`);
+  });
+  // Runs in every document the page opens, before the document's own scripts.
+  await page.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", (e) => {
+      console.error(`CSP violation: ${e.effectiveDirective} refused ${e.blockedURI} (${e.sourceFile}:${e.lineNumber})`);
+    });
   });
   return found;
 }

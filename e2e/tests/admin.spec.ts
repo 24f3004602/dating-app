@@ -26,7 +26,7 @@ function staffFixture(): Fixture {
 test.use({ baseURL: CONSOLE_URL });
 
 test("the landing page says only what the app does", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const res = await page.goto("/");
   await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
   await expect(page.getByText("Not open yet")).toBeVisible();
@@ -45,7 +45,7 @@ test("the landing page says only what the app does", async ({ page }) => {
 });
 
 test("the tester notice pages are linked, readable and accessible", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
@@ -62,7 +62,7 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
 });
 
 test("an unknown page is a plain 404 that keeps the policy", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const res = await page.goto("/no-such-page");
   expect(res?.status()).toBe(404);
   expect(res?.headers()["content-security-policy"] ?? "").toContain("frame-ancestors 'none'");
@@ -77,7 +77,7 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
     return res.status() === 200 ? { status: 200 } : { status: res.status(), location: res.headers()["location"] };
   };
   expect(totp("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", 59_000)).toBe("287082"); // RFC 6238 vector
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const fixture = staffFixture();
 
   // Protected on the server: no cookie, or a forged one, means the sign-in page.

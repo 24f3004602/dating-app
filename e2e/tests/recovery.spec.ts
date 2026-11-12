@@ -9,7 +9,7 @@ import { checkA11y, codeFromWorkerMail, PASSWORD, signUp, watchErrors } from "./
 const NEW_PASSWORD = "amber orchard pebble forty";
 
 test("a forgotten password is reset with a mailed code", async ({ page }) => {
-  const errors = watchErrors(page);
+  const errors = await watchErrors(page);
   const email = `e2e-forgot-${Date.now()}@example.com`; // a labelled test account
   await signUp(page, email);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
