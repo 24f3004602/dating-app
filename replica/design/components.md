@@ -31,7 +31,9 @@ Screen
   top bar    under a stack's top app bar, once the screen's title (or a person's name
              plate) has scrolled under the bar, the bar names the screen in the sign face;
              it fades in (at once with reduce motion) and is hidden from screen readers,
-             which have the page's own heading (D116)
+             which have the page's own heading (D116); the bar gets a title only while the
+             name is in it: on Android a title function, even one drawing nothing, takes
+             the back arrow
   tokens     bg
   a11y       reflows at 320 CSS px with nothing sticking out (e2e)
 

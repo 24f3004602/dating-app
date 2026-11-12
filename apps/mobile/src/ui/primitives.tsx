@@ -142,7 +142,11 @@ export function Screen({ children, overlay = false }: { children: ReactNode; ove
     <OnOverlay.Provider value={overlay}>
     <TitleReport.Provider value={underBar ? report : null}>
     <SafeAreaView edges={edges} style={[styles.safe, overlay && styles.clear]}>
-      {underBar && title ? <RouterStack.Screen options={{ headerTitle: () => (inBar ? <BarTitle>{title.text}</BarTitle> : null) }} /> : null}
+      {/* Only while the name is in the bar: on Android a title function, even one returning
+          nothing, takes the bar's left slot and the back arrow with it (seen on the phone). */}
+      {underBar && title ? (
+        <RouterStack.Screen options={{ headerTitle: inBar ? () => <BarTitle>{title.text}</BarTitle> : undefined }} />
+      ) : null}
       {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
       <Animated.ScrollView
         contentContainerStyle={styles.screen}
@@ -444,7 +448,11 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
               style={(state) => [styles.chip, on && styles.chipOn, state.pressed && !on && styles.chipPressed, focusStyle(state, focusRingStyle)]}
             >
               {/* A tick as well as the fill: the choice isn't shown by colour alone (WCAG 1.4.1). */}
-              {on ? <View style={styles.tick} aria-hidden /> : null}
+              {on ? (
+                <View style={styles.chipTick} aria-hidden>
+                  <View style={styles.tick} aria-hidden />
+                </View>
+              ) : null}
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{o.label}</Text>
             </Pressable>
           );
@@ -743,6 +751,8 @@ const styles = StyleSheet.create({
   listRowPressed: { backgroundColor: color.surface },
   listRowText: { flex: 1, gap: space.xs / 2 },
   listRowDanger: { color: color.danger },
+  // The turned tick is wider than its own box: room for it before a chip's label (seen on the phone).
+  chipTick: { width: size.checkbox * 0.6, alignItems: "center", justifyContent: "center" },
   // The screen's name in the top app bar once its title has scrolled away (D116).
   barTitle: { ...type.sign, color: color.onSign },
   switchRow: { flexDirection: "row", alignItems: "center", gap: space.md, minHeight: touch.min },

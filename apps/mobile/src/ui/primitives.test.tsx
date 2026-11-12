@@ -1,5 +1,6 @@
 /** The design system's components: roles, names and states for screen readers. */
 import { fireEvent, render, screen, within } from "@testing-library/react-native";
+import { Stack } from "expo-router";
 import { AccessibilityInfo, Platform, type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -64,6 +65,10 @@ test("choices: the selected one is checked, and its tick is hidden from screen r
   expect(screen.queryByText("✓", { includeHiddenElements: true })).toBeNull();
   expect(drawnTicks()).toHaveLength(1);
   expect(drawnTicks()[0]?.props["aria-hidden"]).toBe(true);
+  // The turned tick is wider than its own box: the chip gives it room before the label (seen on the phone).
+  const turnedWidth = (size.checkbox * 0.3 + size.checkbox * 0.5) * Math.SQRT1_2;
+  const room = hostsWhere((p) => (StyleSheet.flatten(p.style as StyleProp<ViewStyle>)?.width as number) >= turnedWidth && p["aria-hidden"] === true);
+  expect(room).toHaveLength(1);
   await fireEvent.press(screen.getByRole("radio", { name: "Open to see" }));
   expect(onChange).toHaveBeenCalledWith("open");
 });
@@ -200,6 +205,10 @@ test("several choices in a list are checkboxes in a group", async () => {
 });
 
 test("a screen's name joins the top bar once its title has scrolled under it, hidden from screen readers (MOB-34)", async () => {
+  // The options the screen gives its top bar: on Android a title function, even one that
+  // draws nothing, takes the bar's left slot and the back arrow with it (seen on the phone).
+  const barOptions = jest.spyOn(Stack, "Screen");
+  const titleOption = () => (barOptions.mock.lastCall?.[0] as { options?: { headerTitle?: unknown } } | undefined)?.options?.headerTitle;
   await render(
     <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 412, height: 915 }, insets: { top: 0, right: 0, bottom: 0, left: 0 } }}>
       <ScreenEdges.Provider value={UNDER_TOP_BAR}>
@@ -214,13 +223,17 @@ test("a screen's name joins the top bar once its title has scrolled under it, hi
   await fireEvent(title, "layout", { nativeEvent: { layout: { x: 0, y: 24, width: 380, height: 40 } } });
   const scrollTo = (y: number) => fireEvent.scroll(title, { nativeEvent: { contentOffset: { x: 0, y }, contentSize: { width: 412, height: 2000 }, layoutMeasurement: { width: 412, height: 800 } } });
   expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1); // at the top: only the page's heading
+  expect(titleOption()).toBeUndefined(); // no title function: the back arrow stays
   await scrollTo(30); // the title is still partly in view
   expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1);
   await scrollTo(100); // the title is under the bar: the bar names the screen
   expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(2);
   expect(screen.getAllByText("Privacy")).toHaveLength(1); // screen readers still hear one heading
+  expect(titleOption()).toEqual(expect.any(Function));
   await scrollTo(0);
   expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1);
+  expect(titleOption()).toBeUndefined();
+  barOptions.mockRestore();
 });
 
 test("a setting that takes effect at once is a switch named by its label, and the label flips it too (MOB-35)", async () => {
