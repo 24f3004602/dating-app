@@ -98,13 +98,16 @@ Label (a group of fields; stage 20e, D110)
   a11y       the group carries role group and the label as its name (the date of birth)
 
 Checkbox
-  parts      24-point box (border-input 2), tick on accent when checked, label
+  parts      24-point box (border-input 2); checked: graphite fill and a drawn tick (two
+             sides of a small box, turned, in the roundel's stroke, sized from the box, so
+             it never grows with the text size; D115); label
   states     unchecked, checked, pressed (accent-pressed edge), focus (ring)
   a11y       role checkbox, aria-checked, name = label; the row is the target (48)
 
 ChoiceGroup (chips)
   modes      single (radiogroup of radios) or multiple (group of checkboxes)
-  look       pill, border-input; selected: accent fill, on-accent text and a tick
+  look       square (radius.plate), border-input; selected: graphite fill, on-sign text and
+             a text tick before the label (it scales with the label)
   states     default, selected, pressed (accent-soft), focus (ring), error
   a11y       group named by its label; each chip's name is its label; the tick is
              aria-hidden (the checked state says it)
@@ -113,7 +116,7 @@ Choice list (ChoiceGroup layout="list"; stage 20e, D112)
   look       full-width rows (48 high or more) with a line under each and on top of the list;
              the label in body type, wrapping in its row; on the left the line's station
              roundel (size.roundel, a size.roundelStroke graphite stroke), filled when chosen;
-             several choices: the checkbox's square box with a tick; pressed: surface
+             several choices: the checkbox's square box with its drawn tick; pressed: surface
   a11y       a radiogroup of radios (or a group of checkboxes) named by the label, as the
              chips are; the mark is hidden, the state says it
   use        options that are sentences (Report, Privacy, intent, prompts); short ones stay chips
@@ -191,4 +194,6 @@ List row (stage 20e, D108)
     list rows, the choice list, More options in both tones, a sample sheet);
   - keyboard Tab focus ring, focused-field border, reflow at 320 px;
   - a visual review of the gallery screenshot, which found the browser ring on fields and the accent and danger clash (D089).
+- **Android (the owner's Pixel 8 Pro, Expo Go; NAT-1, partial):** every stage 20e screen at text size 1.0 and 1.3
+  (2026-11-10 to 2026-11-12), the accessibility tree read with uiautomator; it found the tick cut off at 1.3 (D115).
 - **Not yet on devices** (NAT-1): VoiceOver and TalkBack reading order, the iOS announcements, and 200% system text size on iOS and Android.

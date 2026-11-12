@@ -286,7 +286,7 @@ export function Checkbox({ label, checked, onChange, error }: { label: string; c
         {({ pressed }) => (
           <>
             <View style={[styles.box, checked && styles.boxOn, pressed && styles.boxPressed]}>
-              {checked ? <Text style={styles.tick}>✓</Text> : null}
+              {checked ? <View style={styles.tick} /> : null}
             </View>
             <Text style={styles.body}>{label}</Text>
           </>
@@ -336,7 +336,7 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
                 {/* One choice: the line's station roundel, filled when chosen, as the bar marks where you are;
                     several: a square box with a tick. Shape and fill, not colour alone (WCAG 1.4.1). */}
                 <View style={props.multiple ? [styles.box, on && styles.boxOn] : [styles.roundel, on && styles.roundelOn]} aria-hidden>
-                  {props.multiple && on ? <Text style={styles.tick}>✓</Text> : null}
+                  {props.multiple && on ? <View style={styles.tick} /> : null}
                 </View>
                 <Text style={styles.body}>{o.label}</Text>
               </Pressable>
@@ -566,7 +566,18 @@ const styles = StyleSheet.create({
   },
   boxOn: { backgroundColor: color.sign, borderColor: color.sign },
   boxPressed: { borderColor: color.accent },
-  tick: { ...type.label, color: color.onSign },
+  // A drawn tick (two sides of a small box, turned), in points that don't grow with the
+  // system text size: a ✓ glyph did, and at 1.3 on the phone it outgrew the box and was
+  // cut off (stage 20e). Its stroke is the roundel's.
+  tick: {
+    width: size.checkbox * 0.3,
+    height: size.checkbox * 0.5,
+    marginTop: -size.checkbox * 0.125, // the turned shape sits low: lift it to the centre
+    borderRightWidth: size.roundelStroke,
+    borderBottomWidth: size.roundelStroke,
+    borderColor: color.onSign,
+    transform: [{ rotate: "45deg" }],
+  },
 
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   chip: {

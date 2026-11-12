@@ -61,6 +61,26 @@ test("a checkbox toggles and reports its state", async () => {
   expect(onChange).toHaveBeenCalledWith(false);
 });
 
+test("a box's tick is drawn, so it stays inside the box at any text size (MOB-33)", async () => {
+  // A ✓ glyph grows with the system text size: at 1.3 on the phone it outgrew the box and was cut off.
+  const onChange = jest.fn();
+  await render(
+    <>
+      <Checkbox label="Also block" checked onChange={jest.fn()} />
+      <Checkbox label="Pause" checked={false} onChange={jest.fn()} />
+      <ChoiceGroup multiple layout="list" label="Tell me about" value={["matches"]} onChange={onChange}
+        options={[{ value: "matches", label: "New matches" }, { value: "messages", label: "New messages" }]} />
+    </>,
+  ); // prettier-ignore
+  expect(screen.queryByText("✓", { includeHiddenElements: true })).toBeNull();
+  const ticks = hostsWhere((p) => {
+    const s = StyleSheet.flatten(p.style as StyleProp<ViewStyle>);
+    return s?.borderRightWidth === size.roundelStroke && s?.borderBottomWidth === size.roundelStroke && s?.transform !== undefined;
+  });
+  expect(ticks).toHaveLength(2); // the checked box and the chosen row; none for the others
+  for (const tick of ticks) expect(StyleSheet.flatten(tick.props.style as StyleProp<ViewStyle>)?.height).toBeLessThan(size.checkbox);
+});
+
 test("notices: errors are alerts, others are polite updates", async () => {
   await render(
     <>
