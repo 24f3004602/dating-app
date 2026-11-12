@@ -1,0 +1,658 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T00:00:00Z",
+  "title": "Design System: Kinaara (member app)",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Enamel White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Concourse Stone",
+        "canonical": "#f5f3f0",
+        "tonalRamp": [
+          "#0c0b0a",
+          "#262523",
+          "#434240",
+          "#62615f",
+          "#84827f",
+          "#a6a5a2",
+          "#cac9c7",
+          "#efeeed"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Platform Line",
+        "canonical": "#e4e0da",
+        "tonalRamp": [
+          "#0c0b09",
+          "#272522",
+          "#44423e",
+          "#64615c",
+          "#85827d",
+          "#a7a4a0",
+          "#cbc9c5",
+          "#f0eeeb"
+        ]
+      },
+      "border-input": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "#78736b",
+        "tonalRamp": [
+          "#0d0b08",
+          "#272520",
+          "#45413c",
+          "#656159",
+          "#86827a",
+          "#a9a49e",
+          "#ccc9c3",
+          "#f1eeea"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1c1b19",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252423",
+          "#40403e",
+          "#5e5d5b",
+          "#81807e",
+          "#a5a4a2",
+          "#cbcac9",
+          "#efeeed"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Station Grey",
+        "canonical": "#5c5852",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262421",
+          "#423f3b",
+          "#615d58",
+          "#84807a",
+          "#a7a49f",
+          "#cdcac6",
+          "#f0eeeb"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Peacock Teal",
+        "canonical": "#0e6670",
+        "tonalRamp": [
+          "#000f13",
+          "#002a2f",
+          "#0e484f",
+          "#236971",
+          "#478c96",
+          "#78afb7",
+          "#a8d4da",
+          "#d5f6fa"
+        ]
+      },
+      "accent-pressed": {
+        "role": "primary",
+        "displayName": "Deep Teal",
+        "canonical": "#08535a",
+        "tonalRamp": [
+          "#000f11",
+          "#05292d",
+          "#19474c",
+          "#2f676e",
+          "#518b92",
+          "#7faeb4",
+          "#add3d7",
+          "#d8f5f8"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Teal Wash",
+        "canonical": "#e6f3f3",
+        "tonalRamp": [
+          "#080c0c",
+          "#202626",
+          "#3c4444",
+          "#596464",
+          "#7a8585",
+          "#9ea7a7",
+          "#c3cbcb",
+          "#eaf0f0"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On-Accent White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "highlight": {
+        "role": "secondary",
+        "displayName": "Marigold",
+        "canonical": "#f5b544",
+        "tonalRamp": [
+          "#190500",
+          "#3a1c00",
+          "#5e3500",
+          "#855100",
+          "#ac7400",
+          "#cb9b4d",
+          "#eac489",
+          "#ffeabd"
+        ]
+      },
+      "highlight-pressed": {
+        "role": "secondary",
+        "displayName": "Burnt Marigold",
+        "canonical": "#e9a632",
+        "tonalRamp": [
+          "#190500",
+          "#3a1c00",
+          "#5e3500",
+          "#855100",
+          "#ac7400",
+          "#cb9b4d",
+          "#eac489",
+          "#ffeabd"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Alarm Crimson",
+        "canonical": "#a3123a",
+        "tonalRamp": [
+          "#250002",
+          "#4d0014",
+          "#7a122b",
+          "#a92a45",
+          "#d15064",
+          "#ed7e8b",
+          "#ffabb3",
+          "#ffd8dd"
+        ]
+      },
+      "danger-soft": {
+        "role": "tertiary",
+        "displayName": "Crimson Wash",
+        "canonical": "#fdecf0",
+        "tonalRamp": [
+          "#0f0a0b",
+          "#2a2325",
+          "#493f41",
+          "#6a5d60",
+          "#8c7e81",
+          "#aea1a4",
+          "#d0c6c8",
+          "#f4ecee"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Signal Green",
+        "canonical": "#1f6b45",
+        "tonalRamp": [
+          "#001104",
+          "#012e19",
+          "#174e32",
+          "#2e704d",
+          "#51936d",
+          "#7db492",
+          "#a9d6ba",
+          "#d6f9e2"
+        ]
+      },
+      "success-soft": {
+        "role": "tertiary",
+        "displayName": "Green Wash",
+        "canonical": "#e7f3ec",
+        "tonalRamp": [
+          "#080c0a",
+          "#212723",
+          "#3d4440",
+          "#5a645e",
+          "#7b857f",
+          "#9fa7a2",
+          "#c4cbc7",
+          "#eaf0ed"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Keyboard Blue",
+        "canonical": "#2453c4",
+        "tonalRamp": [
+          "#000330",
+          "#051d5d",
+          "#173a8d",
+          "#2c58c0",
+          "#4b7ce7",
+          "#76a2ff",
+          "#a2c8ff",
+          "#d0efff"
+        ]
+      },
+      "overlay": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "#1c1b19",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252423",
+          "#40403e",
+          "#5e5d5b",
+          "#81807e",
+          "#a5a4a2",
+          "#cbcac9",
+          "#efeeed"
+        ]
+      },
+      "sign": {
+        "role": "neutral",
+        "displayName": "Sign Graphite",
+        "canonical": "#1c1b19",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252423",
+          "#40403e",
+          "#5e5d5b",
+          "#81807e",
+          "#a5a4a2",
+          "#cbcac9",
+          "#efeeed"
+        ]
+      },
+      "on-sign": {
+        "role": "neutral",
+        "displayName": "On-Sign White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "on-sign-muted": {
+        "role": "neutral",
+        "displayName": "Sign Grey",
+        "canonical": "#d6d2cb",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262421",
+          "#423f3b",
+          "#605d58",
+          "#83807a",
+          "#a7a49f",
+          "#cccac6",
+          "#f0eeeb"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The welcome headline only. Anek Display file (760, 87.5% width)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "A screen's level-1 heading; a person's name plate. Anek Sign file (700, 87.5% width)."
+      },
+      "sign": {
+        "displayName": "Sign",
+        "purpose": "Names on plates; the screen's name in the top bar once scrolled."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Level-2 headings, card titles, list-row labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, chat messages, choice labels, field text. Anek Text file (400)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field and group labels, the selected chip; buttons use its size in the sign face. Anek Text Semibold file (600)."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Hints, times, counts, field errors; badges in the semibold file."
+      }
+    },
+    "fonts": [
+      {
+        "family": "Anek-Text",
+        "file": "assets/fonts/anek-text.ttf",
+        "axes": "static 400, normal width"
+      },
+      {
+        "family": "Anek-TextSemibold",
+        "file": "assets/fonts/anek-text-semibold.ttf",
+        "axes": "static 600, normal width"
+      },
+      {
+        "family": "Anek-Sign",
+        "file": "assets/fonts/anek-sign.ttf",
+        "axes": "static 700, 87.5% width"
+      },
+      {
+        "family": "Anek-Display",
+        "file": "assets/fonts/anek-display.ttf",
+        "axes": "static 760, 87.5% width"
+      },
+      {
+        "family": "Anek-Devanagari",
+        "file": "assets/fonts/anek-devanagari.ttf",
+        "axes": "static, sign weight",
+        "note": "The name in Hindi only, until the full translation."
+      }
+    ],
+    "shadows": [],
+    "layering": [
+      {
+        "name": "scrim",
+        "value": "#1c1b19 at opacity 0.4",
+        "purpose": "Behind a bottom sheet; nothing is read on it."
+      },
+      {
+        "name": "overlay",
+        "value": "#1c1b19 at opacity 0.7",
+        "purpose": "Over the welcome's candlelight still; text on it is on-accent, the web focus ring marigold."
+      }
+    ],
+    "motion": [
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Press feedback, notices, badges, the bar title, web screen entrance."
+      },
+      {
+        "name": "duration-base",
+        "value": "240ms",
+        "purpose": "Reveals, photo fade-in, the sheet's slide."
+      },
+      {
+        "name": "duration-hero",
+        "value": "700ms",
+        "purpose": "The rings meeting (welcome) and joining (a match)."
+      },
+      {
+        "name": "duration-loop",
+        "value": "2400ms",
+        "purpose": "One breath of the rings; two cycles, then rest."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Default for state changes."
+      },
+      {
+        "name": "ease-decelerate",
+        "value": "cubic-bezier(0, 0, 0, 1)",
+        "purpose": "Things arriving: reveals, the sheet, the rings."
+      },
+      {
+        "name": "ease-sway",
+        "value": "cubic-bezier(0.45, 0, 0.55, 1)",
+        "purpose": "Back-and-forth ambient movement (a token; the app's screens don't use it)."
+      },
+      {
+        "name": "rise",
+        "value": "8",
+        "purpose": "How far a reveal rises, in points."
+      },
+      {
+        "name": "stagger",
+        "value": "50ms",
+        "purpose": "Between list items as they appear, at most six steps."
+      },
+      {
+        "name": "press",
+        "value": "scale 0.98 (buttons), 0.99 (cards)",
+        "purpose": "Press feedback, fast, standard easing."
+      },
+      {
+        "name": "reduce-motion",
+        "value": "AccessibilityInfo / prefers-reduced-motion",
+        "purpose": "Every animation follows it; until known, nothing moves."
+      }
+    ],
+    "breakpoints": [],
+    "geometry": [
+      {
+        "name": "content-max",
+        "value": "560",
+        "purpose": "A screen's and a sheet's maximum width, centred."
+      },
+      {
+        "name": "touch",
+        "value": "48 (buttons, fields, rows, switches), 44 (chips, links), 56 (list rows)",
+        "purpose": "Target sizes in dp."
+      },
+      {
+        "name": "roundel",
+        "value": "18 with a 3-point graphite stroke",
+        "purpose": "The bottom bar's stops, the end of the day's set, a choice in a list."
+      },
+      {
+        "name": "checkbox",
+        "value": "24 with a 3-point graphite edge; drawn tick 30% by 50% of the box",
+        "purpose": "Checkbox and several-choice list."
+      },
+      {
+        "name": "thumb",
+        "value": "96 square, or 96 by 120 (4:5)",
+        "purpose": "Photos in cards and lists."
+      },
+      {
+        "name": "mark",
+        "value": "96",
+        "purpose": "The two-ring mark's box."
+      }
+    ],
+    "openItems": [
+      "Light theme only; dark mode is a later stage with its own contrast checks.",
+      "TalkBack, VoiceOver and 200% system text size are not yet tested on a device (NAT-1).",
+      "The moving candlelight loop plays only on the web build; phones show the bundled still until a native video module is approved.",
+      "The working name is configuration; Kinaara is provisional and local builds show HAANJI."
+    ]
+  },
+  "components": [
+    {
+      "name": "Button Primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A screen's main action: a square marigold plate lettered in graphite.",
+      "html": "<button class=\"ds-btn-primary\">Create an account</button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 0 16px; border: 2px solid #f5b544; border-radius: 0; background: #f5b544; color: #1c1b19; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; font-size: 16px; line-height: 22px; cursor: pointer; transition: transform 150ms cubic-bezier(0.2, 0, 0, 1); } .ds-btn-primary:active { background: #e9a632; border-color: #e9a632; transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; } .ds-btn-primary:disabled { background: #f5f3f0; border-color: #e4e0da; color: #5c5852; }"
+    },
+    {
+      "name": "Button Secondary",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Other actions: white with a graphite outline.",
+      "html": "<button class=\"ds-btn-secondary\">Pass</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; padding: 0 16px; border: 2px solid #1c1b19; border-radius: 0; background: #ffffff; color: #1c1b19; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; font-size: 16px; line-height: 22px; cursor: pointer; } .ds-btn-secondary:active { background: #f5f3f0; transform: scale(0.98); } .ds-btn-secondary:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Button Danger",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "An action that ends something, outlined and lettered in crimson; it asks first.",
+      "html": "<button class=\"ds-btn-danger\">Delete account</button>",
+      "css": ".ds-btn-danger { min-height: 48px; padding: 0 16px; border: 2px solid #a3123a; border-radius: 0; background: #ffffff; color: #a3123a; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; font-size: 16px; line-height: 22px; cursor: pointer; } .ds-btn-danger:active { background: #fdecf0; transform: scale(0.98); } .ds-btn-danger:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "text-field",
+      "description": "Label above, optional hint, a square white field; teal border on focus, crimson on error.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-note\">Add a note (optional)</label><span class=\"ds-hint\">Up to 150 characters.</span><input id=\"ds-note\"></div>",
+      "css": ".ds-field { display: grid; gap: 4px; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; color: #1c1b19; } .ds-field label { font-weight: 600; font-size: 16px; line-height: 22px; } .ds-hint { font-size: 14px; line-height: 20px; color: #5c5852; } .ds-field input { min-height: 48px; padding: 0 12px; border: 1px solid #78736b; border-radius: 0; background: #ffffff; color: #1c1b19; font: inherit; font-size: 16px; line-height: 24px; outline: none; } .ds-field input:focus { border: 2px solid #0e6670; } .ds-field input[aria-invalid=true] { border: 2px solid #a3123a; }"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Short options: square chips; selected is graphite with a drawn tick.",
+      "html": "<div class=\"ds-chips\" role=\"radiogroup\"><button class=\"ds-chip\" role=\"radio\" aria-checked=\"true\"><span class=\"ds-tick\"></span>Women</button><button class=\"ds-chip\" role=\"radio\" aria-checked=\"false\">Men</button></div>",
+      "css": ".ds-chips { display: flex; flex-wrap: wrap; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 16px; border: 1px solid #78736b; border-radius: 0; background: #ffffff; color: #1c1b19; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: 16px; line-height: 24px; cursor: pointer; } .ds-chip:active { background: #f5f3f0; } .ds-chip[aria-checked=true] { background: #1c1b19; border-color: #1c1b19; color: #ffffff; font-weight: 600; } .ds-chip:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; } .ds-tick { display: inline-block; width: 7px; height: 12px; margin: -3px 4px 0; border-right: 3px solid #ffffff; border-bottom: 3px solid #ffffff; transform: rotate(45deg); }"
+    },
+    {
+      "name": "Choice List",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "Options that are sentences: rows with the line's station roundel, filled when chosen.",
+      "html": "<div class=\"ds-choices\" role=\"radiogroup\"><button class=\"ds-choice\" role=\"radio\" aria-checked=\"true\"><span class=\"ds-roundel\"></span>Anyone I might be introduced to</button><button class=\"ds-choice\" role=\"radio\" aria-checked=\"false\"><span class=\"ds-roundel\"></span>Only people I have liked</button></div>",
+      "css": ".ds-choices { border-top: 1px solid #e4e0da; } .ds-choice { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 8px; border: 0; border-bottom: 1px solid #e4e0da; background: #ffffff; color: #1c1b19; text-align: left; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: 16px; line-height: 24px; cursor: pointer; } .ds-choice:active { background: #f5f3f0; } .ds-choice:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; } .ds-roundel { flex: none; width: 18px; height: 18px; box-sizing: border-box; border: 3px solid #1c1b19; border-radius: 50%; background: #ffffff; } .ds-choice[aria-checked=true] .ds-roundel { background: #1c1b19; }"
+    },
+    {
+      "name": "List Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "A place or an action, drawn as a station list; a drawn arrow when it opens a screen; crimson when it ends something.",
+      "html": "<div class=\"ds-rows\"><button class=\"ds-row\"><span class=\"ds-row-text\"><span class=\"ds-row-label\">Photos</span><span class=\"ds-row-hint\">2 of 6 photos</span></span><span class=\"ds-arrow\"></span></button><button class=\"ds-row\"><span class=\"ds-row-text\"><span class=\"ds-row-label ds-danger\">Block</span></span></button></div>",
+      "css": ".ds-rows { border-top: 1px solid #e4e0da; } .ds-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px; border: 0; border-bottom: 1px solid #e4e0da; background: #ffffff; text-align: left; cursor: pointer; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; } .ds-row:active { background: #f5f3f0; } .ds-row:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; } .ds-row-text { flex: 1; display: grid; gap: 2px; } .ds-row-label { color: #1c1b19; font-weight: 700; font-stretch: 87.5%; font-size: 20px; line-height: 28px; } .ds-row-label.ds-danger { color: #a3123a; } .ds-row-hint { color: #5c5852; font-size: 14px; line-height: 20px; } .ds-arrow { width: 8px; height: 8px; margin-right: 4px; border-top: 2px solid #1c1b19; border-right: 2px solid #1c1b19; transform: rotate(45deg); }"
+    },
+    {
+      "name": "Line Bar",
+      "kind": "nav",
+      "description": "The bottom navigation bar as the line: teal and marigold rails behind four station stops; the place you're at is filled, its name on a graphite plate.",
+      "html": "<nav class=\"ds-line\" role=\"tablist\"><span class=\"ds-rails\"><span></span><span></span></span><button class=\"ds-stop\" role=\"tab\" aria-selected=\"true\"><span class=\"ds-stop-r\"></span><span class=\"ds-stop-n\">Today</span></button><button class=\"ds-stop\" role=\"tab\" aria-selected=\"false\"><span class=\"ds-stop-r\"></span><span class=\"ds-stop-n\">Likes</span></button><button class=\"ds-stop\" role=\"tab\" aria-selected=\"false\"><span class=\"ds-stop-r\"></span><span class=\"ds-stop-n\">Matches</span></button><button class=\"ds-stop\" role=\"tab\" aria-selected=\"false\"><span class=\"ds-stop-r\"></span><span class=\"ds-stop-n\">You</span></button></nav>",
+      "css": ".ds-line { position: relative; display: flex; padding-bottom: 8px; background: #ffffff; border-top: 2px solid #1c1b19; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; } .ds-rails { position: absolute; left: 12.5%; right: 12.5%; top: 12px; display: grid; gap: 2px; } .ds-rails span { height: 4px; } .ds-rails span:first-child { background: #0e6670; } .ds-rails span:last-child { background: #f5b544; } .ds-stop { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 64px; padding-top: 8px; border: 0; background: transparent; cursor: pointer; } .ds-stop:active { background: #f5f3f0; } .ds-stop:focus-visible { outline: 2px solid #2453c4; outline-offset: 2px; } .ds-stop-r { width: 18px; height: 18px; box-sizing: border-box; border: 3px solid #1c1b19; border-radius: 50%; background: #ffffff; } .ds-stop-n { padding: 2px 8px; color: #5c5852; font-size: 13px; line-height: 18px; } .ds-stop[aria-selected=true] .ds-stop-r { background: #1c1b19; } .ds-stop[aria-selected=true] .ds-stop-n { background: #1c1b19; color: #ffffff; font-weight: 700; font-stretch: 87.5%; }"
+    },
+    {
+      "name": "Plate",
+      "kind": "custom",
+      "refersTo": "plate",
+      "description": "A name on a graphite sign plate, sized to its text.",
+      "html": "<h2 class=\"ds-plate\">Fixture Aarav, 29</h2>",
+      "css": ".ds-plate { display: inline-block; margin: 0; padding: 2px 8px; border-radius: 0; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; font-size: 22px; line-height: 26px; }"
+    },
+    {
+      "name": "Chat Plates",
+      "kind": "custom",
+      "refersTo": "chat-mine",
+      "description": "A conversation as two lines: yours teal, theirs marigold, square.",
+      "html": "<div class=\"ds-chat\"><p class=\"ds-msg ds-mine\">Hi, chai this weekend?</p><p class=\"ds-msg ds-theirs\">Yes! Sunday?</p></div>",
+      "css": ".ds-chat { display: grid; gap: 8px; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: 16px; line-height: 24px; } .ds-msg { margin: 0; max-width: 80%; padding: 8px 12px; border-radius: 0; } .ds-mine { justify-self: end; background: #0e6670; color: #ffffff; } .ds-theirs { justify-self: start; background: #f5b544; color: #1c1b19; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Interchange",
+    "overview": "The app is the same metro line as the website, ridden every day. Your line is peacock teal, the other person's is marigold; graphite sign plates name people and places; white station roundels outlined in graphite mark where you are. On the website the line is a story told once. In the app it is the furniture: the bottom bar is the line with four stops, the place you're at is the filled stop with its name on a graphite plate, a conversation is two lines of square plates in each person's colour, and the end of the day's introductions is a filled terminus roundel. DMRC's marks are never copied; the grammar of wayfinding is borrowed.\n\nThe app works in Operate mode. Android supplies the structure (navigation bar, top app bar with its back arrow, system Back, edge-to-edge insets, 48 dp targets, type in sp that follows the system text size, the platform's own switch and ripple); the Interchange supplies the theme (colour roles, Anek, square plates). Screens are one calm column of white enamel with readable text, lists drawn as station lists, and one marigold plate forward. Functional screens get feedback motion only; the two-ring mark is the only focal movement, at the welcome, an empty day and a match.\n\nRejected, by the world's contract and the build: the category's swipe-card stack, gradients, pills, rounded cards, drop shadows. Photos in the build are labelled placeholders; no visual shows people or pretend activity.",
+    "keyCharacteristics": [
+      "Two line colours with fixed meanings: teal is yours, marigold is theirs.",
+      "Graphite bars and sign plates on a white enamel ground.",
+      "Anek in five static files: semi-condensed bold for signs, normal width for text.",
+      "Square corners everywhere a member presses or reads; circles only for roundels and the rings.",
+      "Android structure, Interchange theme.",
+      "Drawn marks (tick, arrow, roundel, dots): no icon font, and no glyph stands in for a mark.",
+      "Motion small, from tokens, and still whenever reduce motion is on or not yet known."
+    ],
+    "rules": [
+      {
+        "name": "The Two Lines Rule",
+        "body": "As lines (rails, chat plates, the map, the rings), teal is always you and marigold always the other person. Never swap them, never add a third line colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rails Are Not Text Rule",
+        "body": "Marigold is a rail, a fill or a ring, never text on white; on marigold, the lettering is graphite.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Ends Things Rule",
+        "body": "Crimson marks what ends a match, a block or data, and each of those asks first. What ends only a session (Sign out everywhere) is not red.",
+        "section": "colors"
+      },
+      {
+        "name": "The Condensed Means Sign Rule",
+        "body": "The sign face is for things that work as signs: titles, headings, plates, buttons, list-row labels, bar titles. Paragraphs and labels stay at normal width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Is In The File Rule",
+        "body": "Pick a voice by its family token; never add `fontWeight` to an Anek family.",
+        "section": "typography"
+      },
+      {
+        "name": "The Marks Don't Scale Rule",
+        "body": "Text grows with the system text size; drawn marks (the tick, the roundel, the arrow, the dots) keep their point size, so a 1.3 text size never cuts a mark off.",
+        "section": "typography"
+      },
+      {
+        "name": "The Enamel Rule",
+        "body": "Surfaces are flat painted planes; separation is by colour block or a line, never by shadow or blur.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Sign Plate Rule",
+        "body": "If it is pressed or read as a sign, it is a rectangle. No pills, no rounded cards.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Still Until Known Rule",
+        "body": "Every animation follows reduce motion; with it on, things appear at rest, and until the setting is known nothing moves. Only opacity and transforms animate, with the motion tokens (fast 150, base 240, hero 700, loop 2400 ms; never linear). Reveals rise 8 points and lists stagger 50 ms for at most six items. Nothing loops past 5 seconds.",
+        "section": "components"
+      },
+      {
+        "name": "The Drawn Mark Rule",
+        "body": "The app has no icon set: ticks, arrows, roundels and dots are drawn from views and hidden from screen readers, and the control says the state.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep teal for your line and marigold for theirs in rails, chat plates, the map and the rings.",
+      "Do make every pressable thing a square plate at least 48 tall (44 for chips and links), using the plate radius.",
+      "Do give a screen's main action the marigold plate and the others a graphite or crimson outline.",
+      "Do name people and places on graphite plates in the sign face; keep running text at normal width.",
+      "Do use list rows for places and actions, the choice list for options that are sentences, chips for short options, switches for settings that take effect at once.",
+      "Do set rows and buttons that end a match, a block or data in crimson, and ask first.",
+      "Do pick fonts by family token and size from the type tokens, so text follows the system text size.",
+      "Do draw marks from views at fixed point sizes and hide them from screen readers.",
+      "Do follow reduce motion everywhere, and stay still until it is known."
+    ],
+    "donts": [
+      "Don't use pills, rounded cards, gradients or drop shadows.",
+      "Don't put marigold text on white.",
+      "Don't set `fontWeight` on an Anek family.",
+      "Don't use glyphs or a fallback font for ticks, arrows or other marks.",
+      "Don't use the platform-line border as a control's edge; controls take control-edge.",
+      "Don't copy DMRC's logo, line colours or signage artwork.",
+      "Don't show people, members or activity that don't exist in any visual; photos in development are labelled placeholders.",
+      "Don't bake the brand name into an image; it is configuration."
+    ]
+  }
+}
