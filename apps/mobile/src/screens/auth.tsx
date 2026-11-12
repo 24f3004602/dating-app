@@ -15,7 +15,7 @@ import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
 import { color, font, motion, space } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
-import { Body, Button, Checkbox, Enamel, ExternalLink, FieldError, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
+import { Body, Button, Caption, Checkbox, Enamel, ExternalLink, FieldError, Label, Notice, Row, Screen, TextLink, Title } from "@/ui/primitives";
 import { RouteMap } from "@/ui/RouteMap";
 import { WelcomeBackdrop } from "@/ui/WelcomeBackdrop";
 import {
@@ -92,6 +92,12 @@ const welcomeStyles = StyleSheet.create({
   brandHindi: { fontFamily: font.devanagari, fontSize: 20, lineHeight: 26, color: color.onSign },
 });
 
+// The forms (D110): a group of fields keeps a field's own rhythm; a consent keeps its link close.
+const styles = StyleSheet.create({
+  group: { gap: space.xs },
+  consent: { gap: space.sm },
+});
+
 export function SignUpScreen({ now }: { now?: () => Date }) {
   const { api, setPending } = useAuth();
   const router = useRouter();
@@ -126,28 +132,36 @@ export function SignUpScreen({ now }: { now?: () => Date }) {
         autoCapitalize="none" autoComplete="email" keyboardType="email-address" inputMode="email" />
       <FormField control={control} name="password" label={t.signUp.password} hint={t.signUp.passwordHint}
         error={e.password?.message} secureTextEntry autoComplete="new-password" autoCapitalize="none" />
-      <Body>{t.signUp.birthdate}</Body>
-      <Body muted>{t.signUp.birthdateHint}</Body>
-      <Row>
-        <View style={{ flex: 1 }}>
-          <FormField control={control} name="day" label={t.signUp.day} keyboardType="number-pad" inputMode="numeric" maxLength={2} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <FormField control={control} name="month" label={t.signUp.month} keyboardType="number-pad" inputMode="numeric" maxLength={2} />
-        </View>
-        <View style={{ flex: 2 }}>
-          <FormField control={control} name="year" label={t.signUp.year} keyboardType="number-pad" inputMode="numeric" maxLength={4} />
-        </View>
-      </Row>
-      <FieldError message={e.day?.message ?? e.month?.message ?? e.year?.message} />
-      <ExternalLink label={t.signUp.readTerms} url={DOCUMENT_LINKS.terms} />
-      <Controller control={control} name="terms" render={({ field }) => (
-        <Checkbox label={t.signUp.terms} checked={!!field.value} onChange={field.onChange} error={e.terms?.message} />
-      )} />
-      <ExternalLink label={t.signUp.readPrivacy} url={DOCUMENT_LINKS.privacy} />
-      <Controller control={control} name="privacy" render={({ field }) => (
-        <Checkbox label={t.signUp.privacy} checked={!!field.value} onChange={field.onChange} error={e.privacy?.message} />
-      )} />
+      {/* The date is one labelled group of three fields, with a hint like a field's own (D110). */}
+      <View role="group" aria-label={t.signUp.birthdate} style={styles.group}>
+        <Label>{t.signUp.birthdate}</Label>
+        <Caption>{t.signUp.birthdateHint}</Caption>
+        <Row>
+          <View style={{ flex: 1 }}>
+            <FormField control={control} name="day" label={t.signUp.day} keyboardType="number-pad" inputMode="numeric" maxLength={2} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <FormField control={control} name="month" label={t.signUp.month} keyboardType="number-pad" inputMode="numeric" maxLength={2} />
+          </View>
+          <View style={{ flex: 2 }}>
+            <FormField control={control} name="year" label={t.signUp.year} keyboardType="number-pad" inputMode="numeric" maxLength={4} />
+          </View>
+        </Row>
+        <FieldError message={e.day?.message ?? e.month?.message ?? e.year?.message} />
+      </View>
+      {/* Each consent keeps its document close: the link to read, then the box to tick. */}
+      <View style={styles.consent}>
+        <ExternalLink label={t.signUp.readTerms} url={DOCUMENT_LINKS.terms} />
+        <Controller control={control} name="terms" render={({ field }) => (
+          <Checkbox label={t.signUp.terms} checked={!!field.value} onChange={field.onChange} error={e.terms?.message} />
+        )} />
+      </View>
+      <View style={styles.consent}>
+        <ExternalLink label={t.signUp.readPrivacy} url={DOCUMENT_LINKS.privacy} />
+        <Controller control={control} name="privacy" render={({ field }) => (
+          <Checkbox label={t.signUp.privacy} checked={!!field.value} onChange={field.onChange} error={e.privacy?.message} />
+        )} />
+      </View>
       <Body muted>{BETA_DOCUMENTS ? t.signUp.betaNotice : t.signUp.draftNotice}</Body>
       {failure ? <Notice kind="error">{failure}</Notice> : null}
       <Button label={t.signUp.submit} onPress={submit} busy={formState.isSubmitting} />
@@ -166,7 +180,7 @@ export function VerifyScreen() {
     return (
       <Screen>
         <Title>{t.verify.title}</Title>
-        <Notice kind="info">{t.verify.failed}</Notice>
+        <Notice kind="info">{t.verify.lost}</Notice>
         <Button label={t.verify.restart} onPress={() => router.replace("/sign-up")} />
       </Screen>
     );
@@ -307,7 +321,7 @@ export function ResetScreen() {
         <>
           <Body>{t.reset.requestBody}</Body>
           <FormField control={request.control} name="email" label={t.signUp.email} error={request.formState.errors.email?.message}
-            autoCapitalize="none" keyboardType="email-address" inputMode="email" />
+            autoCapitalize="none" autoComplete="email" keyboardType="email-address" inputMode="email" />
           {failure ? <Notice kind="error">{failure}</Notice> : null}
           <Button label={t.reset.send} onPress={send} busy={request.formState.isSubmitting} />
         </>

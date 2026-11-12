@@ -69,6 +69,8 @@ export const en = {
     resend: "Send a new code",
     resent: "If the address can be used, a new code is on its way.",
     restart: "Start again",
+    // The app no longer holds the sign-up (closed mid-way): nothing was typed, so no code "didn't work".
+    lost: "No sign-up in progress here. Start again with the same email and a new code will be sent.",
     failed: "That code didn't work, or it has expired. Check it, or ask for a new one.",
     inviteOnly: "This test is invite-only. If no code arrives within a few minutes, check your spam folder, and check with the person who invited you that this is the address they added.",
   },

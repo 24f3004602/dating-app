@@ -61,6 +61,9 @@ test("sign-up links to the terms and the privacy notice, opened in the browser",
   await fireEvent.press(screen.getByRole("link", { name: t.signUp.readPrivacy }));
   expect(open.mock.calls).toEqual([["http://127.0.0.1:3000/terms"], ["http://127.0.0.1:3000/privacy"]]);
   expect(screen.getByText(t.signUp.draftNotice)).toBeTruthy(); // development documents
+  // The date of birth is one labelled group with its hint (MOB-28); each consent sits with its link.
+  expect(screen.getByLabelText(t.signUp.birthdate).props.role).toBe("group");
+  expect(screen.getByText(t.signUp.birthdateHint)).toBeTruthy();
 });
 
 test("sign-up shows the app's message for a server rejection", async () => {
@@ -100,6 +103,9 @@ test("verification sends the code with the remembered password and stores the se
 test("verification without a pending sign-up offers to start again", async () => {
   const { api } = fakeApi({});
   await renderWithApp(<VerifyScreen />, api);
+  // Nothing was typed, so it doesn't say a code failed (MOB-28).
+  expect(screen.getByText(t.verify.lost)).toBeTruthy();
+  expect(screen.queryByText(t.verify.failed)).toBeNull();
   await fireEvent.press(await screen.findByRole("button", { name: t.verify.restart }));
   expect(mockRouter.replace).toHaveBeenCalledWith("/sign-up");
 });
@@ -147,6 +153,7 @@ test("password reset: request, then code and a new password checked locally", as
     "POST /v1/auth/password-reset/confirm": () => ({ status: 204 }),
   });
   await renderWithApp(<ResetScreen />, api);
+  expect(screen.getByLabelText(t.signUp.email).props.autoComplete).toBe("email"); // the keyboard offers the address (MOB-28)
   await fireEvent.changeText(screen.getByLabelText(t.signUp.email), "asha@example.com");
   await fireEvent.press(screen.getByRole("button", { name: t.reset.send }));
   expect(await screen.findByText(t.reset.sent)).toBeTruthy();

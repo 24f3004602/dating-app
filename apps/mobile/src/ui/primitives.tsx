@@ -143,6 +143,11 @@ export function Body({ children, muted }: { children: ReactNode; muted?: boolean
 }
 
 /** Small supporting text: times, hints, counts. */
+/** A label for a group of fields, in the field label's style (a field's own label lives in TextField). */
+export function Label({ children }: { children: ReactNode }) {
+  return <Text style={styles.label}>{children}</Text>;
+}
+
 export function Caption({ children }: { children: ReactNode }) {
   return <Text style={[styles.caption, useOnOverlay() && styles.onOverlay]}>{children}</Text>;
 }

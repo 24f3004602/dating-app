@@ -93,6 +93,10 @@ TextField
   a11y       aria-label = label, hint as accessibility hint, aria-invalid on error,
              error text role alert (announced)
 
+Label (a group of fields; stage 20e, D110)
+  look       the field label's style; the group under it keeps a field's gap (xs)
+  a11y       the group carries role group and the label as its name (the date of birth)
+
 Checkbox
   parts      24-point box (border-input 2), tick on accent when checked, label
   states     unchecked, checked, pressed (accent-pressed edge), focus (ring)
