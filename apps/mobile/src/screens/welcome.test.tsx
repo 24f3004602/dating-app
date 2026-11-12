@@ -18,7 +18,8 @@ test("phones show the loop's still under the overlay, and the words turn light t
   const { api } = fakeApi({});
   await renderWithApp(<WelcomeScreen />, api);
   const still = screen.getByTestId("welcome-still", { includeHiddenElements: true });
-  expect((still.props.source as { uri: string }).uri).toMatch(/\/media\/candles-v1-720\.webp$/);
+  // The still ships in the app, so it never waits on the network (D116).
+  expect(still.props.source).toEqual(require("../../assets/media/candles-v1-720.webp"));
   expect(StyleSheet.flatten(screen.getByRole("heading", { name: t.welcome.title }).props.style).color).toBe(color.onAccent);
   expect(StyleSheet.flatten(screen.getByText(t.welcome.adults).props.style).color).toBe(color.onAccent);
   // The buttons are sign plates with their own colours (graphite on marigold, graphite on white).

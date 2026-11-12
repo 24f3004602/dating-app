@@ -1,15 +1,27 @@
 /** The design system's components: roles, names and states for screen readers. */
 import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { AccessibilityInfo, Platform, type StyleProp, StyleSheet, type ViewStyle } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { color, size } from "@/theme/tokens";
-import { Badge, Button, Card, CardTitle, Checkbox, ChoiceGroup, ListRow, Notice, TextField, Thumb, Title } from "@/ui/primitives";
+import { Badge, Button, Card, CardTitle, Checkbox, ChoiceGroup, ListRow, Notice, Screen, ScreenEdges, SwitchRow, TextField, Thumb, Title, UNDER_TOP_BAR } from "@/ui/primitives";
 
-jest.mock("expo-router", () => ({ Link: ({ children }: { children: unknown }) => children }));
+jest.mock("expo-router", () => ({
+  ...require("@/test/expoRouter").expoRouterInPlace(),
+  Link: ({ children }: { children: unknown }) => children,
+}));
 
 /** Host elements by prop: groups and alerts aren't native accessibility elements, so role queries skip them. */
 function hostsWhere(test: (props: Record<string, unknown>) => boolean) {
   return screen.container.queryAll((node) => typeof node.type === "string" && test(node.props));
+}
+
+/** The drawn ticks on screen: two sides of a small box in the roundel's stroke, turned (D115, D116). */
+function drawnTicks() {
+  return hostsWhere((p) => {
+    const s = StyleSheet.flatten(p.style as StyleProp<ViewStyle>);
+    return s?.borderRightWidth === size.roundelStroke && s?.borderBottomWidth === size.roundelStroke && s?.transform !== undefined;
+  });
 }
 
 test("a busy button keeps its name, says it's busy and can't be pressed twice", async () => {
@@ -48,8 +60,10 @@ test("choices: the selected one is checked, and its tick is hidden from screen r
   expect(hostsWhere((p) => p.role === "radiogroup").map((n) => n.props["aria-label"])).toEqual(["Intention"]);
   expect(screen.getByRole("radio", { name: "Long-term", checked: true })).toBeTruthy();
   expect(screen.getByRole("radio", { name: "Open to see", checked: false })).toBeTruthy();
-  expect(screen.getByText("✓", { includeHiddenElements: true })).toBeTruthy(); // seen on screen
-  expect(screen.queryByText("✓")).toBeNull(); // not read out: the radio's state says it
+  // The chosen chip has the drawn tick (no glyph that grows with the text, D116), hidden: the state says it.
+  expect(screen.queryByText("✓", { includeHiddenElements: true })).toBeNull();
+  expect(drawnTicks()).toHaveLength(1);
+  expect(drawnTicks()[0]?.props["aria-hidden"]).toBe(true);
   await fireEvent.press(screen.getByRole("radio", { name: "Open to see" }));
   expect(onChange).toHaveBeenCalledWith("open");
 });
@@ -183,4 +197,56 @@ test("several choices in a list are checkboxes in a group", async () => {
   expect(screen.getByRole("checkbox", { name: "New matches", checked: true })).toBeTruthy();
   await fireEvent.press(screen.getByRole("checkbox", { name: "New messages" }));
   expect(onChange).toHaveBeenCalledWith(["matches", "messages"]);
+});
+
+test("a screen's name joins the top bar once its title has scrolled under it, hidden from screen readers (MOB-34)", async () => {
+  await render(
+    <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 412, height: 915 }, insets: { top: 0, right: 0, bottom: 0, left: 0 } }}>
+      <ScreenEdges.Provider value={UNDER_TOP_BAR}>
+        <Screen>
+          <Title>Privacy</Title>
+          <Notice kind="info">Long content below the title.</Notice>
+        </Screen>
+      </ScreenEdges.Provider>
+    </SafeAreaProvider>,
+  );
+  const title = screen.getByRole("heading", { name: "Privacy" });
+  await fireEvent(title, "layout", { nativeEvent: { layout: { x: 0, y: 24, width: 380, height: 40 } } });
+  const scrollTo = (y: number) => fireEvent.scroll(title, { nativeEvent: { contentOffset: { x: 0, y }, contentSize: { width: 412, height: 2000 }, layoutMeasurement: { width: 412, height: 800 } } });
+  expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1); // at the top: only the page's heading
+  await scrollTo(30); // the title is still partly in view
+  expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1);
+  await scrollTo(100); // the title is under the bar: the bar names the screen
+  expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(2);
+  expect(screen.getAllByText("Privacy")).toHaveLength(1); // screen readers still hear one heading
+  await scrollTo(0);
+  expect(screen.getAllByText("Privacy", { includeHiddenElements: true })).toHaveLength(1);
+});
+
+test("a setting that takes effect at once is a switch named by its label, and the label flips it too (MOB-35)", async () => {
+  const onChange = jest.fn();
+  await render(<SwitchRow label="Pause new introductions" value={false} onChange={onChange} />);
+  const toggle = screen.getByRole("switch", { name: "Pause new introductions", checked: false });
+  await fireEvent(toggle, "valueChange", true);
+  expect(onChange).toHaveBeenLastCalledWith(true);
+  // The label is a second place to tap, not a second control: screen readers meet only the switch.
+  expect(screen.queryByText("Pause new introductions")).toBeNull();
+  await fireEvent.press(screen.getByText("Pause new introductions", { includeHiddenElements: true }));
+  expect(onChange).toHaveBeenLastCalledWith(true);
+  expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+});
+
+test("destructive rows are in the error colour, and a box's edge is the roundel's graphite stroke (MOB-37)", async () => {
+  await render(
+    <>
+      <ListRow label="Block" tone="danger" onPress={jest.fn()} />
+      <ListRow label="Report" opens onPress={jest.fn()} />
+      <Checkbox label="Also block" checked={false} onChange={jest.fn()} />
+    </>,
+  );
+  expect(StyleSheet.flatten(screen.getByText("Block").props.style).color).toBe(color.danger);
+  expect(StyleSheet.flatten(screen.getByText("Report").props.style).color).toBe(color.text);
+  const box = hostsWhere((p) => StyleSheet.flatten(p.style as StyleProp<ViewStyle>)?.width === size.checkbox);
+  expect(box).toHaveLength(1);
+  expect(StyleSheet.flatten(box[0]?.props.style as StyleProp<ViewStyle>)).toMatchObject({ borderColor: color.sign, borderWidth: size.roundelStroke });
 });

@@ -27,7 +27,7 @@ import { fill, t } from "@/i18n/en";
 import { color, radius, space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
 import { MoreButton } from "@/ui/MoreButton";
-import { Body, Button, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, TextField, Thumb, Title } from "@/ui/primitives";
+import { Body, Button, CardTitle, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, SwitchRow, TextField, Thumb, Title } from "@/ui/primitives";
 import { Sheet } from "@/ui/Sheet";
 import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
@@ -177,6 +177,8 @@ export function EditProfileScreen() {
   // The area list filtered by a few typed letters of the area or its city (D111); empty shows all.
   const areaNeedle = areaQuery.trim().toLowerCase();
   const shownAreas = (areas.data ?? []).filter((a) => !areaNeedle || `${a.name} ${a.city}`.toLowerCase().includes(areaNeedle));
+  // The chosen area stays in view whatever the filter shows (impeccable's finish review, D116).
+  const chosenArea = (areas.data ?? []).find((a) => a.id === form.watch("areaId"));
 
   const submit = form.handleSubmit(async (v) => {
     setFailure(null);
@@ -212,6 +214,7 @@ export function EditProfileScreen() {
       )} />
       <FormField control={form.control} name="bio" label={t.editProfile.bio} hint={t.editProfile.bioHint} error={e.bio?.message}
         multiline numberOfLines={4} maxLength={500} />
+      {chosenArea ? <Body>{fill(t.editProfile.areaChosen, { area: `${chosenArea.name}, ${chosenArea.city}` })}</Body> : null}
       <TextField label={t.editProfile.areaSearch} hint={`${t.editProfile.areaSearchHint} ${t.editProfile.areaHint}`} value={areaQuery}
         onChangeText={setAreaQuery} autoCorrect={false} autoCapitalize="none" returnKeyType="search" />
       <Controller control={form.control} name="areaId" render={({ field }) => (
@@ -369,7 +372,7 @@ function PhotoMenu({ open, name, label, canMoveEarlier, canMoveLater, busy, onCl
           <View>
             {canMoveEarlier ? <ListRow label={t.photos.moveUp} onPress={() => onMove(-1)} /> : null}
             {canMoveLater ? <ListRow label={t.photos.moveDown} onPress={() => onMove(1)} /> : null}
-            <ListRow label={t.photos.remove} onPress={() => setConfirming(true)} />
+            <ListRow label={t.photos.remove} tone="danger" onPress={() => setConfirming(true)} />
           </View>
           <Button label={t.common.close} variant="secondary" onPress={onClose} />
         </>
@@ -402,7 +405,7 @@ export function PrivacyScreen() {
       <ChoiceGroup layout="list" label={t.privacy.visibility} value={p.visibility} onChange={(v) => update({ visibility: v })}
         options={[{ value: "everyone", label: t.privacy.everyone }, { value: "liked_only", label: t.privacy.likedOnly }]} />
       <Body muted>{t.privacy.likedOnlyHint}</Body>
-      <Checkbox label={t.privacy.pause} checked={p.discovery_paused} onChange={(v) => update({ discovery_paused: v })} />
+      <SwitchRow label={t.privacy.pause} value={p.discovery_paused} onChange={(v) => update({ discovery_paused: v })} />
       <Body muted>{t.privacy.pauseHint}</Body>
       {failure ? <Notice kind="error">{failure}</Notice> : null}
       <Heading>{t.privacy.deleteHeading}</Heading>

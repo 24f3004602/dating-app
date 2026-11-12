@@ -24,9 +24,9 @@ test("settings: categories save at once, and this test build says push isn't ava
   });
   await renderWithApp(<NotificationsScreen />, api);
   expect(await screen.findByText(t.notifications.intro)).toBeTruthy();
-  await fireEvent.press(screen.getByRole("checkbox", { name: t.notifications.messages, checked: true }));
+  await fireEvent(screen.getByRole("switch", { name: t.notifications.messages, checked: true }), "valueChange", false);
   await waitFor(() => expect(calls.find((c) => c.method === "PUT")?.body).toEqual({ matches: true, messages: false, likes: true }));
-  expect(await screen.findByRole("checkbox", { name: t.notifications.messages, checked: false })).toBeTruthy();
+  expect(await screen.findByRole("switch", { name: t.notifications.messages, checked: false })).toBeTruthy();
   await fireEvent.press(screen.getByRole("button", { name: t.notifications.enable }));
   expect(await screen.findByText(t.notifications.notConfigured)).toBeTruthy();
   expect(screen.getByText(t.notifications.alwaysNotices)).toBeTruthy();

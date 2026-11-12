@@ -6,7 +6,7 @@ import { type NotificationPrefs, useNotificationPrefs, useSaveNotificationPrefs 
 import { useAuth } from "@/auth/AuthProvider";
 import { t } from "@/i18n/en";
 import { enablePush, type PushResult } from "@/notifications/push";
-import { Body, Button, Checkbox, Heading, Loading, Notice, Screen, Title } from "@/ui/primitives";
+import { Body, Button, Heading, Loading, Notice, Screen, SwitchRow, Title } from "@/ui/primitives";
 
 const RESULT: Record<PushResult, { kind: "success" | "info" | "error"; text: string }> = {
   enabled: { kind: "success", text: t.notifications.enabled },
@@ -53,9 +53,9 @@ export function NotificationsScreen() {
       <Heading>{t.notifications.what}</Heading>
       {prefs.data ? (
         <>
-          <Checkbox label={t.notifications.matches} checked={prefs.data.matches} onChange={(v) => update({ matches: v })} />
-          <Checkbox label={t.notifications.messages} checked={prefs.data.messages} onChange={(v) => update({ messages: v })} />
-          <Checkbox label={t.notifications.likes} checked={prefs.data.likes} onChange={(v) => update({ likes: v })} />
+          <SwitchRow label={t.notifications.matches} value={prefs.data.matches} onChange={(v) => update({ matches: v })} />
+          <SwitchRow label={t.notifications.messages} value={prefs.data.messages} onChange={(v) => update({ messages: v })} />
+          <SwitchRow label={t.notifications.likes} value={prefs.data.likes} onChange={(v) => update({ likes: v })} />
         </>
       ) : (
         <Notice kind="error">{messageFor(prefs.error)}</Notice>

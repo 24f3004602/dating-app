@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react-nativ
 import * as ImagePicker from "expo-image-picker";
 import { StyleSheet } from "react-native";
 
-import { t } from "@/i18n/en";
+import { fill, t } from "@/i18n/en";
 import { color } from "@/theme/tokens";
 import { EditProfileScreen, PhotosScreen, PrivacyScreen, ProfileScreen } from "@/screens/profile";
 import { fakeApi, problem } from "@/test/fakeApi";
@@ -149,6 +149,20 @@ test("edit profile: the area list narrows as you type, and says when nothing mat
   expect(screen.queryByText(t.editProfile.areaNone)).toBeNull();
 });
 
+test("edit profile: the chosen area stays in view while the filter hides it (MOB-36)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: PROFILE }),
+    "GET /v1/areas": () => ({ status: 200, body: AREAS }),
+    "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
+  });
+  await renderWithApp(<EditProfileScreen />, api);
+  const chosen = fill(t.editProfile.areaChosen, { area: "Saket, Delhi" });
+  expect(await screen.findByText(chosen)).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText(t.editProfile.areaSearch), "noi");
+  expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull(); // filtered out of the chips
+  expect(screen.getByText(chosen)).toBeTruthy(); // and still in view
+});
+
 test("photos: list, upload from the picker, then move and delete behind each photo's options (MOB-27)", async () => {
   let photos = [photo("p1", 0), photo("p2", 1, "approved")];
   const { api, calls } = fakeApi({
@@ -227,7 +241,7 @@ test("privacy: choosing a setting saves it at once", async () => {
   });
   await renderWithApp(<PrivacyScreen />, api);
   await fireEvent.press(await screen.findByRole("radio", { name: t.privacy.likedOnly }));
-  await fireEvent.press(screen.getByRole("checkbox", { name: t.privacy.pause }));
+  await fireEvent(screen.getByRole("switch", { name: t.privacy.pause, checked: false }), "valueChange", true);
   await waitFor(() => expect(calls.filter((c) => c.method === "PATCH")).toHaveLength(2));
   expect(calls.filter((c) => c.method === "PATCH").map((c) => c.body)).toEqual([
     { visibility: "liked_only" },

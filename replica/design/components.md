@@ -28,6 +28,10 @@ Rules for all components:
 Screen
   layout     safe area; scroll view focusable on web (keyboard scrolling, WCAG 2.1.1);
              padding xl, gap lg, max width 560, centred
+  top bar    under a stack's top app bar, once the screen's title (or a person's name
+             plate) has scrolled under the bar, the bar names the screen in the sign face;
+             it fades in (at once with reduce motion) and is hidden from screen readers,
+             which have the page's own heading (D116)
   tokens     bg
   a11y       reflows at 320 CSS px with nothing sticking out (e2e)
 
@@ -98,7 +102,8 @@ Label (a group of fields; stage 20e, D110)
   a11y       the group carries role group and the label as its name (the date of birth)
 
 Checkbox
-  parts      24-point box (border-input 2); checked: graphite fill and a drawn tick (two
+  parts      24-point box with the roundel's graphite 3-point edge (D116); checked:
+             graphite fill and a drawn tick (two
              sides of a small box, turned, in the roundel's stroke, sized from the box, so
              it never grows with the text size; D115); label
   states     unchecked, checked, pressed (accent-pressed edge), focus (ring)
@@ -107,7 +112,7 @@ Checkbox
 ChoiceGroup (chips)
   modes      single (radiogroup of radios) or multiple (group of checkboxes)
   look       square (radius.plate), border-input; selected: graphite fill, on-sign text and
-             a text tick before the label (it scales with the label)
+             the drawn tick before the label, the Checkbox's own mark (D116)
   states     default, selected, pressed (accent-soft), focus (ring), error
   a11y       group named by its label; each chip's name is its label; the tick is
              aria-hidden (the checked state says it)
@@ -184,7 +189,18 @@ List row (stage 20e, D108)
              `opens`: a drawn arrow (two sides of a small square, turned) at the end
   a11y       one button named by its label; the hint is its accessibility hint (read
              after the name on Android) and visible text; the arrow is hidden
-  used on    You (the places under it, then the account), the chat's sheet
+  tone       `danger`: the label in the error colour, for rows that end something
+             (Unmatch, Block, Delete photo; each asks first; D116)
+  used on    You (the places under it, then the account), the chat's and the photos' sheets
+
+Switch row (stage 20e, D116)
+  look       the label in body type, then Android's own switch (React Native's `Switch`):
+             teal track when on, the input grey when off, white thumb; 48 high or more;
+             on the web a 24-point switch (48 wide)
+  a11y       one control: a switch named by the label, with its on/off state; tapping the
+             label flips it too, without a second stop for screen readers or the keyboard
+  use        settings that take effect at once (Pause, the notification kinds); choices in
+             a form sent later stay checkboxes (consents, Also block)
 ```
 
 ## Checked on

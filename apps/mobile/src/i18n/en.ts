@@ -130,6 +130,7 @@ export const en = {
     areaSearch: "Find your area",
     areaSearchHint: "A few letters of the area or its city.",
     areaNone: "No area matches that. Try the city's name.",
+    areaChosen: "Your area: {area}",
     prompts: "Prompts (up to 3)",
     addPrompt: "Answer a prompt",
     removePrompt: "Remove",

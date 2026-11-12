@@ -132,8 +132,8 @@ export function SafetyMenu({ open, onClose, userId, name, matchId, onEnded }: Sa
       ) : (
         <>
           <View>
-            {matchId ? <ListRow label={t.chat.unmatch} onPress={() => ending.ask("unmatch")} /> : null}
-            <ListRow label={t.chat.block} onPress={() => ending.ask("block")} />
+            {matchId ? <ListRow label={t.chat.unmatch} tone="danger" onPress={() => ending.ask("unmatch")} /> : null}
+            <ListRow label={t.chat.block} tone="danger" onPress={() => ending.ask("block")} />
             <ListRow
               label={t.chat.report}
               opens

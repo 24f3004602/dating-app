@@ -134,16 +134,16 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await page.getByRole("button", { name: "Privacy" }).click();
   await page.getByRole("radio", { name: "Only people I have liked", exact: true }).click();
   await expect(page.getByRole("radio", { name: "Only people I have liked", exact: true })).toBeChecked();
-  await page.getByRole("checkbox", { name: "Pause new introductions", exact: true }).click();
-  await expect(page.getByRole("checkbox", { name: "Pause new introductions", exact: true })).toBeChecked();
+  await page.getByRole("switch", { name: "Pause new introductions", exact: true }).click(); // a switch (D116)
+  await expect(page.getByRole("switch", { name: "Pause new introductions", exact: true })).toBeChecked();
   await checkA11y(page, "privacy");
 
   // Notifications (stage 16): categories save; push itself is for the phone app.
   await page.goBack();
   await page.getByRole("button", { name: "Notifications", exact: true }).click();
   await expect(page.getByText("Notifications never show names or message text: only that something happened.")).toBeVisible();
-  await page.getByRole("checkbox", { name: "Someone liked me", exact: true }).click();
-  await expect(page.getByRole("checkbox", { name: "Someone liked me", exact: true })).not.toBeChecked();
+  await page.getByRole("switch", { name: "Someone liked me", exact: true }).click();
+  await expect(page.getByRole("switch", { name: "Someone liked me", exact: true })).not.toBeChecked();
   await page.getByRole("button", { name: "Turn on notifications" }).click();
   await expect(page.getByText("Notifications work in the phone app, not in a browser.")).toBeVisible();
   await checkA11y(page, "notifications");

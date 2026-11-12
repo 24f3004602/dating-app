@@ -16,6 +16,7 @@ import {
   Card,
   CardTitle,
   Checkbox,
+  SwitchRow,
   ChoiceGroup,
   Heading,
   ListRow,
@@ -40,6 +41,7 @@ export function DesignGallery() {
   const [single, setSingle] = useState<"one" | "two" | undefined>("one");
   const [many, setMany] = useState<("a" | "b" | "c")[]>(["a"]);
   const [checked, setChecked] = useState(true);
+  const [on, setOn] = useState(true);
   const [text, setText] = useState("");
   const [replay, setReplay] = useState(0);
   const [sentence, setSentence] = useState<"short" | "long" | undefined>("short");
@@ -86,6 +88,8 @@ export function DesignGallery() {
 
       <Heading>Choices</Heading>
       <Checkbox label="A checkbox" checked={checked} onChange={setChecked} />
+      {/* A setting that takes effect at once is a switch (D116). */}
+      <SwitchRow label="A setting that takes effect at once" value={on} onChange={setOn} />
       <ChoiceGroup label="One of these" value={single} onChange={setSingle}
         options={[{ value: "one", label: "Option one" }, { value: "two", label: "Option two" }]} />
       <ChoiceGroup label="Any of these" multiple value={many} onChange={setMany}
@@ -130,6 +134,7 @@ export function DesignGallery() {
         <ListRow label="A place" opens onPress={noop} />
         <ListRow label="A place with a hint" hint="What the row holds" opens onPress={noop} />
         <ListRow label="An action" onPress={noop} />
+        <ListRow label="A destructive action" tone="danger" onPress={noop} />
       </View>
       <View style={styles.more}>
         <MoreButton tone="sign" label="More options, on the page" onPress={noop} />

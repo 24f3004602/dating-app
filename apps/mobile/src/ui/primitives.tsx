@@ -10,18 +10,21 @@
  *   buttons and cards press in slightly, notices and badges fade in, photos fade
  *   in as they load, and screens fade in on the web.
  */
-import { type Href, Link } from "expo-router";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { type Href, Link, Stack as RouterStack } from "expo-router";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
   Animated,
   Linking,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   type PressableStateCallbackType,
   type StyleProp,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   type TextInputProps,
@@ -32,7 +35,7 @@ import {
 import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
 import { color, focusRing, font, motion, radius, size, space, touch, type } from "@/theme/tokens";
-import { FadeImage, Reveal, usePressScale, useScreenEntrance } from "@/ui/motion";
+import { easing, FadeImage, nativeDriver, Reveal, usePressScale, useReducedMotion, useScreenEntrance } from "@/ui/motion";
 
 /** React Native Web also reports focus and hover; native platforms report only `pressed`. */
 type PressState = PressableStateCallbackType & { focused?: boolean; hovered?: boolean };
@@ -86,32 +89,89 @@ function useAnnounce(message: ReactNode, active: boolean) {
   }, [message, active]);
 }
 
+/**
+ * A screen's title tells the screen its text and where it ends, so the top app bar can
+ * take over the screen's name once the title has scrolled under it (Android's top app
+ * bar keeps the context; impeccable's finish review, D116).
+ */
+const TitleReport = createContext<((text: string, bottom: number) => void) | null>(null);
+
+/** A title's words when they are plain text (every title in the app is). */
+function plainText(children: ReactNode): string | null {
+  if (typeof children === "string" || typeof children === "number") return String(children);
+  if (Array.isArray(children) && children.every((c) => typeof c === "string" || typeof c === "number")) return children.join("");
+  return null;
+}
+
+/**
+ * The screen's name in the top app bar: it fades in (at once with reduce motion). Screen
+ * readers already have the page's own heading, so this copy is hidden from them.
+ */
+function BarTitle({ children }: { children: string }) {
+  const reduced = useReducedMotion();
+  const opacity = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+  useEffect(() => {
+    if (reduced) {
+      opacity.setValue(1);
+      return;
+    }
+    Animated.timing(opacity, { toValue: 1, duration: motion.duration.fast, easing: easing.standard, useNativeDriver: nativeDriver }).start();
+  }, [opacity, reduced]);
+  return (
+    <Animated.Text aria-hidden importantForAccessibility="no-hide-descendants" numberOfLines={1} style={[styles.barTitle, { opacity }]}>
+      {children}
+    </Animated.Text>
+  );
+}
+
 /** `overlay`: the screen sits over a dark backdrop (its own background is clear). */
 export function Screen({ children, overlay = false }: { children: ReactNode; overlay?: boolean }) {
   const entrance = useScreenEntrance();
   const edges = useContext(ScreenEdges);
+  // Under a top app bar (the stacks' screens; the four places have their own sign band).
+  const underBar = edges === UNDER_TOP_BAR;
+  const [title, setTitle] = useState<{ text: string; bottom: number } | null>(null);
+  const [inBar, setInBar] = useState(false);
+  const report = useCallback((text: string, bottom: number) => {
+    setTitle((was) => (was && was.text === text && was.bottom === bottom ? was : { text, bottom }));
+  }, []);
+  const onScroll = title
+    ? (e: NativeSyntheticEvent<NativeScrollEvent>) => setInBar(e.nativeEvent.contentOffset.y > title.bottom)
+    : undefined;
   return (
     <OnOverlay.Provider value={overlay}>
+    <TitleReport.Provider value={underBar ? report : null}>
     <SafeAreaView edges={edges} style={[styles.safe, overlay && styles.clear]}>
+      {underBar && title ? <RouterStack.Screen options={{ headerTitle: () => (inBar ? <BarTitle>{title.text}</BarTitle> : null) }} /> : null}
       {/* Focusable on web so keyboard users can scroll screens without controls (WCAG 2.1.1; found by axe). */}
       <Animated.ScrollView
         contentContainerStyle={styles.screen}
         keyboardShouldPersistTaps="handled"
         focusable={Platform.OS === "web"}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         style={entrance.style}
         {...entrance.data}
       >
         {children}
       </Animated.ScrollView>
     </SafeAreaView>
+    </TitleReport.Provider>
     </OnOverlay.Provider>
   );
 }
 
 /** `display`: the welcome screen's headline size (the Interchange's display voice). */
 export function Title({ children, display }: { children: ReactNode; display?: boolean }) {
+  const report = useContext(TitleReport);
+  const text = plainText(children);
   return (
-    <Text role="heading" aria-level={1} style={[styles.title, display && styles.display, useOnOverlay() && styles.onOverlay]}>
+    <Text
+      role="heading"
+      aria-level={1}
+      onLayout={report && text ? (e) => report(text, e.nativeEvent.layout.y + e.nativeEvent.layout.height) : undefined}
+      style={[styles.title, display && styles.display, useOnOverlay() && styles.onOverlay]}
+    >
       {children}
     </Text>
   );
@@ -297,6 +357,38 @@ export function Checkbox({ label, checked, onChange, error }: { label: string; c
   );
 }
 
+/**
+ * An on/off setting that takes effect at once (Pause, the notification kinds): Android's own
+ * switch, themed, beside its label (Material; impeccable's finish review, D116). The switch
+ * is the one control, named by the label; tapping the label flips it too, without a second
+ * stop for screen readers or the keyboard. Its state isn't colour alone: the thumb moves.
+ */
+export function SwitchRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <View style={styles.switchRow}>
+      <Pressable
+        accessible={false}
+        focusable={false}
+        aria-hidden
+        importantForAccessibility="no-hide-descendants"
+        onPress={() => onChange(!value)}
+        style={styles.switchLabel}
+      >
+        <Text style={styles.body}>{label}</Text>
+      </Pressable>
+      <Switch
+        accessibilityLabel={label}
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: color.borderInput, true: color.accent }}
+        thumbColor={color.bg}
+        // The web's switch is a checkbox input with the switch role that carries its own state.
+        {...(Platform.OS === "web" ? { activeThumbColor: color.bg, style: styles.switchWeb } : { accessibilityState: { checked: value } })}
+      />
+    </View>
+  );
+}
+
 type ChoiceProps<T extends string> = {
   label: string;
   options: readonly { value: T; label: string }[];
@@ -352,7 +444,7 @@ export function ChoiceGroup<T extends string>(props: ChoiceProps<T>) {
               style={(state) => [styles.chip, on && styles.chipOn, state.pressed && !on && styles.chipPressed, focusStyle(state, focusRingStyle)]}
             >
               {/* A tick as well as the fill: the choice isn't shown by colour alone (WCAG 1.4.1). */}
-              {on ? <Text style={styles.chipTextOn} aria-hidden>✓</Text> : null}
+              {on ? <View style={styles.tick} aria-hidden /> : null}
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{o.label}</Text>
             </Pressable>
           );
@@ -420,8 +512,11 @@ export function CardTitle({ children }: { children: ReactNode }) {
  * a section's heading in the plate's own size (your name under "Your profile").
  */
 export function Plate({ children, heading, level = 1 }: { children: ReactNode; heading?: boolean; level?: 1 | 2 }) {
+  // A plate that is the page's heading (a person's name) names the screen in the top bar too.
+  const report = useContext(TitleReport);
+  const text = heading && level === 1 ? plainText(children) : null;
   return (
-    <View style={styles.plate}>
+    <View style={styles.plate} onLayout={report && text ? (e) => report(text, e.nativeEvent.layout.y + e.nativeEvent.layout.height) : undefined}>
       <Text
         role={heading ? "heading" : undefined}
         aria-level={heading ? level : undefined}
@@ -464,7 +559,7 @@ export function Photo({ uri, label, style }: { uri: string; label: string; style
  * 20e, D108): the label in heading type with a hint under it, a line under each row and a
  * 56-point target; pressed: surface. `opens` draws an arrow: the row leads to another screen.
  */
-export function ListRow({ label, hint, onPress, opens }: { label: string; hint?: string; onPress: () => void; opens?: boolean }) {
+export function ListRow({ label, hint, onPress, opens, tone }: { label: string; hint?: string; onPress: () => void; opens?: boolean; tone?: "danger" }) {
   const focusRingStyle = useRing();
   return (
     <Pressable
@@ -475,7 +570,7 @@ export function ListRow({ label, hint, onPress, opens }: { label: string; hint?:
       style={(state) => [styles.listRow, state.pressed && styles.listRowPressed, focusStyle(state, focusRingStyle)]}
     >
       <View style={styles.listRowText}>
-        <Text style={styles.heading}>{label}</Text>
+        <Text style={[styles.heading, tone === "danger" && styles.listRowDanger]}>{label}</Text>
         {hint ? <Text style={styles.caption}>{hint}</Text> : null}
       </View>
       {opens ? <View style={styles.arrow} aria-hidden /> : null}
@@ -558,8 +653,9 @@ const styles = StyleSheet.create({
     width: size.checkbox,
     height: size.checkbox,
     borderRadius: radius.plate,
-    borderWidth: 2,
-    borderColor: color.borderInput,
+    // The roundel's graphite stroke, as the radios beside it have (finish review, D116).
+    borderWidth: size.roundelStroke,
+    borderColor: color.sign,
     backgroundColor: color.bg,
     alignItems: "center",
     justifyContent: "center",
@@ -646,6 +742,13 @@ const styles = StyleSheet.create({
   },
   listRowPressed: { backgroundColor: color.surface },
   listRowText: { flex: 1, gap: space.xs / 2 },
+  listRowDanger: { color: color.danger },
+  // The screen's name in the top app bar once its title has scrolled away (D116).
+  barTitle: { ...type.sign, color: color.onSign },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: space.md, minHeight: touch.min },
+  switchLabel: { flex: 1, minHeight: touch.min, justifyContent: "center" },
+  // The web's switch at a 24-point height (48 wide): WCAG 2.5.8's minimum target.
+  switchWeb: { height: 24 },
   // A drawn arrow: two sides of a small square, turned to point on.
   arrow: {
     width: space.sm,
