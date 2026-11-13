@@ -70,4 +70,5 @@
   --ease-sway: cubic-bezier(0.45, 0, 0.55, 1);
   --motion-rise: 0.5rem;
   --motion-stagger: 50ms;
+  --overlay-opacity: 0.7;
 }

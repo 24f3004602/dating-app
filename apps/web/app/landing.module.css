@@ -74,6 +74,27 @@
 
 /* --- The first screen ----------------------------------------------------------- */
 
+/* On candlelight, like the app's welcome (stage 22b, D121; the owner's request): the
+   loop or its still under the overlay's graphite shade. The checked pairs hold even
+   over a candle flame (overlay-floor): white words on the shade; the map on its white
+   panel; the waitlist on its graphite sign. */
+.heroStage { position: relative; isolation: isolate; }
+.backdrop { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: var(--color-overlay); }
+.backdrop :global(.hero-story) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  justify-self: auto;
+  background: var(--color-overlay);
+}
+.backdrop :global(.hero-story-media) { object-position: 50% 70%; }
+.shade { position: absolute; inset: 0; background: var(--color-overlay); opacity: var(--overlay-opacity); }
+.heroStage .headline,
+.heroStage .lede { color: var(--on-sign); }
+
 .hero {
   display: grid;
   gap: var(--space-4);
@@ -100,12 +121,16 @@
    flat rings fade out under the 3D ones. */
 .mapBox { position: relative; }
 .map { display: block; position: relative; z-index: 1; width: 100%; height: auto; overflow: visible; }
-.mapCompact { max-width: 34rem; }
+/* The map's white enamel panel on the candlelit first screen (D121): padded on phones,
+   where the lines run past the box; full column width on wide screens, so the rails
+   still sit at 12.5% and 14.75% and run on into the stations. */
+.mapPanel { background: var(--color-bg); }
+.mapCompact { max-width: 34rem; padding: var(--space-5); }
 .mapTall { display: none; }
 .scene { position: absolute; inset: 0; z-index: 0; visibility: hidden; }
 .mapBox[data-scene="3d"] .scene { visibility: visible; }
-.mapCompact[data-scene="3d"] .mapShapes { clip-path: url(#map-compact-outside); }
-.mapTall[data-scene="3d"] .mapShapes { clip-path: url(#map-tall-outside); }
+.mapCompact [data-scene="3d"] .mapShapes { clip-path: url(#map-compact-outside); }
+.mapTall [data-scene="3d"] .mapShapes { clip-path: url(#map-tall-outside); }
 .mapRings { transition: opacity 250ms var(--ease-standard); }
 .mapBox[data-scene="3d"] .mapRings { opacity: 0; }
 .map text { font-family: inherit; fill: var(--sign); }
@@ -184,6 +209,25 @@
   border-radius: 50%;
   box-sizing: border-box;
 }
+
+/* The candlelight loop's pause button (WCAG 2.2.2), in the sign band: a plate like the
+   language option, marigold while pressed, and shown only while the loop is on the page
+   (globals.css hides it for reduced motion). */
+.signEnd :global(.motion-toggle) {
+  position: static;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--on-sign);
+  border-radius: 0;
+  background: transparent;
+  color: var(--on-sign);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+}
+.signEnd :global(.motion-toggle[aria-pressed="true"]) { background: var(--line-them); border-color: var(--line-them); color: var(--sign); }
+.landing:not(:has(video)) .signEnd :global(.motion-toggle) { display: none; }
 
 /* The language option (stage 22a, D120): the other page, named in its own language,
    as a white-outlined plate on the graphite band. */
@@ -315,21 +359,11 @@
 .interchange .stop::before { left: 0; background: var(--color-bg); }
 .interchange .stop::after { right: 0; }
 
-/* The end of the line: the candlelight loop (D099) in a square frame, cropped to the
-   candles, with a rectangular pause plate. */
+/* The end of the line: the candlelight still (D099) in a square frame, cropped to the
+   candles; the loop itself plays behind the first screen (D121). */
 .terminusImage { position: relative; margin-top: var(--space-4); max-width: 34rem; }
 .terminusImage :global(.hero-story) { width: 100%; aspect-ratio: 4 / 3; border-radius: 0; justify-self: auto; }
 .terminusImage :global(.hero-story-media) { object-position: 66% 74%; }
-.terminusImage :global(.motion-toggle) {
-  right: 0;
-  bottom: 0;
-  border: 0;
-  border-radius: 0;
-  background: var(--sign);
-  color: var(--on-sign);
-  font-weight: 700;
-}
-.terminusImage :global(.motion-toggle[aria-pressed="true"]) { background: var(--line-them); color: var(--sign); }
 
 /* The close: a full-width graphite band holding the last stop and the footer. */
 .closing { background: var(--sign); color: var(--on-sign); padding: var(--space-7) var(--space-5) var(--space-5); }
@@ -363,13 +397,14 @@
     grid-template-areas: "headline map" "lede map" "panel map";
     align-items: start;
     padding-top: var(--space-7);
-    padding-bottom: var(--space-5);
+    padding-bottom: 0; /* the map's white panel meets the white page below */
   }
+  .hero .panel { margin-bottom: var(--space-7); }
   .headline { grid-area: headline; }
   .lede { grid-area: lede; }
   .hero .panel { grid-area: panel; }
   .mapCompact { display: none; }
-  .mapTall { display: block; grid-area: map; align-self: end; }
+  .mapTall { display: block; grid-area: map; align-self: end; padding: var(--space-6) 0 0; overflow-x: clip; }
 
   .route { display: grid; padding-top: 0; }
   .routeSide { position: sticky; top: var(--space-6); align-self: start; padding-top: var(--space-6); margin-bottom: 0; }

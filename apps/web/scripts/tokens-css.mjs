@@ -25,6 +25,8 @@ export function tokensCss(spec) {
     for (const [name, c] of Object.entries(spec.motion.easing)) lines.push(`  --ease-${name}: cubic-bezier(${c.join(", ")});`);
     lines.push(`  --motion-rise: ${spec.motion.rise / 16}rem;`, `  --motion-stagger: ${spec.motion.stagger}ms;`);
   }
+  // The dark layer over the candlelight loop (D099; the website's first screen since D121).
+  if (spec.overlay) lines.push(`  --overlay-opacity: ${spec.overlay.opacity};`);
   lines.push("}", "");
   return lines.join("\n");
 }

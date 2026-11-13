@@ -56,6 +56,8 @@ export type Messages = {
     towards: string;
   };
   stations: Station[];
-  terminus: { title: string; body: string; pause: string };
+  terminus: { title: string; body: string };
+  /** The button that pauses the first screen's candlelight loop. */
+  pause: string;
   footer: { lead: (brand: string) => string; terms: string; joiner: string; privacy: string; close: string };
 };

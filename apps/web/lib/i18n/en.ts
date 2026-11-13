@@ -88,8 +88,8 @@ export const en: Messages = {
   terminus: {
     title: "Then, a conversation",
     body: "Chat opens only when you both like each other. That's where the line leads.",
-    pause: "Pause video",
   },
+  pause: "Pause video",
   footer: {
     lead: (brand) => `${brand} is a working name. For the invite-only test:`,
     terms: "terms for testers",

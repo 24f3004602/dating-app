@@ -81,7 +81,7 @@ Write a better version in the last column, or "OK". Leave it empty if unsure.
 | 50 | ऐप में अपना अकाउंट डिलीट करें। आप तुरंत छिप जाते हैं, और 7 दिन बाद सब कुछ मिटा दिया जाता है, सिवाय उन सुरक्षा रिकॉर्ड के, जिनकी सूची गोपनीयता सूचना में है। | Delete your account in the app. You're hidden at once, and everything is deleted after 7 days, apart from the safety records the privacy notice lists. | a station's text on the route |  |
 | 51 | फिर, बातचीत | Then, a conversation | the last station's name | OK (reviewed 2026-11-13) |
 | 52 | चैट तभी खुलती है, जब आप दोनों एक-दूसरे को लाइक करें। लाइन यहीं तक ले जाती है। | Chat opens only when you both like each other. That's where the line leads. | the last station's text |  |
-| 53 | वीडियो रोकें | Pause video | the button that pauses the video |  |
+| 53 | वीडियो रोकें | Pause video | the button in the top band that pauses the candlelight video |  |
 | 54 | Kinaara अभी एक अस्थायी नाम है। सिर्फ़ निमंत्रण वाले टेस्ट के लिए: | Kinaara is a working name. For the invite-only test: | the footer |  |
 | 55 | टेस्टर्स के लिए शर्तें | terms for testers | the footer |  |
 | 56 | और | and the | the footer |  |

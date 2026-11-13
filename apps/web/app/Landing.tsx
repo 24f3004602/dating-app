@@ -18,6 +18,12 @@ import styles from "./landing.module.css";
  * The sign band links each to the other, named in its own language. The words are in
  * lib/i18n; the documents and the emails exist only in English, and the Hindi page
  * says so where it links to them.
+ *
+ * The first screen sits on the candlelight loop, like the app's welcome (stage 22b,
+ * D121; the owner's request): the loop or its still under the overlay's graphite
+ * shade, white words on it, the map on a white enamel panel, the waitlist on its
+ * graphite sign. The loop plays once on the page, there; the end of the line keeps
+ * the still. Its pause button sits in the sign band, shown only while it plays.
  */
 export async function Landing({ lang }: { lang: Lang }) {
   await connection(); // rendered per request, so the CSP nonce applies
@@ -27,6 +33,7 @@ export async function Landing({ lang }: { lang: Lang }) {
 /** The page itself, without the per-request wait (the preview renders this directly). */
 export function LandingView({ lang }: { lang: Lang }) {
   const t = messages(lang);
+  const video = heroVideoConfig(process.env);
   // The name in Devanagari, where it's set, belongs on the Hindi page only.
   const name = lang === "hi" && BRAND_DEVANAGARI ? BRAND_DEVANAGARI : BRAND;
   const form = {
@@ -54,6 +61,7 @@ export function LandingView({ lang }: { lang: Lang }) {
         </p>
         <div className={styles.signEnd}>
           <p className={styles.status}>{t.status}</p>
+          <MotionToggle target="hero-stage" label={t.pause} />
           <a className={styles.language} href={HOME[t.other.lang]} lang={t.other.lang} hrefLang={t.other.lang}>
             {t.other.name}
           </a>
@@ -65,17 +73,23 @@ export function LandingView({ lang }: { lang: Lang }) {
       </div>
 
       <main id="main">
-        <section className={styles.hero} aria-labelledby="hero-title">
-          <h1 id="hero-title" className={styles.headline}>
-            {t.headline}
-          </h1>
-          <p className={styles.lede}>{t.lede}</p>
-          <RouteDiagram words={t.map} scene={heroSceneEnabled(process.env)} />
-          <section className={styles.panel} aria-labelledby="join-title">
-            <h2 id="join-title">{t.join.heading}</h2>
-            <WaitlistForm lang={lang} words={form} privacyLang={docLang} />
+        <div className={styles.heroStage} id="hero-stage">
+          <div className={styles.backdrop} aria-hidden="true">
+            <HeroStory video={video} sizes="100vw" />
+            <div className={styles.shade} />
+          </div>
+          <section className={styles.hero} aria-labelledby="hero-title">
+            <h1 id="hero-title" className={styles.headline}>
+              {t.headline}
+            </h1>
+            <p className={styles.lede}>{t.lede}</p>
+            <RouteDiagram words={t.map} scene={heroSceneEnabled(process.env)} />
+            <section className={styles.panel} aria-labelledby="join-title">
+              <h2 id="join-title">{t.join.heading}</h2>
+              <WaitlistForm lang={lang} words={form} privacyLang={docLang} />
+            </section>
           </section>
-        </section>
+        </div>
 
         <section className={styles.route} aria-labelledby="route-title">
           <div className={styles.routeSide}>
@@ -118,8 +132,8 @@ export function LandingView({ lang }: { lang: Lang }) {
               <h3 className={styles.plate3}>{t.terminus.title}</h3>
               <p>{t.terminus.body}</p>
               <div className={styles.terminusImage}>
-                <HeroStory video={heroVideoConfig(process.env)} sizes="(min-width: 64rem) 34rem, 90vw" />
-                <MotionToggle target="destination" label={t.terminus.pause} />
+                {/* The still: the loop itself plays behind the first screen. */}
+                <HeroStory video={{ ...video, play: false }} sizes="(min-width: 64rem) 34rem, 90vw" />
               </div>
             </li>
           </ol>

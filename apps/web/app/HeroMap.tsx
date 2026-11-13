@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ComponentType, type ReactNode, useEffect, useState } from "react";
+import { Component, type ComponentType, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { chooseHeroScene, readViewing } from "@/lib/heroScene";
 import { COMPACT, TALL } from "@/lib/routeMap";
@@ -19,6 +19,10 @@ type Phase = "flat" | "loading" | "3d";
  *
  * data-scene on each map box: "flat", "loading" or "3d"; data-settled="true" once the
  * rings are at rest (the e2e suite waits on both).
+ *
+ * Each box sits in a white enamel panel (stage 22b, D121: the first screen is on
+ * candlelight); the panel takes the layout, so the box stays exactly the SVG's size
+ * and the scene's canvas still covers it point for point.
  */
 export function HeroMap({ scene, compact, tall }: { scene: boolean; compact: ReactNode; tall: ReactNode }) {
   const [Scene, setScene] = useState<ComponentType<SceneProps> | null>(null);
@@ -27,6 +31,8 @@ export function HeroMap({ scene, compact, tall }: { scene: boolean; compact: Rea
   const [settled, setSettled] = useState(false);
   const [colors, setColors] = useState<SceneColors | null>(null);
   const [tilt, setTilt] = useState(false);
+  const compactBox = useRef<HTMLDivElement>(null);
+  const tallBox = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!scene || chooseHeroScene(readViewing(window), true) !== "3d") return;
@@ -46,7 +52,8 @@ export function HeroMap({ scene, compact, tall }: { scene: boolean; compact: Rea
     };
     setWide(wideQuery.matches);
     setTilt(window.matchMedia("(hover: hover) and (pointer: fine)").matches);
-    setColors(readColors(document.documentElement));
+    const box = (wideQuery.matches ? tallBox : compactBox).current;
+    setColors(readColors(document.documentElement, box));
     setPhase("loading");
     wideQuery.addEventListener("change", onWide);
     motionQuery.addEventListener("change", onMotion);
@@ -96,23 +103,27 @@ export function HeroMap({ scene, compact, tall }: { scene: boolean; compact: Rea
 
   return (
     <>
-      <div className={[styles.mapBox, styles.mapCompact].join(" ")} {...state(!wide)}>
-        {compact}
-        {overlay(!wide, COMPACT)}
+      <div className={[styles.mapPanel, styles.mapCompact].join(" ")}>
+        <div className={styles.mapBox} ref={compactBox} {...state(!wide)}>
+          {compact}
+          {overlay(!wide, COMPACT)}
+        </div>
       </div>
-      <div className={[styles.mapBox, styles.mapTall].join(" ")} {...state(wide)}>
-        {tall}
-        {overlay(wide, TALL)}
+      <div className={[styles.mapPanel, styles.mapTall].join(" ")}>
+        <div className={styles.mapBox} ref={tallBox} {...state(wide)}>
+          {tall}
+          {overlay(wide, TALL)}
+        </div>
       </div>
     </>
   );
 }
 
-/** The scene's colours from the page's own: its ground and the map's tokens. */
-function readColors(root: HTMLElement): SceneColors {
+/** The scene's colours from the page's own: the ground right behind the map, and the map's tokens. */
+function readColors(root: HTMLElement, box: HTMLElement | null): SceneColors {
   const css = getComputedStyle(root);
   let ground = "#ffffff";
-  for (let el: HTMLElement | null = document.querySelector("main"); el; el = el.parentElement) {
+  for (let el: HTMLElement | null = box; el; el = el.parentElement) {
     const bg = getComputedStyle(el).backgroundColor;
     if (bg && bg !== "transparent" && !bg.startsWith("rgba(0, 0, 0, 0")) {
       ground = bg;
