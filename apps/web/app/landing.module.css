@@ -90,9 +90,20 @@
 
 .lede { margin: 0; max-width: 34ch; font-size: clamp(1.125rem, 0.4vw + 1rem, 1.375rem); line-height: 1.45; text-wrap: pretty; }
 
-.map { width: 100%; height: auto; overflow: visible; }
+/* Each map sits in a box with its 3D scene (stage 21a, D119) underneath it: the SVG
+   stays on top, so its words read over the scene. While the scene shows, it draws
+   everything inside the box; the SVG keeps only what runs outside (the clip) and its
+   flat rings fade out under the 3D ones. */
+.mapBox { position: relative; }
+.map { display: block; position: relative; z-index: 1; width: 100%; height: auto; overflow: visible; }
 .mapCompact { max-width: 34rem; }
 .mapTall { display: none; }
+.scene { position: absolute; inset: 0; z-index: 0; visibility: hidden; }
+.mapBox[data-scene="3d"] .scene { visibility: visible; }
+.mapCompact[data-scene="3d"] .mapShapes { clip-path: url(#map-compact-outside); }
+.mapTall[data-scene="3d"] .mapShapes { clip-path: url(#map-tall-outside); }
+.mapRings { transition: opacity 250ms var(--ease-standard); }
+.mapBox[data-scene="3d"] .mapRings { opacity: 0; }
 .map text { font-family: inherit; fill: var(--sign); }
 .mapSmall { font-size: 15px; font-weight: 600; fill: var(--color-text-muted); }
 .mapLabel { font-size: 21px; font-weight: 700; font-stretch: 87.5%; }

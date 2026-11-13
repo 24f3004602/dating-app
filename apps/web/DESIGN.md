@@ -135,7 +135,7 @@ Scope: the public website's Interchange world (`app/page.tsx`, `app/landing.modu
 
 The website is a metro route map in the brand's own colours. Your line is peacock teal, the other person's is marigold, and they meet at an interchange drawn as the brand's two rings, only where both fit. After the interchange the two rails run on side by side, and each rule of the product is a station on that line. The language is Delhi Metro-style wayfinding: graphite sign bands across the top and the close, enamel sign plates lettered in white, thick route lines and white station roundels outlined in graphite, all on a white enamel ground. DMRC's identity (its logo, line colours and signage artwork) is never copied; the system borrows the grammar of wayfinding, not anyone's marks.
 
-Density is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Every sign that names a place or a rule is bilingual, Devanagari under the Latin. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: the only authored movement is the line drawing itself as you travel down the page.
+Density is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Every sign that names a place or a rule is bilingual, Devanagari under the Latin. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: two authored movements, each finished in seconds. On arrival the hero map lifts into relief and their ring hooks through yours, once; then the line draws itself as you travel down the page.
 
 Rejected (confirmed in the direction contract): the category's swipe-card phone mockup and gradients, and the calm cream page. Pills, gradients and glow are out.
 
@@ -145,7 +145,7 @@ Rejected (confirmed in the direction contract): the category's swipe-card phone 
 - Anek throughout: semi-condensed bold (wdth 87.5) for signs, normal width for text.
 - Bilingual signs, Devanagari under the Latin.
 - Square-cornered plates; the only curves are roundels and the two-ring mark.
-- One authored motion: the rails draw on scroll.
+- Two authored motions: the hero's interchange hooks once on arrival (3D, about three seconds); the rails draw on scroll.
 
 ## Colors
 
@@ -209,6 +209,8 @@ Flat. There are no drop shadows, no blur, no gradients and no glow. Depth comes 
 
 **The Enamel Rule.** Surfaces are flat painted planes. Separation is by colour block, never by shadow.
 
+**The Relief Exception.** The hero map's 3D scene (stage 21a, D119) is the same map in relief: the lines' depth shows as walls in a darker step of their own colour, roundels are shallow studs, the rings carry graphite outlines; three flat tones, no shadow, blur or glow. Its face stays exactly where the flat map draws it.
+
 ## Shapes
 
 Rectangles with square corners (radius 0) for everything that is a sign: bands, panels, plates, buttons, inputs, the video frame and its pause plate. Circles (50%) only for things that are map symbols: station roundels (white fill, 4px graphite outline), the filled terminus, the two interlocking rings of the interchange and the brand mark, and the small marigold ring that marks a confirmation. Lines are thick and straight, turning through a single rounded bend on the map. Arrows are drawn as inline SVG strokes.
@@ -243,7 +245,9 @@ A small marigold plate in the sign band, graphite 700 at 0.875rem, semi-condense
 ### Station line (signature)
 The ordered list of rules drawn as a metro line: two rails, a roundel per station, a graphite plate for each name and a short paragraph beneath. The first station is the interchange (the two rings; on desktop the map's rings stand in for it), the last is the terminus (a filled roundel) where the line ends at the candlelight loop in a 4:3 square-cornered frame. A legend beside the line explains the key: your line, theirs, interchange, end of the line.
 
-**The One Moving Idea Rule.** The rails draw downward as the visitor scrolls (a `scaleY` 0 to 1 keyframe, linear, on a CSS scroll-driven `view()` timeline, range entry 30% to cover 55%; no script). It runs only under `prefers-reduced-motion: no-preference` and `@supports (animation-timeline: view())`; otherwise the line is fully drawn from the start. Only the rails move; every word is visible from first paint. This is the world's only authored motion. The end-of-line video loops longer than 5 seconds, so it carries a rectangular graphite pause plate in its bottom-right corner (marigold when pressed) to satisfy WCAG 2.2.2, and the plate is hidden when reduced motion is requested.
+**The One Moving Idea Rule.** The rails draw downward as the visitor scrolls (a `scaleY` 0 to 1 keyframe, linear, on a CSS scroll-driven `view()` timeline, range entry 30% to cover 55%; no script). It runs only under `prefers-reduced-motion: no-preference` and `@supports (animation-timeline: view())`; otherwise the line is fully drawn from the start. Only the rails move; every word is visible from first paint. Apart from the hero's interchange, this is the world's only authored motion. The end-of-line video loops longer than 5 seconds, so it carries a rectangular graphite pause plate in its bottom-right corner (marigold when pressed) to satisfy WCAG 2.2.2, and the plate is hidden when reduced motion is requested.
+
+**The Interchange Rule.** Once the page is idle, the hero map is replaced by the same map in 3D, line for line: it lifts into relief, the marigold ring drops through the teal one, catches like a chain link, swings and comes to rest (physics, about three seconds); then nothing moves except a slight tilt with a mouse. It never plays with reduced motion, the data saver, a slow connection, forced colours, a low-memory device or no WebGL 2. The flat map is the picture until the scene's first frames match it, and again whenever anything fails; the scene is aria-hidden and the SVG keeps the name and the words.
 
 ## Do's and Don'ts
 
@@ -259,7 +263,7 @@ The ordered list of rules drawn as a metro line: two rails, a roundel per statio
 ### Don't:
 - **Don't** use pills, rounded cards, gradients, glow or drop shadows.
 - **Don't** copy DMRC's logo, line colours or signage artwork; the grammar is borrowed, the marks are our own.
-- **Don't** add motion beyond the drawing rails and the pausable end-of-line loop.
+- **Don't** add motion beyond the hero's interchange, the drawing rails and the pausable end-of-line loop.
 - **Don't** condense paragraphs; semi-condensed bold is for signs.
 - **Don't** use the shared blue focus colour, the shared radius scale or the staff console's coloured left-border notice inside this world.
 - **Don't** show people in imagery; the end-of-line loop is people-free footage.

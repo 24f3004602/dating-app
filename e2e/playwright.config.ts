@@ -18,6 +18,9 @@ export default defineConfig({
     viewport: { width: 390, height: 844 },
     // Stage 19: the suite runs still, so no check races an animation; motion.spec.ts turns motion on.
     reducedMotion: "reduce",
+    // Stage 21a: the landing page's 3D map needs WebGL; CI's Chrome has no GPU, so it
+    // gets the software renderer (SwiftShader), which Chrome now only enables on request.
+    launchOptions: { args: ["--enable-unsafe-swiftshader"] },
     trace: "retain-on-failure",
   },
   webServer: [

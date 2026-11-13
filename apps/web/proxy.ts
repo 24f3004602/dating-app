@@ -6,7 +6,9 @@ import { heroVideoOrigins } from "@/lib/heroVideo";
  * A strict Content-Security-Policy with a fresh nonce per request (Next.js CSP
  * guide, v16). Next.js reads the nonce from the request's CSP header and puts
  * it on its own scripts, so pages render dynamically. Photos come from the
- * API's signed URLs, so its origin is allowed for images only.
+ * API's signed URLs, so its origin is allowed for images only. 'wasm-unsafe-eval'
+ * lets the first screen's 3D scene compile its physics engine (WebAssembly, bundled
+ * with the site's own scripts; stage 21a, D119); it allows no JavaScript eval.
  */
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -20,7 +22,7 @@ export function proxy(request: NextRequest) {
   const video = heroVideoOrigins(process.env);
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${dev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self'${dev ? " 'unsafe-inline'" : ` 'nonce-${nonce}'`}`,
     `img-src 'self' data: ${[apiOrigin, ...video.img].join(" ")}`,
     `media-src 'self'${video.media.map((o) => ` ${o}`).join("")}`,

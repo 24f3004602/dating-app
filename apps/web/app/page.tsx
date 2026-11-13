@@ -6,6 +6,7 @@ import { MotionToggle } from "@/app/MotionToggle";
 import { RouteDiagram } from "@/app/RouteDiagram";
 import { WaitlistForm } from "@/app/WaitlistForm";
 import { BRAND, BRAND_DEVANAGARI } from "@/lib/config";
+import { heroSceneEnabled } from "@/lib/heroScene";
 import { heroVideoConfig } from "@/lib/heroVideo";
 
 import styles from "./landing.module.css";
@@ -114,7 +115,7 @@ export default async function Landing() {
           <p className={styles.lede}>
             Up to 15 people a day, and only where what you want fits what they want, both ways.
           </p>
-          <RouteDiagram hindi={BOTH_WAYS_HI} />
+          <RouteDiagram hindi={BOTH_WAYS_HI} scene={heroSceneEnabled(process.env)} />
           <section className={styles.panel} aria-labelledby="join-title">
             <h2 id="join-title">
               Next stop: Delhi NCR

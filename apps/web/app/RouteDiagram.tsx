@@ -1,3 +1,6 @@
+import { COMPACT, type MapLayout, pathD, TALL } from "@/lib/routeMap";
+
+import { HeroMap } from "./HeroMap";
 import styles from "./landing.module.css";
 
 /**
@@ -10,74 +13,97 @@ import styles from "./landing.module.css";
  * run off its bottom edge straight into the station rails below. Those rails sit at
  * 12.5% and 14.75% of the map's width, and landing.module.css puts the station rails
  * at the same percentages of the same column, so the line is one line at any width.
+ *
+ * The shapes come from lib/routeMap.ts, which the 3D scene reads too (stage 21a, D119).
+ * When the scene is showing, it draws everything inside the map's box: the shapes here
+ * are clipped to what runs outside the box, the flat rings fade out under the 3D ones,
+ * and the words stay on top.
  */
 const TITLE = "A route map: your line and someone else's line meet at one interchange, only where both of you fit.";
+const STROKE = { teal: "var(--color-accent)", marigold: "var(--color-highlight)" } as const;
 
-export function RouteDiagram({ hindi }: { hindi: string }) {
+export function RouteDiagram({ hindi, scene }: { hindi: string; scene: boolean }) {
+  return (
+    <HeroMap
+      scene={scene}
+      compact={
+        <svg className={styles.map} viewBox={`0 0 ${COMPACT.width} ${COMPACT.height}`} role="img" aria-labelledby="map-compact">
+          <title id="map-compact">{TITLE}</title>
+          <Shapes map={COMPACT} id="map-compact-outside" />
+          <text className={styles.mapSmall} x="18" y="24">
+            Your line · <tspan lang="hi">आपकी लाइन</tspan>
+          </text>
+          <text className={styles.mapSmall} x="384" y="60" textAnchor="end">
+            Theirs · <tspan lang="hi">उनकी</tspan>
+          </text>
+          <text className={styles.mapLabel} x="244" y="148">
+            Fit both ways
+          </text>
+          <text className={styles.mapHindi} x="244" y="174" lang="hi">
+            {hindi}
+          </text>
+        </svg>
+      }
+      tall={
+        <svg className={styles.map} viewBox={`0 0 ${TALL.width} ${TALL.height}`} role="img" aria-labelledby="map-tall">
+          <title id="map-tall">{TITLE}</title>
+          {/* The joined rails run past the bottom edge into the stations (overflow is visible). */}
+          <Shapes map={TALL} id="map-tall-outside" />
+          <text className={styles.mapSmall} x="74" y="68">
+            Your line: what you&apos;re looking for
+          </text>
+          <text className={styles.mapSmall} x="74" y="90" lang="hi">
+            आपकी लाइन: आप क्या चाहते हैं
+          </text>
+          <text className={styles.mapSmall} x="396" y="160" textAnchor="end">
+            Theirs: what they&apos;re looking for
+          </text>
+          <text className={styles.mapSmall} x="396" y="182" textAnchor="end" lang="hi">
+            उनकी लाइन: वे क्या चाहते हैं
+          </text>
+          <text className={styles.mapLabelTall} x="104" y="338">
+            Fit both ways
+          </text>
+          <text className={styles.mapHindiTall} x="104" y="370" lang="hi">
+            {hindi}
+          </text>
+        </svg>
+      }
+    />
+  );
+}
+
+/**
+ * The lines, stations and rings. `id` names the clip that keeps only what lies outside
+ * the box, plus a band 2 units inside its edge: the canvas can end a fraction of a pixel
+ * short of a box that is a fractional number of pixels tall, and there the 3D lines are
+ * still flat, so the flat strokes laid over them cover the gap without a seam.
+ */
+function Shapes({ map, id }: { map: MapLayout; id: string }) {
+  const { minX, maxX, minY, maxY } = map.extent;
+  const band = 2;
+  const outside =
+    `M ${minX - 100} ${minY - 100} H ${maxX + 100} V ${maxY + 100} H ${minX - 100} Z ` +
+    `M ${band} ${band} V ${map.height - band} H ${map.width - band} V ${band} Z`;
   return (
     <>
-      <svg className={[styles.map, styles.mapCompact].join(" ")} viewBox="0 0 400 196" role="img" aria-labelledby="map-compact">
-        <title id="map-compact">{TITLE}</title>
-        <path d="M -24 44 H 118 Q 154 44 168 82 L 180 116" fill="none" stroke="var(--color-accent)" strokeWidth="10" />
-        <path d="M 424 80 H 286 Q 250 80 236 106 L 224 124" fill="none" stroke="var(--color-highlight)" strokeWidth="10" />
-        <path d="M 191 150 V 214" fill="none" stroke="var(--color-accent)" strokeWidth="10" />
-        <path d="M 205 150 V 214" fill="none" stroke="var(--color-highlight)" strokeWidth="10" />
-        {[44, 92].map((x) => (
-          <circle key={x} cx={x} cy="44" r="8" fill="#ffffff" stroke="var(--color-text)" strokeWidth="4" />
+      <defs>
+        <clipPath id={id} clipPathUnits="userSpaceOnUse">
+          <path d={outside} clipRule="evenodd" />
+        </clipPath>
+      </defs>
+      <g className={styles.mapShapes}>
+        {[...map.lines, ...map.rails].map((line) => (
+          <path key={pathD(line.d)} d={pathD(line.d)} fill="none" stroke={STROKE[line.tone]} strokeWidth={map.lineWidth} />
         ))}
-        {[358, 310].map((x) => (
-          <circle key={x} cx={x} cy="80" r="8" fill="#ffffff" stroke="var(--color-text)" strokeWidth="4" />
+        {map.stations.map((s) => (
+          <circle key={`${s.x},${s.y}`} cx={s.x} cy={s.y} r={map.stationRadius} fill="#ffffff" stroke="var(--color-text)" strokeWidth={map.stationStroke} />
         ))}
-        <circle cx="186" cy="134" r="22" fill="#ffffff" stroke="var(--color-text)" strokeWidth="7" />
-        <circle cx="210" cy="134" r="22" fill="none" stroke="var(--color-text)" strokeWidth="7" />
-        <text className={styles.mapSmall} x="18" y="24">
-          Your line · <tspan lang="hi">आपकी लाइन</tspan>
-        </text>
-        <text className={styles.mapSmall} x="384" y="60" textAnchor="end">
-          Theirs · <tspan lang="hi">उनकी</tspan>
-        </text>
-        <text className={styles.mapLabel} x="244" y="148">
-          Fit both ways
-        </text>
-        <text className={styles.mapHindi} x="244" y="174" lang="hi">
-          {hindi}
-        </text>
-      </svg>
-
-      <svg className={[styles.map, styles.mapTall].join(" ")} viewBox="0 0 400 470" role="img" aria-labelledby="map-tall">
-        <title id="map-tall">{TITLE}</title>
-        <path d="M 50 0 V 318" fill="none" stroke="var(--color-accent)" strokeWidth="6.4" />
-        <path d="M 424 200 H 146 Q 84 200 68 262 L 59 304" fill="none" stroke="var(--color-highlight)" strokeWidth="6.4" />
-        {/* The joined rails run past the bottom edge into the stations (overflow is visible). */}
-        <path d="M 50 352 V 540" fill="none" stroke="var(--color-accent)" strokeWidth="6.4" />
-        <path d="M 59 352 V 540" fill="none" stroke="var(--color-highlight)" strokeWidth="6.4" />
-        {[70, 150].map((y) => (
-          <circle key={y} cx="50" cy={y} r="8" fill="#ffffff" stroke="var(--color-text)" strokeWidth="3.5" />
-        ))}
-        {[330, 250].map((x) => (
-          <circle key={x} cx={x} cy="200" r="8" fill="#ffffff" stroke="var(--color-text)" strokeWidth="3.5" />
-        ))}
-        <circle cx="43" cy="330" r="22" fill="#ffffff" stroke="var(--color-text)" strokeWidth="6.5" />
-        <circle cx="66" cy="330" r="22" fill="none" stroke="var(--color-text)" strokeWidth="6.5" />
-        <text className={styles.mapSmall} x="74" y="68">
-          Your line: what you&apos;re looking for
-        </text>
-        <text className={styles.mapSmall} x="74" y="90" lang="hi">
-          आपकी लाइन: आप क्या चाहते हैं
-        </text>
-        <text className={styles.mapSmall} x="396" y="160" textAnchor="end">
-          Theirs: what they&apos;re looking for
-        </text>
-        <text className={styles.mapSmall} x="396" y="182" textAnchor="end" lang="hi">
-          उनकी लाइन: वे क्या चाहते हैं
-        </text>
-        <text className={styles.mapLabelTall} x="104" y="338">
-          Fit both ways
-        </text>
-        <text className={styles.mapHindiTall} x="104" y="370" lang="hi">
-          {hindi}
-        </text>
-      </svg>
+      </g>
+      <g className={styles.mapRings}>
+        <circle cx={map.rings[0].x} cy={map.rings[0].y} r={map.ringRadius} fill="#ffffff" stroke="var(--color-text)" strokeWidth={map.ringStroke} />
+        <circle cx={map.rings[1].x} cy={map.rings[1].y} r={map.ringRadius} fill="none" stroke="var(--color-text)" strokeWidth={map.ringStroke} />
+      </g>
     </>
   );
 }

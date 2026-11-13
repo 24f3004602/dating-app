@@ -105,6 +105,40 @@ test.describe("with motion", () => {
     expect(errors.console).toEqual([]);
   });
 
+  test("landing: the route map rises into 3D, the marigold ring hooks through the teal one and comes to rest", async ({ page }) => {
+    // Stage 21a (D119): loaded once the page is idle, shown when its first frames match
+    // the flat map, at rest within seconds; the flat SVG stays the accessible picture.
+    const errors = await watchErrors(page);
+    await measureLayoutShift(page);
+    await page.goto(`${CONSOLE_URL}/`);
+    const map = page.locator("[data-scene]:visible");
+    await expect(map).toHaveCount(1);
+    const picture = page.getByRole("img", { name: /^A route map: your line and someone else's line meet/ });
+    await expect(picture).toBeVisible();
+    await expect(map).toHaveAttribute("data-scene", "3d", { timeout: 20_000 });
+    // The scene is decoration: one canvas, hidden from assistive technology.
+    await expect(map.locator('[aria-hidden="true"] canvas')).toHaveCount(1);
+    await expect(map).toHaveAttribute("data-settled", "true", { timeout: 15_000 });
+    // The words and the picture's name are still the SVG's, on top of the scene.
+    await expect(picture).toBeVisible();
+    await expect(map.getByText("Fit both ways")).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __cls: number }).__cls)).toBeLessThan(0.05);
+    await page.screenshot({ path: "test-results/landing-3d.png" }); // for review
+    await checkA11y(page, "landing (3D map)");
+
+    // Wide: the tall map takes over, its scene already at rest (no second performance).
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const wide = page.locator("[data-scene]:visible");
+    await expect(wide).toHaveAttribute("data-scene", "3d", { timeout: 20_000 });
+    await expect(wide).toHaveAttribute("data-settled", "true");
+    await expect(wide.locator('[aria-hidden="true"] canvas')).toHaveCount(1);
+    await page.screenshot({ path: "test-results/landing-3d-wide.png" }); // for review
+    await fitsEveryWidth(page);
+    // No console error and no CSP violation (the physics engine is WebAssembly: 'wasm-unsafe-eval').
+    expect(errors.console).toEqual([]);
+    expect(errors.server).toEqual([]);
+  });
+
   test("app welcome: the candlelight loop under the overlay, the rings meet, the words rise in", async ({ page }) => {
     const errors = await watchErrors(page);
     await page.goto(`${WEB_URL}/welcome`);
@@ -177,6 +211,9 @@ test.describe("with reduced motion", () => {
     await expect(page.locator(".hero-story img")).toBeVisible();
     await page.waitForTimeout(2500); // longer than the idle wait before a video would start
     await expect(page.locator("video")).toHaveCount(0);
+    // The route map stays flat: no 3D scene is even loaded (stage 21a, D119).
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await expect(page.locator("[data-scene]:visible")).toHaveAttribute("data-scene", "flat");
 
     await page.goto(`${WEB_URL}/welcome`);
     await expect(page.locator('[data-rings="meet"]')).toHaveAttribute("data-motion", "still");

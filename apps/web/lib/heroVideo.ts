@@ -77,7 +77,7 @@ export type Viewing = {
   narrow: boolean;
 };
 
-const SLOW = new Set(["slow-2g", "2g", "3g"]);
+export const SLOW: ReadonlySet<string> = new Set(["slow-2g", "2g", "3g"]);
 
 /**
  * Which files to play, or null for none (the still poster stays): no video when

@@ -39,6 +39,18 @@
         ],
         "createdAt": "2026-11-10T13:04:08.880Z",
         "reason": "Claude, D100-D101: a decision-round sketch of another direction (git-ignored, never shipped); it keeps the fonts of the world it pictured"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "roboto",
+        "createdAt": "2026-11-13T06:27:50.143Z",
+        "reason": "agent triage: a fallback name in the staff console's system-ui stack (apps/web/app/globals.css, stage 14b), not a brand face; the landing page sets Anek"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "menlo",
+        "createdAt": "2026-11-13T06:27:50.582Z",
+        "reason": "agent triage: a fallback name in the staff console's ui-monospace stack for recovery codes and secrets (apps/web/app/globals.css, stage 14b), not a brand face"
       }
     ]
   }
