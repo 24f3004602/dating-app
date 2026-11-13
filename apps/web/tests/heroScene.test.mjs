@@ -11,11 +11,12 @@ test("3D only when nothing says otherwise", () => {
   assert.equal(chooseHeroScene(roomy, true), "3d");
   assert.equal(chooseHeroScene({ ...roomy, effectiveType: undefined, deviceMemory: undefined }, true), "3d"); // Safari, Firefox
   assert.equal(chooseHeroScene(roomy, false), "flat"); // HERO_3D=off
+  // A 3G estimate still gets the scene (the owner's choice, D119); only 2G is too slow.
+  assert.equal(chooseHeroScene({ ...roomy, effectiveType: "3g" }, true), "3d");
   for (const change of [
     { reducedMotion: true },
     { saveData: true },
     { forcedColors: true },
-    { effectiveType: "3g" },
     { effectiveType: "2g" },
     { effectiveType: "slow-2g" },
     { deviceMemory: 2 },

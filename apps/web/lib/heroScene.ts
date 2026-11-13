@@ -2,10 +2,17 @@
  * Whether the first screen's route map comes alive in 3D (stage 21a, D119) or stays the
  * flat drawing. The flat map is always the first picture and the fallback; the 3D scene
  * costs about 1 MB more, so it never loads for a visitor who asks for less: reduced
- * motion, the data saver, a slow connection, forced colours, a low-memory device, no
+ * motion, the data saver, a 2G connection, forced colours, a low-memory device, no
  * WebGL 2, or HERO_3D=off for everyone. Pure, so it's unit-tested (tests/heroScene.test.mjs).
  */
-import { SLOW } from "./heroVideo.ts";
+
+/**
+ * Too slow for the scene: Chrome's 2G estimates. A 3G estimate still gets it (the
+ * owner's choice, 2026-11-13, D119): it loads after the page is usable, and on the beta
+ * Chrome's 3G mostly measured the home-hosted site's slow answers, not the visitor's
+ * network. (The loop video keeps its own, stricter rule: lib/heroVideo.ts.)
+ */
+const TOO_SLOW: ReadonlySet<string> = new Set(["slow-2g", "2g"]);
 
 export type SceneViewing = {
   reducedMotion: boolean;
@@ -22,7 +29,7 @@ export type SceneViewing = {
 
 export function chooseHeroScene(viewing: SceneViewing, enabled: boolean): "3d" | "flat" {
   if (!enabled || viewing.reducedMotion || viewing.saveData || viewing.forcedColors) return "flat";
-  if (viewing.effectiveType && SLOW.has(viewing.effectiveType)) return "flat";
+  if (viewing.effectiveType && TOO_SLOW.has(viewing.effectiveType)) return "flat";
   if (viewing.deviceMemory !== undefined && viewing.deviceMemory < 4) return "flat";
   return viewing.webgl2 ? "3d" : "flat";
 }
