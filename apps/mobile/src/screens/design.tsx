@@ -18,6 +18,7 @@ import {
   Checkbox,
   SwitchRow,
   ChoiceGroup,
+  Enamel,
   Heading,
   ListRow,
   Loading,
@@ -32,6 +33,7 @@ import {
 } from "@/ui/primitives";
 import { MoreButton } from "@/ui/MoreButton";
 import { Rings } from "@/ui/Rings";
+import { RouteMap } from "@/ui/RouteMap";
 import { Sheet } from "@/ui/Sheet";
 
 const SWATCHES = Object.entries(color) as [keyof typeof color, string][];
@@ -166,6 +168,10 @@ export function DesignGallery() {
         <Rings mode="breathe" />
         <Caption>Join: a match</Caption>
         <Rings mode="join" />
+        <Caption>Relief: the welcome map lifts into 3D and their ring hooks yours, then rests</Caption>
+        <Enamel>
+          <RouteMap />
+        </Enamel>
         <Caption>Reveal: list items rise in, a little apart</Caption>
         {["First", "Second", "Third"].map((label, i) => (
           <Reveal key={label} delay={staggered(i)}>

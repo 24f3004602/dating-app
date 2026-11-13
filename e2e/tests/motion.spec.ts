@@ -214,7 +214,8 @@ test.describe("with motion", () => {
     const errors = await watchErrors(page);
     await page.goto(`${WEB_URL}/design`);
     for (const mode of ["meet", "breathe", "join"]) {
-      await expect(page.locator(`[data-rings="${mode}"]`)).toHaveAttribute("data-motion", "animated");
+      // The gallery's own sample (the welcome map's rings come later, in its relief sample).
+      await expect(page.locator(`[data-rings="${mode}"]`).first()).toHaveAttribute("data-motion", "animated");
     }
     const third = page.getByRole("button", { name: "Sample card: Third" });
     await third.scrollIntoViewIfNeeded();
