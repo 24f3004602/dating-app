@@ -122,6 +122,19 @@ docker compose up -d && docker compose ps
 - **App:** add `EXPO_PUBLIC_WELCOME_VIDEO=off` to the edge service's build args, then `docker compose build edge && docker compose up -d edge`.
 - **CSP:** after changing `app-csp.txt`, rewrite `APP_CSP` in `.env` the way `make-env.sh` does.
 
+**Updating the app on the laptop without building it there (D118):** building the app's image needs more memory than the laptop can spare beside the running beta, so GitHub Actions builds it (Git Bash, in the project folder; `gh` signed in):
+```sh
+gh workflow run edge-image.yml -f domain=<domain> -f brand_name=<name>   # add -f brand_name_devanagari=... if set
+gh run list --workflow edge-image.yml --limit 1                          # wait until it says completed, success
+gh run download <run id> -n edge-image -D /tmp/edge && (cd /tmp/edge && sha256sum -c edge-image.sha256)
+docker tag datingapp-edge:beta datingapp-edge:rollback-$(date +%Y%m%d)   # keep the running one
+gunzip -c /tmp/edge/edge-image.tar.gz | docker load
+cd infra/beta && docker compose up -d --no-deps edge                     # restarts the app container only
+```
+- **Check:** `https://app.<domain>` answers and shows the new app; the other containers keep their uptime.
+- **Roll back:** `docker tag datingapp-edge:rollback-<date> datingapp-edge:beta && docker compose up -d --no-deps edge`.
+- The website and the API are not touched. Rebuild them only when their changes are meant to go live.
+
 **Moving to a server later:**
 1. Set up the server (steps 1–2 below) and clone the repo.
 2. Copy `.env` across securely, without the two home lines. It holds the database passwords and the app key; the invites and staff authenticators depend on that key.
