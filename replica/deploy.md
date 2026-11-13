@@ -122,18 +122,25 @@ docker compose up -d && docker compose ps
 - **App:** add `EXPO_PUBLIC_WELCOME_VIDEO=off` to the edge service's build args, then `docker compose build edge && docker compose up -d edge`.
 - **CSP:** after changing `app-csp.txt`, rewrite `APP_CSP` in `.env` the way `make-env.sh` does.
 
-**Updating the app on the laptop without building it there (D118):** building the app's image needs more memory than the laptop can spare beside the running beta, so GitHub Actions builds it (Git Bash, in the project folder; `gh` signed in):
+**Updating the beta without building on the laptop (D118):** building the images needs more memory than the laptop can spare beside the running beta, so GitHub Actions builds them (Git Bash, in the project folder; `gh` signed in). Pick what goes live: `app` (the member app, the `edge` image), `website` (`web`), `api` (the API, worker and migrations) or `all`.
 ```sh
-gh workflow run edge-image.yml -f domain=<domain> -f brand_name=<name>   # add -f brand_name_devanagari=... if set
-gh run list --workflow edge-image.yml --limit 1                          # wait until it says completed, success
-gh run download <run id> -n edge-image -D /tmp/edge && (cd /tmp/edge && sha256sum -c edge-image.sha256)
-docker tag datingapp-edge:beta datingapp-edge:rollback-$(date +%Y%m%d)   # keep the running one
-gunzip -c /tmp/edge/edge-image.tar.gz | docker load
-cd infra/beta && docker compose up -d --no-deps edge                     # restarts the app container only
+gh workflow run beta-images.yml -f images=app -f domain=<domain> -f brand_name=<name>   # add -f brand_name_devanagari=... if set
+gh run list --workflow beta-images.yml --limit 1        # wait until it says completed, success
+gh run download <run id> -D /tmp/beta-images            # one folder per image: edge-image, web-image, api-image
+for d in /tmp/beta-images/*/; do (cd "$d" && sha256sum -c *.sha256); done
 ```
-- **Check:** `https://app.<domain>` answers and shows the new app; the other containers keep their uptime.
-- **Roll back:** `docker tag datingapp-edge:rollback-<date> datingapp-edge:beta && docker compose up -d --no-deps edge`.
-- The website and the API are not touched. Rebuild them only when their changes are meant to go live.
+Then, for each image downloaded (`edge`, `web` or `api`), keep the running one and load the new one:
+```sh
+docker tag datingapp-edge:beta datingapp-edge:rollback-$(date +%Y%m%d)
+gunzip -c /tmp/beta-images/edge-image/edge-image.tar.gz | docker load
+```
+and restart only what changed, from `infra/beta`:
+- **App:** `docker compose up -d --no-deps edge`.
+- **Website:** `docker compose up -d --no-deps web`.
+- **API:** back up first (`BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh`), then `docker compose run --rm migrate` (the build log's "newest migration" says whether one is due), then `docker compose up -d --no-deps api worker`. A migration changes the database: rolling the API back past one needs that backup.
+- **Check:** `https://app.<domain>`, `https://<domain>` and `https://api.<domain>/readyz` answer; the containers you didn't restart keep their uptime.
+- **Roll back** an image: `docker tag datingapp-<image>:rollback-<date> datingapp-<image>:beta`, then the same `up -d --no-deps` line.
+- Rebuild only what is meant to go live: the website's Devanagari copy still waits for a native speaker (progress.md).
 
 **Moving to a server later:**
 1. Set up the server (steps 1–2 below) and clone the repo.

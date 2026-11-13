@@ -1,0 +1,137 @@
+# Builds the closed beta's images here instead of on the beta's own laptop, where building
+# them runs it out of memory (D118). Run by hand; each image comes back as a one-day
+# artifact with its SHA-256 for `docker load` on the beta computer (replica/deploy.md).
+# Nothing is pushed or deployed: the owner's computer loads what it needs and restarts those
+# containers. The images hold only the public code, the app's public build settings (the
+# domain and the name) and the Caddyfile; every secret is set at run time from .env.
+name: beta-images
+
+on:
+  workflow_dispatch:
+    inputs:
+      images:
+        description: "Which images: app (edge), website (web), api (the API, worker and migrations), or all"
+        type: choice
+        options: [app, website, api, all]
+        default: app
+      domain:
+        description: The beta's domain (the app calls api.<domain> and links to <domain>)
+        required: true
+        default: kinaara.online
+      brand_name:
+        description: The working name (BRAND_NAME in infra/beta/.env), baked into the app
+        required: true
+        default: Kinaara
+      brand_name_devanagari:
+        description: The name in Devanagari for the app's welcome sign (empty for the Latin name only)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta-images
+  cancel-in-progress: true
+
+jobs:
+  edge:
+    if: inputs.images == 'app' || inputs.images == 'all'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DOMAIN: ${{ inputs.domain }}
+      BRAND_NAME: ${{ inputs.brand_name }}
+      BRAND_NAME_DEVANAGARI: ${{ inputs.brand_name_devanagari }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the inputs
+        run: |
+          [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || { echo "not a domain: $DOMAIN"; exit 1; }
+          [ -n "$BRAND_NAME" ] || { echo "the name is empty"; exit 1; }
+      - name: Build the app image as compose builds the edge service (infra/beta/compose.yaml)
+        run: |
+          docker build --file infra/beta/app.Dockerfile --tag datingapp-edge:beta \
+            --build-arg EXPO_PUBLIC_API_URL="https://api.${DOMAIN}" \
+            --build-arg EXPO_PUBLIC_WEB_URL="https://${DOMAIN}" \
+            --build-arg BRAND_NAME="${BRAND_NAME}" \
+            --build-arg BRAND_NAME_DEVANAGARI="${BRAND_NAME_DEVANAGARI}" \
+            --label org.opencontainers.image.revision="${GITHUB_SHA}" \
+            .
+      - name: Check the app inside points at the beta
+        run: |
+          docker run --rm --entrypoint sh -e WANT="https://api.${DOMAIN}" datingapp-edge:beta \
+            -c 'grep -rqF "$WANT" /srv/app && echo "the bundle calls $WANT"'
+      - name: Save the image
+        run: |
+          docker save datingapp-edge:beta | gzip > edge-image.tar.gz
+          ls -l edge-image.tar.gz
+          sha256sum edge-image.tar.gz | tee edge-image.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: edge-image
+          path: |
+            edge-image.tar.gz
+            edge-image.sha256
+          retention-days: 1
+          compression-level: 0
+
+  web:
+    if: inputs.images == 'website' || inputs.images == 'all'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the website image as compose builds the web service (no build settings)
+        run: |
+          docker build --file apps/web/Dockerfile --tag datingapp-web:beta \
+            --label org.opencontainers.image.revision="${GITHUB_SHA}" \
+            .
+      - name: Check the standalone server is inside
+        run: docker run --rm --entrypoint node datingapp-web:beta -e "require('fs').accessSync('apps/web/server.js'); console.log('apps/web/server.js present')"
+      - name: Save the image
+        run: |
+          docker save datingapp-web:beta | gzip > web-image.tar.gz
+          ls -l web-image.tar.gz
+          sha256sum web-image.tar.gz | tee web-image.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-image
+          path: |
+            web-image.tar.gz
+            web-image.sha256
+          retention-days: 1
+          compression-level: 0
+
+  api:
+    if: inputs.images == 'api' || inputs.images == 'all'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the API image as compose builds it (the api, worker and migrate services)
+        run: |
+          docker build --tag datingapp-api:beta \
+            --label org.opencontainers.image.revision="${GITHUB_SHA}" \
+            apps/api
+      - name: Show the newest migration inside (the beta needs `migrate` when it is newer than its database)
+        run: docker run --rm datingapp-api:beta alembic heads
+      - name: Save the image
+        run: |
+          docker save datingapp-api:beta | gzip > api-image.tar.gz
+          ls -l api-image.tar.gz
+          sha256sum api-image.tar.gz | tee api-image.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: api-image
+          path: |
+            api-image.tar.gz
+            api-image.sha256
+          retention-days: 1
+          compression-level: 0
