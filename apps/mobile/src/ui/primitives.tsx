@@ -34,16 +34,26 @@ import {
 } from "react-native";
 import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
-import { color, focusRing, font, motion, radius, size, space, touch, type } from "@/theme/tokens";
+import { color, font, motion, radius, signRing, size, space, touch, type } from "@/theme/tokens";
 import { easing, FadeImage, nativeDriver, Reveal, usePressScale, useReducedMotion, useScreenEntrance } from "@/ui/motion";
 
 /** React Native Web also reports focus and hover; native platforms report only `pressed`. */
 type PressState = PressableStateCallbackType & { focused?: boolean; hovered?: boolean };
 
-/** The web focus ring, drawn outside the control so it sits on the page colour. */
+/**
+ * The web focus ring: the Interchange's marigold inside graphite (the website's ring, D117),
+ * drawn outside the control. The graphite halo gives it contrast on white, the marigold on
+ * graphite and over the welcome screen's video, so one ring serves every ground.
+ */
 const ring: ViewStyle =
   Platform.OS === "web"
-    ? { outlineColor: color.focus, outlineStyle: "solid", outlineWidth: focusRing.width, outlineOffset: focusRing.offset }
+    ? {
+        outlineColor: color.highlight,
+        outlineStyle: "solid",
+        outlineWidth: signRing.width,
+        outlineOffset: signRing.offset,
+        boxShadow: `0 0 0 ${signRing.halo}px ${color.sign}`,
+      }
     : {};
 
 /**
@@ -64,10 +74,9 @@ export const ScreenEdges = createContext<readonly Edge[]>(ALL_EDGES);
 const OnOverlay = createContext(false);
 export const useOnOverlay = () => useContext(OnOverlay);
 
-const overlayRing: ViewStyle = Platform.OS === "web" ? { ...ring, outlineColor: color.highlight } : {};
 
 function useRing(): ViewStyle {
-  return useOnOverlay() ? overlayRing : ring;
+  return ring;
 }
 
 function focusStyle(state: PressableStateCallbackType, focusRingStyle: ViewStyle = ring): ViewStyle | false {

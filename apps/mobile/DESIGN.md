@@ -221,7 +221,7 @@ Two saturated line colours carried by graphite and white, with quiet washes for 
 - **Peacock Teal** (accent): your line. The bottom bar's upper rail, your chat plates (lettered in on-accent white), the welcome map's left line, the first of the two rings, text links (underlined), field focus borders, the switch's track when on, the spinner. **Deep Teal** (accent-pressed) is a pressed link. **Teal Wash** (accent-soft) is the info notice's fill.
 
 ### Secondary
-- **Marigold** (highlight): their line. The bottom bar's lower rail, the other person's chat plates (ink text), the welcome map's right line, the second ring and the match glow, the primary button plate, the "Your turn"-style badge, and the web focus ring on the welcome overlay. **Burnt Marigold** (highlight-pressed) is the primary plate while pressed.
+- **Marigold** (highlight): their line. The bottom bar's lower rail, the other person's chat plates (ink text), the welcome map's right line, the second ring, the primary button plate, the "Your turn"-style badge, and the web focus ring's outline (inside a graphite halo). **Burnt Marigold** (highlight-pressed) is the primary plate while pressed.
 
 ### Tertiary
 - **Alarm Crimson** (danger): actions that end something. Danger buttons are crimson-outlined with crimson lettering; list rows that end something (Unmatch, Block, Delete photo) carry their label in crimson; field errors and the field's error border. **Crimson Wash** (danger-soft) fills the error notice and the pressed danger button.
@@ -235,7 +235,7 @@ Two saturated line colours carried by graphite and white, with quiet washes for 
 - **Control Edge** (border-input): the edge of a control (fields, chips, cards) and the off switch's track, at least 3:1 on bg and surface.
 - **Platform Line** (border): dividers only, such as the line under each list row; never a control's edge.
 - **Sign Grey** (on-sign-muted): the pressed dots of More options on the top bar.
-- **Keyboard Blue** (focus): the web build's keyboard focus ring.
+- **Keyboard Blue** (focus): the staff console's keyboard focus ring on the website; the member app doesn't use it since D117.
 
 ### Named Rules
 **The Two Lines Rule.** As lines (rails, chat plates, the map, the rings), teal is always you and marigold always the other person. Never swap them, never add a third line colour.
@@ -295,7 +295,7 @@ Sign plates, not pills.
 - **Secondary:** white with a graphite outline and graphite lettering; pressed, concourse stone.
 - **Danger:** white with a crimson outline and crimson lettering; pressed, crimson wash.
 - **Disabled / Busy:** stone fill, platform-line border, muted text; busy shows a hidden spinner and keeps the label as the name.
-- **Press:** scales to 0.98 (fast) when motion is allowed. **Focus (web):** a 2-point keyboard-blue ring 2 outside the plate; marigold on the welcome overlay.
+- **Press:** scales to 0.98 (fast) when motion is allowed. **Focus (web):** the world's ring: a 3-point marigold outline 2 points outside the plate, inside a 6-point graphite halo (`signRing`), the same on white and over the welcome's video (D117).
 
 ### Chips (ChoiceGroup, short options)
 - **Style:** white, a 1-point control-edge border, square, 44 tall, body text.
@@ -334,7 +334,7 @@ A modal bottom sheet: white, square, under a 2-point graphite rule, 24 padding, 
 Two lines of square plates: yours teal with white text on the right, theirs marigold with ink text on the left, each with who and when beneath in caption. A removed message is white with a platform-line border and muted text, never italic (Anek has none).
 
 ### Rings and the welcome
-The two-ring mark, teal and marigold (the teal ring turns white on the overlay), hidden from screen readers and always explained in text beside it. It meets once at the welcome (hero, decelerate), breathes twice on a day with no new introductions (two loop cycles, under 5 seconds), and joins once at a match with a soft marigold glow peaking at 0.35 opacity. The welcome draws the route map on a white enamel panel: the two lines run in, turn at 45 degrees, meet at the rings and run on together, labelled in text. The candlelight still ships inside the app under the night overlay; the moving loop plays only on the web build.
+The two-ring mark, teal and marigold (the teal ring turns white on the overlay), hidden from screen readers and always explained in text beside it. It meets once at the welcome (hero, decelerate), breathes twice on a day with no new introductions (two loop cycles, under 5 seconds), and joins once at a match, without a glow (the world is flat; D117). The welcome draws the route map on a white enamel panel: the two lines run in, turn at 45 degrees, meet at the rings and run on together, labelled in text. The candlelight still ships inside the app under the night overlay; the moving loop plays only on the web build.
 
 **The Still Until Known Rule.** Every animation follows reduce motion; with it on, things appear at rest, and until the setting is known nothing moves. Only opacity and transforms animate, with the motion tokens (fast 150, base 240, hero 700, loop 2400 ms; never linear). Reveals rise 8 points and lists stagger 50 ms for at most six items. Nothing loops past 5 seconds.
 
@@ -354,7 +354,7 @@ The two-ring mark, teal and marigold (the teal ring turns white on the overlay),
 - **Do** follow reduce motion everywhere, and stay still until it is known.
 
 ### Don't:
-- **Don't** use pills, rounded cards, gradients or drop shadows.
+- **Don't** use pills, rounded cards, gradients, drop shadows or glows.
 - **Don't** put marigold text on white.
 - **Don't** set `fontWeight` on an Anek family.
 - **Don't** use glyphs or a fallback font for ticks, arrows or other marks.

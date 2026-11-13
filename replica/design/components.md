@@ -10,7 +10,7 @@ Rules for all components:
 - **Tokens only:** no raw colours, sizes or fonts in components or screens.
 - **Fonts and text size:** system fonts; text scales with the platform's text size, and line heights scale with it.
 - **Touch targets:** 48 points for buttons and fields, at least 44 for chips and links.
-- **Keyboard focus (web):** a 2-point `focus` ring, 2 points outside the control, so it sits on `bg` or `surface`. Fields show focus with a 2-point accent border instead, and the browser's own ring is turned off.
+- **Keyboard focus (web):** the member app shows the world's ring (D117): a 3-point `highlight` outline 2 points outside the control, inside a 6-point `sign` halo (`signRing`), the same on white and on the welcome's video. The staff console keeps the 2-point blue `focus` ring. Fields show focus with a 2-point accent border instead, and the browser's own ring is turned off.
 - **States:** pressed and disabled differ by colour, never by opacity alone. Selection is never shown by colour alone.
 - **Errors** are announced: `role="alert"` and `aria-live` on the web and Android, plus `AccessibilityInfo.announceForAccessibility` on iOS, which ignores live regions.
 - **No shadows.**
@@ -47,11 +47,12 @@ Motion (apps/mobile/src/ui/motion.tsx, Rings.tsx)
               phones use the platform's transition, none with reduce motion
   Notice, Badge  fade in (fast); a badge fades again when its text changes
   Rings       the mark: meet (welcome, once), breathe (an empty introductions day,
-              twice, then rest), join (a match, once, with a marigold glow); aria-hidden;
+              twice, then rest), join (a match, once; no glow, D117); aria-hidden;
               on the overlay the teal ring turns white
   Welcome     full screen over the candlelight loop (web) or its still (phones), under
-              the overlay (overlay colour at 0.7); text turns on-accent and the focus
-              ring highlight inside `<Screen overlay>`; a Pause video button (web);
+              the overlay (overlay colour at 0.7); text turns on-accent inside
+              `<Screen overlay>`; a Pause video button (web), a square sign plate
+              with the world's ring on keyboard focus (D117);
               no header bar; light status bar
   web         each animated element says `data-motion="animated" | "still"` (e2e)
 

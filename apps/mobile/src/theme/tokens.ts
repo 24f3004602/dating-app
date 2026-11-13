@@ -77,6 +77,13 @@ export const radius = { sm: 6, md: 10, lg: 16, pill: 999, plate: 0 } as const;
 /** 48 points for buttons and fields (Android's guidance; above Apple's 44); chips and links at least 44. */
 export const touch = { min: 48, chip: 44 } as const;
 export const focusRing = { width: 2, offset: 2 } as const;
+/**
+ * The Interchange's keyboard focus ring, as on the website's landing page
+ * (apps/web/app/landing.module.css): a 3-point marigold outline 2 points out, inside a
+ * 6-point graphite ring, so it shows on white and on graphite alike (D117). The app's web
+ * build uses it everywhere; `focusRing` above stays the shared console's ring (tokens.json).
+ */
+export const signRing = { width: 3, offset: 2, halo: 6 } as const;
 /** `roundel`: the line's station roundel (the bottom bar, the end of the day's set, a choice in a list) and its stroke. */
 export const size = { checkbox: 24, contentMax: 560, thumb: 96, multiline: 96, mark: 96, roundel: 18, roundelStroke: 3 } as const;
 

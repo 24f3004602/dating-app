@@ -4,9 +4,9 @@
  * by stand-ins that record their settings, so nothing runs on a real clock.
  */
 import { act, render, screen } from "@testing-library/react-native";
-import { AccessibilityInfo, Animated, StyleSheet, Text } from "react-native";
+import { AccessibilityInfo, Animated, type StyleProp, StyleSheet, Text, type ViewStyle } from "react-native";
 
-import { motion } from "@/theme/tokens";
+import { color, motion } from "@/theme/tokens";
 import { Reveal, resetMotionSetting, staggered, usePressScale, useReducedMotion } from "@/ui/motion";
 import { Rings } from "@/ui/Rings";
 
@@ -119,6 +119,11 @@ test("the rings breathe twice, then rest (under 5 seconds: WCAG 2.2.2); joining 
   await settle();
   expect(loop).not.toHaveBeenCalled();
   expect(timing.mock.calls.map(([, config]) => (config as { duration: number }).duration)).toContain(motion.duration.hero);
+  // No glow on a match: the world is flat enamel (D117). Only the two rings are drawn, no marigold disc.
+  const filled = screen.container.queryAll(
+    (node) => typeof node.type === "string" && StyleSheet.flatten(node.props.style as StyleProp<ViewStyle>)?.backgroundColor === color.highlight,
+  );
+  expect(filled).toHaveLength(0);
   reduceMotion.mockReset();
   reduceMotion.mockImplementation(async () => true);
 });

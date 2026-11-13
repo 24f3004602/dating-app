@@ -133,6 +133,14 @@ test.describe("with motion", () => {
     await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
     await pause.click();
     await expect.poll(() => playing(video)).toBe(true);
+    // A square sign plate, and the world's ring on keyboard focus (D117): marigold inside graphite.
+    await expect(pause).toHaveCSS("border-top-left-radius", "0px");
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); // the clicks focused it by mouse
+    for (let i = 0; i < 20 && !(await pause.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+    await expect(pause).toBeFocused();
+    await expect(pause).toHaveCSS("outline-width", "3px");
+    await expect(pause).toHaveCSS("outline-color", "rgb(245, 181, 68)");
+    await expect(pause).toHaveCSS("box-shadow", "rgb(28, 27, 25) 0px 0px 0px 6px");
     await page.screenshot({ path: "test-results/welcome-motion.png" }); // for review
     await checkA11y(page, "welcome (motion)");
     await fitsEveryWidth(page);

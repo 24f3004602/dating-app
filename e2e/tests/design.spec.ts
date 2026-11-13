@@ -19,9 +19,12 @@ test("the design gallery: axe, keyboard focus, screenshot", async ({ page }) => 
     await page.keyboard.press("Tab");
   }
   await expect(primary).toBeFocused();
+  // The Interchange's ring (D117): marigold 3 px, 2 px out, inside a 6 px graphite halo.
   await expect(primary).toHaveCSS("outline-style", "solid");
-  await expect(primary).toHaveCSS("outline-width", "2px");
-  await expect(primary).toHaveCSS("outline-color", "rgb(36, 83, 196)"); // color.focus
+  await expect(primary).toHaveCSS("outline-width", "3px");
+  await expect(primary).toHaveCSS("outline-offset", "2px");
+  await expect(primary).toHaveCSS("outline-color", "rgb(245, 181, 68)"); // color.highlight
+  await expect(primary).toHaveCSS("box-shadow", "rgb(28, 27, 25) 0px 0px 0px 6px"); // color.sign
   await page.keyboard.press("Tab");
   await expect(primary).toHaveCSS("outline-style", "none"); // only while focused
 

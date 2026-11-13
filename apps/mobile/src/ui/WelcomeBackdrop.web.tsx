@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { MEDIA_URL, WELCOME_VIDEO } from "@/config";
 import { t } from "@/i18n/en";
-import { color, overlay, radius, space, touch, type } from "@/theme/tokens";
+import { color, font, overlay, radius, signRing, space, touch, type } from "@/theme/tokens";
 import { chooseLoop, loopVideo, type VideoSet } from "@/ui/loopVideo";
 import { useMotionSetting } from "@/ui/motion";
 
@@ -26,6 +26,7 @@ export function WelcomeBackdrop() {
   const ref = useRef<HTMLVideoElement>(null);
   const [chosen, setChosen] = useState<VideoSet | null>(null);
   const [paused, setPaused] = useState(false);
+  const [keyboardFocus, setKeyboardFocus] = useState(false);
 
   useEffect(() => {
     const connection = (navigator as Navigator & { connection?: Connection }).connection;
@@ -91,7 +92,15 @@ export function WelcomeBackdrop() {
         <div style={styles.shade} />
       </div>
       {chosen ? (
-        <button type="button" aria-pressed={paused} onClick={() => setPaused((p) => !p)} style={styles.pause}>
+        <button
+          type="button"
+          aria-pressed={paused}
+          onClick={() => setPaused((p) => !p)}
+          // The world's ring on keyboard focus only, as the app's controls show it (D117).
+          onFocus={(e) => setKeyboardFocus(e.currentTarget.matches(":focus-visible"))}
+          onBlur={() => setKeyboardFocus(false)}
+          style={keyboardFocus ? { ...styles.pause, ...styles.ring } : styles.pause}
+        >
           {t.welcome.pauseVideo}
         </button>
       ) : null}
@@ -103,19 +112,28 @@ const styles = {
   fill: { position: "absolute", inset: 0, overflow: "hidden", backgroundColor: color.overlay },
   media: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" },
   shade: { position: "absolute", inset: 0, backgroundColor: color.overlay, opacity: overlay.opacity },
-  // Above the screen's clear scroll area, so it can be pressed.
+  // Above the screen's clear scroll area, so it can be pressed. A sign plate like the
+  // screen's own secondary button (square, graphite edge, the sign face): it was a pill in
+  // the browser's font, the one round shape in the world (impeccable's documenter, D116).
   pause: {
     position: "absolute",
     right: space.lg,
     bottom: space.lg,
     zIndex: 1,
-    minHeight: touch.chip,
-    padding: `0 ${space.md}px`,
-    borderRadius: radius.pill,
-    border: `1px solid ${color.borderInput}`,
+    minHeight: touch.min,
+    padding: `0 ${space.lg}px`,
+    borderRadius: radius.plate,
+    border: `2px solid ${color.sign}`,
     backgroundColor: color.bg,
-    color: color.text,
-    fontSize: type.caption.fontSize,
+    color: color.sign,
+    fontFamily: font.sign,
+    fontSize: type.label.fontSize,
+    lineHeight: `${type.label.lineHeight}px`,
     cursor: "pointer",
+  },
+  ring: {
+    outline: `${signRing.width}px solid ${color.highlight}`,
+    outlineOffset: signRing.offset,
+    boxShadow: `0 0 0 ${signRing.halo}px ${color.sign}`,
   },
 } as const;
