@@ -51,10 +51,14 @@
 .name { display: flex; align-items: center; gap: var(--space-3); margin: 0; }
 .mark { flex: none; width: 3rem; height: 2rem; }
 .latin { font-size: 1.75rem; line-height: 1; font-weight: 700; font-stretch: 87.5%; letter-spacing: 0.04em; text-transform: uppercase; }
-.devanagari { display: block; margin-top: 0.125rem; font-size: 1.375rem; line-height: 1.15; }
+/* On the Hindi page, a name set in Devanagari is the wordmark (stage 22a, D120). */
+.devanagari { font-size: 1.75rem; line-height: 1.1; font-weight: 700; }
+
+/* The status plate and the language option, together at the band's far end. */
+.signEnd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-left: auto; }
 
 .status {
-  margin: 0 0 0 auto;
+  margin: 0;
   padding: var(--space-1) var(--space-3);
   background: var(--line-them);
   color: var(--sign);
@@ -107,9 +111,7 @@
 .map text { font-family: inherit; fill: var(--sign); }
 .mapSmall { font-size: 15px; font-weight: 600; fill: var(--color-text-muted); }
 .mapLabel { font-size: 21px; font-weight: 700; font-stretch: 87.5%; }
-.mapHindi { font-size: 18px; }
 .mapLabelTall { font-size: 30px; font-weight: 760; font-stretch: 87.5%; }
-.mapHindiTall { font-size: 24px; }
 
 /* --- The waitlist: the next stop ----------------------------------------------- */
 
@@ -183,8 +185,27 @@
   box-sizing: border-box;
 }
 
-/* Hindi under the English on a sign, at sign size (the contract, D103). */
-.plateHindi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; }
+/* The language option (stage 22a, D120): the other page, named in its own language,
+   as a white-outlined plate on the graphite band. */
+.landing a.language {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--on-sign);
+  color: var(--on-sign);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+  text-decoration: none;
+}
+.landing a.language:hover { background: var(--on-sign); color: var(--sign); }
+.landing a.language:lang(hi) { font-family: "Anek Label", "Anek", "Nirmala UI", "Noto Sans Devanagari", system-ui, sans-serif; }
+
+/* Devanagari carries marks above and below its headline: more room between lines,
+   and no letter-spacing, which would break the joining line along the top. */
+.landing:lang(hi) .headline { line-height: 1.22; letter-spacing: 0; }
+.landing:lang(hi) :is(h2, h3) { line-height: 1.3; }
 
 /* --- The line: one station per rule ------------------------------------------ */
 

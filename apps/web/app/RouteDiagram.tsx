@@ -1,3 +1,4 @@
+import type { Messages } from "@/lib/i18n";
 import { COMPACT, type MapLayout, pathD, TALL } from "@/lib/routeMap";
 
 import { HeroMap } from "./HeroMap";
@@ -18,54 +19,44 @@ import styles from "./landing.module.css";
  * When the scene is showing, it draws everything inside the map's box: the shapes here
  * are clipped to what runs outside the box, the flat rings fade out under the 3D ones,
  * and the words stay on top.
+ *
+ * The words are in the page's one language (stage 22a, D120), one line per label: each
+ * sits centred where its English and Hindi pair used to.
  */
-const TITLE = "A route map: your line and someone else's line meet at one interchange, only where both of you fit.";
 const STROKE = { teal: "var(--color-accent)", marigold: "var(--color-highlight)" } as const;
 
-export function RouteDiagram({ hindi, scene }: { hindi: string; scene: boolean }) {
+export function RouteDiagram({ words, scene }: { words: Messages["map"]; scene: boolean }) {
   return (
     <HeroMap
       scene={scene}
       compact={
         <svg className={styles.map} viewBox={`0 0 ${COMPACT.width} ${COMPACT.height}`} role="img" aria-labelledby="map-compact">
-          <title id="map-compact">{TITLE}</title>
+          <title id="map-compact">{words.title}</title>
           <Shapes map={COMPACT} id="map-compact-outside" />
           <text className={styles.mapSmall} x="18" y="24">
-            Your line · <tspan lang="hi">आपकी लाइन</tspan>
+            {words.yourLine}
           </text>
           <text className={styles.mapSmall} x="384" y="60" textAnchor="end">
-            Theirs · <tspan lang="hi">उनकी</tspan>
+            {words.theirs}
           </text>
-          <text className={styles.mapLabel} x="244" y="148">
-            Fit both ways
-          </text>
-          <text className={styles.mapHindi} x="244" y="174" lang="hi">
-            {hindi}
+          <text className={styles.mapLabel} x="244" y="141">
+            {words.bothWays}
           </text>
         </svg>
       }
       tall={
         <svg className={styles.map} viewBox={`0 0 ${TALL.width} ${TALL.height}`} role="img" aria-labelledby="map-tall">
-          <title id="map-tall">{TITLE}</title>
+          <title id="map-tall">{words.title}</title>
           {/* The joined rails run past the bottom edge into the stations (overflow is visible). */}
           <Shapes map={TALL} id="map-tall-outside" />
-          <text className={styles.mapSmall} x="74" y="68">
-            Your line: what you&apos;re looking for
+          <text className={styles.mapSmall} x="74" y="75">
+            {words.yourLineLong}
           </text>
-          <text className={styles.mapSmall} x="74" y="90" lang="hi">
-            आपकी लाइन: आप क्या चाहते हैं
+          <text className={styles.mapSmall} x="396" y="180" textAnchor="end">
+            {words.theirsLong}
           </text>
-          <text className={styles.mapSmall} x="396" y="160" textAnchor="end">
-            Theirs: what they&apos;re looking for
-          </text>
-          <text className={styles.mapSmall} x="396" y="182" textAnchor="end" lang="hi">
-            उनकी लाइन: वे क्या चाहते हैं
-          </text>
-          <text className={styles.mapLabelTall} x="104" y="338">
-            Fit both ways
-          </text>
-          <text className={styles.mapHindiTall} x="104" y="370" lang="hi">
-            {hindi}
+          <text className={styles.mapLabelTall} x="104" y="341">
+            {words.bothWays}
           </text>
         </svg>
       }

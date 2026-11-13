@@ -52,7 +52,7 @@ Exact versions are pinned in lockfiles when each part is created.
 | API tests | pytest 9.2, pytest-asyncio 1.4, httpx 0.28 against a real PostgreSQL | tests constraints and transactions for real |
 | quality | ruff 0.17, mypy 2.4, pip-audit 2.10 | lint, types, dependency vulnerabilities |
 | mobile | Expo SDK 58 (React Native 0.88.1, React 19.3.0; Node ≥ 22.13), Expo Router 58, TanStack Query 5.105, React Hook Form 7.91, Zod 4.6, openapi-fetch 0.17, expo-secure-store, expo-image-picker; TypeScript 6.0 (Expo's pin) (D057) | owner spec; SDK 58 requirements checked in Expo's docs (iOS 16.4+, Android 7+) |
-| web | Next.js 16.4.5 (App Router), React 19.3, TypeScript 6.0 | owner spec; landing page and admin console; the browser never holds an API token (D091) |
+| web | Next.js 16.4.5 (App Router), React 19.3, TypeScript 6.0 | owner spec; landing page and admin console; the browser never holds an API token (D091); the landing page in one language per page, English at `/` and Hindi at `/hi`, from `lib/i18n` (D120) |
 | web 3D (stage 21a) | three 0.187, @react-three/fiber 9.8.2, @react-three/rapier 2.2.0 (Rapier 0.19, WebAssembly), @react-three/postprocessing 3.2.2 (postprocessing 6.39.6) | the landing hero's 3D route map; loaded after the page is idle, only where nothing says otherwise, about 1.1 MB gzipped (D119) |
 | shared types | openapi-typescript 7.13 (with its own TypeScript 5.9) in `packages/api-types`, generated from `scripts/export_openapi.py`; CI fails if they drift | one contract; no hand-written duplicate types |
 | JS workspace | npm workspaces (`apps/mobile`, `apps/web`, `packages/api-types`) | hoisted layout is the safest for Metro. To verify against Expo's monorepo guide in stage 7 |

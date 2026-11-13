@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { heroVideoOrigins } from "@/lib/heroVideo";
+import { langForPath } from "@/lib/i18n";
 
 /**
  * A strict Content-Security-Policy with a fresh nonce per request (Next.js CSP
@@ -36,6 +37,9 @@ export function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  // The page's language for <html lang> (stage 22a, D120); always set here, so a
+  // visitor's own x-lang header never reaches the layout.
+  requestHeaders.set("x-lang", langForPath(request.nextUrl.pathname));
   requestHeaders.set("Content-Security-Policy", csp);
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);

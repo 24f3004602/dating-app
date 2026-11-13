@@ -135,7 +135,7 @@ Scope: the public website's Interchange world (`app/page.tsx`, `app/landing.modu
 
 The website is a metro route map in the brand's own colours. Your line is peacock teal, the other person's is marigold, and they meet at an interchange drawn as the brand's two rings, only where both fit. After the interchange the two rails run on side by side, and each rule of the product is a station on that line. The language is Delhi Metro-style wayfinding: graphite sign bands across the top and the close, enamel sign plates lettered in white, thick route lines and white station roundels outlined in graphite, all on a white enamel ground. DMRC's identity (its logo, line colours and signage artwork) is never copied; the system borrows the grammar of wayfinding, not anyone's marks.
 
-Density is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Every sign that names a place or a rule is bilingual, Devanagari under the Latin. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: two authored movements, each finished in seconds. On arrival the hero map lifts into relief and their ring hooks through yours, once; then the line draws itself as you travel down the page.
+Density is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Each page is in one language: English at /, Hindi at /hi, the other a link away in the sign band. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: two authored movements, each finished in seconds. On arrival the hero map lifts into relief and their ring hooks through yours, once; then the line draws itself as you travel down the page.
 
 Rejected (confirmed in the direction contract): the category's swipe-card phone mockup and gradients, and the calm cream page. Pills, gradients and glow are out.
 
@@ -143,7 +143,7 @@ Rejected (confirmed in the direction contract): the category's swipe-card phone 
 - Two line colours with fixed meanings: teal is yours, marigold is theirs.
 - Graphite sign bands and plates on a white enamel ground.
 - Anek throughout: semi-condensed bold (wdth 87.5) for signs, normal width for text.
-- Bilingual signs, Devanagari under the Latin.
+- One language per page (English or Hindi), the other a link away in the sign band.
 - Square-cornered plates; the only curves are roundels and the two-ring mark.
 - Two authored motions: the hero's interchange hooks once on arrival (3D, about three seconds); the rails draw on scroll.
 
@@ -175,21 +175,21 @@ Two saturated line colours carried by graphite and white, like a transit map on 
 **Body Font:** Anek, normal width
 **Label/Mono Font:** none distinct
 
-**Character:** One self-hosted family (Ek Type, OFL) covers both scripts. Signs set it semi-condensed (font-stretch 87.5%) and bold, the way station names are lettered; running text sets it at normal width so it reads easily on a phone. The Latin file is a variable font (wght 100 to 800, wdth 75 to 125%) and is preloaded; the Devanagari file is a single static instance at wght 650 / wdth 90, declared for every weight and width so the browser never synthesizes bold, and it loads only when a page shows Devanagari. `font-synthesis: none` is set on the world.
+**Character:** One self-hosted family (Ek Type, OFL) covers both scripts. Signs set it semi-condensed (font-stretch 87.5%) and bold, the way station names are lettered; running text sets it at normal width so it reads easily on a phone. The Latin file is a variable font (wght 100 to 800, wdth 75 to 125%) and is preloaded; Devanagari comes in two static cuts, text (wght 450, wdth 100) below weight 600 and sign (wght 700, wdth 87.5) from 600, each declared for every width so the browser never synthesizes bold, plus a 3 KB face holding only the language option's name; they load only when a page shows Devanagari. `font-synthesis: none` is set on the world.
 
 ### Hierarchy
 - **Display** (760, fluid 2.5 to 5rem, 0.98): the first-screen headline only; balanced wrapping.
 - **Headline** (750, fluid 1.75 to 2.75rem, 1.05): section headings such as "How it works, stop by stop"; the confirm and leave pages use a 2 to 3rem variant at 1.02.
 - **Title** (700, fluid 1.5 to 2rem, 1.1): headings inside graphite panels ("Next stop: Delhi NCR").
 - **Sign** (700, fluid 1.25 to 1.625rem, 1.15): station names on enamel plates.
-- **Wordmark** (700, 1.75rem, uppercase, +0.04em): the brand name in the sign band; its Devanagari sits beneath at 1.375rem.
+- **Wordmark** (700, 1.75rem, uppercase, +0.04em): the brand name in the sign band; on the Hindi page a name set in Devanagari takes its place at the same size.
 - **Lede** (400, fluid 1.125 to 1.375rem, 1.45, max 34ch): the one line under the headline.
 - **Body** (400, 1.0625rem, 1.55, max 60ch): station descriptions.
 - **Label** (600, 1rem): form labels, legend entries; buttons and plates use 700 at 1.0625rem, semi-condensed.
 - **Small** (400, 0.9375rem, 1.5, max 52 to 72ch): consent lines and the footer, in the muted grey of their ground.
 
 ### Named Rules
-**The Bilingual Sign Rule.** Every sign that names a place or a rule carries its Devanagari directly beneath the Latin, as a block, at 0.875em of the sign's size with line-height 1.2, marked `lang="hi"`. This covers station plates, panel headings and the direction sign. The wordmark and the map labels set their Hindi at their own fixed sizes. Running text is English only. Open item: all Hindi copy is pending a native reviewer before the site goes live; it is not approved copy, and new Hindi must be added to `scripts/devanagari-text.txt` so the subset font contains it.
+**The One Language Rule.** A page is in one language (D120, the owner's request): Hindi is never written beside the English. The Hindi page (`/hi`) carries the whole page in Devanagari, its headings with more line height for the marks above and below, and no letter-spacing, which would break the joining line along the top. What exists only in English (the app's own labels, the legal documents, the emails) is named as English where the Hindi page links to it. The language option in the sign band names the other language in itself (हिन्दी, English), marked with its `lang`. New Hindi goes through a native reviewer before it ships (`replica/launch/hindi-review.md`).
 
 **The Condensed Means Sign Rule.** Semi-condensed bold is for things that work as signs (names, headings, plates, buttons). Paragraphs are never condensed.
 
@@ -225,14 +225,14 @@ Sign plates, not pills.
 - **Primary (button plate):** marigold with graphite lettering, 0 1.5rem padding, 700 at 1.0625rem, semi-condensed. Used for "Join the waitlist", "Confirm my place", "Remove my address".
 - **Hover / Active:** light marigold on hover, burnt marigold on press; the background change eases over 150ms (standard easing) only when motion is allowed. Disabled turns sign grey with a progress cursor and a pending label ("Adding you…").
 - **Focus:** a 3px marigold outline at 2px offset inside a 6px graphite ring, the same ring for every focusable element on both white and graphite grounds.
-- **Direction sign:** a teal plate with white lettering, an inline SVG arrow and its Devanagari beneath; deep teal on hover. Used for in-page wayfinding ("Towards the waitlist").
+- **Direction sign:** a teal plate with white lettering, an inline SVG arrow; deep teal on hover. Used for in-page wayfinding ("Towards the waitlist").
 
 ### Status plate
 A small marigold plate in the sign band, graphite 700 at 0.875rem, semi-condensed ("Not open yet"). It states the service status, as a station sign would.
 
 ### Cards / Containers
 - **Sign panel:** graphite block, white lettering, 1.5rem padding, square corners, no border or shadow. Holds a title, the form, and nothing decorative. Links inside are marigold.
-- **Station plate:** graphite enamel plate with white sign lettering and its Devanagari beneath; sized to its text (inline-block), never full width.
+- **Station plate:** graphite enamel plate with white sign lettering; sized to its text (inline-block), never full width.
 
 ### Inputs / Fields
 - **Style:** white fill, 2px white border, square corners, graphite text at 1.0625rem, 3rem minimum height. Labels above at 600. Checkboxes are 1.5rem with a marigold accent and a 2.75rem-tall label target.
@@ -240,7 +240,7 @@ A small marigold plate in the sign band, graphite 700 at 0.875rem, semi-condense
 - **Error:** the border turns signal coral; the message sits below in signal coral at 600, linked by `aria-describedby`. Success is announced in a polite live region with a marigold ring roundel before it, so shape, not colour alone, carries the confirmation.
 
 ### Navigation
-- **Sign band:** graphite header with the two-ring mark (a white ring and a marigold ring) and the wordmark with its Devanagari, the status plate pushed to the right; under it the half-teal, half-marigold strip. On the confirm and leave pages the wordmark is the home link. There is no menu.
+- **Sign band:** graphite header with the two-ring mark (a white ring and a marigold ring) and the wordmark, then the status plate and the language option (a white-outlined plate naming the other language) pushed to the right; under it the half-teal, half-marigold strip. On the confirm and leave pages the wordmark is the home link. There is no menu.
 
 ### Station line (signature)
 The ordered list of rules drawn as a metro line: two rails, a roundel per station, a graphite plate for each name and a short paragraph beneath. The first station is the interchange (the two rings; on desktop the map's rings stand in for it), the last is the terminus (a filled roundel) where the line ends at the candlelight loop in a 4:3 square-cornered frame. A legend beside the line explains the key: your line, theirs, interchange, end of the line.
@@ -253,7 +253,7 @@ The ordered list of rules drawn as a metro line: two rails, a roundel per statio
 
 ### Do:
 - **Do** keep teal for your line and marigold for theirs, everywhere, including the two-ring mark.
-- **Do** set every sign that names a place or a rule bilingual, Devanagari beneath at 0.875em, and route new Hindi through a native reviewer before it ships.
+- **Do** keep each page in one language: new words go into both dictionaries (`lib/i18n`), and new Hindi goes through a native reviewer before it ships.
 - **Do** make anything pressable a square-cornered plate at least 3rem tall, with the marigold-in-graphite focus ring.
 - **Do** put marigold text only on graphite; on white, marigold is a rail or a fill.
 - **Do** keep the map rails and station rails on one geometry (12.5% and 14.75% of the column, 1.6% wide) at desktop widths.

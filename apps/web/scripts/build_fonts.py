@@ -13,12 +13,15 @@ github.com/EkType/Anek (fonts/*/variable, OFL-1.1), and OFL.txt. Nothing is inst
 
 - Files are served from /fonts for a year (next.config.ts): bump VERSION when they change.
 - Latin: the usual Latin ranges (Basic Latin, Latin-1, punctuation, the rupee sign).
-- Devanagari: only the characters in scripts/devanagari-text.txt, which lists every
-  Devanagari string the site shows; the shaping rules for them are kept, so conjuncts
-  and matras render. Cut to one static instance at sign weight (wght 650, wdth 90):
-  the variable font with every conjunct those letters can form is about 520 KB, the
-  static one about 62 KB (D103). Add new Hindi copy there and run this again (a test checks the
-  site's source against that file).
+- Devanagari (stage 22a, D120: a whole page in Hindi at /hi): only the characters in
+  scripts/devanagari-text.txt, which `node scripts/devanagari-text.mjs` writes from the
+  Hindi page's words; the shaping rules for them are kept, so conjuncts and matras
+  render. Two static cuts, since the variable font with every conjunct those letters
+  can form is about 520 KB: text (wght 450, wdth 100) for paragraphs and the form,
+  sign (wght 700, wdth 87.5) for names and plates. A third, tiny one holds only the
+  language option's name (scripts/devanagari-label.txt), so the English page never
+  fetches a whole Devanagari face for one word. A test checks the site's source
+  against devanagari-text.txt.
 """
 
 from __future__ import annotations
@@ -35,8 +38,11 @@ LATIN = (
     "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,"
     "U+2000-206F,U+20AC,U+20B9,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
 )
-VERSION = "v1"
-DEVANAGARI_INSTANCE = {"wght": 650, "wdth": 90}  # Hindi is always set at sign weight
+VERSION = "v1"  # the Latin file
+DEVANAGARI_VERSION = "v2"  # one language per page (stage 22a): text and sign cuts, and the label
+DEVANAGARI_TEXT = {"wght": 450, "wdth": 100}
+DEVANAGARI_SIGN = {"wght": 700, "wdth": 87.5}
+DEVANAGARI_INSTANCE = {"wght": 650, "wdth": 90}  # the app's name-only font (D105), unchanged
 # Joiners and the dotted circle that shaping may need, beside the listed text.
 DEVANAGARI_EXTRA = "\u200c\u200d\u25cc "  # ZWNJ, ZWJ, dotted circle, space
 
@@ -104,18 +110,22 @@ def main(argv: list[str]) -> int:
         return 2
     source, out = pathlib.Path(argv[1]), pathlib.Path(argv[2])
     out.mkdir(parents=True, exist_ok=True)
-    text = pathlib.Path(__file__).with_name("devanagari-text.txt").read_text(encoding="utf-8")
+    here = pathlib.Path(__file__)
+    text = here.with_name("devanagari-text.txt").read_text(encoding="utf-8")
+    label = here.with_name("devanagari-label.txt").read_text(encoding="utf-8").strip()
+    devanagari = source / "AnekDevanagari.ttf"
     sizes = {
         f"anek-latin-{VERSION}.woff2": build(
             source / "AnekLatin.ttf", out / f"anek-latin-{VERSION}.woff2", unicodes=LATIN
         ),
-        f"anek-devanagari-{VERSION}.woff2": build(
-            source / "AnekDevanagari.ttf",
-            out / f"anek-devanagari-{VERSION}.woff2",
-            text=text + DEVANAGARI_EXTRA,
-            instance=DEVANAGARI_INSTANCE,
-        ),
     }
+    for name, instance, letters in (
+        ("text", DEVANAGARI_TEXT, text),
+        ("sign", DEVANAGARI_SIGN, text),
+        ("label", DEVANAGARI_SIGN, label),
+    ):
+        file = f"anek-devanagari-{name}-{DEVANAGARI_VERSION}.woff2"
+        sizes[file] = build(devanagari, out / file, text=letters + DEVANAGARI_EXTRA, instance=instance)
     shutil.copyfile(source / "OFL.txt", out / "OFL.txt")
     if len(argv) == 4:  # noqa: PLR2004 - the app's fonts too
         sizes |= build_app(source, pathlib.Path(argv[3]))

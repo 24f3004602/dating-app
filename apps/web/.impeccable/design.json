@@ -19,8 +19,8 @@
       "display": { "displayName": "Display", "purpose": "The first-screen headline only." },
       "headline": { "displayName": "Headline", "purpose": "Section headings; the confirm and leave page titles use a 2 to 3rem variant." },
       "title": { "displayName": "Title", "purpose": "Headings inside graphite panels." },
-      "sign": { "displayName": "Sign", "purpose": "Station names on enamel plates, with Devanagari beneath at 0.875em." },
-      "wordmark": { "displayName": "Wordmark", "purpose": "The brand name in the sign band, uppercase." },
+      "sign": { "displayName": "Sign", "purpose": "Station names on enamel plates, in the page's one language." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "The brand name in the sign band, uppercase; on the Hindi page a name set in Devanagari takes its place." },
       "lede": { "displayName": "Lede", "purpose": "The one line under the headline, max 34ch." },
       "body": { "displayName": "Body", "purpose": "Station descriptions, max 60ch." },
       "label": { "displayName": "Label", "purpose": "Form labels and legend entries; plates use 700 at 1.0625rem, semi-condensed." },
@@ -28,7 +28,9 @@
     },
     "fonts": [
       { "family": "Anek", "file": "/fonts/anek-latin-v1.woff2", "axes": "wght 100-800, wdth 75-125%", "note": "Variable, preloaded in app/layout.tsx." },
-      { "family": "Anek", "file": "/fonts/anek-devanagari-v1.woff2", "axes": "static wght 650, wdth 90", "note": "Subset to scripts/devanagari-text.txt; declared for every weight and width so bold is never synthesized." }
+      { "family": "Anek", "file": "/fonts/anek-devanagari-text-v2.woff2", "axes": "static wght 450, wdth 100", "note": "Weights 100-599 on the Hindi page; subset to scripts/devanagari-text.txt (written from lib/i18n/hi.ts)." },
+      { "family": "Anek", "file": "/fonts/anek-devanagari-sign-v2.woff2", "axes": "static wght 700, wdth 87.5", "note": "Weights 600-800 on the Hindi page; same subset." },
+      { "family": "Anek Label", "file": "/fonts/anek-devanagari-label-v2.woff2", "axes": "static wght 700, wdth 87.5", "note": "Only the language option's name (हिन्दी) on English pages, about 3 KB." }
     ],
     "shadows": [
       { "name": "focus-ring", "value": "outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19", "purpose": "The only box-shadow in the world: the solid graphite outer ring of the focus indicator, on white and graphite grounds alike." }
@@ -49,7 +51,7 @@
       { "name": "stop", "value": "1.625rem roundel, 4px graphite outline, white fill", "purpose": "Station stop; terminus filled graphite; interchange is the two rings." }
     ],
     "openItems": [
-      "All Hindi copy is pending a native reviewer before the site goes live; it is not approved copy."
+      "The Hindi page's new copy (beyond the 16 lines reviewed on 2026-11-13) waits for the owner's review before it goes live (replica/launch/hindi-review.md)."
     ]
   },
   "components": [
@@ -65,7 +67,7 @@
       "name": "Direction Sign",
       "kind": "button",
       "refersTo": "direction-sign",
-      "description": "In-page wayfinding: a teal plate with an arrow and its Devanagari beneath.",
+      "description": "In-page wayfinding: a teal plate with an arrow.",
       "html": "<a class=\"ds-towards\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 12h14M12 5l7 7-7 7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"/></svg><span>Towards the waitlist<span class=\"ds-hi\" lang=\"hi\">वेटलिस्ट की ओर</span></span></a>",
       "css": ".ds-towards { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 3rem; padding: 0.5rem 1rem; background: #0e6670; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-weight: 700; font-stretch: 87.5%; text-decoration: none; } .ds-towards svg { width: 1.25rem; height: 1.25rem; } .ds-towards .ds-hi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; } .ds-towards:hover { background: #08535a; } .ds-towards:focus-visible { outline: 3px solid #f5b544; outline-offset: 2px; box-shadow: 0 0 0 6px #1c1b19; }"
     },
@@ -73,7 +75,7 @@
       "name": "Station Plate",
       "kind": "custom",
       "refersTo": "station-plate",
-      "description": "A rule's name on a graphite enamel plate, bilingual.",
+      "description": "A rule's name on a graphite enamel plate.",
       "html": "<h3 class=\"ds-station-plate\">Safety tools are free<span class=\"ds-hi\" lang=\"hi\">सुरक्षा के टूल मुफ़्त</span></h3>",
       "css": ".ds-station-plate { display: inline-block; margin: 0; padding: 0.5rem 0.875rem 0.5625rem; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; font-size: clamp(1.25rem, 0.6vw + 1.1rem, 1.625rem); line-height: 1.15; font-weight: 700; font-stretch: 87.5%; } .ds-station-plate .ds-hi { display: block; margin-top: 0.125rem; font-size: 0.875em; line-height: 1.2; }"
     },
@@ -89,7 +91,7 @@
       "name": "Sign Band",
       "kind": "nav",
       "refersTo": "sign-band",
-      "description": "The graphite header: two-ring mark, bilingual wordmark, status plate, then the teal and marigold strip.",
+      "description": "The graphite header: two-ring mark, wordmark, status plate and the language option, then the teal and marigold strip.",
       "html": "<div><header class=\"ds-sign\"><p class=\"ds-name\"><svg viewBox=\"0 0 48 32\" width=\"48\" height=\"32\" aria-hidden=\"true\"><circle cx=\"17\" cy=\"16\" r=\"12\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"4.5\"/><circle cx=\"31\" cy=\"16\" r=\"12\" fill=\"none\" stroke=\"#f5b544\" stroke-width=\"4.5\"/></svg><span><span class=\"ds-latin\">Kinaara</span><span class=\"ds-dev\" lang=\"hi\">किनारा</span></span></p><p class=\"ds-status\">Not open yet</p></header><div class=\"ds-lines\"><span></span><span></span></div></div>",
       "css": ".ds-sign { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; padding: 0.75rem 1.5rem; background: #1c1b19; color: #ffffff; font-family: Anek, 'Nirmala UI', system-ui, sans-serif; } .ds-name { display: flex; align-items: center; gap: 0.75rem; margin: 0; } .ds-latin { font-size: 1.75rem; line-height: 1; font-weight: 700; font-stretch: 87.5%; letter-spacing: 0.04em; text-transform: uppercase; } .ds-dev { display: block; margin-top: 0.125rem; font-size: 1.375rem; line-height: 1.15; } .ds-status { margin: 0 0 0 auto; padding: 0.25rem 0.75rem; background: #f5b544; color: #1c1b19; font-size: 0.875rem; font-weight: 700; font-stretch: 87.5%; } .ds-lines { display: flex; height: 0.5rem; } .ds-lines span { flex: 1; } .ds-lines span:first-child { background: #0e6670; } .ds-lines span:last-child { background: #f5b544; }"
     },
@@ -104,19 +106,19 @@
   ],
   "narrative": {
     "northStar": "The Interchange",
-    "overview": "The website is a metro route map in the brand's own colours. Your line is peacock teal, the other person's is marigold, and they meet at an interchange drawn as the brand's two rings, only where both fit. After the interchange the two rails run on side by side, and each rule of the product is a station on that line. The language is Delhi Metro-style wayfinding: graphite sign bands across the top and the close, enamel sign plates lettered in white, thick route lines and white station roundels outlined in graphite, all on a white enamel ground. DMRC's identity (its logo, line colours and signage artwork) is never copied; the system borrows the grammar of wayfinding, not anyone's marks.\n\nDensity is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Every sign that names a place or a rule is bilingual, Devanagari under the Latin. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: the only authored movement is the line drawing itself as you travel down the page.\n\nRejected (confirmed in the direction contract): the category's swipe-card phone mockup and gradients, and the calm cream page. Pills, gradients and glow are out.",
+    "overview": "The website is a metro route map in the brand's own colours. Your line is peacock teal, the other person's is marigold, and they meet at an interchange drawn as the brand's two rings, only where both fit. After the interchange the two rails run on side by side, and each rule of the product is a station on that line. The language is Delhi Metro-style wayfinding: graphite sign bands across the top and the close, enamel sign plates lettered in white, thick route lines and white station roundels outlined in graphite, all on a white enamel ground. DMRC's identity (its logo, line colours and signage artwork) is never copied; the system borrows the grammar of wayfinding, not anyone's marks.\n\nDensity is that of signage: big condensed bold names, short plates, generous white ground between stations, body text kept to readable measures. Each page is in one language: English at /, Hindi at /hi, the other a link away in the sign band. The world is loud enough to be remembered (bands, plates, two saturated lines) and calm in its motion: the only authored movement is the line drawing itself as you travel down the page.\n\nRejected (confirmed in the direction contract): the category's swipe-card phone mockup and gradients, and the calm cream page. Pills, gradients and glow are out.",
     "keyCharacteristics": [
       "Two line colours with fixed meanings: teal is yours, marigold is theirs.",
       "Graphite sign bands and plates on a white enamel ground.",
       "Anek throughout: semi-condensed bold (wdth 87.5) for signs, normal width for text.",
-      "Bilingual signs, Devanagari under the Latin.",
+      "One language per page, the other a link away in the sign band.",
       "Square-cornered plates; the only curves are roundels and the two-ring mark.",
       "One authored motion: the rails draw on scroll."
     ],
     "rules": [
       { "name": "The Two Lines Rule", "body": "Teal always means you and marigold always means the other person. Never swap them, never add a third line colour, and never use them as decoration detached from that meaning (the button plate and focus ring are marigold because they are the step toward someone else).", "section": "colors" },
       { "name": "The Rails Are Not Text Rule", "body": "Marigold on white is for rails, plates and fills only, never for text on the white ground; marigold text appears only on graphite.", "section": "colors" },
-      { "name": "The Bilingual Sign Rule", "body": "Every sign that names a place or a rule carries its Devanagari directly beneath the Latin, as a block, at 0.875em of the sign's size with line-height 1.2, marked `lang=\"hi\"`. This covers station plates, panel headings and the direction sign. The wordmark and the map labels set their Hindi at their own fixed sizes. Running text is English only. Open item: all Hindi copy is pending a native reviewer before the site goes live; it is not approved copy, and new Hindi must be added to `scripts/devanagari-text.txt` so the subset font contains it.", "section": "typography" },
+      { "name": "The One Language Rule", "body": "A page is in one language (D120): Hindi is never written beside the English. The Hindi page (/hi) is all Devanagari, headings with more line height and no letter-spacing; what exists only in English (the app's labels, the legal documents, the emails) is named as English where it is linked. The sign band's language option names the other language in itself. New Hindi goes through a native reviewer before it ships." },
       { "name": "The Condensed Means Sign Rule", "body": "Semi-condensed bold is for things that work as signs (names, headings, plates, buttons). Paragraphs are never condensed.", "section": "typography" },
       { "name": "The One Geometry Rule", "body": "On desktop the map's joined rails and the station rails share one geometry: centred at 12.5% and 14.75% of the right grid column, each 1.6% of it wide, so the line runs unbroken from the first screen to the last stop. Change one and you must change the other (`RouteDiagram.tsx` and `landing.module.css`).", "section": "layout" },
       { "name": "The Enamel Rule", "body": "Surfaces are flat painted planes. Separation is by colour block, never by shadow.", "section": "elevation" },
@@ -125,7 +127,7 @@
     ],
     "dos": [
       "Do keep teal for your line and marigold for theirs, everywhere, including the two-ring mark.",
-      "Do set every sign that names a place or a rule bilingual, Devanagari beneath at 0.875em, and route new Hindi through a native reviewer before it ships.",
+      "Do keep each page in one language: new words go into both dictionaries (lib/i18n), and new Hindi goes through a native reviewer before it ships.",
       "Do make anything pressable a square-cornered plate at least 3rem tall, with the marigold-in-graphite focus ring.",
       "Do put marigold text only on graphite; on white, marigold is a rail or a fill.",
       "Do keep the map rails and station rails on one geometry (12.5% and 14.75% of the column, 1.6% wide) at desktop widths.",

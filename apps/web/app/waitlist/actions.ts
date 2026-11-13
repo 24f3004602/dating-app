@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { api } from "@/lib/api";
 import { BRAND } from "@/lib/config";
 import { PRIVACY_VERSION } from "@/lib/documents";
+import { isLang } from "@/lib/i18n";
 import { type FormState, joinOutcome, linkToken, tokenOutcome, validateJoin } from "@/lib/waitlist";
 
 /**
@@ -17,14 +18,17 @@ async function forwardedFor(): Promise<string | undefined> {
 }
 
 export async function joinWaitlist(_previous: FormState, form: FormData): Promise<FormState> {
-  const input = validateJoin(form.get("email"), form.get("adult"));
+  // The form says which page it's on (English or Hindi, D120); anything else is English.
+  const given = form.get("lang");
+  const lang = isLang(given) ? given : "en";
+  const input = validateJoin(form.get("email"), form.get("adult"), lang);
   if (!input.ok) return input.state;
   const result = await api("/v1/waitlist", {
     method: "POST",
     body: { email: input.email, adult: true, privacy: PRIVACY_VERSION },
     forwardedFor: await forwardedFor(),
   });
-  return joinOutcome(result.ok ? 202 : result.status, result.ok ? "" : result.code, input.email);
+  return joinOutcome(result.ok ? 202 : result.status, result.ok ? "" : result.code, input.email, lang);
 }
 
 async function redeemLink(kind: "confirm" | "leave", form: FormData): Promise<FormState> {
