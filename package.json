@@ -5,6 +5,7 @@
     "apps/mobile",
     "apps/web",
     "packages/api-types",
+    "packages/interchange",
     "e2e"
   ],
   "engines": {

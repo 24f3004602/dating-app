@@ -1,10 +1,10 @@
 import { Matrix4, OrthographicCamera } from "three";
 
 /**
- * An oblique view (stage 21a, D119): the plane z = 0 is drawn face-on, exactly where
- * the flat SVG draws the map, and a point at depth z moves by (shearX, shearY) x z on
- * screen. So the map's face never moves while its depth shows, and tilting the view
- * (changing the shear) leaves the page's words and the station rails lined up.
+ * An oblique view (stage 21a, D119; the app's welcome too, D122): the plane z = 0 is
+ * drawn face-on, exactly where the flat map is drawn, and a point at depth z moves by
+ * (shearX, shearY) x z on screen. So the map's face never moves while its depth shows,
+ * and tilting the view (changing the shear) leaves the words and rails around it lined up.
  */
 export class ObliqueCamera extends OrthographicCamera {
   /** React Three Fiber leaves a manual camera's projection alone on resize. */

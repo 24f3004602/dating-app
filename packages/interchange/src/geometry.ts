@@ -1,11 +1,12 @@
 /**
- * The 3D route map's shapes, built from the same data as the SVG (lib/routeMap.ts;
- * stage 21a, D119). World units: one unit is the ring radius (22 SVG units), y points
- * up. The map's face stays at z = 0, exactly where the SVG draws it, so the page's
- * words and the station rails below still line up; depth runs back from it. Pure
- * arithmetic (no three.js), so it's unit-tested (tests/sceneGeometry.test.mjs).
+ * The 3D route map's shapes, built from the same data as the flat map (map.ts; stage
+ * 21a, D119; the app's welcome shares them since stage 21b, D122). World units: one unit
+ * is the ring radius (22 map units), y points up. The map's face stays at z = 0, exactly
+ * where the flat map draws it, so the words and the rails around it still line up; depth
+ * runs back from it. Pure arithmetic (no three.js), so it's unit-tested (the website's
+ * tests/scene.test.mjs).
  */
-import { type Cmd, type MapLayout, type Point, segments } from "../routeMap.ts";
+import { type Cmd, type MapLayout, type Point, segments } from "./map.ts";
 
 /** SVG units per world unit: the interchange rings' radius. */
 export const UNIT = 22;

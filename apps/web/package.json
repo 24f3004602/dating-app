@@ -12,6 +12,7 @@
     "test": "node --test \"tests/*.test.mjs\""
   },
   "dependencies": {
+    "@datingapp/interchange": "0.1.0",
     "@react-three/fiber": "9.8.2",
     "@react-three/postprocessing": "3.2.2",
     "@react-three/rapier": "2.2.0",

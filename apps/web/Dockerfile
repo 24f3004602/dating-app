@@ -11,8 +11,10 @@ COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY apps/mobile/package.json apps/mobile/
 COPY packages/api-types/package.json packages/api-types/
+COPY packages/interchange/package.json packages/interchange/
 COPY e2e/package.json e2e/
 RUN --mount=type=cache,target=/root/.npm npm ci --workspace @datingapp/web --include-workspace-root=false --no-audit --no-fund
+COPY packages/interchange packages/interchange
 COPY apps/web apps/web
 COPY replica/design/tokens.json replica/design/tokens.json
 ENV NEXT_TELEMETRY_DISABLED=1 NEXT_OUTPUT=standalone

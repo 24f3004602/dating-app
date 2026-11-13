@@ -6,14 +6,16 @@
 FROM node:22-slim AS build
 WORKDIR /repo
 # Every workspace's package.json, so the lockfile resolves; only the app's
-# dependencies (and the API types it imports) are installed.
+# dependencies (and the shared packages it imports) are installed.
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY apps/mobile/package.json apps/mobile/
 COPY packages/api-types/package.json packages/api-types/
+COPY packages/interchange/package.json packages/interchange/
 COPY e2e/package.json e2e/
 RUN --mount=type=cache,target=/root/.npm npm ci --workspace @datingapp/mobile --include-workspace-root=false --no-audit --no-fund
 COPY packages/api-types packages/api-types
+COPY packages/interchange packages/interchange
 COPY apps/mobile apps/mobile
 ARG EXPO_PUBLIC_API_URL
 ARG EXPO_PUBLIC_WEB_URL

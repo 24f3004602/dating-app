@@ -22,6 +22,10 @@ export const DOCUMENT_LINKS = { terms: `${WEB_URL}/terms`, privacy: `${WEB_URL}/
 export const MEDIA_URL = (process.env.EXPO_PUBLIC_MEDIA_URL ?? WEB_URL).replace(/\/$/, "");
 export const WELCOME_VIDEO = process.env.EXPO_PUBLIC_WELCOME_VIDEO !== "off";
 
+// The welcome's route map in 3D (stage 21b, D122): EXPO_PUBLIC_WELCOME_3D=off (any case)
+// keeps the flat map for everyone.
+export const WELCOME_3D = process.env.EXPO_PUBLIC_WELCOME_3D?.trim().toLowerCase() !== "off";
+
 // The working name on the welcome screen's sign (D019: configuration, not code), and
 // optionally the same name in Devanagari (D105). Its letters must be in
 // assets/fonts/devanagari-text.txt (the font is subset to that list).

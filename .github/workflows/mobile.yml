@@ -41,6 +41,7 @@ jobs:
           (cd apps/api && uv sync --locked && uv run python scripts/export_openapi.py ../../packages/api-types/openapi.json)
           npm run generate -w @datingapp/api-types
           git diff --exit-code -- packages/api-types
+      - run: npm test -w @datingapp/interchange
       - run: npm run typecheck -w @datingapp/mobile
       - run: npm test -w @datingapp/mobile -- --ci
       - run: npm run export:web -w @datingapp/mobile

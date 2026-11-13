@@ -28,6 +28,13 @@ const WIDTH = D + OVERLAP + APART * 2;
 // The mark's box: a little room for the breath.
 const BOX = D * 1.1;
 
+/**
+ * The mark's proportions, in points: a ring's outer diameter and stroke, the distance
+ * between the two centres at rest, and the box it's drawn in. The welcome map places it by
+ * these (welcomeMap.ts), and the 3D welcome was recorded for them (D122; a test checks).
+ */
+export const RING = { diameter: D, stroke: STROKE, apart: OVERLAP, width: WIDTH, height: BOX } as const;
+
 export function Rings({ mode }: { mode: RingsMode }) {
   const setting = useMotionSetting();
   // Over the welcome screen's dark overlay, the teal ring would vanish: it turns white.

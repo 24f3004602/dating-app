@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
         outputFileTracingRoot: path.join(__dirname, "../.."),
       }
     : {}),
+  // The shared route map and 3D shapes are TypeScript source (packages/interchange).
+  transpilePackages: ["@datingapp/interchange"],
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

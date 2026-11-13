@@ -184,6 +184,32 @@ test.describe("with motion", () => {
     expect(errors.console).toEqual([]);
   });
 
+  // E2E-15 (stage 21b, D122): the welcome's route map in 3D, on the app's web build.
+  test("app welcome: once the rings have met, the map lifts into 3D and their ring hooks yours, then nothing moves", async ({ page }) => {
+    const errors = await watchErrors(page);
+    await page.goto(`${WEB_URL}/welcome`);
+    const map = page.getByRole("img", { name: "A route map: your line and someone else's meet at one interchange, only where both of you fit." });
+    await expect(map).toBeVisible();
+    // Not before the flat rings have met (0.7 s); then shown once its first frames match the flat map.
+    const scene = map.locator("[data-scene]");
+    await expect(scene).toHaveAttribute("data-scene", "3d", { timeout: 15000 });
+    await expect(scene.locator("canvas")).toHaveCount(1);
+    // The flat rings fade out under the scene's.
+    await expect.poll(() => map.locator('[data-rings="meet"]').evaluate((el) => Number(getComputedStyle(el.parentElement!).opacity))).toBe(0);
+    // At rest after about three seconds; then the canvas no longer changes.
+    await expect(scene).toHaveAttribute("data-settled", "true", { timeout: 10000 });
+    const still = await map.screenshot();
+    await page.waitForTimeout(600);
+    expect((await map.screenshot()).equals(still)).toBe(true);
+    // Still one described image to screen readers; the scene is decoration.
+    await expect(scene).toHaveAttribute("aria-hidden", "true");
+    await page.screenshot({ path: "test-results/welcome-3d.png" }); // for review
+    await checkA11y(page, "welcome (3D map)");
+    // No console error and no CSP violation under the app's own policy (no eval, no WebAssembly).
+    expect(errors.console).toEqual([]);
+    expect(errors.server).toEqual([]);
+  });
+
   test("design gallery: every motion pattern plays and ends at rest", async ({ page }) => {
     const errors = await watchErrors(page);
     await page.goto(`${WEB_URL}/design`);
@@ -226,5 +252,7 @@ test.describe("with reduced motion", () => {
     await page.waitForTimeout(2500);
     await expect(page.locator("video")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Pause video" })).toHaveCount(0);
+    // The welcome's route map stays flat: no 3D scene is even loaded (stage 21b, D122).
+    await expect(page.locator("canvas")).toHaveCount(0);
   });
 });

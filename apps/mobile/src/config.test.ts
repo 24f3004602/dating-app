@@ -1,5 +1,5 @@
 /** Build-time settings for the beta build (D096). */
-const KEYS = ["EXPO_PUBLIC_TERMS_VERSION", "EXPO_PUBLIC_PRIVACY_VERSION", "EXPO_PUBLIC_WEB_URL", "EXPO_PUBLIC_INVITE_ONLY"];
+const KEYS = ["EXPO_PUBLIC_TERMS_VERSION", "EXPO_PUBLIC_PRIVACY_VERSION", "EXPO_PUBLIC_WEB_URL", "EXPO_PUBLIC_INVITE_ONLY", "EXPO_PUBLIC_WELCOME_3D"];
 
 afterEach(() => {
   for (const key of KEYS) delete process.env[key];
@@ -31,4 +31,14 @@ test("the beta build: the tester notice, invite-only, the beta website", () => {
   expect(config.BETA_DOCUMENTS).toBe(true);
   expect(config.INVITE_ONLY).toBe(true);
   expect(config.DOCUMENT_LINKS).toEqual({ terms: "https://example.in/terms", privacy: "https://example.in/privacy" });
+});
+
+test("MOB-3D-2: the welcome's 3D map is on unless EXPO_PUBLIC_WELCOME_3D=off, in any case", () => {
+  expect(load().WELCOME_3D).toBe(true);
+  for (const off of ["off", "OFF", " Off "]) {
+    process.env.EXPO_PUBLIC_WELCOME_3D = off;
+    expect(load().WELCOME_3D).toBe(false);
+  }
+  process.env.EXPO_PUBLIC_WELCOME_3D = "on";
+  expect(load().WELCOME_3D).toBe(true);
 });

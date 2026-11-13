@@ -17,31 +17,17 @@ import { EffectComposer, Outline } from "@react-three/postprocessing";
 import { CapsuleCollider, interactionGroups, Physics, type RapierRigidBody, RigidBody, useBeforePhysicsStep } from "@react-three/rapier";
 import { BlendFunction } from "postprocessing";
 import { type RefObject, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  BufferGeometry,
-  CircleGeometry,
-  Color,
-  CylinderGeometry,
-  DataTexture,
-  Euler,
-  Float32BufferAttribute,
-  type Group,
-  type Mesh,
-  MeshToonMaterial,
-  NearestFilter,
-  Quaternion,
-  RedFormat,
-  TorusGeometry,
-} from "three";
+import { Euler, type Group, type Mesh, Quaternion, TorusGeometry } from "three";
 
-import type { MapLayout, MapLine, Tone } from "@/lib/routeMap";
-import { depthProfile, LOOK, ringCapsules, samplePath, stripMesh, UNIT } from "@/lib/scene/geometry";
-import { atRest, control, HOOK, linking, type Pose, restPoses, ringGap, startPose, tubeRadius } from "@/lib/scene/hook";
+import type { MapLayout } from "@/lib/routeMap";
+import { LOOK, ringCapsules, UNIT } from "@datingapp/interchange/geometry";
+import { atRest, control, HOOK, linking, type Pose, restPoses, ringGap, startPose, tubeRadius } from "@datingapp/interchange/hook";
+import { LIGHT, lineGeometry, type Materials, type SceneColors, stationShapes, toonMaterials } from "@datingapp/interchange/meshes";
 
-import { ObliqueCamera } from "./ObliqueCamera";
+import { ObliqueCamera } from "@datingapp/interchange/oblique-camera";
 
 /** The page's own colours, read from its CSS so the scene matches the SVG exactly. */
-export type SceneColors = { ground: string; teal: string; marigold: string; graphite: string; white: string };
+export type { SceneColors };
 
 export type SceneProps = {
   map: MapLayout;
@@ -208,8 +194,8 @@ function Interchange({
   return (
     <>
       <color attach="background" args={[colors.ground]} />
-      <ambientLight intensity={Math.PI * 0.4} />
-      <directionalLight intensity={Math.PI * 0.6} position={[-0.25, 0.35, 1]} />
+      <ambientLight intensity={LIGHT.ambient} />
+      <directionalLight intensity={LIGHT.directional} position={LIGHT.direction} />
       <Lines map={map} materials={materials} />
       <Stations map={map} materials={materials} />
       <group ref={rings}>
@@ -249,7 +235,7 @@ function Interchange({
   );
 }
 
-/** The physics: the teal ring fixed, the marigold ring falling through it and hooking (lib/scene/hook.ts). */
+/** The physics: the teal ring fixed, the marigold ring falling through it and hooking (@datingapp/interchange/hook). */
 function Hook({
   map,
   rest,
@@ -344,31 +330,12 @@ function Lines({ map, materials }: { map: MapLayout; materials: Materials }) {
   );
 }
 
-function lineGeometry(line: MapLine, map: MapLayout): BufferGeometry {
-  const points = samplePath(line.d, 3);
-  const mesh = stripMesh(points, map.lineWidth, LOOK.depth, depthProfile(points, map, LOOK.taper));
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(mesh.positions, 3));
-  geometry.setAttribute("normal", new Float32BufferAttribute(mesh.normals, 3));
-  geometry.setIndex(mesh.indices);
-  return geometry;
-}
-
 /**
  * The stations: white roundels with graphite rims, as shallow studs standing on the
  * line's face (a stud as deep as the line read as a heavy graphite post).
  */
 function Stations({ map, materials }: { map: MapLayout; materials: Materials }) {
-  const shapes = useMemo(() => {
-    const outer = (map.stationRadius + map.stationStroke / 2) / UNIT;
-    const inner = (map.stationRadius - map.stationStroke / 2) / UNIT;
-    const top = LOOK.stud;
-    return {
-      top,
-      rim: new CylinderGeometry(outer, outer, top, 48).rotateX(Math.PI / 2).translate(0, 0, top / 2),
-      face: new CircleGeometry(inner, 48),
-    };
-  }, [map]);
+  const shapes = useMemo(() => stationShapes(map), [map]);
   return (
     <>
       {map.stations.map((s) => (
@@ -381,27 +348,9 @@ function Stations({ map, materials }: { map: MapLayout; materials: Materials }) 
   );
 }
 
-type Materials = Record<Tone | "graphite" | "white" | "ringTeal" | "ringMarigold", MeshToonMaterial>;
-
+/** Three flat tones in the page's exact colours (@datingapp/interchange/meshes). */
 function useMaterials(colors: SceneColors): Materials {
-  return useMemo(() => {
-    // Three flat tones: lit faces in the page's exact colour, sides and the far side of
-    // the rings darker.
-    const gradient = new DataTexture(new Uint8Array([51, 115, 255]), 3, 1, RedFormat);
-    gradient.minFilter = NearestFilter;
-    gradient.magFilter = NearestFilter;
-    gradient.generateMipmaps = false;
-    gradient.needsUpdate = true;
-    const toon = (hex: string) => new MeshToonMaterial({ color: new Color(hex.trim()), gradientMap: gradient });
-    return {
-      teal: toon(colors.teal),
-      marigold: toon(colors.marigold),
-      graphite: toon(colors.graphite),
-      white: toon(colors.white),
-      ringTeal: toon(colors.teal),
-      ringMarigold: toon(colors.marigold),
-    };
-  }, [colors]);
+  return useMemo(() => toonMaterials(colors), [colors]);
 }
 
 const vec = (pose: Pose): [number, number, number] => [pose.position.x, pose.position.y, pose.position.z];

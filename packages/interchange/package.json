@@ -1,0 +1,26 @@
+{
+  "name": "@datingapp/interchange",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Interchange's route map as data, its 3D shapes, its view and the rings' hook (stage 21, D119, D122): TypeScript shared by the website and the app. Only the camera needs three.js.",
+  "exports": {
+    "./map": "./src/map.ts",
+    "./geometry": "./src/geometry.ts",
+    "./hook": "./src/hook.ts",
+    "./track": "./src/track.ts",
+    "./welcome-track": "./src/welcomeTrack.ts",
+    "./oblique-camera": "./src/ObliqueCamera.ts",
+    "./meshes": "./src/meshes.ts"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "record": "node scripts/record-hook.mjs"
+  },
+  "devDependencies": {
+    "@dimforge/rapier3d-compat": "0.19.2"
+  },
+  "peerDependencies": {
+    "three": "0.187.0"
+  }
+}

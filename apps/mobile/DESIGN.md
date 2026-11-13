@@ -276,7 +276,7 @@ Targets: 48 for buttons, fields, rows and switches; at least 44 for chips and li
 
 ## Elevation & Depth
 
-Flat. No shadows anywhere: the shadow token group is empty and the top bar's shadow is switched off. Depth is the ground changing: graphite bars against white, plates on cards, the sheet's 2-point graphite rule over a graphite scrim at 0.4 opacity. The welcome screen lays its text over the bundled candlelight still under the night overlay at 0.7, with a white enamel panel for the route map.
+Flat. No shadows anywhere: the shadow token group is empty and the top bar's shadow is switched off. Depth is the ground changing: graphite bars against white, plates on cards, the sheet's 2-point graphite rule over a graphite scrim at 0.4 opacity. The welcome screen lays its text over the bundled candlelight still under the night overlay at 0.7, with a white enamel panel for the route map. The one exception is that map's relief in 3D (the Relief Rule): flat tones, no shadow.
 
 **The Enamel Rule.** Surfaces are flat painted planes; separation is by colour block or a line, never by shadow or blur.
 
@@ -334,7 +334,9 @@ A modal bottom sheet: white, square, under a 2-point graphite rule, 24 padding, 
 Two lines of square plates: yours teal with white text on the right, theirs marigold with ink text on the left, each with who and when beneath in caption. A removed message is white with a platform-line border and muted text, never italic (Anek has none).
 
 ### Rings and the welcome
-The two-ring mark, teal and marigold (the teal ring turns white on the overlay), hidden from screen readers and always explained in text beside it. It meets once at the welcome (hero, decelerate), breathes twice on a day with no new introductions (two loop cycles, under 5 seconds), and joins once at a match, without a glow (the world is flat; D117). The welcome draws the route map on a white enamel panel: the two lines run in, turn at 45 degrees, meet at the rings and run on together, labelled in text. The candlelight still ships inside the app under the night overlay; the moving loop plays only on the web build.
+The two-ring mark, teal and marigold (the teal ring turns white on the overlay), hidden from screen readers and always explained in text beside it. It meets once at the welcome (hero, decelerate), breathes twice on a day with no new introductions (two loop cycles, under 5 seconds), and joins once at a match, without a glow (the world is flat; D117). The welcome draws the route map on a white enamel panel: the two lines run in, turn at 45 degrees (their bars meeting in mitres), meet at the rings and run on together, labelled in text. The candlelight still ships inside the app under the night overlay; the moving loop plays only on the web build.
+
+**The Relief Rule (D122).** Once the rings have met and the screen is idle, the welcome map is laid over by the same map in 3D, line for line, as on the website (D119): it lifts into relief, the marigold ring drops through the teal one, catches like a chain link, swings and comes to rest in about three seconds; then nothing moves. The lines' depth shows as walls in a darker step of their own colour, roundels are shallow studs, the rings carry 1.25-point graphite outlines; three flat tones, no shadow, blur or glow, the edges smoothed by drawing at twice the size. It never plays with reduce motion on or not yet known; the flat map is the picture until the scene's first frames match it, and again whenever anything fails; the scene is hidden from screen readers and the map keeps its description and its words on top.
 
 **The Still Until Known Rule.** Every animation follows reduce motion; with it on, things appear at rest, and until the setting is known nothing moves. Only opacity and transforms animate, with the motion tokens (fast 150, base 240, hero 700, loop 2400 ms; never linear). Reveals rise 8 points and lists stagger 50 ms for at most six items. Nothing loops past 5 seconds.
 

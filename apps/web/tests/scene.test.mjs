@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { COMPACT, TALL } from "../lib/routeMap.ts";
-import { depthProfile, inBox, LOOK, ringCapsules, samplePath, stripMesh, UNIT } from "../lib/scene/geometry.ts";
-import { atRest, control, HOOK, linking, restPoses, ringGap, startPose, tubeRadius } from "../lib/scene/hook.ts";
+import { depthProfile, inBox, LOOK, ringCapsules, samplePath, stripMesh, UNIT } from "@datingapp/interchange/geometry";
+import { atRest, control, HOOK, linking, restPoses, ringGap, startPose, tubeRadius } from "@datingapp/interchange/hook";
 
 const close = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
 

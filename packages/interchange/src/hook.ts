@@ -3,7 +3,8 @@
  * (marigold) drops through it, hooks like a chain link, swings and settles. The
  * physics engine (Rapier) moves the marigold ring and stops it on the teal one; these
  * functions are the rest of the story, kept free of the engine so they're unit-tested
- * (tests/hook.test.mjs) and the same numbers drive the web scene and the app's.
+ * (the website's tests/scene.test.mjs) and the same numbers drive the website's scene
+ * (live, in Rapier) and the app's (a recording of the same run: track.ts, D122).
  *
  * The story, in physics steps of 1/120 s (at 1/60 s the catch, at about 8 ring radii
  * a second, sank 0.12 radii into the teal ring before the contact caught it):
@@ -19,7 +20,7 @@
  * still report a speed of g x dt and never look at rest.
  */
 
-import type { MapLayout } from "../routeMap.ts";
+import type { MapLayout } from "./map.ts";
 import { LOOK, UNIT } from "./geometry.ts";
 
 export type Vec = { x: number; y: number; z: number };
