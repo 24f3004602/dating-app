@@ -137,7 +137,7 @@ gunzip -c /tmp/beta-images/edge-image/edge-image.tar.gz | docker load
 and restart only what changed, from `infra/beta`:
 - **App:** `docker compose up -d --no-deps edge`.
 - **Website:** `docker compose up -d --no-deps web`.
-- **API:** back up first (`BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh`), then `docker compose run --rm migrate` (the build log's "newest migration" says whether one is due), then `docker compose up -d --no-deps api worker`. A migration changes the database: rolling the API back past one needs that backup.
+- **API:** back up first (`BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh`), then `docker compose run --rm --no-deps migrate` (the build log's "newest migration" says whether one is due; without `--no-deps`, compose also brings postgres up and recreates it if its settings changed, which restarted the database for a second on 2026-11-13), then `docker compose up -d --no-deps api worker`. A migration changes the database: rolling the API back past one needs that backup.
 - **Check:** `https://app.<domain>`, `https://<domain>` and `https://api.<domain>/readyz` answer; the containers you didn't restart keep their uptime.
 - **Roll back** an image: `docker tag datingapp-<image>:rollback-<date> datingapp-<image>:beta`, then the same `up -d --no-deps` line.
 - Rebuild only what is meant to go live: the website's Devanagari copy still waits for a native speaker (progress.md).
