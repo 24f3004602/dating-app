@@ -1,6 +1,7 @@
 # Components
 
-Date: 2026-11-05 (stage 13, D088-D089). Code: `apps/mobile/src/ui/primitives.tsx`.
+Date: 2026-11-05 (stage 13, D088-D089); revised 2026-11-13 for the Interchange (stage 20e, D105-D117), whose
+full record is `apps/mobile/DESIGN.md`. Code: `apps/mobile/src/ui/primitives.tsx`.
 Tokens: `tokens.json` (checked by `contrast.py`; `tokens.test.ts` keeps the
 code equal to it). Every component and state is on the gallery page `/design`
 (development and the e2e build only), scanned by axe in `e2e/tests/design.spec.ts`;
@@ -8,12 +9,12 @@ code equal to it). Every component and state is on the gallery page `/design`
 
 Rules for all components:
 - **Tokens only:** no raw colours, sizes or fonts in components or screens.
-- **Fonts and text size:** system fonts; text scales with the platform's text size, and line heights scale with it.
+- **Fonts and text size:** Anek, one static file per voice (text, text semibold, sign, display, and the name in Devanagari), the weight in the file and never set in a style (D105); the staff console on the website keeps system fonts. Text scales with the platform's text size, and line heights scale with it; drawn marks (ticks, roundels, arrows) keep their size (D115).
 - **Touch targets:** 48 points for buttons and fields, at least 44 for chips and links.
 - **Keyboard focus (web):** the member app shows the world's ring (D117): a 3-point `highlight` outline 2 points outside the control, inside a 6-point `sign` halo (`signRing`), the same on white and on the welcome's video. The staff console keeps the 2-point blue `focus` ring. Fields show focus with a 2-point accent border instead, and the browser's own ring is turned off.
 - **States:** pressed and disabled differ by colour, never by opacity alone. Selection is never shown by colour alone.
 - **Errors** are announced: `role="alert"` and `aria-live` on the web and Android, plus `AccessibilityInfo.announceForAccessibility` on iOS, which ignores live regions.
-- **No shadows.**
+- **No shadows:** the only one is the focus ring's graphite halo on the web (D117).
 - **Motion (stage 19, D098)**, from the motion tokens (`fast` 150, `base` 240, `hero` 700, `loop` 2400 ms; easing `standard`, `decelerate`, `sway`, never linear):
   - **It follows reduce motion** (the phone's setting, or `prefers-reduced-motion`): with it on, everything appears at rest. Until the setting is known, nothing moves.
   - **Only opacity and transforms move** (native driver on phones).
@@ -72,15 +73,17 @@ Website motion (apps/web/app/globals.css, HeroBackdrop.tsx)
               the page is identical and still, and the Pause button is hidden
 
 Title / Heading / Body / Caption
-  type       title 28/34 700 (h1, aria-level 1); heading 20/28 600 (aria-level 2);
-             body 16/24; caption 14/20 muted
+  type       title 28/34 and heading 20/28 in the sign face (Anek semi-condensed, 700 in
+             the file; h1, then aria-level 2); body 16/24 and caption 14/20 (muted) in the
+             text face
   tokens     text, text-muted
   a11y       headings carry role and level; Body wraps (flexShrink), never truncates
 
 Button
-  variants   primary (accent fill), secondary (accent outline), danger (danger outline)
-  size       min height 48, radius md, label type
-  states     default; pressed (accent-pressed fill / accent-soft / danger-soft);
+  variants   primary (marigold `highlight` plate, graphite text), secondary (white plate,
+             graphite 2-point edge and text), danger (white plate, danger edge and text)
+  size       min height 48, square (radius plate), label size in the sign face
+  states     default; pressed (highlight-pressed / surface / danger-soft);
              focus (ring); disabled (surface fill, border, text-muted);
              busy (spinner, aria-busy, disabled)
   a11y       role button, name = label (kept while busy); aria-disabled; the spinner
@@ -94,7 +97,7 @@ TextLink
 
 TextField
   parts      label (label type), optional hint (caption), input, error
-  size       min height 48; multiline min height 96, text from the top
+  size       min height 48, square (radius plate); multiline min height 96, text from the top
   states     default (border-input 1); focus (accent 2); error (danger 2);
              disabled (surface fill, text-muted)
   a11y       aria-label = label, hint as accessibility hint, aria-invalid on error,
@@ -109,14 +112,14 @@ Checkbox
              graphite fill and a drawn tick (two
              sides of a small box, turned, in the roundel's stroke, sized from the box, so
              it never grows with the text size; D115); label
-  states     unchecked, checked, pressed (accent-pressed edge), focus (ring)
+  states     unchecked, checked, pressed (accent edge), focus (ring)
   a11y       role checkbox, aria-checked, name = label; the row is the target (48)
 
 ChoiceGroup (chips)
   modes      single (radiogroup of radios) or multiple (group of checkboxes)
   look       square (radius.plate), border-input; selected: graphite fill, on-sign text and
              the drawn tick before the label, the Checkbox's own mark (D116)
-  states     default, selected, pressed (accent-soft), focus (ring), error
+  states     default, selected, pressed (surface), focus (ring), error
   a11y       group named by its label; each chip's name is its label; the tick is
              aria-hidden (the checked state says it)
 
@@ -136,12 +139,13 @@ Notice
              the others are polite live regions
 
 Badge
-  tones      neutral (surface), highlight (marigold), success, danger: text colour on each
+  tones      neutral (surface), highlight (marigold), success, danger: text colour on each;
+             square (radius plate), caption size in the text semibold face
   use        short statuses: "2 new", "Your turn", photo review state
   a11y       plain text; inside a Card the card's label already says it
 
 Card
-  look       row, padding md, border-input edge, radius md; pressed: surface
+  look       row, padding md, border-input edge, square (radius plate); pressed: surface
   parts      Thumb (decorative), CardTitle (heading type, no heading role), Stack of text
   a11y       one button; its label is the whole summary (name, age, statuses); no
              headings inside (a button's content is presentational)

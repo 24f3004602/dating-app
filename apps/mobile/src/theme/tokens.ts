@@ -84,7 +84,10 @@ export const focusRing = { width: 2, offset: 2 } as const;
  * build uses it everywhere; `focusRing` above stays the shared console's ring (tokens.json).
  */
 export const signRing = { width: 3, offset: 2, halo: 6 } as const;
-/** `roundel`: the line's station roundel (the bottom bar, the end of the day's set, a choice in a list) and its stroke. */
+/**
+ * `roundel`: the line's station roundel (the bottom bar, the end of the day's set, a choice in a list) and its
+ * stroke. Mirrored in tokens.json's `size`, as `signRing` is in its `sign-ring` (tokens.test.ts checks both).
+ */
 export const size = { checkbox: 24, contentMax: 560, thumb: 96, multiline: 96, mark: 96, roundel: 18, roundelStroke: 3 } as const;
 
 /**

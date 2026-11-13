@@ -4,7 +4,7 @@
  * Run `python3 .claude/skills/replica-design/contrast.py replica/design/tokens.json`
  * for the full report; this test keeps CI honest about both.
  */
-import { font, color, focusRing, motion, overlay, radius, scrim, space, touch, type } from "@/theme/tokens";
+import { font, color, focusRing, motion, overlay, radius, scrim, signRing, size, space, touch, type } from "@/theme/tokens";
 
 import design from "../../../../replica/design/tokens.json";
 
@@ -17,6 +17,8 @@ type Spec = {
   radius: Record<string, number>;
   touch: { min: number; chip: number };
   focus: { width: number; offset: number };
+  size: Record<string, number | string>;
+  "sign-ring": { width: number; offset: number; halo: number };
   motion: { duration: Record<string, number>; easing: Record<string, number[]>; rise: number; stagger: number };
   overlay: { opacity: number };
   scrim: { opacity: number };
@@ -49,7 +51,7 @@ test("every listed pair passes WCAG AA (4.5:1 text, 3:1 large text and UI parts)
   expect(spec.pairs.length).toBeGreaterThanOrEqual(20);
 });
 
-test("the type scale, spacing, radius, touch targets and focus ring match too", () => {
+test("the type scale, spacing, radius, touch targets, sizes and focus rings match too", () => {
   // Each role names its font file; the weight is in the file, never set in styles (D105).
   for (const [name, t] of Object.entries(spec.type)) {
     expect(type[name as keyof typeof type]).toEqual({
@@ -64,6 +66,11 @@ test("the type scale, spacing, radius, touch targets and focus ring match too", 
   expect(radius).toEqual(spec.radius);
   expect(touch).toEqual(spec.touch);
   expect(focusRing).toEqual({ width: spec.focus.width, offset: spec.focus.offset });
+  // The fixed sizes and the Interchange's ring live in the design file too (the documenter found them missing).
+  const sizes = Object.entries(spec.size).filter(([k]) => !k.startsWith("_"));
+  expect(Object.fromEntries(sizes.map(([k, v]) => [camel(k), v]))).toEqual(size);
+  const { width, offset, halo } = spec["sign-ring"];
+  expect(signRing).toEqual({ width, offset, halo });
 });
 
 test("motion matches too, and no easing is linear", () => {
