@@ -27,7 +27,7 @@ The Interchange: Delhi Metro-style wayfinding in our own colours. Memorable mome
 ## Unresolved
 
 - The final name (Kinaara is provisional); the name stays configuration, never baked into images.
-- Hindi copy needs a native reviewer before it ships.
+- Hindi copy needs a native reviewer before it ships. **Done 2026-11-13:** the owner, a native Hindi speaker, kept all 16 lines (`replica/launch/hindi-review.md`).
 
 ## Direction contract
 
