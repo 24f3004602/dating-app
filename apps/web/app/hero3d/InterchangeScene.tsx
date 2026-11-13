@@ -16,7 +16,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 import { CapsuleCollider, interactionGroups, Physics, type RapierRigidBody, RigidBody, useBeforePhysicsStep } from "@react-three/rapier";
 import { BlendFunction } from "postprocessing";
-import { type RefObject, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BufferGeometry,
   CircleGeometry,
@@ -68,7 +68,8 @@ const FADE = 0.25;
 const ZERO = { x: 0, y: 0, z: 0 };
 
 export function InterchangeScene(props: SceneProps) {
-  const { map, onLost } = props;
+  const { map } = props;
+  const lost = useLostContext(props.onLost);
   const camera = useMemo(() => {
     const cam = new ObliqueCamera(0, map.width / UNIT, 0, -map.height / UNIT, 0.1, 40);
     cam.position.set(0, 0, 20);
@@ -83,7 +84,7 @@ export function InterchangeScene(props: SceneProps) {
       dpr={[1, 2]}
       frameloop={settled ? "demand" : "always"}
       gl={{ antialias: false, alpha: false, stencil: false, powerPreference: "low-power" }}
-      onCreated={({ gl }) => gl.domElement.addEventListener("webglcontextlost", onLost)}
+      onCreated={({ gl }) => lost.watch(gl.domElement)}
     >
       <Suspense fallback={null}>
         <Interchange
@@ -98,6 +99,38 @@ export function InterchangeScene(props: SceneProps) {
       </Suspense>
     </Canvas>
   );
+}
+
+/**
+ * A lost GPU context brings the flat map back. The renderer's own disposal on unmount
+ * loses its context on purpose too (React Three Fiber calls forceContextLoss), which
+ * once sent the map flat when the layout crossed the breakpoint; so only the live scene
+ * listens, and its listener goes when it unmounts.
+ */
+function useLostContext(onLost: () => void) {
+  const report = useRef(onLost);
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const live = useRef(false);
+  useEffect(() => {
+    report.current = onLost;
+  });
+  const handle = useCallback(() => {
+    if (live.current) report.current();
+  }, []);
+  useEffect(() => {
+    live.current = true;
+    canvas.current?.addEventListener("webglcontextlost", handle);
+    return () => {
+      live.current = false;
+      canvas.current?.removeEventListener("webglcontextlost", handle);
+    };
+  }, [handle]);
+  return {
+    watch: (element: HTMLCanvasElement) => {
+      canvas.current = element;
+      element.addEventListener("webglcontextlost", handle);
+    },
+  };
 }
 
 function Interchange({
@@ -137,6 +170,8 @@ function Interchange({
   useFrame((state, delta) => {
     const c = clock.current;
     c.frames += 1;
+    // At rest (on demand) nothing else asks for frames: ask until the two that show the canvas.
+    if (c.frames < 3) invalidate();
     if (c.frames === 2) onReady();
     if (c.frames > 2 && c.start < 0) {
       c.start = state.clock.elapsedTime;
