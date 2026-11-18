@@ -295,7 +295,12 @@ available) and `PAYMENTS_BACKEND=none` (the plan says it isn't available). In or
    the website, and the app, whose Caddyfile now allows the camera and microphone on
    `app.<domain>`); run `migrate` first (a backup before it), as for every migration.
 4. **Check:** two phones or browsers on different networks: a call connects, and
-   `chrome://webrtc-internals` shows only relay candidates.
+   `chrome://webrtc-internals` shows only relay candidates. For the Android app, run the
+   `android-apk` workflow by hand (Actions, android-apk, Run workflow, the beta's domain):
+   it builds an APK with the beta's public settings (debug-signed, never published,
+   kept 7 days); check the SHA-256 it prints, then install it with
+   `adb install app-release.apk` and call a browser from it. Listen for the sound: if it
+   comes from the earpiece, add the speaker fix D126 names.
 5. **Payments, later (owner):** a Razorpay account with KYC; a plan (₹299 a month,
    tax-inclusive, is the recommendation); test keys first (`PAYMENTS_BACKEND=razorpay`,
    `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_PLAN_ID`) and the webhook
