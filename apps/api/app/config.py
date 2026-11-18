@@ -191,6 +191,15 @@ class Settings(BaseSettings):
             raise ValueError("must be a lowercase PostgreSQL identifier")
         return v
 
+    @field_validator(
+        "cloudflare_turn_key_id", "cloudflare_turn_api_token", "razorpay_key_id", "razorpay_key_secret",
+        "razorpay_webhook_secret", "razorpay_plan_id", mode="before",
+    )  # fmt: skip
+    @classmethod
+    def _empty_is_unset(cls, v: object) -> object:
+        """An empty value (compose's `${X:-}`) means not set."""
+        return None if isinstance(v, str) and not v.strip() else v
+
     @field_validator("cors_origins")
     @classmethod
     def _exact_origins(cls, v: list[str]) -> list[str]:

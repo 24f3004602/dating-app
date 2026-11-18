@@ -162,7 +162,13 @@ async def test_cloudflare_relay_credentials() -> None:
 
 
 async def test_live_settings_rules(base_settings: Settings) -> None:
-    """LIVE-3: the Cloudflare relay needs its key; servers people use never run without a relay."""
+    """LIVE-3: the Cloudflare relay needs its key; servers people use never run without a relay;
+    empty values (compose's `${X:-}` on the beta) mean not set."""
+    unset = Settings.model_validate(
+        {**base_settings.model_dump(), "cloudflare_turn_key_id": "", "cloudflare_turn_api_token": " ",
+         "razorpay_key_id": "", "razorpay_plan_id": ""}
+    )  # fmt: skip
+    assert (unset.cloudflare_turn_key_id, unset.cloudflare_turn_api_token, unset.razorpay_key_id) == (None, None, None)
     with pytest.raises(ValidationError, match="CLOUDFLARE_TURN_KEY_ID"):
         Settings.model_validate({**base_settings.model_dump(), "calls_ice": "cloudflare"})
     with pytest.raises(ValidationError, match="Live calls need the relay in beta"):

@@ -66,7 +66,9 @@ LIKE_WINDOW = timedelta(hours=24)
 OPEN = (CallState.connecting, CallState.live)
 
 QUEUE_LIMIT = Limit("live_queue", 1200, 3600)  # a heartbeat every 4 s, with room
-SIGNAL_LIMIT = Limit("call_signal", 600, 3600)
+# The apps poll a call every 5 s while it runs (1.5 s while connecting): a plan member
+# in calls all hour stays well under this.
+SIGNAL_LIMIT = Limit("call_signal", 3600, 3600)
 ICE_LIMIT = Limit("call_ice", 120, 3600)  # relay credentials cost money
 # Pairings a member may have in a day: far above real use, it stops anyone
 # harvesting faces through Live.

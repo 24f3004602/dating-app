@@ -42,6 +42,18 @@ x-app-env: &app-env
   STORAGE_BACKEND: local
   PUSH_BACKEND: ${PUSH_BACKEND:-none}
   EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+  # Live calls (stage 23, D123): off until the owner's Cloudflare TURN key is in .env
+  # (deploy.md, "Live calls and the plan"). Never "direct" here (the settings refuse it).
+  CALLS_ICE: ${CALLS_ICE:-off}
+  CLOUDFLARE_TURN_KEY_ID: ${CLOUDFLARE_TURN_KEY_ID:-}
+  CLOUDFLARE_TURN_API_TOKEN: ${CLOUDFLARE_TURN_API_TOKEN:-}
+  # The plan (D094, D124): no payments until the owner's Razorpay account; test keys first,
+  # and live keys are refused in the beta.
+  PAYMENTS_BACKEND: ${PAYMENTS_BACKEND:-none}
+  RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+  RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+  RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+  RAZORPAY_PLAN_ID: ${RAZORPAY_PLAN_ID:-}
 
 x-api-image: &api-image
   image: datingapp-api:beta
