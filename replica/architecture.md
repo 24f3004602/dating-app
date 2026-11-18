@@ -258,6 +258,15 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
   - Structured JSON with request IDs and user IDs.
   - Never logged: message bodies, emails, birthdates, tokens or codes. IP addresses are truncated.
   - Security logs are kept for at least 1 year (DPDP), then deleted.
+### Live calls (stage 23, D123)
+
+- **Module:** `app/modules/calls` (models, service, router, `sdp.py`), `app/providers/ice.py` (none, direct, Cloudflare).
+- **Tables (migration 0015):** `call_members` (rules version, free calls used), `call_queue` (waiting members, heartbeat), `calls` (one row per pairing; descriptions only while open); `reports.call_id`.
+- **Routes:** `GET /v1/live`, `PUT /v1/live/rules`, `POST|DELETE /v1/live/queue` (join or heartbeat; leave), `GET /v1/calls/{id}`, `POST /v1/calls/{id}/ice`, `PUT /v1/calls/{id}/offer`, `PUT /v1/calls/{id}/answer`, `POST /v1/calls/{id}/connected`, `POST /v1/calls/{id}/end`; `GET /v1/plan` (the plan's price from Razorpay).
+- **Pairing:** one transaction under one advisory lock (`pg_advisory_xact_lock(int, int)`, its own key space): the member's open call, readiness, the longest-waiting suitable member, or a queue entry. Eligibility is SQL (`base_available_to`, gender and age both ways, no recent pairing, no hold).
+- **Signalling:** REST plus the realtime hint `call.updated` {call_id}; the apps poll every 1.5 s while connecting and 5 s while live. No trickle ICE.
+- **Clock:** the first `connected` report sets `ends_at`; reads and writes end calls past `ends_at` (plus 5 s) or past the connection timeout; no background job.
+- **Apps:** `src/calls/` (`session.ts` the controller, `peer.ts` the WebRTC link, `rtc.web.ts` the browser, `rtc.ts` the phone seam), `src/screens/live.tsx`, `src/screens/plan.tsx`; Live is the centre tab.
 
 ## Integration strategy
 

@@ -13,8 +13,12 @@ import { checkA11y, readyProfile, signUp, watchErrors } from "./helpers";
 
 // Chrome's own test camera and microphone, granted without a prompt; sound may autoplay.
 const FAKE_MEDIA = ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream", "--autoplay-policy=no-user-gesture-required"];
+const browsers: Browser[] = [];
 
-async function person(browser: Browser): Promise<Page> {
+/** One browser per person: two pages of one browser can't both hold the fake camera and microphone. */
+async function person(): Promise<Page> {
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: FAKE_MEDIA });
+  browsers.push(browser);
   const context = await browser.newContext({
     baseURL: WEB_URL,
     viewport: { width: 390, height: 844 },
@@ -38,11 +42,10 @@ async function playing(page: Page, label: string) {
 
 test("two people meet on Live, like each other, and a report pauses Live for the one reported", async () => {
   test.setTimeout(240_000);
-  const browser = await chromium.launch({ channel: "chrome", headless: true, args: FAKE_MEDIA });
   try {
     const stamp = Date.now();
-    const asha = await person(browser);
-    const rohan = await person(browser);
+    const asha = await person();
+    const rohan = await person();
     const errors = await Promise.all([watchErrors(asha), watchErrors(rohan)]);
 
     await signUp(asha, `e2e-asha-${stamp}@example.com`); // labelled test accounts
@@ -92,7 +95,7 @@ test("two people meet on Live, like each other, and a report pauses Live for the
     await expect(rohan.getByRole("button", { name: /^Chat with Asha, 27/ })).toBeVisible();
 
     // Asha moves on; Vikram is next. She reports him: the call ends at once.
-    const vikram = await person(browser);
+    const vikram = await person();
     errors.push(await watchErrors(vikram));
     await signUp(vikram, `e2e-vikram-${stamp}@example.com`);
     await readyProfile(vikram, { name: "Vikram", gender: "Man", seeking: "Woman" });
@@ -121,6 +124,6 @@ test("two people meet on Live, like each other, and a report pauses Live for the
       expect(found.console).toEqual([]);
     }
   } finally {
-    await browser.close();
+    await Promise.all(browsers.map((b) => b.close()));
   }
 });

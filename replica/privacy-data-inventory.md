@@ -98,6 +98,10 @@ them go through the grievance contact.
 Residual gaps:
 - A photo file whose deletion job fails 8 times is left in storage with no row pointing to it. Its job stays visible for 30 days. A reconciliation sweep that lists the bucket comes with the bucket adapter (owner setup).
 - The duplicate-photo signal isn't built, so no photo hash outlives its photo.
+| Live call records (stage 23, D123) | pairing, the free-call count, safety reviews | system | `calls`: the two member IDs, their device IDs (random per screen visit), when it was paired, connected and ended, how it ended, the call's limit, whether each side was on a free call; the two session descriptions only while the call is open (relay addresses only on servers) | the two members (their own call); staff only through a report naming the call (when and how long) | 90 days **(R)**; longer only while an open report names the call | deleted with the account (cascade) |
+| Live state (stage 23) | the Live rules accepted, free calls used | member, system | `call_members` (rules version and time, free calls used) | the member | while the account exists (the free count must outlive the call records) | deleted |
+| Live queue (stage 23) | waiting to be paired | member | `call_queue` (member, device ID, joined, last heartbeat) | nobody | until paired or left; swept an hour after the last heartbeat | deleted |
+| audio and video in Live calls | the call itself | member's device | **nowhere on our side**: media goes between the two devices through the relay; nothing is recorded | the other person (who could record their own screen, as the Live rules say) | not kept | n/a |
 
 ## External processors (none connected yet)
 
@@ -108,6 +112,7 @@ Residual gaps:
 | network: Cloudflare (home mode only, D097) | all traffic passes through it, encrypted between the phone and Cloudflare, then through the tunnel | **planned for the home beta**. API and photo responses are `no-store` or `private`, so they aren't cached; the app's own code files are. Named in the tester notice. Check Cloudflare's privacy terms and log retention before going live |
 | push delivery: Expo push service, then Apple (APNs) and Google (FCM) | the push token and the discreet text ("You have a new message."), never names, message text or IDs | **not connected** (needs the owner's EAS project and credentials); the adapter is built and tested against a fake server. Expo's own retention of tickets is a day; check its privacy terms before connecting |
 | payments: Razorpay (website) | nothing from us about the member: they enter their payment details in Razorpay's own checkout; we keep only the subscription ID | **not connected** (needs the owner's account and KYC). Razorpay holds payment data under its own terms and RBI rules; check them, and invoicing and GST, before going live (D094) |
+| TURN relay for Live calls: Cloudflare Realtime (D123) | the devices' IP addresses and the media packets it relays, for the call's duration; a short-lived credential per call; no names or IDs from us | **not connected** (needs the owner's Cloudflare TURN key: `CALLS_ICE=cloudflare`); until then Live is unavailable on servers. The privacy notice must name it before Live is switched on (deploy.md) |
 | later: SMS, verification vendor, error tracking | only what each needs | each requires a review and an inventory row before use |
 
 ## Member rights flows

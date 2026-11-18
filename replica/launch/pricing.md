@@ -92,3 +92,13 @@ Still to check:
 is before store fees (roughly 15-30%) and GST, both to be verified. **The model
 only works at much larger scale.** Density in one city comes first;
 monetization comes after the MVP proves the loop.
+
+## The plan, as built (2026-11-18, stage 23a, D124)
+
+- **The owner's rule:** every member's first 5 Live calls are free, up to a minute each; after that, Live comes with the plan.
+- **What it brings:** Live calls after the free ones, and calls up to 10 minutes. Nothing else: it never changes who sees whom or the equal like limit (principles 1-3).
+- **Its name:** "{brand} Plus" (BRAND_NAME).
+- **Its price:** whatever the owner sets on the Razorpay plan; the apps read it from Razorpay, so the price shown is the price charged. **Recommendation:** ₹299 a month, tax-inclusive (P1's low end). A weekly pass (P4) can follow as a second plan later.
+- **Where:** Razorpay's own page, from the web app and direct-download Android builds. Store builds: in-app purchase and Play Billing first (Apple 3.1.1; Play's payments policy).
+- **Easy exit (principle 4):** Stop renewing in the app, one tap and a confirmation, keeping what was paid for.
+- **Cost side:** the relay is the only per-call cost. Cloudflare Realtime: 1,000 GB a month free, then $0.05 per GB (read 2026-11-18). A one-minute call at about 1 Mbit/s each way relays roughly 15 MB, so about 60,000 such calls a month fit the free tier.

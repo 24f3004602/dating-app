@@ -65,6 +65,10 @@ export const en: Messages = {
       body: "Every member gets the same ten. More likes are never for sale.",
     },
     {
+      title: "Or meet live, on a one-minute call",
+      body: "A short video call with someone who fits you both ways. Your first five calls are free, up to a minute each, and their video stays hidden until you choose to see it. Like each other afterwards and it's a match.",
+    },
+    {
       title: "Answer before you collect more",
       body: "When five people are waiting for your reply, new likes pause until you answer someone.",
     },

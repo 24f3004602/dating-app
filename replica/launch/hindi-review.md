@@ -86,6 +86,8 @@ Write a better version in the last column, or "OK". Leave it empty if unsure.
 | 55 | टेस्टर्स के लिए शर्तें | terms for testers | the footer |  |
 | 56 | और | and the | the footer |  |
 | 57 | गोपनीयता सूचना | privacy notice | the footer |  |
+| 59 | या लाइव मिलिए, एक मिनट की कॉल पर | Or meet live, on a one-minute call | a new station's name on the route (Live, stage 23, 2026-11-18) |  |
+| 60 | किसी ऐसे इंसान से छोटी वीडियो कॉल, जो आपसे दोनों तरफ़ से मेल खाता हो। पहली पाँच कॉल मुफ़्त हैं, हर कॉल एक मिनट तक, और उनका वीडियो तब तक छिपा रहता है, जब तक आप उसे देखना न चुनें। बाद में आप दोनों एक-दूसरे को लाइक करें, तो मैच। | A short video call with someone who fits you both ways. Your first five calls are free, up to a minute each, and their video stays hidden until you choose to see it. Like each other afterwards and it's a match. | under that station's name (Live, stage 23, 2026-11-18) |  |
 | 58 | , दोनों अंग्रेज़ी में। किसी भी सार्वजनिक लॉन्च से पहले पूरे दस्तावेज़ आएँगे। | . Full documents will follow before any public launch. | the footer |  |
 
 **Afterwards (engineering):** corrections go into `apps/web/lib/i18n/hi.ts`; then

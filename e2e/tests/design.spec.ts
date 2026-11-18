@@ -39,14 +39,19 @@ test("the design gallery: axe, keyboard focus, screenshot", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Primary, disabled" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Primary, busy" })).toHaveAttribute("aria-busy", "true");
 
-  // Reflow (WCAG 1.4.10): at 320 CSS pixels wide, nothing sticks out sideways.
+  // Reflow (WCAG 1.4.10): at 320 CSS pixels wide, nothing sticks out sideways. Polled: the
+  // welcome map in the gallery lays itself out from its measured width, a frame after the
+  // resize, so its first check could see the old width (CI on 5d53c22).
   await page.setViewportSize({ width: 320, height: 800 });
-  const overflow = await page.evaluate(() =>
-    [...document.querySelectorAll("body *")]
-      .filter((el) => el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().right > 320.5)
-      .map((el) => el.getAttribute("aria-label") ?? el.textContent?.slice(0, 40) ?? el.tagName),
-  );
-  expect(overflow).toEqual([]);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("body *")]
+          .filter((el) => el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().right > 320.5)
+          .map((el) => el.getAttribute("aria-label") || el.textContent?.slice(0, 40) || `<${el.tagName.toLowerCase()}>`),
+      ),
+    )
+    .toEqual([]);
 
   await page.setViewportSize({ width: 390, height: 4200 }); // the page scrolls inside the app: show it all
   await page.screenshot({ path: "test-results/design-gallery.png", fullPage: true });

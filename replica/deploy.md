@@ -274,6 +274,34 @@ The privacy notice promises all this within 30 days of the end.
 - **Documents:** the notice hasn't had legal review.
 - **Email:** Gmail's sending limits apply.
 - **Staff sign-in limits:** the console's server doesn't pass the visitor's IP to the API, so per-IP limits on staff sign-in count all staff together. That's stricter, not weaker, but an attack on the console could lock staff out for a while.
+### Live calls and the plan: switching them on (stage 23, D123, D124)
+
+Live and the plan are built but off on the beta: `CALLS_ICE=off` (Live says it isn't
+available) and `PAYMENTS_BACKEND=none` (the plan says it isn't available). In order:
+
+1. **The relay (owner):** in the Cloudflare dashboard (the account the tunnel uses), Realtime,
+   TURN: create a TURN key; put its ID and API token in `infra/beta/.env` as
+   `CLOUDFLARE_TURN_KEY_ID` and `CLOUDFLARE_TURN_API_TOKEN`, with `CALLS_ICE=cloudflare`.
+   Never `direct` on a server (the settings refuse it).
+2. **The documents (owner, with legal review):** before Live is on, the privacy notice must
+   say: Live calls are video calls with other members; audio and video go between the two
+   devices through Cloudflare's relay, which sees the devices' IP addresses, and are not
+   recorded by us; we keep who called whom, when, how long and how it ended for 90 days
+   (longer if a report names the call); the other person could record their screen. The
+   terms gain the Live rules (as the app shows them) and, before any payment, the plan's
+   terms: price, renewal, cancellation and refunds. Then bump `BETA_VERSION` with the API's
+   and the app's document versions (documents.ts says how).
+3. **Release:** the images through `beta-images` (all three: the API with migration 0015,
+   the website, and the app, whose Caddyfile now allows the camera and microphone on
+   `app.<domain>`); run `migrate` first (a backup before it), as for every migration.
+4. **Check:** two phones or browsers on different networks: a call connects, and
+   `chrome://webrtc-internals` shows only relay candidates.
+5. **Payments, later (owner):** a Razorpay account with KYC; a plan (₹299 a month,
+   tax-inclusive, is the recommendation); test keys first (`PAYMENTS_BACKEND=razorpay`,
+   `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_PLAN_ID`) and the webhook
+   (`https://api.<domain>/v1/webhooks/razorpay`, its secret in `RAZORPAY_WEBHOOK_SECRET`,
+   events `subscription.*`); live keys only with the owner's go (`PAYMENTS_LIVE=true`,
+   which the beta refuses until the owner decides to charge testers or moves to production).
 
 ## Staging plan (planned)
 
