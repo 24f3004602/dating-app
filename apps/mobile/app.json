@@ -48,6 +48,14 @@
           "cameraPermission": "Live video calls use your camera, only while you're in Live.",
           "microphonePermission": "Live video calls use your microphone, only while you're in Live."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-dontwarn org.webrtc.Dav1dDecoder$Natives"
+          }
+        }
       ]
     ]
   }
