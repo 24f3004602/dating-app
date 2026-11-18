@@ -9,7 +9,7 @@
  */
 import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { Children, type ReactNode, useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { ApiError } from "@/api/client";
@@ -23,8 +23,8 @@ import { platformRtc, useLiveSession } from "@/calls/useLiveSession";
 import { VideoView } from "@/calls/VideoView";
 import { BRAND } from "@/config";
 import { fill, t } from "@/i18n/en";
-import { color, space, type } from "@/theme/tokens";
-import { Badge, Body, Button, Caption, Heading, Loading, Notice, Plate, Row, Screen, Title } from "@/ui/primitives";
+import { color, font, radius, space, type } from "@/theme/tokens";
+import { Body, Button, Caption, Heading, Loading, Notice, Plate, Screen, Title } from "@/ui/primitives";
 
 export const planName = () => fill(t.plan.name, { brand: BRAND });
 
@@ -39,13 +39,32 @@ function problemText(code: string): string {
   return fill(known ?? t.live.problems.unknown, { plan: planName() });
 }
 
+/** Buttons side by side, each an equal share of the row. */
+function Cells({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.cells}>
+      {Children.toArray(children).map((child, i) => (
+        <View key={i} style={styles.cell}>
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function Countdown({ endsAt }: { endsAt: number }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(timer);
   }, []);
-  return <Badge label={fill(t.live.timeLeft, { time: clock(endsAt - now) })} tone="highlight" />;
+  // A plain sign, not a Badge: a Badge fades in whenever its words change, and the time
+  // changes every second (badges never pulse).
+  return (
+    <View style={styles.clock}>
+      <Text style={styles.clockText}>{fill(t.live.timeLeft, { time: clock(endsAt - now) })}</Text>
+    </View>
+  );
 }
 
 /** What you have: free calls left, or the plan. */
@@ -78,6 +97,7 @@ function Lobby({ live, problem, onStart }: { live: LiveOut; problem: string | nu
 
   return (
     <>
+      <Body muted>{t.live.intro}</Body>
       <Allowance live={live} />
       {shown ? <Notice kind={shown.startsWith("camera") || shown === "no_camera" ? "error" : "info"}>{problemText(shown)}</Notice> : null}
       {live.call ? (
@@ -154,9 +174,12 @@ function Stage({ rtc }: { rtc?: LiveRtc }) {
   };
   const connected = !!call?.connected_at;
 
+  const upsell = phase === "ended" && call?.end_reason === "limit" && call.free && live.data.plan === false;
+  const likeShown = connected && !!peer && !decide.isSuccess;
+
   return (
     <>
-      <View style={styles.stage} aria-label={t.live.stage}>
+      <View style={styles.stage} role="group" aria-label={t.live.stage}>
         <View style={styles.remote}>
           {phase === "connecting" || phase === "live" ? (
             <VideoView stream={state.remote} label={fill(t.live.them, { name })} />
@@ -183,32 +206,49 @@ function Stage({ rtc }: { rtc?: LiveRtc }) {
         <View style={styles.mine}>
           <VideoView stream={state.camera} label={t.live.you} mirror muted />
         </View>
+        {/* Their name and the time left ride on the picture, like a station's name sign. */}
+        {peer && (phase === "connecting" || phase === "live" || phase === "ended") ? (
+          <View style={styles.tag}>
+            <Plate>{`${name}, ${peer.age}`}</Plate>
+          </View>
+        ) : null}
+        {phase === "live" && state.endsAt ? (
+          <View style={styles.timer}>
+            <Countdown endsAt={state.endsAt} />
+          </View>
+        ) : null}
       </View>
 
-      {peer && phase !== "searching" ? (
-        <Row>
-          <Plate>{`${name}, ${peer.age}`}</Plate>
-          {phase === "live" && state.endsAt ? <Countdown endsAt={state.endsAt} /> : null}
-        </Row>
-      ) : null}
       {phase === "searching" ? <Caption>{t.live.searchingHint}</Caption> : null}
       {phase === "connecting" ? <Body muted>{fill(t.live.connecting, { name })}</Body> : null}
       {state.problem ? <Notice kind="info">{problemText(state.problem)}</Notice> : null}
 
+      {/* In a call, End and Report sit in the first row: never below the fold. */}
       {phase === "connecting" || phase === "live" ? (
-        <View style={styles.controls}>
+        <Cells>
           <Button label={t.live.next} variant="secondary" onPress={() => void session.next()} />
           <Button label={t.live.end} variant="danger" onPress={() => void session.hangUp("hangup")} />
           <Button label={t.live.report} variant="danger" accessibleName={`${t.live.report} ${name}`} onPress={() => void report()} />
-        </View>
+        </Cells>
+      ) : null}
+      {state.camera && phase !== "ended" ? (
+        <>
+          <Cells>
+            <Button label={state.micOn ? t.live.mute : t.live.unmute} variant="secondary" onPress={() => session.setMic(!state.micOn)} />
+            <Button label={state.cameraOn ? t.live.cameraOff : t.live.cameraOn} variant="secondary" onPress={() => session.setCamera(!state.cameraOn)} />
+          </Cells>
+          {!state.micOn ? <Caption>{t.live.yourMicOff}</Caption> : null}
+          {!state.cameraOn ? <Caption>{t.live.yourCameraOff}</Caption> : null}
+        </>
       ) : null}
       {phase === "camera" || phase === "searching" ? (
         <Button label={t.live.stop} variant="secondary" onPress={() => session.stop()} />
       ) : null}
 
+      {/* After a call, one main action: Like when it connected, else the next person. */}
       {phase === "ended" ? (
         <View style={styles.controls}>
-          {connected && peer && !decide.isSuccess ? (
+          {likeShown ? (
             <Button label={fill(t.live.like, { name })} hint={fill(t.live.likeHint, { name })} busy={decide.isPending} onPress={like} />
           ) : null}
           {decide.isSuccess ? (
@@ -222,9 +262,21 @@ function Stage({ rtc }: { rtc?: LiveRtc }) {
             )
           ) : null}
           {decide.error ? <Notice kind="error">{decide.error instanceof ApiError ? messageFor(decide.error) : t.common.unknownError}</Notice> : null}
-          <Button label={t.live.nextPerson} variant={connected ? "secondary" : "primary"} onPress={() => void session.next()} />
+          {upsell ? (
+            <>
+              <Notice kind="info">{fill(t.live.longer, { plan: planName(), minutes: Math.round(live.data.plan_call_seconds / 60) })}</Notice>
+              <Button label={fill(t.live.seePlan, { plan: planName() })} variant="secondary" onPress={() => router.push("/plan")} />
+            </>
+          ) : null}
+          <Cells>
+            <Button
+              label={t.live.nextPerson}
+              variant={likeShown || decide.data?.match ? "secondary" : "primary"}
+              onPress={() => void session.next()}
+            />
+            <Button label={t.live.done} variant="secondary" onPress={() => session.stop()} />
+          </Cells>
           {peer ? <Button label={t.live.report} variant="danger" accessibleName={`${t.live.report} ${name}`} onPress={() => void report()} /> : null}
-          <Button label={t.live.done} variant="secondary" onPress={() => session.stop()} />
         </View>
       ) : null}
     </>
@@ -236,8 +288,14 @@ export function LiveScreen({ rtc }: { rtc?: LiveRtc } = {}) {
   return (
     <Screen>
       <Title>{t.live.title}</Title>
-      <Body muted>{t.live.intro}</Body>
-      {supported ? <Stage rtc={rtc ?? platformRtc} /> : <Notice kind="info">{t.live.webOnly}</Notice>}
+      {supported ? (
+        <Stage rtc={rtc ?? platformRtc} />
+      ) : (
+        <>
+          <Body muted>{t.live.intro}</Body>
+          <Notice kind="info">{t.live.webOnly}</Notice>
+        </>
+      )}
     </Screen>
   );
 }
@@ -245,7 +303,12 @@ export function LiveScreen({ rtc }: { rtc?: LiveRtc } = {}) {
 const styles = StyleSheet.create({
   rules: { gap: space.md },
   // The call: 3:4, graphite, their video over a marigold rail (their line), yours in a teal frame (yours).
-  stage: { width: "100%", aspectRatio: 3 / 4, backgroundColor: color.sign, overflow: "hidden" },
+  // 4:5, the shape photos are kept in (D105).
+  stage: { width: "100%", aspectRatio: 4 / 5, backgroundColor: color.sign, overflow: "hidden" },
+  tag: { position: "absolute", top: space.md, left: space.md, maxWidth: "65%" },
+  timer: { position: "absolute", top: space.md, right: space.md },
+  clock: { backgroundColor: color.highlight, borderRadius: radius.plate, paddingHorizontal: space.sm, paddingVertical: space.xs / 2 },
+  clockText: { ...type.caption, fontFamily: font.textSemibold, color: color.text },
   remote: { flex: 1 },
   rail: { height: 6, backgroundColor: color.highlight },
   cover: {
@@ -273,4 +336,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   controls: { gap: space.md },
+  cells: { flexDirection: "row", gap: space.md },
+  cell: { flex: 1 },
 });

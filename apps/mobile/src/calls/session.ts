@@ -49,6 +49,9 @@ export type LiveState = {
   endsAt: number | null;
   /** Why the session stopped or a call didn't happen: a code the screen puts into words. */
   problem: string | null;
+  /** Your microphone and camera picture: off sends silence or black, nothing is turned off. */
+  micOn: boolean;
+  cameraOn: boolean;
 };
 
 export const CONNECTING_POLL_MS = 1500;
@@ -58,7 +61,9 @@ export const CONNECT_TIMEOUT_MS = 30_000;
 export const DROP_GRACE_MS = 6000;
 const RETRY_MS = 5000;
 
-const INITIAL: LiveState = { phase: "idle", camera: null, remote: null, call: null, endsAt: null, problem: null };
+const INITIAL: LiveState = {
+  phase: "idle", camera: null, remote: null, call: null, endsAt: null, problem: null, micOn: true, cameraOn: true,
+}; // prettier-ignore
 
 function cameraProblem(err: unknown): string {
   const name = err instanceof Error || (typeof err === "object" && err !== null) ? (err as { name?: string }).name : undefined;
@@ -155,7 +160,7 @@ export class LiveSession {
           camera.getTracks().forEach((track) => track.stop()); // stopped meanwhile
           return;
         }
-        this.set({ camera });
+        this.set({ camera, micOn: true, cameraOn: true });
       } catch (err) {
         if (gen === this.generation) this.set({ phase: "idle", problem: cameraProblem(err) });
         return;
@@ -348,6 +353,22 @@ export class LiveSession {
     if ((phase === "connecting" || phase === "live") && call) void this.deps.api.end(call.id, "hangup").catch(() => undefined);
     this.stopCamera();
     this.set({ ...INITIAL });
+  }
+
+  /** Mute or unmute the microphone: the other person hears silence. */
+  setMic(on: boolean): void {
+    this.enable("audio", on);
+    this.set({ micOn: on });
+  }
+
+  /** Turn the camera's picture off or on: the other person sees black. */
+  setCamera(on: boolean): void {
+    this.enable("video", on);
+    this.set({ cameraOn: on });
+  }
+
+  private enable(kind: "audio" | "video", on: boolean): void {
+    for (const track of this.state.camera?.getTracks() ?? []) if (track.kind === kind) track.enabled = on;
   }
 
   /** A realtime hint: something about a call changed. */

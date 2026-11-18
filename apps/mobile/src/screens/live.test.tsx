@@ -129,3 +129,43 @@ test("the time left reads as minutes and seconds, never below zero", () => {
   expect(clock(41_200)).toBe("0:42");
   expect(clock(-5)).toBe("0:00");
 });
+
+test("LIVE-APP-15: mute and camera off while waiting; after a free call's minute runs out, the plan is offered", async () => {
+  const plan = fill(t.plan.name, { brand: BRAND });
+  const link = { state: "new", remote: null, offer: jest.fn(), answer: jest.fn(), accept: jest.fn(), onChange: () => () => undefined, close: jest.fn() };
+  const rtc: LiveRtc = { ...fakeRtc(), link: jest.fn(() => link as never) };
+  const call = {
+    id: "c1", role: "answerer", client_id: "", state: "connecting", peer: { user_id: "u2", display_name: "Rohan", age: 27 },
+    limit_s: 60, free: true, offer_sdp: null, answer_sdp: null, connected_at: null, ends_at: null, ended_at: null,
+    end_reason: null, server_now: new Date().toISOString(),
+  }; // prettier-ignore
+  let paired = false;
+  const { api } = fakeApi({
+    "GET /v1/live": () => live(),
+    "POST /v1/live/queue": (req) =>
+      paired
+        ? { status: 200, body: { state: "paired", call: { ...call, client_id: (req.body as { client_id: string }).client_id }, retry_after_s: 0 } }
+        : { status: 200, body: { state: "waiting", call: null, retry_after_s: 4 } },
+    "POST /v1/calls/c1/ice": () => ({ status: 200, body: { policy: "all", servers: [], ttl_s: 150 } }),
+    "GET /v1/calls/c1": () => ({
+      status: 200,
+      body: { ...call, state: "ended", end_reason: "limit", connected_at: call.server_now, ended_at: call.server_now },
+    }),
+  });
+  await renderWithApp(<SignedIn><LiveScreen rtc={rtc} /></SignedIn>, api);
+  await fireEvent.press(await screen.findByRole("button", { name: t.live.start }));
+  expect(await screen.findByText(t.live.searching)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.live.mute }));
+  expect(screen.getByRole("button", { name: t.live.unmute })).toBeTruthy();
+  expect(screen.getByText(t.live.yourMicOff)).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.live.cameraOff }));
+  expect(screen.getByText(t.live.yourCameraOff)).toBeTruthy();
+
+  paired = true;
+  await fireEvent.press(screen.getByRole("button", { name: t.live.stop }));
+  await fireEvent.press(await screen.findByRole("button", { name: t.live.start }));
+  expect(await screen.findByText(fill(t.live.longer, { plan, minutes: 10 }))).toBeTruthy();
+  expect(screen.getByText(new RegExp(t.live.timeUp))).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: fill(t.live.seePlan, { plan }) }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/plan");
+});

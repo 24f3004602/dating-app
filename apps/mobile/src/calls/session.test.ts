@@ -233,3 +233,19 @@ test("a call given to another device of yours isn't taken here", async () => {
   expect(session.getState()).toMatchObject({ phase: "idle", problem: "other_device" });
   expect(api.ice).not.toHaveBeenCalled();
 });
+
+test("muting and turning the camera off change only that kind of track, and a new camera starts on", async () => {
+  const tracks = { audio: { kind: "audio", enabled: true, stop: jest.fn() }, video: { kind: "video", enabled: true, stop: jest.fn() } };
+  const stream = { getTracks: () => [tracks.audio, tracks.video] };
+  const { session } = setup({}, { openCamera: jest.fn(async () => stream) });
+  await session.start();
+  await flush();
+  session.setMic(false);
+  expect([tracks.audio.enabled, tracks.video.enabled, session.getState().micOn]).toEqual([false, true, false]);
+  session.setCamera(false);
+  expect([tracks.audio.enabled, tracks.video.enabled, session.getState().cameraOn]).toEqual([false, false, false]);
+  session.setMic(true);
+  expect([tracks.audio.enabled, session.getState().micOn]).toEqual([true, true]);
+  session.stop();
+  expect(session.getState()).toMatchObject({ micOn: true, cameraOn: true, camera: null });
+});
