@@ -20,7 +20,10 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -34,11 +37,18 @@
         "expo-image-picker",
         {
           "photosPermission": "Choose photos for your profile. Only the photos you pick are uploaded.",
-          "cameraPermission": false,
-          "microphonePermission": false
+          "cameraPermission": "Live video calls use your camera, only while you're in Live.",
+          "microphonePermission": "Live video calls use your microphone, only while you're in Live."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Live video calls use your camera, only while you're in Live.",
+          "microphonePermission": "Live video calls use your microphone, only while you're in Live."
+        }
+      ]
     ]
   }
 }

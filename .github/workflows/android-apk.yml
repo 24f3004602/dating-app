@@ -1,0 +1,83 @@
+name: android-apk
+
+# A native Android build of the member app (stage 23, D126), run by hand: it checks that
+# the app's native modules (react-native-webrtc, for Live on phones) build with this Expo
+# and React Native, and keeps the APK for seven days for a check on a phone. It uses the
+# beta's public settings, is signed with the template's debug key, and is never published:
+# testers' builds go through EAS once the owner's project exists (deploy.md).
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: The server the app talks to (api.<domain>; links to <domain>)
+        required: true
+        default: kinaara.online
+      brand_name:
+        description: The working name shown in the app
+        required: true
+        default: Kinaara
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      DOMAIN: ${{ inputs.domain }}
+      BRAND_NAME: ${{ inputs.brand_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the inputs
+        run: |
+          [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || { echo "not a domain: $DOMAIN"; exit 1; }
+          [[ "$BRAND_NAME" =~ ^[A-Za-z][A-Za-z0-9\ ]{0,39}$ ]] || { echo "not a name: $BRAND_NAME"; exit 1; }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - name: The build's settings (the beta's public ones)
+        run: |
+          {
+            echo "APP_VARIANT=beta"
+            echo "EXPO_PUBLIC_API_URL=https://api.$DOMAIN"
+            echo "EXPO_PUBLIC_WEB_URL=https://$DOMAIN"
+            echo "EXPO_PUBLIC_TERMS_VERSION=beta-2026-11"
+            echo "EXPO_PUBLIC_PRIVACY_VERSION=beta-2026-11"
+            echo "EXPO_PUBLIC_INVITE_ONLY=1"
+            echo "EXPO_PUBLIC_BRAND_NAME=$BRAND_NAME"
+            echo "EXPO_PUBLIC_WEB_CHECKOUT=1"
+          } >> "$GITHUB_ENV"
+      - name: Generate the native project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Build the APK (arm64)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
+      - name: Check WebRTC is inside, and record the APK's hash
+        working-directory: apps/mobile/android/app/build/outputs/apk/release
+        run: |
+          ls -l
+          unzip -l app-release.apk | grep -E "libjingle_peerconnection_so\.so" || { echo "the WebRTC native library is missing"; exit 1; }
+          unzip -p app-release.apk AndroidManifest.xml > /dev/null
+          sha256sum app-release.apk | tee app-release.apk.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app-release-apk
+          path: |
+            apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+            apps/mobile/android/app/build/outputs/apk/release/app-release.apk.sha256
+          retention-days: 7
+          if-no-files-found: error
