@@ -6,8 +6,9 @@ One transaction per decision:
 2. `pg_advisory_xact_lock` on the ordered pair: serialises two people
    deciding about each other at the same moment, so a reciprocal like is
    never missed (each would otherwise miss the other's uncommitted row);
-3. re-check that the target is reachable (today's set, or they liked the
-   actor) and available (blocks, account state) inside the lock;
+3. re-check that the target is reachable (today's set, they liked the
+   actor, or the two met in a Live call in the last day) and available
+   (blocks, account state) inside the lock;
 4. insert the interaction (unique per pair: no second decision, no undo);
 5. if both liked, insert the match with ON CONFLICT DO NOTHING on the
    unique ordered pair: duplicates are impossible even if the lock failed.
@@ -33,6 +34,7 @@ from app.logs import request_id_var
 from app.modules.accounts.models import User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.auth.service import age_on, local_today
+from app.modules.calls.service import met_on_call
 from app.modules.discovery.models import Block, Interaction, InteractionKind, Match, MatchCloseReason
 from app.modules.discovery.service import approved_photo_count, base_available_to, in_todays_set
 from app.modules.matching.schemas import (
@@ -120,6 +122,15 @@ async def liked_me(session: AsyncSession, viewer_id: uuid.UUID, target_id: uuid.
         )
     ).scalar_one_or_none()
     return row is not None
+
+
+async def met_and_available(session: AsyncSession, viewer_id: uuid.UUID, target_id: uuid.UUID, now: datetime) -> bool:
+    """A like after a Live call (D123): they met in a call that connected in the
+    last day, and the target is still available (no block either way, active)."""
+    if not await met_on_call(session, viewer_id, target_id, now):
+        return False
+    found = await session.execute(select(User.id).where(User.id == target_id, *base_available_to(viewer_id)))
+    return found.scalar_one_or_none() is not None
 
 
 async def chats_awaiting_reply(session: AsyncSession, settings: Settings, me: uuid.UUID, now: datetime) -> int:
@@ -269,8 +280,10 @@ async def decide(
         return out, False
 
     # Reachability is re-checked inside the locks: blocks and state changes apply.
-    reachable = await in_todays_set(session, settings, actor.id, data.target_id, now) or await liked_me(
-        session, actor.id, data.target_id
+    reachable = (
+        await in_todays_set(session, settings, actor.id, data.target_id, now)
+        or await liked_me(session, actor.id, data.target_id)
+        or await met_and_available(session, actor.id, data.target_id, now)
     )
     if not reachable:
         raise ApiError(404, "not_found")

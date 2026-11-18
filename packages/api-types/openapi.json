@@ -282,6 +282,196 @@
         "title": "BlockedOut",
         "type": "object"
       },
+      "CallEndReason": {
+        "enum": [
+          "hangup",
+          "next",
+          "limit",
+          "timeout",
+          "failed",
+          "report",
+          "left"
+        ],
+        "title": "CallEndReason",
+        "type": "string"
+      },
+      "CallOut": {
+        "additionalProperties": false,
+        "properties": {
+          "answer_sdp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For the offerer, once the answer is in",
+            "title": "Answer Sdp"
+          },
+          "client_id": {
+            "description": "The device of yours that takes this call",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "connected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connected At"
+          },
+          "end_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallEndReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the call's time runs out (set once connected)",
+            "title": "Ends At"
+          },
+          "free": {
+            "description": "This is one of your free calls",
+            "title": "Free",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "limit_s": {
+            "description": "The longest the call may run once connected",
+            "title": "Limit S",
+            "type": "integer"
+          },
+          "offer_sdp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For the answerer, once the offer is in",
+            "title": "Offer Sdp"
+          },
+          "peer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallPeer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None if they have left"
+          },
+          "role": {
+            "enum": [
+              "offerer",
+              "answerer"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "server_now": {
+            "description": "The server's clock, to show the time left correctly",
+            "format": "date-time",
+            "title": "Server Now",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CallState"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "client_id",
+          "state",
+          "peer",
+          "limit_s",
+          "free",
+          "offer_sdp",
+          "answer_sdp",
+          "connected_at",
+          "ends_at",
+          "ended_at",
+          "end_reason",
+          "server_now"
+        ],
+        "title": "CallOut",
+        "type": "object"
+      },
+      "CallPeer": {
+        "additionalProperties": false,
+        "description": "All a stranger sees of you in a call, besides your video: first name and age.",
+        "properties": {
+          "age": {
+            "title": "Age",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "age"
+        ],
+        "title": "CallPeer",
+        "type": "object"
+      },
+      "CallState": {
+        "enum": [
+          "connecting",
+          "live",
+          "ended"
+        ],
+        "title": "CallState",
+        "type": "string"
+      },
       "ChallengeOut": {
         "additionalProperties": false,
         "description": "The password was right; the second step is next.",
@@ -314,8 +504,19 @@
       },
       "CheckoutOut": {
         "additionalProperties": false,
-        "description": "For Razorpay Checkout on the website: the subscription to authorise and the public key.",
+        "description": "The subscription to authorise: on Razorpay's own page (`checkout_url`), or in Checkout with the key.",
         "properties": {
+          "checkout_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkout Url"
+          },
           "key_id": {
             "title": "Key Id",
             "type": "string"
@@ -327,7 +528,8 @@
         },
         "required": [
           "subscription_id",
-          "key_id"
+          "key_id",
+          "checkout_url"
         ],
         "title": "CheckoutOut",
         "type": "object"
@@ -485,6 +687,27 @@
         "title": "EmailIn",
         "type": "object"
       },
+      "EndIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "enum": [
+              "hangup",
+              "next",
+              "failed",
+              "report",
+              "limit"
+            ],
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "EndIn",
+        "type": "object"
+      },
       "EnrollIn": {
         "additionalProperties": false,
         "properties": {
@@ -595,6 +818,77 @@
           "status"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "IceOut": {
+        "additionalProperties": false,
+        "description": "For the device's peer connection: `relay` means `iceTransportPolicy: \"relay\"`.",
+        "properties": {
+          "policy": {
+            "enum": [
+              "relay",
+              "all"
+            ],
+            "title": "Policy",
+            "type": "string"
+          },
+          "servers": {
+            "items": {
+              "$ref": "#/components/schemas/IceServerOut"
+            },
+            "title": "Servers",
+            "type": "array"
+          },
+          "ttl_s": {
+            "title": "Ttl S",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "policy",
+          "servers",
+          "ttl_s"
+        ],
+        "title": "IceOut",
+        "type": "object"
+      },
+      "IceServerOut": {
+        "additionalProperties": false,
+        "properties": {
+          "credential": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credential"
+          },
+          "urls": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Urls",
+            "type": "array"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "urls"
+        ],
+        "title": "IceServerOut",
         "type": "object"
       },
       "Intent": {
@@ -866,6 +1160,90 @@
           "person"
         ],
         "title": "LikeReceivedOut",
+        "type": "object"
+      },
+      "LiveOut": {
+        "additionalProperties": false,
+        "description": "Live at a glance, for its screen.",
+        "properties": {
+          "available": {
+            "description": "Calls are set up on this server",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "call": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "An open call, on this device or another"
+          },
+          "free_call_seconds": {
+            "title": "Free Call Seconds",
+            "type": "integer"
+          },
+          "free_calls": {
+            "title": "Free Calls",
+            "type": "integer"
+          },
+          "free_calls_left": {
+            "title": "Free Calls Left",
+            "type": "integer"
+          },
+          "plan": {
+            "description": "The plan is active: calls aren't counted",
+            "title": "Plan",
+            "type": "boolean"
+          },
+          "plan_call_seconds": {
+            "title": "Plan Call Seconds",
+            "type": "integer"
+          },
+          "ready": {
+            "enum": [
+              "ok",
+              "unavailable",
+              "rules",
+              "profile_incomplete",
+              "paused",
+              "on_hold",
+              "no_calls_left",
+              "daily_limit"
+            ],
+            "title": "Ready",
+            "type": "string"
+          },
+          "rules_accepted": {
+            "title": "Rules Accepted",
+            "type": "boolean"
+          },
+          "rules_version": {
+            "title": "Rules Version",
+            "type": "string"
+          },
+          "waiting": {
+            "title": "Waiting",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available",
+          "ready",
+          "rules_version",
+          "rules_accepted",
+          "free_calls",
+          "free_calls_left",
+          "free_call_seconds",
+          "plan",
+          "plan_call_seconds",
+          "waiting",
+          "call"
+        ],
+        "title": "LiveOut",
         "type": "object"
       },
       "LoginIn": {
@@ -1491,6 +1869,72 @@
         "title": "PhotoUrls",
         "type": "object"
       },
+      "PlanOut": {
+        "additionalProperties": false,
+        "description": "What the plan costs, as the payment provider will charge it. `available`\nis false while payments aren't set up: the apps then sell nothing.",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "interval": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "enum": [
+                  "daily",
+                  "weekly",
+                  "monthly",
+                  "quarterly",
+                  "yearly"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "PlanOut",
+        "type": "object"
+      },
       "PreferencesIn": {
         "additionalProperties": false,
         "properties": {
@@ -1892,6 +2336,22 @@
         "title": "PushDeviceIn",
         "type": "object"
       },
+      "QueueIn": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "description": "A random ID for this device or tab",
+            "pattern": "^[A-Za-z0-9-]{8,36}$",
+            "title": "Client Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ],
+        "title": "QueueIn",
+        "type": "object"
+      },
       "QueueItem": {
         "additionalProperties": false,
         "properties": {
@@ -1899,7 +2359,8 @@
             "enum": [
               "profile",
               "message",
-              "photo"
+              "photo",
+              "call"
             ],
             "title": "About",
             "type": "string"
@@ -1965,6 +2426,41 @@
           "open_reports_on_subject"
         ],
         "title": "QueueItem",
+        "type": "object"
+      },
+      "QueueOut": {
+        "additionalProperties": false,
+        "properties": {
+          "call": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retry_after_s": {
+            "description": "When to send the next heartbeat while waiting",
+            "title": "Retry After S",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "waiting",
+              "paired"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "call",
+          "retry_after_s"
+        ],
+        "title": "QueueOut",
         "type": "object"
       },
       "ReadIn": {
@@ -2085,6 +2581,31 @@
             ],
             "title": "Assignee Id"
           },
+          "call_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How long that call ran once connected",
+            "title": "Call Seconds"
+          },
+          "call_started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a report from a Live call, if its record is kept",
+            "title": "Call Started At"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -2186,6 +2707,8 @@
           "evidence_text",
           "message_removed",
           "photo",
+          "call_started_at",
+          "call_seconds",
           "subject",
           "history"
         ],
@@ -2199,6 +2722,18 @@
             "default": true,
             "title": "Block",
             "type": "boolean"
+          },
+          "call_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Call Id"
           },
           "details": {
             "anyOf": [
@@ -2260,7 +2795,8 @@
             "enum": [
               "profile",
               "message",
-              "photo"
+              "photo",
+              "call"
             ],
             "title": "About",
             "type": "string"
@@ -2328,6 +2864,37 @@
         ],
         "title": "ReportStatus",
         "type": "string"
+      },
+      "RulesIn": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "maxLength": 16,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "RulesIn",
+        "type": "object"
+      },
+      "SdpIn": {
+        "additionalProperties": false,
+        "properties": {
+          "sdp": {
+            "maxLength": 20000,
+            "minLength": 10,
+            "title": "Sdp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sdp"
+        ],
+        "title": "SdpIn",
+        "type": "object"
       },
       "SessionOut": {
         "additionalProperties": false,
@@ -2609,7 +3176,7 @@
       },
       "SubscriptionOut": {
         "additionalProperties": false,
-        "description": "`entitled` is decided here, from the provider's webhooks. The plan unlocks\nnothing yet: what it includes is the owner's decision (pricing P2, D094).",
+        "description": "`entitled` is decided here, from the provider's webhooks. The plan brings\nLive calls after the free ones, and longer calls (the owner's choice,\n2026-11-18, D123).",
         "properties": {
           "entitled": {
             "title": "Entitled",
@@ -4916,6 +5483,524 @@
         ]
       }
     },
+    "/v1/calls/{call_id}": {
+      "get": {
+        "operationId": "get_call_v1_calls__call_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "One of my calls, with the other side's description",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/calls/{call_id}/answer": {
+      "put": {
+        "operationId": "answer_v1_calls__call_id__answer_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SdpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "The answerer's description",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/calls/{call_id}/connected": {
+      "post": {
+        "operationId": "connected_v1_calls__call_id__connected_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "This device is connected. The first report starts the call's clock",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/calls/{call_id}/end": {
+      "post": {
+        "operationId": "end_v1_calls__call_id__end_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Hang up (or move on, or report)",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/calls/{call_id}/ice": {
+      "post": {
+        "operationId": "ice_v1_calls__call_id__ice_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Relay servers for this call, with credentials that last only as long as it may",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/calls/{call_id}/offer": {
+      "put": {
+        "operationId": "offer_v1_calls__call_id__offer_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SdpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "The offerer's description",
+        "tags": [
+          "live"
+        ]
+      }
+    },
     "/v1/discovery/today": {
       "get": {
         "operationId": "today_v1_discovery_today_get",
@@ -5110,6 +6195,251 @@
         "summary": "People who liked me and are waiting for my decision",
         "tags": [
           "matching"
+        ]
+      }
+    },
+    "/v1/live": {
+      "get": {
+        "operationId": "live_v1_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Live at a glance: free calls left, the plan, an open call",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/live/queue": {
+      "delete": {
+        "operationId": "leave_v1_live_queue_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Stop waiting",
+        "tags": [
+          "live"
+        ]
+      },
+      "post": {
+        "operationId": "join_v1_live_queue_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueueIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Wait for someone, or be paired now. Also the heartbeat while waiting",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/live/rules": {
+      "put": {
+        "operationId": "accept_rules_v1_live_rules_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RulesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Accept the Live rules (the version shown)",
+        "tags": [
+          "live"
         ]
       }
     },
@@ -6549,7 +7879,7 @@
             "description": "A dependency (database, Redis) is unavailable"
           }
         },
-        "summary": "Start a subscription to authorise in Razorpay Checkout (website only; sandbox)",
+        "summary": "Start a subscription to authorise on Razorpay's page (web and sideloaded apps; never in store builds)",
         "tags": [
           "billing"
         ]
@@ -6678,6 +8008,37 @@
         "summary": "Redirect to a short-lived signed URL, if the access policy allows (otherwise 404)",
         "tags": [
           "photos"
+        ]
+      }
+    },
+    "/v1/plan": {
+      "get": {
+        "operationId": "plan_v1_plan_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          }
+        },
+        "summary": "What the plan costs, as the payment provider charges it",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -6905,7 +8266,7 @@
             "description": "Rate limited; see `Retry-After`"
           }
         },
-        "summary": "Report a profile, one of their photos or one of their messages (blocks them unless `block` is false)",
+        "summary": "Report a profile, a photo, a message or a Live call (blocks them unless `block` is false)",
         "tags": [
           "safety"
         ]

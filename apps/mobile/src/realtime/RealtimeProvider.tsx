@@ -7,6 +7,7 @@ import { AppState } from "react-native";
 import { unwrap } from "@/api/client";
 import { chatKeys, discoveryKeys, matchingKeys } from "@/api/hooks";
 import { useAuth } from "@/auth/AuthProvider";
+import { emitCallUpdated } from "@/calls/events";
 import { API_URL } from "@/config";
 import { RealtimeClient, type RealtimeEvent, realtimeUrl, type RealtimeStatus, type SocketLike } from "@/realtime/client";
 
@@ -30,6 +31,10 @@ export function RealtimeProvider({ children, openSocket }: Props) {
 
   useEffect(() => {
     const refresh = (event: RealtimeEvent) => {
+      if (event.type === "call.updated") {
+        emitCallUpdated(event.call_id); // the Live session refetches the call
+        return;
+      }
       void qc.invalidateQueries({ queryKey: matchingKeys.matches });
       if (event.type === "message.created" || event.type === "match.closed") {
         // A closed match: the open chat refetches, gets 404 and says it has ended.

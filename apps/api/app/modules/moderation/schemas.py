@@ -34,7 +34,7 @@ class QueueItem(ApiModel):
     reason: ReportReason
     priority: int = Field(description="1 first (underage), 2 harm, 3 the rest")
     status: ReportStatus
-    about: Literal["profile", "message", "photo"]
+    about: Literal["profile", "message", "photo", "call"]
     created_at: datetime
     subject: SubjectBrief | None = Field(description="None if the account has gone")
     assignee_id: uuid.UUID | None
@@ -78,6 +78,8 @@ class ReportDetail(ApiModel):
     evidence_text: str | None = Field(description="A copy of the reported message: the only message text staff see")
     message_removed: bool
     photo: PhotoOut | None
+    call_started_at: datetime | None = Field(description="For a report from a Live call, if its record is kept")
+    call_seconds: int | None = Field(description="How long that call ran once connected")
     subject: SubjectDetail | None
     history: list[ActionOut] = Field(description="Earlier actions on this account")
 

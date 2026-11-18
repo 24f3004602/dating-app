@@ -95,7 +95,10 @@ async def test_a_subscription_from_checkout_to_cancelled(
     asha = await make_member(db, app.state.storage, now)
     r = await client.post("/v1/me/subscription", headers=asha.headers)
     assert r.status_code == 201, r.text
-    assert r.json() == {"subscription_id": "sub_fake000001", "key_id": "rzp_test_fake"}
+    assert r.json() == {
+        "subscription_id": "sub_fake000001", "key_id": "rzp_test_fake",
+        "checkout_url": "https://rzp.example/i/sub_fake000001",  # Razorpay's own page (short_url)
+    }  # fmt: skip
     assert (await plan(client, asha))["status"] == "created"
     assert (await plan(client, asha))["entitled"] is False  # nothing paid yet
 
@@ -249,3 +252,45 @@ async def test_the_razorpay_adapter_calls_the_documented_endpoints() -> None:
     wrong = RazorpayPayments("k", "s", "h", "p", transport=httpx.MockTransport(lambda r: httpx.Response(400, json={})))
     with pytest.raises(httpx.HTTPStatusError):  # our request is wrong: not retried
         await wrong.create_subscription()
+
+
+async def test_the_price_comes_from_the_plan_itself(app: FastAPI, client: AsyncClient, db: Db, now: datetime) -> None:
+    """BIL-9 (D123): the price members see is read from the provider's plan, so it
+    is what they are charged; nothing is offered while payments aren't set up."""
+    m = await make_member(db, app.state.storage, now)
+    assert (await client.get("/v1/plan")).status_code == 401
+    none = (await client.get("/v1/plan", headers=m.headers)).json()
+    assert none == {"available": False, "amount": None, "currency": None, "period": None, "interval": None}
+    app.state.payments = FakePayments()
+    assert (await client.get("/v1/plan", headers=m.headers)).json() == {
+        "available": True, "amount": 29900, "currency": "INR", "period": "monthly", "interval": 1,
+    }  # fmt: skip
+
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        item = {"name": "Plus", "amount": 29900, "unit_amount": 29900, "currency": "INR", "active": True}
+        body = {"id": "plan_123", "entity": "plan", "interval": 1, "period": "monthly", "item": item}
+        return httpx.Response(200, json=body)
+
+    rp = RazorpayPayments(
+        "rzp_test_key", "key-secret", "hook-secret", "plan_123", transport=httpx.MockTransport(handler)
+    )
+    price = await rp.plan_price()
+    assert price is not None
+    assert (price.amount, price.currency, price.period, price.interval) == (
+        29900,
+        "INR",
+        "monthly",
+        1,
+    )
+    await rp.plan_price()  # remembered for a while: one request
+    assert [(r.method, str(r.url)) for r in seen] == [("GET", "https://api.razorpay.com/v1/plans/plan_123")]
+    for answer in (httpx.Response(503), httpx.Response(200, json={"item": {}})):
+        broken = RazorpayPayments("k", "s", "h", "p", transport=httpx.MockTransport(lambda r, a=answer: a))
+        with pytest.raises(PaymentsUnavailableError):
+            await broken.plan_price()
+        app.state.payments = broken
+        assert (await client.get("/v1/plan", headers=m.headers)).json()["available"] is False
+    await rp.aclose()

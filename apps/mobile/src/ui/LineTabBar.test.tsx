@@ -1,4 +1,4 @@
-/** MOB-18 (stage 20e, D105): the bottom bar is a named tab list of four stops on one line. */
+/** MOB-18 (stage 20e, D105; Live added in stage 23, D123): the bottom bar is a named tab list of five stops on one line. */
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -16,22 +16,23 @@ test("a named tab list; each stop is a tab with its name, and only the current o
       <LineBar label={t.tabs.label}>
         <Stop label={t.tabs.today} isFocused onPress={onPress} />
         <Stop label={t.tabs.likes} onPress={onPress} />
+        <Stop label={t.tabs.live} onPress={onPress} />
         <Stop label={t.tabs.matches} onPress={onPress} />
         <Stop label={t.tabs.you} onPress={onPress} />
       </LineBar>
     </SafeAreaProvider>,
   );
   // The container is named and has the tablist role, but is not one accessibility element:
-  // on Android that would merge the four tabs into a single TalkBack stop.
+  // on Android that would merge the five tabs into a single TalkBack stop.
   const bar = screen.getByLabelText(t.tabs.label);
   expect(bar.props.role).toBe("tablist");
   expect(bar.props.accessible).toBeUndefined();
-  expect(screen.getAllByRole("tab")).toHaveLength(4);
-  for (const name of [t.tabs.today, t.tabs.likes, t.tabs.matches, t.tabs.you]) {
+  expect(screen.getAllByRole("tab")).toHaveLength(5);
+  for (const name of [t.tabs.today, t.tabs.likes, t.tabs.live, t.tabs.matches, t.tabs.you]) {
     expect(screen.getByRole("tab", { name })).toBeTruthy(); // the name assistive tech reads
   }
   expect(screen.getByRole("tab", { name: t.tabs.today, selected: true })).toBeTruthy();
-  expect(screen.getAllByRole("tab", { selected: false })).toHaveLength(3);
+  expect(screen.getAllByRole("tab", { selected: false })).toHaveLength(4);
   await fireEvent.press(screen.getByRole("tab", { name: t.tabs.likes }));
   expect(onPress).toHaveBeenCalledTimes(1);
 });

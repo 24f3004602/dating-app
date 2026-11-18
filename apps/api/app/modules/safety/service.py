@@ -14,9 +14,10 @@ Anyone may be blocked by ID, and an unknown ID gets the same answer: the
 endpoint reveals nothing about who exists.
 
 Reports need a connection to the person (introduced, liked or passed either
-way, matched, or blocked by the reporter), which keeps strangers from
-mass-reporting arbitrary accounts. A reported message is copied into the
-report: that copy is the only message text staff see.
+way, matched, met in a Live call, or blocked by the reporter), which keeps
+strangers from mass-reporting arbitrary accounts. A reported message is copied
+into the report: that copy is the only message text staff see. A report from a
+call holds the reported member out of Live until staff decide (D123).
 """
 
 from __future__ import annotations
@@ -31,6 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.errors import ApiError
 from app.modules.accounts.models import User
 from app.modules.audit.service import record
+from app.modules.calls.service import call_between, called_together
 from app.modules.discovery.models import Block, DailyPick, Interaction, Match, MatchCloseReason
 from app.modules.matching.service import close_open_match, ordered, pair_lock_key
 from app.modules.media.models import Photo
@@ -134,6 +136,7 @@ async def _connected(session: AsyncSession, me: uuid.UUID, other: uuid.UUID) -> 
         ),
         exists().where(Match.user_a_id == a, Match.user_b_id == b),
         exists().where(Block.blocker_id == me, Block.blocked_id == other),
+        called_together(me, other),
     )
     return bool((await session.execute(select(or_(*checks)))).scalar_one())
 
@@ -167,6 +170,8 @@ async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: date
         photo = await session.get(Photo, data.photo_id)
         if photo is None or photo.user_id != data.subject_id:
             raise ApiError(422, "invalid_report_item", "Choose one of their photos.")
+    if data.call_id is not None and not await call_between(session, data.call_id, me, data.subject_id):
+        raise ApiError(422, "invalid_report_item", "Choose a call you had with them.")
 
     row = Report(
         reporter_id=me,
@@ -176,6 +181,7 @@ async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: date
         message_id=data.message_id,
         evidence_text=evidence,
         photo_id=data.photo_id,
+        call_id=data.call_id,
         priority=PRIORITY[data.reason],
         status=ReportStatus.open,
         created_at=now,
@@ -189,8 +195,14 @@ async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: date
     return _report_out(row, name), closed
 
 
+def report_about(row: Report) -> str:
+    if row.message_id or row.evidence_text:
+        return "message"
+    return "photo" if row.photo_id else "call" if row.call_id else "profile"
+
+
 def _report_out(row: Report, subject_name: str | None) -> ReportOut:
-    about = "message" if row.message_id or row.evidence_text else "photo" if row.photo_id else "profile"
+    about = report_about(row)
     return ReportOut(
         id=row.id, reason=row.reason, about=about, subject_name=subject_name, status=row.status,
         created_at=row.created_at,

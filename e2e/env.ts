@@ -61,5 +61,8 @@ export function apiEnv(runId: string): Record<string, string> {
     LOG_JSON: "false",
     // No moderation queue until stage 11: approve uploads so the member can browse.
     PHOTO_REVIEW_REQUIRED: "false",
+    // Live calls (stage 23, D123) between two browsers on this machine: no relay here.
+    // Refused on any server people use, where calls go only through the relay.
+    CALLS_ICE: "direct",
   };
 }

@@ -127,6 +127,28 @@ class Settings(BaseSettings):
     razorpay_plan_id: str | None = Field(default=None, max_length=64)
     payments_live: bool = False
 
+    # Live calls (stage 23, D123): random one-to-one video calls. The relay:
+    # "off" keeps Live unavailable (the default, and the safe one on a server
+    # until a relay is set up); "direct" connects devices without a relay
+    # (development and tests only: it would show each person the other's IP
+    # address); "cloudflare" relays every call through Cloudflare's TURN with
+    # short-lived credentials.
+    calls_ice: Literal["off", "direct", "cloudflare"] = "off"
+    cloudflare_turn_key_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    cloudflare_turn_api_token: SecretStr | None = None
+    # The owner's rule (2026-11-18): the first 5 calls are free, up to a minute
+    # each; after that, calls come with the plan.
+    calls_free_count: int = Field(default=5, ge=0, le=50)
+    calls_free_seconds: int = Field(default=60, ge=15, le=600)
+    # How long a call may run when both people have the plan.
+    calls_plan_seconds: int = Field(default=600, ge=60, le=3600)
+    # A pairing that hasn't connected by then is over.
+    calls_connect_timeout_s: int = Field(default=30, ge=10, le=120)
+    # Waiting members send a heartbeat; without one for this long they're skipped.
+    calls_queue_ttl_s: int = Field(default=20, ge=5, le=120)
+    # The same two people aren't paired again within this many hours.
+    calls_repeat_hours: int = Field(default=24, ge=0, le=720)
+
     # Media (stage 7). "local" writes under media_dir (development); "memory"
     # is for tests. Production needs a private bucket adapter (owner setup).
     storage_backend: Literal["local", "memory"] = "local"
@@ -214,6 +236,12 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _calls_rules(self) -> Settings:
+        if self.calls_ice == "cloudflare" and not (self.cloudflare_turn_key_id and self.cloudflare_turn_api_token):
+            raise ValueError("the cloudflare relay needs CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_API_TOKEN")
+        return self
+
+    @model_validator(mode="after")
     def _smtp_rules(self) -> Settings:
         if self.email_backend == "smtp" and not self.smtp_host:
             raise ValueError("the smtp email backend needs SMTP_HOST")
@@ -248,6 +276,8 @@ class Settings(BaseSettings):
             # Stage 17: test-only backends and plain-HTTP browser origins never reach a server.
             (self.push_backend == "memory", "the memory push backend is for tests only"),
             (self.payments_backend == "fake", "the fake payments backend is for tests only"),
+            # Without a relay, each person in a call would see the other's IP address.
+            (self.calls_ice == "direct", f"Live calls need the relay in {env} (CALLS_ICE=cloudflare, or off)"),
             (
                 any(not origin.startswith("https://") for origin in self.cors_origins),
                 f"CORS origins must be https in {env}",

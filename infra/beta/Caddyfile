@@ -43,7 +43,9 @@
 	header {
 		Content-Security-Policy "{$APP_CSP}"
 		X-Frame-Options "DENY"
-		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Live calls (stage 23, D123) need the camera and microphone, for this origin
+		# only; never location.
+		Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
 	}
 	root * /srv/app
 	# A single-page app: unknown paths get the app shell; hashed bundles are cached.

@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 // The API base URL. Set EXPO_PUBLIC_API_URL for devices on the LAN; the
 // default suits the web build and emulators that forward localhost.
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
@@ -34,6 +36,12 @@ export const BRAND_DEVANAGARI = process.env.EXPO_PUBLIC_BRAND_NAME_DEVANAGARI?.t
 
 // Invite-only sign-up (the beta, D096): the verify screen explains a missing code.
 export const INVITE_ONLY = process.env.EXPO_PUBLIC_INVITE_ONLY === "1";
+
+// Paying for the plan on the payment provider's own page (stage 23, D094, D123): always
+// in the web build; in a phone build only when made for direct download
+// (EXPO_PUBLIC_WEB_CHECKOUT=1). Store builds must use in-app purchase (Apple 3.1.1, Google
+// Play's payments policy), which isn't built yet, so they sell nothing.
+export const WEB_CHECKOUT = Platform.OS === "web" || process.env.EXPO_PUBLIC_WEB_CHECKOUT === "1";
 
 // The design-system gallery (`/design`): development and the e2e build only.
 // It shows labelled samples, never people (D088).

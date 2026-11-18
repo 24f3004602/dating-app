@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, status
 
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
 from app.modules.billing import service
-from app.modules.billing.schemas import CheckoutOut, SubscriptionOut
+from app.modules.billing.schemas import CheckoutOut, PlanOut, SubscriptionOut
 from app.openapi import problems
 from app.providers.payments import PaymentProvider
 from app.schemas import ApiModel
@@ -23,6 +23,11 @@ def _provider(request: Request) -> PaymentProvider:
     return found
 
 
+@router.get("/v1/plan", responses=problems(401), summary="What the plan costs, as the payment provider charges it")
+async def plan(request: Request, auth: CurrentSession) -> PlanOut:
+    return await service.plan(_provider(request))
+
+
 @router.get("/v1/me/subscription", responses=problems(401), summary="My plan: status, whether it's active, until when")
 async def mine(auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> SubscriptionOut:
     return await service.my_subscription(db, auth.user.id, ctx.clock())
@@ -32,7 +37,7 @@ async def mine(auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Subscriptio
     "/v1/me/subscription",
     status_code=status.HTTP_201_CREATED,
     responses=problems(401, 409, 429, 503),
-    summary="Start a subscription to authorise in Razorpay Checkout (website only; sandbox)",
+    summary="Start a subscription to authorise on Razorpay's page (web and sideloaded apps; never in store builds)",
 )
 async def checkout(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> CheckoutOut:
     await ctx.limiter.hit(service.CHECKOUT_LIMIT, str(auth.user.id))

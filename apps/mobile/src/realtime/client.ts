@@ -16,7 +16,9 @@ export type RealtimeEvent =
   | { type: "message.created"; match_id: string; n: number }
   | { type: "match.created"; match_id: string }
   | { type: "match.closed"; match_id: string }
-  | { type: "read.updated"; match_id: string; last_read_n: number };
+  | { type: "read.updated"; match_id: string; last_read_n: number }
+  // A Live call changed (paired, a description in, connected, ended): refetch it (D123).
+  | { type: "call.updated"; call_id: string };
 
 export type RealtimeStatus = "connecting" | "live" | "offline";
 
@@ -132,7 +134,8 @@ export class RealtimeClient {
       event.type === "message.created" ||
       event.type === "match.created" ||
       event.type === "match.closed" ||
-      event.type === "read.updated"
+      event.type === "read.updated" ||
+      event.type === "call.updated"
     ) {
       this.options.onEvent(event as RealtimeEvent);
     }

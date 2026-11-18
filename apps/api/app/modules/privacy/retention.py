@@ -22,6 +22,12 @@ UNVERIFIED_ACCOUNT = timedelta(days=7)  # sign-ups whose email was never confirm
 CLOSED_CONVERSATION = timedelta(days=30)  # after unmatch, block, ban or deletion (reports keep their copy)
 DAILY_PICKS_DAYS = 7
 
+# Live calls (stage 23, D123): who called whom, when, how long and how it ended.
+# Kept for safety reviews and the free-call count's disputes; a record an open
+# report names is kept until the report is resolved.
+CALL_RECORD = timedelta(days=90)  # (R)
+STALE_QUEUE_ENTRY = timedelta(hours=1)  # a waiting member who stopped sending heartbeats
+
 # Authentication.
 ENDED_SESSION = timedelta(days=30)  # after expiry or revocation
 EXPIRED_CODE = timedelta(days=1)

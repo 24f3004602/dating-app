@@ -9,8 +9,9 @@ from app.schemas import ApiModel
 
 
 class SubscriptionOut(ApiModel):
-    """`entitled` is decided here, from the provider's webhooks. The plan unlocks
-    nothing yet: what it includes is the owner's decision (pricing P2, D094)."""
+    """`entitled` is decided here, from the provider's webhooks. The plan brings
+    Live calls after the free ones, and longer calls (the owner's choice,
+    2026-11-18, D123)."""
 
     status: Literal[
         "none", "created", "authenticated", "active", "pending", "halted", "paused", "cancelled", "completed", "expired"
@@ -21,7 +22,19 @@ class SubscriptionOut(ApiModel):
 
 
 class CheckoutOut(ApiModel):
-    """For Razorpay Checkout on the website: the subscription to authorise and the public key."""
+    """The subscription to authorise: on Razorpay's own page (`checkout_url`), or in Checkout with the key."""
 
     subscription_id: str
     key_id: str
+    checkout_url: str | None
+
+
+class PlanOut(ApiModel):
+    """What the plan costs, as the payment provider will charge it. `available`
+    is false while payments aren't set up: the apps then sell nothing."""
+
+    available: bool
+    amount: int | None = None  # in the currency's smallest unit (paise)
+    currency: str | None = None
+    period: Literal["daily", "weekly", "monthly", "quarterly", "yearly"] | None = None
+    interval: int | None = None

@@ -7,9 +7,9 @@ import { LineBar, Stop } from "@/ui/LineTabBar";
 import { BETWEEN_BARS, ScreenEdges } from "@/ui/primitives";
 import { SignBand } from "@/ui/SignBand";
 
-// The four main places as tabs on one line (stage 20e, D105). Their URLs stay the same
-// (/discover, /likes, /matches, /profile); everything else opens above them in the
-// stack, so system Back works as before.
+// The main places as tabs on one line (stage 20e, D105), with Live at the centre (stage
+// 23, D123). Their URLs stay the same (/discover, /likes, /live, /matches, /profile);
+// everything else opens above them in the stack, so system Back works as before.
 export default function TabsLayout() {
   return (
     <Tabs style={styles.root}>
@@ -25,6 +25,9 @@ export default function TabsLayout() {
           </TabTrigger>
           <TabTrigger name="likes" href="/likes" asChild>
             <Stop label={t.tabs.likes} />
+          </TabTrigger>
+          <TabTrigger name="live" href="/live" asChild>
+            <Stop label={t.tabs.live} />
           </TabTrigger>
           <TabTrigger name="matches" href="/matches" asChild>
             <Stop label={t.tabs.matches} />

@@ -27,7 +27,7 @@ from app.errors import ApiError
 from app.jobs import JobQueue
 from app.modules.audit.service import record
 from app.modules.billing.models import STATUSES, PaymentEvent, Subscription
-from app.modules.billing.schemas import CheckoutOut, SubscriptionOut
+from app.modules.billing.schemas import CheckoutOut, PlanOut, SubscriptionOut
 from app.providers.payments import PaymentProvider, PaymentsUnavailableError
 from app.ratelimit import Limit
 
@@ -71,6 +71,28 @@ async def my_subscription(session: AsyncSession, user_id: uuid.UUID, now: dateti
     return subscription_out(await _latest(session, user_id), now)
 
 
+async def has_plan(session: AsyncSession, user_id: uuid.UUID, now: datetime) -> bool:
+    """The entitlement other modules ask about (Live calls, D123)."""
+    return entitled(await _latest(session, user_id), now)
+
+
+PERIODS = ("daily", "weekly", "monthly", "quarterly", "yearly")
+
+
+async def plan(provider: PaymentProvider) -> PlanOut:
+    """The price as the provider will charge it, or not available."""
+    try:
+        price = await provider.plan_price()
+    except PaymentsUnavailableError:
+        price = None
+    if price is None or price.period not in PERIODS or price.amount <= 0:
+        return PlanOut(available=False)
+    return PlanOut(
+        available=True, amount=price.amount, currency=price.currency,
+        period=price.period, interval=price.interval,
+    )  # fmt: skip
+
+
 async def start_checkout(
     session: AsyncSession, provider: PaymentProvider, user_id: uuid.UUID, now: datetime
 ) -> CheckoutOut:
@@ -92,7 +114,7 @@ async def start_checkout(
     )  # fmt: skip
     record(session, "billing.checkout_started", actor=user_id, target_type="user", target_id=user_id)
     await session.commit()
-    return CheckoutOut(subscription_id=created.id, key_id=provider.public_key)
+    return CheckoutOut(subscription_id=created.id, key_id=provider.public_key, checkout_url=created.short_url)
 
 
 async def cancel(

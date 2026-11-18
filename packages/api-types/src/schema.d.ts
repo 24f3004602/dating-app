@@ -481,6 +481,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/calls/{call_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my calls, with the other side's description */
+        get: operations["get_call_v1_calls__call_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/{call_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** The answerer's description */
+        put: operations["answer_v1_calls__call_id__answer_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/{call_id}/connected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** This device is connected. The first report starts the call's clock */
+        post: operations["connected_v1_calls__call_id__connected_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/{call_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hang up (or move on, or report) */
+        post: operations["end_v1_calls__call_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/{call_id}/ice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Relay servers for this call, with credentials that last only as long as it may */
+        post: operations["ice_v1_calls__call_id__ice_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calls/{call_id}/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** The offerer's description */
+        put: operations["offer_v1_calls__call_id__offer_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/discovery/today": {
         parameters: {
             query?: never;
@@ -525,6 +627,58 @@ export interface paths {
         /** People who liked me and are waiting for my decision */
         get: operations["likes_received_v1_likes_received_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live at a glance: free calls left, the plan, an open call */
+        get: operations["live_v1_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/live/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Wait for someone, or be paired now. Also the heartbeat while waiting */
+        post: operations["join_v1_live_queue_post"];
+        /** Stop waiting */
+        delete: operations["leave_v1_live_queue_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/live/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Accept the Live rules (the version shown) */
+        put: operations["accept_rules_v1_live_rules_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -837,7 +991,7 @@ export interface paths {
         /** My plan: status, whether it's active, until when */
         get: operations["mine_v1_me_subscription_get"];
         put?: never;
-        /** Start a subscription to authorise in Razorpay Checkout (website only; sandbox) */
+        /** Start a subscription to authorise on Razorpay's page (web and sideloaded apps; never in store builds) */
         post: operations["checkout_v1_me_subscription_post"];
         delete?: never;
         options?: never;
@@ -871,6 +1025,23 @@ export interface paths {
         };
         /** Redirect to a short-lived signed URL, if the access policy allows (otherwise 404) */
         get: operations["media_v1_media__photo_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the plan costs, as the payment provider charges it */
+        get: operations["plan_v1_plan_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -939,7 +1110,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Report a profile, one of their photos or one of their messages (blocks them unless `block` is false) */
+        /** Report a profile, a photo, a message or a Live call (blocks them unless `block` is false) */
         post: operations["report_v1_reports_post"];
         delete?: never;
         options?: never;
@@ -1174,6 +1345,88 @@ export interface components {
             user_id: string;
         };
         /**
+         * CallEndReason
+         * @enum {string}
+         */
+        CallEndReason: "hangup" | "next" | "limit" | "timeout" | "failed" | "report" | "left";
+        /** CallOut */
+        CallOut: {
+            /**
+             * Answer Sdp
+             * @description For the offerer, once the answer is in
+             */
+            answer_sdp: string | null;
+            /**
+             * Client Id
+             * @description The device of yours that takes this call
+             */
+            client_id: string;
+            /** Connected At */
+            connected_at: string | null;
+            end_reason: components["schemas"]["CallEndReason"] | null;
+            /** Ended At */
+            ended_at: string | null;
+            /**
+             * Ends At
+             * @description When the call's time runs out (set once connected)
+             */
+            ends_at: string | null;
+            /**
+             * Free
+             * @description This is one of your free calls
+             */
+            free: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Limit S
+             * @description The longest the call may run once connected
+             */
+            limit_s: number;
+            /**
+             * Offer Sdp
+             * @description For the answerer, once the offer is in
+             */
+            offer_sdp: string | null;
+            /** @description None if they have left */
+            peer: components["schemas"]["CallPeer"] | null;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "offerer" | "answerer";
+            /**
+             * Server Now
+             * Format: date-time
+             * @description The server's clock, to show the time left correctly
+             */
+            server_now: string;
+            state: components["schemas"]["CallState"];
+        };
+        /**
+         * CallPeer
+         * @description All a stranger sees of you in a call, besides your video: first name and age.
+         */
+        CallPeer: {
+            /** Age */
+            age: number;
+            /** Display Name */
+            display_name: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * CallState
+         * @enum {string}
+         */
+        CallState: "connecting" | "live" | "ended";
+        /**
          * ChallengeOut
          * @description The password was right; the second step is next.
          */
@@ -1193,9 +1446,11 @@ export interface components {
         };
         /**
          * CheckoutOut
-         * @description For Razorpay Checkout on the website: the subscription to authorise and the public key.
+         * @description The subscription to authorise: on Razorpay's own page (`checkout_url`), or in Checkout with the key.
          */
         CheckoutOut: {
+            /** Checkout Url */
+            checkout_url: string | null;
             /** Key Id */
             key_id: string;
             /** Subscription Id */
@@ -1271,6 +1526,14 @@ export interface components {
              */
             email: string;
         };
+        /** EndIn */
+        EndIn: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "hangup" | "next" | "failed" | "report" | "limit";
+        };
         /** EnrollIn */
         EnrollIn: {
             /** Challenge */
@@ -1322,6 +1585,30 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /**
+         * IceOut
+         * @description For the device's peer connection: `relay` means `iceTransportPolicy: "relay"`.
+         */
+        IceOut: {
+            /**
+             * Policy
+             * @enum {string}
+             */
+            policy: "relay" | "all";
+            /** Servers */
+            servers: components["schemas"]["IceServerOut"][];
+            /** Ttl S */
+            ttl_s: number;
+        };
+        /** IceServerOut */
+        IceServerOut: {
+            /** Credential */
+            credential?: string | null;
+            /** Urls */
+            urls: string[];
+            /** Username */
+            username?: string | null;
         };
         /**
          * Intent
@@ -1429,6 +1716,43 @@ export interface components {
              */
             liked_at: string;
             person: components["schemas"]["PublicProfileOut"];
+        };
+        /**
+         * LiveOut
+         * @description Live at a glance, for its screen.
+         */
+        LiveOut: {
+            /**
+             * Available
+             * @description Calls are set up on this server
+             */
+            available: boolean;
+            /** @description An open call, on this device or another */
+            call: components["schemas"]["CallOut"] | null;
+            /** Free Call Seconds */
+            free_call_seconds: number;
+            /** Free Calls */
+            free_calls: number;
+            /** Free Calls Left */
+            free_calls_left: number;
+            /**
+             * Plan
+             * @description The plan is active: calls aren't counted
+             */
+            plan: boolean;
+            /** Plan Call Seconds */
+            plan_call_seconds: number;
+            /**
+             * Ready
+             * @enum {string}
+             */
+            ready: "ok" | "unavailable" | "rules" | "profile_incomplete" | "paused" | "on_hold" | "no_calls_left" | "daily_limit";
+            /** Rules Accepted */
+            rules_accepted: boolean;
+            /** Rules Version */
+            rules_version: string;
+            /** Waiting */
+            waiting: boolean;
         };
         /** LoginIn */
         LoginIn: {
@@ -1703,6 +2027,23 @@ export interface components {
             /** Small */
             small: string;
         };
+        /**
+         * PlanOut
+         * @description What the plan costs, as the payment provider will charge it. `available`
+         *     is false while payments aren't set up: the apps then sell nothing.
+         */
+        PlanOut: {
+            /** Amount */
+            amount?: number | null;
+            /** Available */
+            available: boolean;
+            /** Currency */
+            currency?: string | null;
+            /** Interval */
+            interval?: number | null;
+            /** Period */
+            period?: ("daily" | "weekly" | "monthly" | "quarterly" | "yearly") | null;
+        };
         /** PreferencesIn */
         PreferencesIn: {
             /** Age Max */
@@ -1840,13 +2181,21 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** QueueIn */
+        QueueIn: {
+            /**
+             * Client Id
+             * @description A random ID for this device or tab
+             */
+            client_id: string;
+        };
         /** QueueItem */
         QueueItem: {
             /**
              * About
              * @enum {string}
              */
-            about: "profile" | "message" | "photo";
+            about: "profile" | "message" | "photo" | "call";
             /** Assignee Id */
             assignee_id: string | null;
             /**
@@ -1870,6 +2219,20 @@ export interface components {
             status: components["schemas"]["ReportStatus"];
             /** @description None if the account has gone */
             subject: components["schemas"]["SubjectBrief"] | null;
+        };
+        /** QueueOut */
+        QueueOut: {
+            call: components["schemas"]["CallOut"] | null;
+            /**
+             * Retry After S
+             * @description When to send the next heartbeat while waiting
+             */
+            retry_after_s: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "waiting" | "paired";
         };
         /** ReadIn */
         ReadIn: {
@@ -1917,6 +2280,16 @@ export interface components {
             /** Assignee Id */
             assignee_id: string | null;
             /**
+             * Call Seconds
+             * @description How long that call ran once connected
+             */
+            call_seconds: number | null;
+            /**
+             * Call Started At
+             * @description For a report from a Live call, if its record is kept
+             */
+            call_started_at: string | null;
+            /**
              * Created At
              * Format: date-time
              */
@@ -1959,6 +2332,8 @@ export interface components {
              * @default true
              */
             block: boolean;
+            /** Call Id */
+            call_id?: string | null;
             /** Details */
             details?: string | null;
             /** Message Id */
@@ -1978,7 +2353,7 @@ export interface components {
              * About
              * @enum {string}
              */
-            about: "profile" | "message" | "photo";
+            about: "profile" | "message" | "photo" | "call";
             /**
              * Created At
              * Format: date-time
@@ -2008,6 +2383,16 @@ export interface components {
          * @enum {string}
          */
         ReportStatus: "open" | "in_review" | "actioned" | "dismissed";
+        /** RulesIn */
+        RulesIn: {
+            /** Version */
+            version: string;
+        };
+        /** SdpIn */
+        SdpIn: {
+            /** Sdp */
+            sdp: string;
+        };
         /** SessionOut */
         SessionOut: {
             /**
@@ -2136,8 +2521,9 @@ export interface components {
         };
         /**
          * SubscriptionOut
-         * @description `entitled` is decided here, from the provider's webhooks. The plan unlocks
-         *     nothing yet: what it includes is the owner's decision (pricing P2, D094).
+         * @description `entitled` is decided here, from the provider's webhooks. The plan brings
+         *     Live calls after the free ones, and longer calls (the owner's choice,
+         *     2026-11-18, D123).
          */
         SubscriptionOut: {
             /** Entitled */
@@ -3911,6 +4297,411 @@ export interface operations {
             };
         };
     };
+    get_call_v1_calls__call_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    answer_v1_calls__call_id__answer_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SdpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    connected_v1_calls__call_id__connected_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    end_v1_calls__call_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ice_v1_calls__call_id__ice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IceOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    offer_v1_calls__call_id__offer_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SdpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     today_v1_discovery_today_get: {
         parameters: {
             query?: never;
@@ -4079,6 +4870,227 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    live_v1_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    join_v1_live_queue_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    leave_v1_live_queue_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    accept_rules_v1_live_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RulesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -5373,6 +6385,35 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    plan_v1_plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

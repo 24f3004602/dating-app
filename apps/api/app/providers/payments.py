@@ -5,7 +5,10 @@
 - `RazorpayPayments`: Razorpay's Subscriptions API (docs read 2026-11-05):
   POST https://api.razorpay.com/v1/subscriptions {plan_id, total_count} and
   POST .../subscriptions/{id}/cancel {cancel_at_cycle_end}, with HTTP Basic
-  auth (key ID and secret). Webhooks carry `X-Razorpay-Signature`, an
+  auth (key ID and secret). The price shown to members is read from the plan
+  itself (GET .../plans/{id}: `item.amount` in paise, `item.currency`,
+  `period`, `interval`; plan entity docs read 2026-11-18), so what the app
+  shows is what Razorpay charges. Webhooks carry `X-Razorpay-Signature`, an
   HMAC-SHA256 of the raw body under the webhook secret. Tested against a fake
   server and our own secret, not against Razorpay.
 
@@ -17,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import time
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -30,10 +34,22 @@ API = "https://api.razorpay.com/v1"
 TOTAL_COUNT = 120
 
 
+# How long a plan's price is remembered before it is read again.
+PRICE_TTL_S = 600
+
+
 @dataclass(frozen=True)
 class CreatedSubscription:
     id: str
     short_url: str | None
+
+
+@dataclass(frozen=True)
+class PlanPrice:
+    amount: int  # in the currency's smallest unit (paise)
+    currency: str
+    period: str  # daily, weekly, monthly, quarterly or yearly
+    interval: int
 
 
 class PaymentsUnavailableError(RuntimeError):
@@ -47,6 +63,7 @@ class PaymentProvider(Protocol):
     async def create_subscription(self) -> CreatedSubscription: ...
     async def cancel(self, subscription_id: str, *, at_cycle_end: bool) -> None: ...
     def verify(self, raw_body: bytes, signature: str) -> bool: ...
+    async def plan_price(self) -> PlanPrice | None: ...
 
 
 def razorpay_signature(secret: str, raw_body: bytes) -> str:
@@ -70,6 +87,9 @@ class NoPayments:
     def verify(self, raw_body: bytes, signature: str) -> bool:
         return False
 
+    async def plan_price(self) -> PlanPrice | None:
+        return None
+
 
 @dataclass
 class FakePayments:
@@ -79,16 +99,21 @@ class FakePayments:
     created: list[str] = field(default_factory=list)
     cancelled: list[tuple[str, bool]] = field(default_factory=list)
 
+    price: PlanPrice | None = field(default_factory=lambda: PlanPrice(29900, "INR", "monthly", 1))
+
     async def create_subscription(self) -> CreatedSubscription:
         sub_id = f"sub_fake{len(self.created) + 1:06d}"
         self.created.append(sub_id)
-        return CreatedSubscription(id=sub_id, short_url=None)
+        return CreatedSubscription(id=sub_id, short_url=f"https://rzp.example/i/{sub_id}")
 
     async def cancel(self, subscription_id: str, *, at_cycle_end: bool) -> None:
         self.cancelled.append((subscription_id, at_cycle_end))
 
     def verify(self, raw_body: bytes, signature: str) -> bool:
         return _matches(self.secret, raw_body, signature)
+
+    async def plan_price(self) -> PlanPrice | None:
+        return self.price
 
 
 class RazorpayPayments:
@@ -102,6 +127,7 @@ class RazorpayPayments:
         self.public_key = key_id  # the Checkout key is public by design
         self._webhook_secret = webhook_secret
         self._plan_id = plan_id
+        self._price: tuple[float, PlanPrice] | None = None
         self._client = httpx.AsyncClient(
             base_url=API, auth=(key_id, key_secret), timeout=15.0, transport=transport,
             headers={"accept": "application/json"},
@@ -117,6 +143,27 @@ class RazorpayPayments:
         res.raise_for_status()
         payload: dict[str, object] = res.json()
         return payload
+
+    async def plan_price(self) -> PlanPrice | None:
+        if self._price is not None and time.monotonic() - self._price[0] < PRICE_TTL_S:
+            return self._price[1]
+        try:
+            res = await self._client.get(f"/plans/{self._plan_id}")
+        except httpx.HTTPError as exc:
+            raise PaymentsUnavailableError("payment provider unreachable") from exc
+        if res.status_code != 200:
+            raise PaymentsUnavailableError(f"payment provider answered {res.status_code}")
+        try:
+            data = res.json()
+            item = data["item"]
+            price = PlanPrice(
+                amount=int(item["amount"]), currency=str(item["currency"]),
+                period=str(data["period"]), interval=int(data["interval"]),
+            )  # fmt: skip
+        except (ValueError, KeyError, TypeError) as exc:
+            raise PaymentsUnavailableError("payment provider answered something unexpected") from exc
+        self._price = (time.monotonic(), price)
+        return price
 
     async def create_subscription(self) -> CreatedSubscription:
         data = await self._post("/subscriptions", {"plan_id": self._plan_id, "total_count": TOTAL_COUNT})

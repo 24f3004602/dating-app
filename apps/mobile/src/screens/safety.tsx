@@ -150,7 +150,7 @@ export function SafetyMenu({ open, onClose, userId, name, matchId, onEnded }: Sa
   );
 }
 
-export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; name: string; matchId?: string }) {
+export function ReportScreen({ subjectId, name, matchId, callId }: { subjectId: string; name: string; matchId?: string; callId?: string }) {
   const router = useRouter();
   const send = useReport();
   const convo = useConversation(matchId ?? "", { enabled: !!matchId });
@@ -191,6 +191,8 @@ export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; 
         block: alsoBlock,
         ...(text ? { details: text } : {}),
         ...(about !== "profile" ? { message_id: about } : {}),
+        // From a Live call (D123): the report names the call, which has already ended.
+        ...(callId ? { call_id: callId } : {}),
       });
       setSent(true);
     } catch (err) {
@@ -202,6 +204,7 @@ export function ReportScreen({ subjectId, name, matchId }: { subjectId: string; 
     <Screen>
       <Title>{fill(t.report.title, { name })}</Title>
       <Body muted>{fill(t.report.intro, { name })}</Body>
+      {callId ? <Body>{fill(t.report.call, { name })}</Body> : null}
       {/* Both questions are sentences, so they are lists, not chips (D112). */}
       <ChoiceGroup
         layout="list"

@@ -33,6 +33,8 @@ from app.modules.accounts.models import User, UserRole, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.audit.service import record
 from app.modules.auth.service import age_on, local_today, revoke_all_sessions
+from app.modules.calls.models import Call
+from app.modules.calls.service import end_all_for as end_calls_for
 from app.modules.discovery.models import Match, MatchCloseReason
 from app.modules.matching.service import close_all_open_matches
 from app.modules.media.models import ModerationState, Photo
@@ -52,6 +54,7 @@ from app.modules.notifications.service import add_notice
 from app.modules.profiles.models import Profile
 from app.modules.profiles.service import prompt_answers
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
+from app.modules.safety.service import report_about
 from app.providers.storage import ObjectStorage
 
 ACTIVE = (ReportStatus.open, ReportStatus.in_review)
@@ -68,7 +71,7 @@ class Effects:
 
 
 def _about(r: Report) -> str:
-    return "message" if r.message_id or r.evidence_text else "photo" if r.photo_id else "profile"
+    return report_about(r)
 
 
 def _action_out(a: ModerationAction) -> ActionOut:
@@ -202,6 +205,8 @@ async def report_detail(
     await session.commit()
     photo = await session.get(Photo, r.photo_id) if r.photo_id else None
     message = await session.get(Message, r.message_id) if r.message_id else None
+    call = await session.get(Call, r.call_id) if r.call_id else None
+    ran = (call.ended_at or now) - call.connected_at if call and call.connected_at else None
     return ReportDetail(
         id=r.id,
         reason=r.reason,
@@ -214,6 +219,8 @@ async def report_detail(
         evidence_text=r.evidence_text,
         message_removed=bool(message and message.removed_at),
         photo=photo_out(photo, storage, now) if photo else None,
+        call_started_at=call.created_at if call else None,
+        call_seconds=round(ran.total_seconds()) if ran is not None else None,
         subject=await _subject_detail(session, settings, storage, r.subject_id, now) if r.subject_id else None,
         history=await _history(session, r.subject_id),
     )
@@ -222,6 +229,8 @@ async def report_detail(
 async def _apply_account(
     session: AsyncSession, target: User, action: ActionKind, now: datetime, effects: Effects
 ) -> None:
+    if action in (ActionKind.suspend, ActionKind.ban):
+        await end_calls_for(session, target.id, now)  # their Live calls end now
     if action is ActionKind.suspend:
         target.status = UserStatus.suspended
     elif action is ActionKind.ban:

@@ -43,6 +43,8 @@ from app.modules.auth.crypto import banned_email_digest
 from app.modules.auth.models import OneTimeCode, Session, SignupInvite
 from app.modules.auth.service import AuthContext, banned_email_key, local_today, revoke_all_sessions
 from app.modules.billing import service as billing
+from app.modules.calls.models import Call, CallQueueEntry
+from app.modules.calls.service import end_all_for as end_calls_for
 from app.modules.discovery.models import DailyPick, Match, MatchCloseReason
 from app.modules.matching.service import close_all_open_matches
 from app.modules.media.service import DELETE_OBJECTS, list_photos
@@ -84,6 +86,7 @@ async def request_deletion(
     await revoke_all_sessions(session, user.id, now)
     await billing.cancel_for_deletion(session, ctx.jobs, user.id)  # never charge someone who is leaving
     closed = await close_all_open_matches(session, user.id, MatchCloseReason.deleted, now)
+    await end_calls_for(session, user.id, now)  # Live calls end, and the queue forgets them
     await session.execute(
         delete(DailyPick).where(or_(DailyPick.candidate_id == user.id, DailyPick.viewer_id == user.id))
     )
@@ -219,6 +222,16 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
         session, delete(OneTimeCode).where(OneTimeCode.expires_at < now - retention.EXPIRED_CODE)
     )
     counts["payment_events"] = await billing.purge_events(session, now)
+    counts["calls"] = await _count(
+        session,
+        delete(Call).where(
+            Call.created_at < now - retention.CALL_RECORD,
+            ~exists().where(Report.call_id == Call.id, Report.status.in_(ACTIVE_REPORT)),
+        ),
+    )
+    counts["call_queue"] = await _count(
+        session, delete(CallQueueEntry).where(CallQueueEntry.seen_at < now - retention.STALE_QUEUE_ENTRY)
+    )
     counts["signup_invites"] = await _count(session, delete(SignupInvite).where(SignupInvite.expires_at < now))
     counts["waitlist_entries"] = await _count(
         session,

@@ -25,6 +25,10 @@ const types = {
   ".ttf": "font/ttf",
 };
 
+// The beta server's permissions for the app (infra/beta/Caddyfile): the camera and the
+// microphone for Live calls (stage 23, D123), for this origin only; never location.
+const permissions = "camera=(self), microphone=(self), geolocation=()";
+
 createServer((req, res) => {
   const pathname = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
   const relative = normalize(pathname).split(/[\\/]+/).filter(Boolean).join(sep);
@@ -34,6 +38,7 @@ createServer((req, res) => {
   res.writeHead(200, {
     "content-type": types[extname(file)] ?? "application/octet-stream",
     "content-security-policy": csp,
+    "permissions-policy": permissions,
   });
   createReadStream(file).pipe(res);
 }).listen(port, "127.0.0.1", () => console.log(`serving ${root} on http://127.0.0.1:${port}`));

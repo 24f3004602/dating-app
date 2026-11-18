@@ -22,6 +22,7 @@ from app.modules.auth.passwords import Passwords
 from app.modules.auth.router import router as auth_router
 from app.modules.auth.service import AuthContext
 from app.modules.billing.router import router as billing_router
+from app.modules.calls.router import router as calls_router
 from app.modules.discovery.router import router as discovery_router
 from app.modules.health.router import router as health_router
 from app.modules.matching.router import router as matching_router
@@ -37,6 +38,7 @@ from app.modules.staff.challenges import Challenges
 from app.modules.staff.router import router as staff_router
 from app.modules.waitlist.router import router as waitlist_router
 from app.openapi import install_openapi
+from app.providers.ice import CloudflareIce, create_ice
 from app.providers.identity import NoIdentityVerifier
 from app.providers.payments import create_payments
 from app.providers.storage import create_storage
@@ -60,10 +62,13 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
         socket_timeout=settings.redis_timeout_s,
     )
     realtime = RealtimeHub(redis, settings.rate_limit_prefix)
+    ice = create_ice(settings)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        if isinstance(ice, CloudflareIce):
+            await ice.aclose()
         await realtime.aclose()
         await redis.aclose()
         await engine.dispose()
@@ -84,6 +89,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.state.realtime = realtime
     app.state.staff_challenges = Challenges(redis, settings.rate_limit_prefix)
     app.state.payments = create_payments(settings)
+    app.state.ice = ice
     app.state.identity = NoIdentityVerifier()
     app.state.storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
     app.state.auth = AuthContext(
@@ -130,6 +136,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(privacy_router)
     app.include_router(notifications_router)
     app.include_router(billing_router)
+    app.include_router(calls_router)
     app.include_router(staff_router)
     app.include_router(waitlist_router)
     install_openapi(app)

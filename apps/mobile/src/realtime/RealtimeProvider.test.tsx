@@ -1,5 +1,6 @@
 import { act, screen, waitFor } from "@testing-library/react-native";
 
+import { onCallUpdated } from "@/calls/events";
 import type { SocketLike } from "@/realtime/client";
 import { RealtimeProvider } from "@/realtime/RealtimeProvider";
 import { ChatScreen } from "@/screens/chat";
@@ -86,5 +87,27 @@ test("match.closed closes an open chat: it says it has ended", async () => {
   gone = true;
   await act(async () => sockets[0]?.say({ type: "match.closed", match_id: "m1" }));
   expect(await screen.findByText("This conversation isn't available any more.")).toBeTruthy();
+  await screen.unmount();
+});
+
+test("call.updated reaches a Live session's listener and refreshes nothing else", async () => {
+  const sockets: FakeSocket[] = [];
+  const heard: string[] = [];
+  const stop = onCallUpdated((id) => heard.push(id));
+  const { api, calls } = fakeApi({
+    "POST /v1/realtime/ticket": () => ({ status: 201, body: { ticket: "tk", expires_in: 30 } }),
+  });
+  await renderWithApp(
+    <RealtimeProvider openSocket={(url) => { const s = new FakeSocket(url); sockets.push(s); return s; }}>
+      <></>
+    </RealtimeProvider>,
+    api,
+  ); // prettier-ignore
+  await waitFor(() => expect(sockets).toHaveLength(1));
+  const before = calls.length;
+  await act(async () => sockets[0]?.say({ type: "call.updated", call_id: "call-7" }));
+  expect(heard).toEqual(["call-7"]);
+  expect(calls.length).toBe(before);
+  stop();
   await screen.unmount();
 });

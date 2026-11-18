@@ -64,6 +64,9 @@ class Report(CreatedAtMixin, Base):
     # A copy of the reported message: the only message text staff ever see.
     evidence_text: Mapped[str | None] = mapped_column(String(2000))
     photo_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("photos.id", ondelete="SET NULL"), index=True)
+    # A report made from a Live call (stage 23, D123). While it is open, the
+    # reported member can't use Live.
+    call_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("calls.id", ondelete="SET NULL"), index=True)
     status: Mapped[ReportStatus] = mapped_column(_enum(ReportStatus, "status"), server_default=ReportStatus.open.value)
     # 1 first: underage; 2: harm (explicit, harassment, hate, scam); 3: the rest.
     priority: Mapped[int] = mapped_column(SmallInteger)

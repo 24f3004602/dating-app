@@ -67,7 +67,7 @@ async def unmatch(match_id: uuid.UUID, request: Request, auth: CurrentSession, c
     "/reports",
     status_code=status.HTTP_201_CREATED,
     responses=problems(404),
-    summary="Report a profile, one of their photos or one of their messages (blocks them unless `block` is false)",
+    summary="Report a profile, a photo, a message or a Live call (blocks them unless `block` is false)",
 )
 async def report(body: ReportIn, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> ReportOut:
     await ctx.limiter.hit(service.REPORT_LIMIT, str(auth.user.id))
