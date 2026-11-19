@@ -97,6 +97,12 @@ def test_the_pass_takes_money_only_with_the_owners_go(base_settings: Settings) -
     ok = Settings.model_validate({**upi, "payments_live": True, "upi_payee_vpa": "", "upi_payee_name": PAYEE} | {
         "upi_payee_vpa": VPA})  # fmt: skip
     assert (ok.plus_price_inr, ok.plus_pass_days) == (299, 30)
+    live = {**upi, "payments_live": True}
+    for name in ("E2E Payee", "Shop 24x7", "R.K. Stores & Sons"):  # business names carry digits and marks
+        assert Settings.model_validate({**live, "upi_payee_name": name}).upi_payee_name == name
+    for bad_name in (" Leading space", "Line" + chr(10) + "break", "x" * 51):
+        with pytest.raises(ValidationError):
+            Settings.model_validate({**live, "upi_payee_name": bad_name})
 
 
 # --- paying -------------------------------------------------------------------------------

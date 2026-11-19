@@ -132,7 +132,7 @@ class Settings(BaseSettings):
     # The UPI pass (D127): where members pay, what the pass costs in whole rupees,
     # and how many days of Plus it brings. The UPI ID is shown to paying members.
     upi_payee_vpa: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{2,64}@[A-Za-z0-9]{2,32}$")
-    upi_payee_name: str | None = Field(default=None, pattern=r"^[A-Za-z][A-Za-z .&'-]{0,49}$")
+    upi_payee_name: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&'-]{0,49}$")
     plus_price_inr: int = Field(default=299, ge=1, le=99_999)
     plus_pass_days: int = Field(default=30, ge=1, le=366)
 
