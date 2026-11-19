@@ -1,6 +1,6 @@
 # Progress
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 ## Current phase
 
@@ -17,6 +17,12 @@ Updated: 2026-11-18
   - **Checks:** app Jest 192 and `tsc` clean; npm audit unchanged (the same three advisories).
   - **Not on a phone yet:** a call in the APK needs the beta's API released with migration 0015 and the relay key (blocker 8); then the owner's Pixel. Watch whether sound comes from the speaker (D126 names the fix if not).
   - **Not yet:** the owner's Cloudflare TURN key, the privacy notice and terms for Live (and the plan), the Razorpay account; E2E-16 in CI.
+- **23c, CI unblocked, Plus as a UPI pass, and the documents (2026-11-19, the owner's "finish everything"):**
+  - **CI:** GHSA-fc5q-39xc-vjpf (picomatch) was **withdrawn** on 2026-11-18 15:38 UTC; `npm audit` shows 0 high or critical. The re-run of mobile on `7c99f31` (44351500829) passed: checks and e2e 20/20, **E2E-16 (Live in two real browsers) green in CI for the first time**. Blocker 7 is gone with no change to the gate.
+  - **The owner's answers:** release it all; the relay key (the owner creates it); the 42 new Hindi lines all OK (the review sheet); payments through `youpi-pg/YouPI-PG`, which can't be used (a "Commercial" licence and no licence file; its README: an experimental research project, not for real payments; it reads bank SMS and the Gmail inbox and uses an unofficial WhatsApp client), so the owner chose **our own UPI pass** (D127).
+  - **Built (D127):** `PAYMENTS_BACKEND=upi`: Plus as a 30-day pass for ₹299 (settings), no auto-renewal. A member starts a payment (an 8-character code, the exact amount, the owner's UPI ID as a `upi://pay` link and, on the web, its QR code), pays in any UPI app and sends the 12-digit UPI reference within 48 hours; an admin approves it in the console's new Payments page after finding it in the bank (the pass starts, or follows the running one) or rejects it with a reason the member sees. One reference backs one pass (a partial unique index); the payer's UPI ID is never asked for; records kept 8 years (R) for accounting, unlinked after a deletion; migration 0016 (`plus_payments`); segno 1.6 (BSD) draws the QR.
+  - **Documents (D128):** `beta-2026-11-19`: the privacy notice gains Live (the relay, what's kept, the other person could record) and Plus (UPI, what's kept, how long); the terms gain Live's rules and Plus (paying only to the UPI ID the app shows, no auto-renewal, a refund proposal, never pay anyone you met here). The version moves together in the API (compose), the app (`app.Dockerfile`, eas.json, android-apk) and the website.
+  - **Checks:** API 422 passed (PLUS-1..10; four mutations caught: moderators deciding, no extension, deciding your own, no expiry); app Jest 194 and `tsc` clean (PLUS-APP-1..2); web 35 and `tsc` clean; ruff, format, strict mypy clean. The OpenAPI types regenerated. **In a browser:** the real Plus screen through the live-preview harness at 390 px: the steps, the QR, a refused reference, the checking notice; no console error, nothing wider than the screen; **the QR decoded with jsQR equals the payment link**. E2E-17 (the member's journey) and the console's approval (admin.spec.ts) are written for CI.
 
 **Stage 22 (languages, D120) has started (2026-11-13), at the owner's request:** "don't write hindi direct on pages, add language option or translation".
 - **22a, one language per page on the website: done and tested; CI green on `7b3bcd9` (e2e 18/18 with E2E-14). Not live: the new Hindi waits for the owner's review.**
@@ -530,11 +536,11 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 4. **Object storage** (needed before any real photo): a private bucket in an India region, for example S3 in ap-south-1 or Cloudflare R2, with an access key for the app. I then add and test the adapter with presigned GETs (D053).
 5. SMS stays off until India DLT registration (entity, sender ID, templates) and an SMS provider exist (D012).
 6. **Name:** Haanji failed screening on 2026-11-05: a matrimonial service (Radio Haanji's "Haanji Rishte") and a relationships check-in app use it, and every domain is taken. The lean is Kinaara (kinaara.in and kinaara.app are free). Next: the owner runs the IP India search (it needs a sign-in), then an attorney's opinion (`brand.md`).
-7. **CI's dependency audit (new, 2026-11-18):** `npm audit --audit-level=high` now fails on GHSA-fc5q-39xc-vjpf (picomatch, high, no fixed version), reached only through build and test tools. Options: wait for a fixed picomatch; or let the gate accept assessed advisories with an expiry (a list in the repo, each with why, failing again when it expires). I proposed the second; changing a security gate is the owner's call, so it is not done.
-8. **Live and the plan (stage 23):** a Cloudflare TURN key for the relay; the privacy notice and terms for Live; a Razorpay account (KYC), plan and keys; the go for live payments (deploy.md).
+7. ~~CI's dependency audit~~: resolved 2026-11-19 (the picomatch advisory was withdrawn; the gate is unchanged).
+8. **Live and Plus on the beta (stage 23):** the owner's Cloudflare TURN key in `infra/beta/.env`; the owner's UPI ID (a business one is best), the name on it, the price, and a yes to the refund wording; then the release (deploy.md, "Live calls and the plan"). Razorpay stays for later.
 
 ## Next
 
-**Stage 23 (2026-11-18):** Live and the plan are built and tested (above). Next: the owner's decision on CI's audit gate (blocker 7), so E2E-16 runs in CI; then the relay key and documents (blocker 8) and a release; then react-native-webrtc in a development build for phones.
+**Stage 23 (2026-11-19):** Live, the UPI pass and the documents are built and tested (above). Next: CI on the commits, then the release with the owner's go (blocker 8: the relay key and the UPI ID), then a call through the relay and a phone test of the APK.
 
 Stage 20e is reviewed (impeccable: ship for its scored fixes), documented (`apps/mobile/DESIGN.md`) and live on the beta (2026-11-13, the member app only). The website and the waitlist are live too (2026-11-13). Stage 21a (the website hero's 3D map) is live on the beta and seen on the owner's phone (2026-11-13). Stage 22a (one language per page, D120) and 22b (the candlelit first screen, D121) are built; they go live together after the owner's review of the Hindi and the owner's go. Stage 21b (the app's welcome in 3D, D122) is built, tested and green in CI; next, the owner's Pixel. Also next: a lawyer's review of the privacy notice and terms (owner, blocker 3), now that the public can join the waitlist; a few literal numbers remain outside the tokens (above). The `beta-images` workflow can now build the website and API images too (deploy.md), so their release needs no build on the laptop; a run of all three passed (43364994936). The new API image's newest migration is 0014 (the waitlist) and the live database is at 0013, so that release needs a backup and `migrate` first. Still open on devices: TalkBack itself (NAT-1). Owner setup (the email provider and its DNS, the private bucket; deploy.md, gates 1-2) remains the way to real sign-ups.

@@ -102,3 +102,15 @@ monetization comes after the MVP proves the loop.
 - **Where:** Razorpay's own page, from the web app and direct-download Android builds. Store builds: in-app purchase and Play Billing first (Apple 3.1.1; Play's payments policy).
 - **Easy exit (principle 4):** Stop renewing in the app, one tap and a confirmation, keeping what was paid for.
 - **Cost side:** the relay is the only per-call cost. Cloudflare Realtime: 1,000 GB a month free, then $0.05 per GB (read 2026-11-18). A one-minute call at about 1 Mbit/s each way relays roughly 15 MB, so about 60,000 such calls a month fit the free tier.
+
+## The pass, paid by UPI (2026-11-19, stage 23c, D127)
+
+The owner chose to sell Plus as a pass paid by UPI straight to the owner, instead of a gateway (YouPI-PG can't be used: a "Commercial" licence, and its own README says it isn't for real payments; Razorpay charges 2% plus 18% GST on UPI and needs KYC, and stays in the code for later).
+
+- **What:** {brand} Plus for `PLUS_PASS_DAYS` days (30) for `PLUS_PRICE_INR` (₹299, the recommendation above). It never renews: members buy another pass when they want more, and its days follow the current one's.
+- **How members pay:** the Plus screen gives the exact amount, the owner's UPI ID and a code for the note, as a link that opens their UPI app filled in (on the web, also as a QR code); they pay and type the 12-digit UPI reference. **The owner (an admin) approves each payment** in the console's Payments page after finding it in the bank; the pass starts at once.
+- **Costs:** no fees for UPI payments to the owner's own account. The owner's time per sale: finding the reference in the bank app and one click.
+- **Fair and honest:** the price shown is what is paid; no auto-renewal to forget; nothing else changes with Plus (principles 1-4).
+- **Refunds (a proposal in the terms, the owner's to change):** payments that can't be confirmed, wrong amounts and repeated payments are refunded to the account they came from within 7 working days; if the test or Live ends while a pass runs, the days left are refunded; otherwise a pass that has started isn't refundable, and it ends with the account.
+- **A business UPI ID** (from the owner's bank, or a free merchant account such as PhonePe Business or Paytm for Business) works best: community reports say some UPI apps refuse link payments to personal UPI IDs. The screen also shows the UPI ID for paying by hand.
+- **Later:** with more members, Razorpay (already built, D124) confirms payments without the owner's clicks and can renew.

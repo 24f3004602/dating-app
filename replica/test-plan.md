@@ -353,7 +353,21 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | LIVE-APP-15 | Live | happy | Mute and Camera off; a free call's minute running out | the tracks switch off and say so; Plus offered after the minute | jest | pass |
 | LIVE-APP-16 | Live | edge | the phone adapter | no native module: not offered, the package never loads; both camera and microphone or a refusal; the library's connection | jest | pass |
 | NAT-LIVE-1 | Live | happy | a native Android build | prebuild, Gradle release for arm64, R8, the WebRTC library in the APK | ci (manual) | pass: android-apk run 44351502502 |
-| E2E-16 | Live | happy | three people in real Chrome with fake cameras | rules, Start, paired, connected, video covered then shown, the minute counting, End, a like each: a match; a report pauses Live for the one reported | e2e | written; not run in CI yet (the npm audit step fails first) |
+| E2E-16 | Live | happy | three people in real Chrome with fake cameras | rules, Start, paired, connected, video covered then shown, the minute counting, End, a like each: a match; a report pauses Live for the one reported | e2e | pass: mobile run 44351500829 (re-run 2026-11-19 after the picomatch advisory was withdrawn) |
+| PLUS-1 | plan | guard | the UPI pass's settings | needs the payee and `PAYMENTS_LIVE`; a beta may sell the pass only; bad UPI IDs refused | api | pass |
+| PLUS-2 | plan | edge | no pass set up | nothing to start (503), nothing in progress | api | pass |
+| PLUS-3 | plan | happy | starting a payment | the price and days; an 8-character code from the unambiguous alphabet; the exact `upi://pay` link; a PNG QR code; 48 hours; a second tap gives the same payment; audited | api | pass |
+| PLUS-4 | plan | security | sending the reference | 12 digits only; once per payment; someone else's payment is 404; a reference held by another payment is refused | api | pass |
+| PLUS-5 | plan | edge | an unpaid payment | after 48 hours it takes no reference; a new payment gets a new code | api | pass (mutation-checked) |
+| PLUS-6 | plan | security | who checks payments | members' sessions 401, moderators 403; admins see codes, amounts and references, never who; audited | api | pass (mutation-checked) |
+| PLUS-7 | plan | happy | an approved payment | the pass starts at approval, brings Live's plan, a second pass follows the first, and both end on their own | api | pass (mutation-checked) |
+| PLUS-8 | plan | edge | a rejected payment | a reason is required and shown to the member; the reference can be sent again | api | pass |
+| PLUS-9 | plan | security | one bank payment, two passes | the database refuses a reference held twice by pending or approved payments | api | pass |
+| PLUS-10 | plan | privacy | own payments and deleted accounts | an admin can't decide their own; a deleted member's record stays without the link, and can't be approved; unpaid attempts swept after 30 days, records after 8 years | api | pass (mutation-checked) |
+| PLUS-APP-1 | plan | happy | paying in the app | the pass price; Pay opens the steps: payee, UPI ID, the link, the note; a short reference refused; spaces dropped; the checking notice | jest | pass |
+| PLUS-APP-2 | plan | edge | after a decision, and store builds | a rejection says why and offers Start again; a confirmed pass offers more days and nothing to cancel; a store build asks nothing | jest | pass |
+| E2E-17 | plan | happy | the pass in the web app | from Live to Plus; the steps and the QR code drawn under the app's CSP; a short reference refused; sent; the checking notice; axe | e2e | written; runs in CI |
+| E2E-4b | plan | happy | an admin approves a payment in the console | the Payments page (axe), Approve, the status, the decided list | e2e (admin.spec.ts) | written; runs in CI |
 
 ## Results
 

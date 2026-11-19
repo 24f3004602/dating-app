@@ -185,6 +185,8 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | GET /v1/admin/staff | staff accounts and whether each has an authenticator | Adm | admin |
 | POST /v1/admin/staff/{id}/enrollment | reset a staff member's authenticator and issue a one-time enrolment token (not for yourself) | Adm | admin |
 | PUT, DELETE /v1/me/push-device; GET, PUT /v1/me/notifications; GET /v1/me/notices; POST /v1/me/notices/{id}/read | this session's phone for pushes; which kinds to push; notices from the team (D093) | M | notifications |
+| GET /v1/plan; GET, POST /v1/me/plus-payment; PUT /v1/me/plus-payment/{id}/reference | the plan's price (a subscription or, D127, a pass); the Plus pass paid by UPI: the payment in progress (a `upi://pay` link and its QR code, 48 hours to send the reference), start one, send the 12-digit UPI reference | M | billing |
+| GET /v1/admin/plus-payments; POST /v1/admin/plus-payments/{id}/decision | pass payments waiting for an admin (codes, amounts, references, never who); approve (the pass starts, or follows the running one) or reject with a reason; audited (D127) | Adm | billing |
 | GET, POST /v1/me/subscription; POST /v1/me/subscription/cancel; POST /v1/webhooks/razorpay | the plan: status and entitlement; start a Razorpay subscription (website, sandbox); stop renewing; provider webhooks (D094) | M / provider | billing |
 | POST /v1/waitlist; POST /v1/waitlist/confirm; POST /v1/waitlist/leave | join (email, the 18+ answer, the notice version; the same 202 for every address), confirm with the emailed token (once, 7 days), leave with the signed link (always 204; deletes the entry); called by the website's server, which forwards the visitor's IP (D101) | P | waitlist |
 
@@ -281,7 +283,7 @@ account.
 | `ObjectStorage` | local filesystem in `var/` | S3 (ap-south-1) or Cloudflare R2 | stage 7 |
 | `VerificationProvider` | none ("not verified" labels) | a liveness vendor, after DPDP review of biometric data | after the MVP |
 | `PushSender` | none (default) and in-memory | Expo push service (adapter built and tested against a fake server; needs the owner's EAS project, FCM and APNs credentials) | stage 16 (D093) |
-| `PaymentProvider` | none (default) and a fake | Razorpay (website; adapter built and tested against a fake server, sandbox only); App Store and Google Play billing for the apps (not built) | stage 16b (D094) |
+| `PaymentProvider` | none (default), a fake, and `upi` (D127: the Plus pass paid by UPI to the owner, confirmed by an admin; no provider, no keys) | Razorpay (website; adapter built and tested against a fake server, sandbox only); App Store and Google Play billing for the apps (not built) | stage 16b (D094) |
 
 ## The parts that bite
 

@@ -276,21 +276,19 @@ The privacy notice promises all this within 30 days of the end.
 - **Staff sign-in limits:** the console's server doesn't pass the visitor's IP to the API, so per-IP limits on staff sign-in count all staff together. That's stricter, not weaker, but an attack on the console could lock staff out for a while.
 ### Live calls and the plan: switching them on (stage 23, D123, D124)
 
-Live and the plan are built but off on the beta: `CALLS_ICE=off` (Live says it isn't
-available) and `PAYMENTS_BACKEND=none` (the plan says it isn't available). In order:
+Live and the plan are built but off on the beta until these settings are in:
+`CALLS_ICE=off` (Live says it isn't available) and `PAYMENTS_BACKEND=none` (the plan says
+it isn't available). In order:
 
 1. **The relay (owner):** in the Cloudflare dashboard (the account the tunnel uses), Realtime,
    TURN: create a TURN key; put its ID and API token in `infra/beta/.env` as
    `CLOUDFLARE_TURN_KEY_ID` and `CLOUDFLARE_TURN_API_TOKEN`, with `CALLS_ICE=cloudflare`.
    Never `direct` on a server (the settings refuse it).
-2. **The documents (owner, with legal review):** before Live is on, the privacy notice must
-   say: Live calls are video calls with other members; audio and video go between the two
-   devices through Cloudflare's relay, which sees the devices' IP addresses, and are not
-   recorded by us; we keep who called whom, when, how long and how it ended for 90 days
-   (longer if a report names the call); the other person could record their screen. The
-   terms gain the Live rules (as the app shows them) and, before any payment, the plan's
-   terms: price, renewal, cancellation and refunds. Then bump `BETA_VERSION` with the API's
-   and the app's document versions (documents.ts says how).
+2. **The documents:** done in `beta-2026-11-19` (D128): Live and Plus in the privacy notice
+   and the terms, released with the images below (the owner's go, no lawyer's review yet).
+   The API (compose), the app's build (`app.Dockerfile`, eas.json, android-apk) and the
+   website (`documents.ts`) carry the version together; release all three at once, or
+   sign-ups fail on a version mismatch.
 3. **Release:** the images through `beta-images` (all three: the API with migration 0015,
    the website, and the app, whose Caddyfile now allows the camera and microphone on
    `app.<domain>`); run `migrate` first (a backup before it), as for every migration.
@@ -301,12 +299,24 @@ available) and `PAYMENTS_BACKEND=none` (the plan says it isn't available). In or
    kept 7 days); check the SHA-256 it prints, then install it with
    `adb install app-release.apk` and call a browser from it. Listen for the sound: if it
    comes from the earpiece, add the speaker fix D126 names.
-5. **Payments, later (owner):** a Razorpay account with KYC; a plan (₹299 a month,
-   tax-inclusive, is the recommendation); test keys first (`PAYMENTS_BACKEND=razorpay`,
-   `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_PLAN_ID`) and the webhook
-   (`https://api.<domain>/v1/webhooks/razorpay`, its secret in `RAZORPAY_WEBHOOK_SECRET`,
-   events `subscription.*`); live keys only with the owner's go (`PAYMENTS_LIVE=true`,
-   which the beta refuses until the owner decides to charge testers or moves to production).
+5. **The Plus pass, paid by UPI (D127, the owner's choice):** in `infra/beta/.env`:
+   ```
+   PAYMENTS_BACKEND=upi
+   PAYMENTS_LIVE=true
+   UPI_PAYEE_VPA=<the UPI ID members pay; a business one works best>
+   UPI_PAYEE_NAME=<the name on it, as UPI apps show it>
+   PLUS_PRICE_INR=299
+   PLUS_PASS_DAYS=30
+   ```
+   then `docker compose up -d --no-deps api worker`. **Each payment:** the console's
+   Payments page (admins) lists references waiting; find each in the bank's app or
+   statement, check the amount, then Approve (the pass starts) or Reject with why. Refunds
+   go from the bank by hand, as the terms say. To stop selling: `PAYMENTS_BACKEND=none`.
+6. **Razorpay, later (owner):** a Razorpay account with KYC; a plan; test keys first
+   (`PAYMENTS_BACKEND=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
+   `RAZORPAY_PLAN_ID`) and the webhook (`https://api.<domain>/v1/webhooks/razorpay`, its
+   secret in `RAZORPAY_WEBHOOK_SECRET`, events `subscription.*`); live keys only with the
+   owner's go (the beta allows live payments for the UPI pass only).
 
 ## Staging plan (planned)
 
