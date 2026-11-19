@@ -210,9 +210,13 @@ export function Heading({ children }: { children: ReactNode }) {
   );
 }
 
-export function Body({ children, muted }: { children: ReactNode; muted?: boolean }) {
+export function Body({ children, muted, selectable }: { children: ReactNode; muted?: boolean; selectable?: boolean }) {
   // On the overlay there's no muted grey that keeps its contrast: everything is light.
-  return <Text style={[styles.body, muted && styles.muted, useOnOverlay() && styles.onOverlay]}>{children}</Text>;
+  return (
+    <Text selectable={selectable} style={[styles.body, muted && styles.muted, useOnOverlay() && styles.onOverlay]}>
+      {children}
+    </Text>
+  );
 }
 
 /** Small supporting text: times, hints, counts. */

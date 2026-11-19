@@ -18,6 +18,13 @@ export function dateInIndia(iso: string): string {
   return inIndia(iso).toISOString().slice(0, 10);
 }
 
+/** "4 Nov" on India's calendar, with the year only when it isn't this year ("4 Nov 2027"). */
+export function dateForPeople(iso: string, now: Date = new Date()): string {
+  const d = inIndia(iso);
+  const day = `${d.getUTCDate()} ${t.time.months[d.getUTCMonth()] ?? ""}`;
+  return d.getUTCFullYear() === inIndia(now.toISOString()).getUTCFullYear() ? day : `${day} ${d.getUTCFullYear()}`;
+}
+
 /**
  * A day as people say it, on India's calendar: "today", "yesterday", else "4 Nov", with
  * the year only when it isn't this year ("4 Nov 2025"). `now` is for tests.
@@ -29,6 +36,5 @@ export function dayInIndia(iso: string, now: Date = new Date()): string {
   const ago = days(today) - days(d);
   if (ago === 0) return t.time.today;
   if (ago === 1) return t.time.yesterday;
-  const day = `${d.getUTCDate()} ${t.time.months[d.getUTCMonth()] ?? ""}`;
-  return d.getUTCFullYear() === today.getUTCFullYear() ? day : `${day} ${d.getUTCFullYear()}`;
+  return dateForPeople(iso, now);
 }

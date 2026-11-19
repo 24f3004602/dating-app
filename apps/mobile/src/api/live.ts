@@ -9,11 +9,13 @@ export const liveKeys = {
   live: ["live"] as const,
   plan: ["plan"] as const,
   subscription: ["me", "subscription"] as const,
+  plusPayment: ["me", "plus-payment"] as const,
 };
 
 export type LiveOut = Schemas["LiveOut"];
 export type PlanOut = Schemas["PlanOut"];
 export type SubscriptionOut = Schemas["SubscriptionOut"];
+export type PlusPaymentOut = Schemas["PlusPaymentOut"];
 
 export function useLive() {
   const { api } = useAuth();
@@ -37,6 +39,42 @@ export function usePlan() {
 export function useSubscription() {
   const { api } = useAuth();
   return useQuery({ queryKey: liveKeys.subscription, queryFn: () => unwrap(api.GET("/v1/me/subscription")) });
+}
+
+/** The pass payment in progress (D127): while it's being checked, look again every 30 seconds. */
+export function usePlusPayment(enabled: boolean) {
+  const { api } = useAuth();
+  return useQuery({
+    queryKey: liveKeys.plusPayment,
+    queryFn: () => unwrap(api.GET("/v1/me/plus-payment")),
+    enabled,
+    refetchInterval: (query) => (query.state.data?.status === "submitted" ? 30_000 : false),
+  });
+}
+
+function usePlusPaymentChanged() {
+  const qc = useQueryClient();
+  return (payment: PlusPaymentOut) => {
+    qc.setQueryData(liveKeys.plusPayment, payment);
+    void qc.invalidateQueries({ queryKey: liveKeys.subscription });
+    void qc.invalidateQueries({ queryKey: liveKeys.live });
+  };
+}
+
+export function useStartPlusPayment() {
+  const { api } = useAuth();
+  const changed = usePlusPaymentChanged();
+  return useMutation({ mutationFn: () => unwrap(api.POST("/v1/me/plus-payment")), onSuccess: changed });
+}
+
+export function useSendReference() {
+  const { api } = useAuth();
+  const changed = usePlusPaymentChanged();
+  return useMutation({
+    mutationFn: ({ id, utr }: { id: string; utr: string }) =>
+      unwrap(api.PUT("/v1/me/plus-payment/{payment_id}/reference", { params: { path: { payment_id: id } }, body: { utr } })),
+    onSuccess: changed,
+  });
 }
 
 export function useCheckout() {
