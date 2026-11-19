@@ -265,7 +265,10 @@
   font-stretch: 87.5%;
 }
 .signEnd :global(.motion-toggle[aria-pressed="true"]) { background: var(--line-them); border-color: var(--line-them); color: var(--sign); }
-.landing:not(:has(video)) .signEnd :global(.motion-toggle) { display: none; }
+/* Until the loop plays, the button keeps its place, unseen: the band never re-flows when
+   it appears (with Sign in beside it, D133, the band would gain a row on a phone).
+   Reduced motion hides it outright (globals.css): no loop ever comes. */
+.landing:not(:has(video)) .signEnd :global(.motion-toggle) { visibility: hidden; }
 
 /* The language option (stage 22a, D120): the other page, named in its own language,
    as a white-outlined plate on the graphite band. */
