@@ -12,7 +12,7 @@ import { expect, test } from "@playwright/test";
 import { apiEnv, CONSOLE_URL } from "../env";
 import { checkA11y, PASSWORD, totp, watchErrors } from "./helpers";
 
-type Fixture = { email: string; enrollment_token: string; report_id: string };
+type Fixture = { email: string; enrollment_token: string; report_id: string; payment_utr: string };
 
 function staffFixture(): Fixture {
   const out = execFileSync("uv", ["run", "python", "scripts/e2e_staff.py", "--password", PASSWORD], {
@@ -49,7 +49,7 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Version beta-2026-11/)).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11-19/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
   await checkA11y(page, "privacy");
   await page.getByRole("link", { name: "Terms for testers" }).click();
@@ -131,6 +131,17 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   await page.getByRole("link", { name: "Photos" }).click();
   await expect(page.getByRole("heading", { name: "Photo review", level: 1 })).toBeVisible();
   await checkA11y(page, "console-photos");
+  // A Plus pass payment (D127): an admin checks it against the bank and approves it.
+  await page.getByRole("link", { name: "Payments" }).click();
+  await expect(page.getByRole("heading", { name: "Payments", level: 1 })).toBeVisible();
+  await expect(page.getByRole("cell", { name: fixture.payment_utr })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "₹299" })).toBeVisible();
+  await checkA11y(page, "console-payments");
+  await page.getByRole("button", { name: `Approve the payment with reference ${fixture.payment_utr}` }).click();
+  await expect(page.getByRole("status")).toHaveText("Payment approved: the member's pass has started.");
+  await expect(page.getByText("No payments waiting.")).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^Approved: Plus until / })).toBeVisible();
+
   await page.getByRole("link", { name: "Audit log" }).click();
   await expect(page.getByText("staff.login", { exact: true }).first()).toBeVisible();
   await checkA11y(page, "console-audit");

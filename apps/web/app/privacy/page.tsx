@@ -50,11 +50,66 @@ export default async function Privacy() {
         </li>
       </ul>
       <p>
-        We never ask for your phone&apos;s location, contacts or camera roll
-        beyond the photos you choose. We show others your area and a distance
-        range, never where you are. We don&apos;t sell your data or use it for
-        ads.
+        We never ask for your phone&apos;s location or contacts, or for your
+        camera roll beyond the photos you choose. Live uses your camera and
+        microphone only during its calls. We show others your area and a
+        distance range, never where you are. We don&apos;t sell your data or use
+        it for ads.
       </p>
+
+      <h2>If you use Live</h2>
+      <ul>
+        <li>
+          <strong>Your camera and microphone</strong>, only while you&apos;re on
+          a call. The video and sound go between your device and the other
+          person&apos;s through Cloudflare&apos;s relay servers, so neither of
+          you is shown the other&apos;s IP address. They never reach our server,
+          and we don&apos;t record calls. Cloudflare&apos;s relay sees both
+          devices&apos; IP addresses, to connect them.
+        </li>
+        <li>
+          <strong>The other person</strong> sees and hears you during the call,
+          with your first name and age. They could record their screen, so
+          don&apos;t share anything you&apos;d regret.
+        </li>
+        <li>
+          <strong>What we keep</strong>: that you accepted the Live rules, and
+          when; how many of your free calls you&apos;ve used; and for each call,
+          who was paired with whom, when, how long it lasted and how it ended,
+          for 90 days, or longer only while a report names the call. The
+          technical details the two devices exchange to connect pass through
+          our server and are deleted when the call ends. While you wait to be
+          paired, we note that you&apos;re waiting, deleted within an hour.
+        </li>
+        <li>
+          <strong>Reports</strong> made from a call tell our review team which
+          call it was. Someone reported from a call can&apos;t use Live until
+          the report has been handled.
+        </li>
+      </ul>
+
+      <h2>If you buy {BRAND} Plus</h2>
+      <ul>
+        <li>
+          <strong>Paying</strong>: you pay by UPI from your own UPI app,
+          straight to our UPI ID. Your bank, your UPI app and NPCI handle the
+          payment under their own terms. We never see your bank details or UPI
+          PIN, and we don&apos;t ask for your UPI ID.
+        </li>
+        <li>
+          <strong>What we keep</strong>: the payment&apos;s code and amount, the
+          12-digit UPI reference you send us, when you sent it, what we decided
+          after checking our bank account, and the dates your pass runs. An
+          admin checks each payment against our bank account.
+        </li>
+        <li>
+          <strong>How long</strong>: a payment you start but never send a
+          reference for is deleted after 30 days. The rest are accounting
+          records, which the law requires us to keep, so we keep them for 8
+          years, even after you delete your account; from then on they no
+          longer show which account they belonged to.
+        </li>
+      </ul>
 
       <h2>If you join the waitlist</h2>
       <ul>
@@ -111,7 +166,8 @@ export default async function Privacy() {
             </>
           )}{" "}
           Google (Gmail) sends our emails, so it handles your email address and
-          the codes. On the Android app, Expo and Google deliver notifications;
+          the codes. Cloudflare&apos;s relay servers carry Live calls between the
+          two devices. On the Android app, Expo and Google deliver notifications;
           these say only things like &quot;You have a new message.&quot;, never
           names or message text.
         </li>
@@ -141,7 +197,8 @@ export default async function Privacy() {
         </li>
         <li>
           When the test ends, we delete the server and everything on it,
-          including backups, within 30 days, and the emails we sent.
+          including backups, within 30 days, and the emails we sent, except
+          the payment records the law requires us to keep (above).
         </li>
       </ul>
 

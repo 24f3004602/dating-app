@@ -58,6 +58,24 @@ export async function decidePhoto(photoId: string, form: FormData): Promise<void
   redirect(r.ok ? `/admin/photos?done=${decision}` : `/admin/photos?error=${r.code}`);
 }
 
+const PAYMENT_REASONS = new Set(["not_found", "wrong_amount", "other"]);
+
+/** Admin: a UPI payment found in the bank (approve) or not (reject, with why). D127. */
+export async function decidePayment(paymentId: string, form: FormData): Promise<void> {
+  const { token } = await requireStaff();
+  const id = checkedId(paymentId);
+  const decision = text(form, "decision");
+  const reason = text(form, "reason");
+  if (decision !== "approve" && decision !== "reject") redirect("/admin/payments?error=invalid");
+  if (decision === "reject" && !PAYMENT_REASONS.has(reason)) redirect("/admin/payments?error=invalid");
+  const r = await api(`/v1/admin/plus-payments/${id}/decision`, {
+    method: "POST",
+    token,
+    body: decision === "reject" ? { decision, reason } : { decision },
+  });
+  redirect(r.ok ? `/admin/payments?done=payment_${decision}` : `/admin/payments?error=${r.code}`);
+}
+
 export type IssuedToken = { token?: string; expiresAt?: string; error?: string };
 
 /** Admin: reset someone's authenticator. The token is returned to this page once, never put in a URL. */

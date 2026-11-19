@@ -29,8 +29,8 @@ x-app-env: &app-env
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
   # Waitlist emails link to the website (D101).
   SITE_URL: https://${DOMAIN}
-  TERMS_VERSION: beta-2026-11
-  PRIVACY_VERSION: beta-2026-11
+  TERMS_VERSION: beta-2026-11-19
+  PRIVACY_VERSION: beta-2026-11-19
   SIGNUP_INVITE_ONLY: "true"
   EMAIL_BACKEND: smtp
   EMAIL_FROM: ${SMTP_USERNAME:?set the Gmail address in .env}
@@ -47,9 +47,15 @@ x-app-env: &app-env
   CALLS_ICE: ${CALLS_ICE:-off}
   CLOUDFLARE_TURN_KEY_ID: ${CLOUDFLARE_TURN_KEY_ID:-}
   CLOUDFLARE_TURN_API_TOKEN: ${CLOUDFLARE_TURN_API_TOKEN:-}
-  # The plan (D094, D124): no payments until the owner's Razorpay account; test keys first,
-  # and live keys are refused in the beta.
+  # The plan (D094, D124, D127): nothing sold by default. The Plus pass paid by UPI needs
+  # PAYMENTS_BACKEND=upi, the owner's UPI ID and PAYMENTS_LIVE=true (every UPI payment is
+  # real money); Razorpay needs the owner's account (test keys only in the beta).
   PAYMENTS_BACKEND: ${PAYMENTS_BACKEND:-none}
+  PAYMENTS_LIVE: ${PAYMENTS_LIVE:-false}
+  UPI_PAYEE_VPA: ${UPI_PAYEE_VPA:-}
+  UPI_PAYEE_NAME: ${UPI_PAYEE_NAME:-}
+  PLUS_PRICE_INR: ${PLUS_PRICE_INR:-299}
+  PLUS_PASS_DAYS: ${PLUS_PASS_DAYS:-30}
   RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
   RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
   RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}

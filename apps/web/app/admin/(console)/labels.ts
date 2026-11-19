@@ -34,6 +34,15 @@ export const DONE: Record<string, string> = {
   reinstate: "Account reinstated.",
   approve: "Photo approved.",
   reject: "Photo rejected.",
+  payment_approve: "Payment approved: the member's pass has started.",
+  payment_reject: "Payment rejected. The member sees why.",
+};
+
+/** Why a UPI payment was rejected (D127), as the member is told it. */
+export const PAYMENT_REASONS: Record<string, string> = {
+  not_found: "No payment with this reference in the bank",
+  wrong_amount: "A payment arrived, for another amount",
+  other: "Something else (write to the member)",
 };
 
 export function when(iso: string): string {

@@ -64,5 +64,11 @@ export function apiEnv(runId: string): Record<string, string> {
     // Live calls (stage 23, D123) between two browsers on this machine: no relay here.
     // Refused on any server people use, where calls go only through the relay.
     CALLS_ICE: "direct",
+    // The Plus pass (D127): paid by UPI to a labelled test payee; nobody pays anything in
+    // the e2e run (a member only sends a made-up reference, and an admin decides).
+    PAYMENTS_BACKEND: "upi",
+    PAYMENTS_LIVE: "true",
+    UPI_PAYEE_VPA: "e2e.payee@example",
+    UPI_PAYEE_NAME: "E2E Payee",
   };
 }

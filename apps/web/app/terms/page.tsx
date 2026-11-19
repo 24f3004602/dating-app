@@ -54,8 +54,57 @@ export default async function Terms() {
         We don&apos;t check identities: profiles show only what we actually
         checked (an email address and a declared age). If you meet someone, meet
         in a public place, tell a friend where you&apos;ll be, and get there and
-        back on your own.
+        back on your own. Never send money to someone you met here.
       </p>
+
+      <h2>Live calls</h2>
+      <ul>
+        <li>
+          Live pairs you at random for a short video call with someone whose
+          preferences match yours. The rules the app shows before your first
+          call are part of these terms.
+        </li>
+        <li>
+          Keep your clothes on and be kind: no nudity, sexual acts, hate or
+          harassment. Don&apos;t record, screenshot or share anyone&apos;s call.
+        </li>
+        <li>
+          A report ends the call at once, and the person reported can&apos;t use
+          Live until our review team has looked at it.
+        </li>
+        <li>
+          Your first 5 calls are free, up to a minute each. After that, Live
+          calls come with {BRAND} Plus.
+        </li>
+      </ul>
+
+      <h2>{BRAND} Plus</h2>
+      <ul>
+        <li>
+          <strong>What it is</strong>: a pass for a set number of days that
+          brings Live calls after your free ones, and longer calls. It never
+          changes who sees you or how many likes you get. The app shows the
+          price and the number of days before you pay.
+        </li>
+        <li>
+          <strong>Paying</strong>: by UPI, only to the UPI ID the Plus screen
+          shows; then you send us the payment&apos;s 12-digit reference. Plus
+          starts once we&apos;ve found the payment in our bank account, usually
+          within a day. We never ask for money in chats or calls.
+        </li>
+        <li>
+          <strong>No auto-renewal</strong>: a pass simply ends. Buying another
+          adds its days after the end of the one you have.
+        </li>
+        <li>
+          <strong>Refunds</strong>: if we can&apos;t confirm your payment, or you
+          paid the wrong amount or more than once, write to us and we&apos;ll
+          refund it to the account it came from within 7 working days. If we
+          end the test or Live while your pass runs, we refund the days left.
+          Otherwise a pass that has started isn&apos;t refundable, and it ends
+          if you delete your account.
+        </li>
+      </ul>
 
       <h2>This is a test</h2>
       <ul>
@@ -63,7 +112,10 @@ export default async function Terms() {
           Things will change, some things will break, and the app may be
           unavailable at times.
         </li>
-        <li>Nothing is for sale, and nothing costs money.</li>
+        <li>
+          Everything is free except {BRAND} Plus (above), which you never need
+          for anything but Live calls after your free ones.
+        </li>
         <li>
           We may use your feedback to improve the app. When the test ends, your
           account and data are deleted (see the privacy notice).

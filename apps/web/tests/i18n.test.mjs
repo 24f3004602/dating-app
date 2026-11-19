@@ -47,7 +47,7 @@ test("LANG-3: every Hindi word is in Devanagari, except the option back to Engli
 });
 
 test("LANG-4: the 16 lines the owner reviewed (2026-11-13) are used word for word", () => {
-  // Stations added since (Live, stage 23) wait on the review sheet; the reviewed ones keep their order.
+  // Stations added since (Live, stage 23) were reviewed on 2026-11-19 with the rest; these first 16 keep their order.
   const reviewed = ["दोनों तरफ़ से", "रोज़ 15 तक परिचय", "रोज़ दस लाइक, सबके लिए", "पहले जवाब, फिर और", "सुरक्षा के टूल मुफ़्त", "लेबल पर सिर्फ़ वही, जो हमने जाँचा", "आपकी जगह मोटे तौर पर ही दिखती है", "जब चाहें, छोड़ दें"];
   assert.deepEqual(
     hi.stations.map((s) => s.title).filter((title) => reviewed.includes(title)),
