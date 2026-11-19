@@ -135,7 +135,7 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   await page.getByRole("link", { name: "Payments" }).click();
   await expect(page.getByRole("heading", { name: "Payments", level: 1 })).toBeVisible();
   await expect(page.getByRole("cell", { name: fixture.payment_utr, exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "₹299", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "₹299.00", exact: true })).toBeVisible();
   await checkA11y(page, "console-payments");
   await page.getByRole("button", { name: `Approve the payment with reference ${fixture.payment_utr}` }).click();
   await expect(page.getByRole("status")).toHaveText("Payment approved: the member's pass has started.");
