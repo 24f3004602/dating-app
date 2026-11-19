@@ -26,9 +26,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.errors import ApiError
 from app.jobs import JobQueue
 from app.modules.audit.service import record
+from app.modules.billing import passes
 from app.modules.billing.models import STATUSES, PaymentEvent, Subscription
 from app.modules.billing.schemas import CheckoutOut, PlanOut, SubscriptionOut
-from app.providers.payments import PaymentProvider, PaymentsUnavailableError
+from app.providers.payments import PaymentProvider, PaymentsUnavailableError, UpiPayments
 from app.ratelimit import Limit
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ LIVE = ("authenticated", "active", "pending", "paused")  # still able to charge
 EVENT_RETENTION = timedelta(days=90)
 
 
-def _unavailable() -> ApiError:
+def unavailable() -> ApiError:
     return ApiError(503, "payments_unavailable", "Payments aren't available yet.", headers={"Retry-After": "3600"})
 
 
@@ -68,12 +69,17 @@ def subscription_out(sub: Subscription | None, now: datetime) -> SubscriptionOut
 
 
 async def my_subscription(session: AsyncSession, user_id: uuid.UUID, now: datetime) -> SubscriptionOut:
-    return subscription_out(await _latest(session, user_id), now)
+    """The subscription, or a running pass (D127), whichever lasts longer."""
+    out = subscription_out(await _latest(session, user_id), now)
+    until = await passes.pass_until(session, user_id, now)
+    if until is not None and not (out.entitled and out.paid_until and out.paid_until >= until):
+        return SubscriptionOut(status="active", entitled=True, paid_until=until, renews=False)
+    return out
 
 
 async def has_plan(session: AsyncSession, user_id: uuid.UUID, now: datetime) -> bool:
-    """The entitlement other modules ask about (Live calls, D123)."""
-    return entitled(await _latest(session, user_id), now)
+    """The entitlement other modules ask about (Live calls, D123): a subscription or a pass."""
+    return entitled(await _latest(session, user_id), now) or await passes.pass_until(session, user_id, now) is not None
 
 
 PERIODS = ("daily", "weekly", "monthly", "quarterly", "yearly")
@@ -81,6 +87,9 @@ PERIODS = ("daily", "weekly", "monthly", "quarterly", "yearly")
 
 async def plan(provider: PaymentProvider) -> PlanOut:
     """The price as the provider will charge it, or not available."""
+    if isinstance(provider, UpiPayments):
+        one = provider.price
+        return PlanOut(available=True, kind="pass", amount=one.amount, currency=one.currency, days=one.days)
     try:
         price = await provider.plan_price()
     except PaymentsUnavailableError:
@@ -98,14 +107,14 @@ async def start_checkout(
 ) -> CheckoutOut:
     """A new subscription for the member to authorise in Razorpay Checkout."""
     if provider.public_key is None:
-        raise _unavailable()
+        raise unavailable()
     current = await _latest(session, user_id, lock=True)
     if entitled(current, now) or (current is not None and current.status in LIVE):
         raise ApiError(409, "already_subscribed", "You already have the plan.")
     try:
         created = await provider.create_subscription()
     except PaymentsUnavailableError as exc:
-        raise _unavailable() from exc
+        raise unavailable() from exc
     session.add(
         Subscription(
             user_id=user_id, provider=provider.name, provider_subscription_id=created.id,
@@ -128,7 +137,7 @@ async def cancel(
         try:
             await provider.cancel(sub.provider_subscription_id, at_cycle_end=True)
         except PaymentsUnavailableError as exc:
-            raise _unavailable() from exc
+            raise unavailable() from exc
         sub.cancel_at_cycle_end = True
         sub.updated_at = now
         record(session, "billing.cancel_requested", actor=user_id, target_type="user", target_id=user_id)

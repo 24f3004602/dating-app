@@ -260,10 +260,12 @@ async def test_the_price_comes_from_the_plan_itself(app: FastAPI, client: AsyncC
     m = await make_member(db, app.state.storage, now)
     assert (await client.get("/v1/plan")).status_code == 401
     none = (await client.get("/v1/plan", headers=m.headers)).json()
-    assert none == {"available": False, "amount": None, "currency": None, "period": None, "interval": None}
+    assert none == {"available": False, "kind": "subscription", "amount": None, "currency": None, "period": None,
+                    "interval": None, "days": None}  # fmt: skip
     app.state.payments = FakePayments()
     assert (await client.get("/v1/plan", headers=m.headers)).json() == {
-        "available": True, "amount": 29900, "currency": "INR", "period": "monthly", "interval": 1,
+        "available": True, "kind": "subscription", "amount": 29900, "currency": "INR", "period": "monthly",
+        "interval": 1, "days": None,
     }  # fmt: skip
 
     seen: list[httpx.Request] = []

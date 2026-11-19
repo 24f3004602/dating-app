@@ -174,6 +174,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/plus-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plus pass payments: waiting to be checked (oldest first) or decided (audited; admins) */
+        get: operations["staff_payments_v1_admin_plus_payments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/plus-payments/{payment_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a payment found in the bank (the pass starts), or reject it with why (admins) */
+        post: operations["decide_payment_v1_admin_plus_payments__payment_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/reports": {
         parameters: {
             query?: never;
@@ -905,6 +939,41 @@ export interface paths {
         post?: never;
         /** Delete a photo */
         delete: operations["delete_v1_me_photos__photo_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/plus-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Plus pass payment in progress, or the last one decided this week (null if none) */
+        get: operations["my_plus_payment_v1_me_plus_payment_get"];
+        put?: never;
+        /** Start paying for the Plus pass by UPI, or get the payment already open (web and sideloaded apps only) */
+        post: operations["start_plus_payment_v1_me_plus_payment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/plus-payment/{payment_id}/reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Send the 12-digit UPI reference (UTR) of the payment, for an admin to find in the bank */
+        put: operations["send_reference_v1_me_plus_payment__payment_id__reference_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2030,7 +2099,9 @@ export interface components {
         /**
          * PlanOut
          * @description What the plan costs, as the payment provider will charge it. `available`
-         *     is false while payments aren't set up: the apps then sell nothing.
+         *     is false while payments aren't set up: the apps then sell nothing. A
+         *     `subscription` renews every `interval` `period`s; a `pass` (D127) brings
+         *     `days` of the plan for one UPI payment and never renews.
          */
         PlanOut: {
             /** Amount */
@@ -2039,11 +2110,92 @@ export interface components {
             available: boolean;
             /** Currency */
             currency?: string | null;
+            /** Days */
+            days?: number | null;
             /** Interval */
             interval?: number | null;
+            /**
+             * Kind
+             * @default subscription
+             * @enum {string}
+             */
+            kind: "subscription" | "pass";
             /** Period */
             period?: ("daily" | "weekly" | "monthly" | "quarterly" | "yearly") | null;
         };
+        /**
+         * PlusDecisionIn
+         * @description Approve (the payment is in the bank, for the right amount) or reject (with why).
+         */
+        PlusDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Reason */
+            reason?: ("not_found" | "wrong_amount" | "other") | null;
+        };
+        /**
+         * PlusPaymentOut
+         * @description Paying for the pass (D127): pay exactly `amount` by UPI to `payee_vpa` (the
+         *     `upi_url` opens a UPI app with everything filled in; `qr` is the same link as
+         *     a PNG data URL, to scan from another phone), then send the 12-digit UPI
+         *     reference before `open_until`. An admin then finds the payment in the bank.
+         */
+        PlusPaymentOut: {
+            /** Amount */
+            amount: number;
+            /** Code */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Days */
+            days: number;
+            /** Decided At */
+            decided_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Open Until
+             * Format: date-time
+             */
+            open_until: string;
+            /** Payee Name */
+            payee_name: string;
+            /** Payee Vpa */
+            payee_vpa: string;
+            /** Plus Until */
+            plus_until: string | null;
+            /** Qr */
+            qr: string | null;
+            /** Reject Reason */
+            reject_reason: ("not_found" | "wrong_amount" | "other") | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "submitted" | "approved" | "rejected" | "expired";
+            /** Submitted At */
+            submitted_at: string | null;
+            /** Upi Url */
+            upi_url: string;
+            /** Utr */
+            utr: string | null;
+        };
+        /**
+         * PlusPaymentStatus
+         * @enum {string}
+         */
+        PlusPaymentStatus: "open" | "submitted" | "approved" | "rejected" | "expired";
         /** PreferencesIn */
         PreferencesIn: {
             /** Age Max */
@@ -2249,6 +2401,14 @@ export interface components {
             /** Unread */
             unread: number;
         };
+        /**
+         * ReferenceIn
+         * @description The UPI reference (UTR): 12 digits, shown in the UPI app after paying.
+         */
+        ReferenceIn: {
+            /** Utr */
+            utr: string;
+        };
         /** RegisterIn */
         RegisterIn: {
             /**
@@ -2453,6 +2613,46 @@ export interface components {
              * @enum {string}
              */
             role: "moderator" | "admin";
+        };
+        /**
+         * StaffPlusPayment
+         * @description A payment as an admin checks it against the bank: the code, the amount and
+         *     the UPI reference. Nothing about the member: the bank match needs none.
+         */
+        StaffPlusPayment: {
+            /** Amount */
+            amount: number;
+            /** Code */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Days */
+            days: number;
+            /** Decided At */
+            decided_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Plus Until */
+            plus_until: string | null;
+            /** Reject Reason */
+            reject_reason: ("not_found" | "wrong_amount" | "other") | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "submitted" | "approved" | "rejected" | "expired";
+            /** Submitted At */
+            submitted_at: string | null;
+            /** Utr */
+            utr: string | null;
         };
         /** StaffSessionOut */
         StaffSessionOut: {
@@ -3159,6 +3359,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    staff_payments_v1_admin_plus_payments_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PlusPaymentStatus"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlusPayment"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    decide_payment_v1_admin_plus_payments__payment_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlusDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlusPayment"];
                 };
             };
             /** @description Not signed in, or bad credentials */
@@ -5888,6 +6209,171 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    my_plus_payment_v1_me_plus_payment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlusPaymentOut"] | null;
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_plus_payment_v1_me_plus_payment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlusPaymentOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    send_reference_v1_me_plus_payment__payment_id__reference_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlusPaymentOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

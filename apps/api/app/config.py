@@ -116,16 +116,25 @@ class Settings(BaseSettings):
     push_backend: Literal["none", "memory", "expo"] = "none"
     expo_access_token: SecretStr | None = None
 
-    # Payments (stage 16b, D094): sandbox only. "none" refuses checkouts (the
-    # default); "fake" is for tests; "razorpay" needs the owner's account. Live
-    # keys (rzp_live_...) are refused unless payments_live is set: no live
-    # payments without the owner's authorization (CLAUDE.md).
-    payments_backend: Literal["none", "fake", "razorpay"] = "none"
+    # Payments (stage 16b, D094; D127). "none" sells nothing (the default);
+    # "fake" is for tests; "razorpay" needs the owner's account, and its live
+    # keys (rzp_live_...) are refused unless payments_live is set; "upi" sells
+    # the Plus pass (D127): paid by UPI straight to the operator's UPI ID, and
+    # confirmed by an admin who finds the payment in the bank. Every UPI payment
+    # is real money, so it too needs payments_live: no live payments without the
+    # owner's authorization (CLAUDE.md).
+    payments_backend: Literal["none", "fake", "razorpay", "upi"] = "none"
     razorpay_key_id: str | None = Field(default=None, max_length=64)
     razorpay_key_secret: SecretStr | None = None
     razorpay_webhook_secret: SecretStr | None = None
     razorpay_plan_id: str | None = Field(default=None, max_length=64)
     payments_live: bool = False
+    # The UPI pass (D127): where members pay, what the pass costs in whole rupees,
+    # and how many days of Plus it brings. The UPI ID is shown to paying members.
+    upi_payee_vpa: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._-]{2,64}@[A-Za-z0-9]{2,32}$")
+    upi_payee_name: str | None = Field(default=None, pattern=r"^[A-Za-z][A-Za-z .&'-]{0,49}$")
+    plus_price_inr: int = Field(default=299, ge=1, le=99_999)
+    plus_pass_days: int = Field(default=30, ge=1, le=366)
 
     # Live calls (stage 23, D123): random one-to-one video calls. The relay:
     # "off" keeps Live unavailable (the default, and the safe one on a server
@@ -193,7 +202,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "cloudflare_turn_key_id", "cloudflare_turn_api_token", "razorpay_key_id", "razorpay_key_secret",
-        "razorpay_webhook_secret", "razorpay_plan_id", mode="before",
+        "razorpay_webhook_secret", "razorpay_plan_id", "upi_payee_vpa", "upi_payee_name", mode="before",
     )  # fmt: skip
     @classmethod
     def _empty_is_unset(cls, v: object) -> object:
@@ -242,6 +251,11 @@ class Settings(BaseSettings):
             self.razorpay_key_id and self.razorpay_key_secret and self.razorpay_webhook_secret and self.razorpay_plan_id
         ):
             raise ValueError("the razorpay backend needs a key ID, key secret, webhook secret and plan ID")
+        if self.payments_backend == "upi":
+            if not (self.upi_payee_vpa and self.upi_payee_name):
+                raise ValueError("the upi backend needs UPI_PAYEE_VPA and UPI_PAYEE_NAME")
+            if not self.payments_live:
+                raise ValueError("the UPI pass takes real money: it needs PAYMENTS_LIVE=true (the owner's go)")
         return self
 
     @model_validator(mode="after")
@@ -293,7 +307,11 @@ class Settings(BaseSettings):
             ),
             (not self.site_url.startswith("https://"), f"SITE_URL must be https in {env}"),
             (env == "beta" and not self.signup_invite_only, "the beta is invite-only (SIGNUP_INVITE_ONLY=true)"),
-            (env == "beta" and self.payments_live, "no live payments in the beta"),
+            # The owner chose to sell the UPI pass in the beta (D127); nothing else live.
+            (
+                env == "beta" and self.payments_live and self.payments_backend != "upi",
+                "no live payments in the beta except the UPI pass",
+            ),
         ]
         problems = [problem for failed, problem in checks if failed]
         if problems:

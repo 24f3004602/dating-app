@@ -53,8 +53,8 @@ BETA = {
     "EMAIL_BACKEND": "smtp",
     "SMTP_HOST": "smtp.gmail.com",
     "SIGNUP_INVITE_ONLY": True,
-    "TERMS_VERSION": "beta-2026-11",
-    "PRIVACY_VERSION": "beta-2026-11",
+    "TERMS_VERSION": "beta-2026-11-19",
+    "PRIVACY_VERSION": "beta-2026-11-19",
     "CORS_ORIGINS": ["https://app.example.in"],
     "SITE_URL": "https://example.in",
 }
@@ -66,6 +66,15 @@ def test_a_beta_server_may_keep_photos_on_its_disk_and_use_the_beta_notice() -> 
     assert not s.is_production
     assert s.storage_backend == "local"
     assert not s.interactive_docs_enabled
+
+
+def test_a_beta_server_may_sell_the_upi_pass_with_the_owners_go() -> None:
+    """D127: the owner chose to sell the pass in the beta; it is real money, so PAYMENTS_LIVE says so."""
+    upi = {"PAYMENTS_BACKEND": "upi", "UPI_PAYEE_VPA": "kinaara@example", "UPI_PAYEE_NAME": "Kinaara"}
+    s = settings_from({**BETA, **upi, "PAYMENTS_LIVE": True})
+    assert (s.payments_backend, s.payments_live) == ("upi", True)
+    with pytest.raises(ValidationError, match="takes real money"):
+        settings_from({**BETA, **upi})
 
 
 @pytest.mark.parametrize(

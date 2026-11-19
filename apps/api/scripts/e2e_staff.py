@@ -2,8 +2,9 @@
 
 Creates a labelled e2e admin with the password given on the command line (the
 seeded fixtures use an undeliverable domain and can never sign in), issues it
-a one-time enrolment token, and files a labelled report between two seeded
-fixture profiles. Prints JSON: {"email", "enrollment_token", "report_id"}.
+a one-time enrolment token, files a labelled report between two seeded fixture
+profiles, and a Plus pass payment from a fixture waiting for an admin (D127).
+Prints JSON: {"email", "enrollment_token", "report_id", "payment_utr"}.
 
 Refuses any database whose name does not end in `_e2e_test`, and production.
 Run after `seed-dev` (the e2e global setup does both).
@@ -27,6 +28,7 @@ from app.db import create_engine, create_session_factory
 from app.fixtures import PROFILES
 from app.modules.accounts.models import User, UserRole, UserStatus
 from app.modules.auth.passwords import Passwords
+from app.modules.billing.models import PlusPayment, PlusPaymentStatus
 from app.modules.safety.models import Report, ReportReason, ReportStatus
 from app.modules.staff.service import issue_enrollment
 
@@ -41,6 +43,7 @@ def main() -> int:
         print(f"refusing to touch {name!r}: e2e database names end in _e2e_test", file=sys.stderr)
         return 2
     admin_email = "e2e-admin@example.com"
+    payment_utr = "600000000017"  # made up: nothing is paid in the e2e run
     reporter_email, subject_email = PROFILES[3].email, PROFILES[0].email
 
     async def go() -> dict[str, str]:
@@ -68,9 +71,18 @@ def main() -> int:
                     details="E2E test report between two labelled fixtures.", status=ReportStatus.open, priority=3,
                 )  # fmt: skip
                 session.add(report)
+                session.add(
+                    PlusPayment(
+                        user_id=ids[reporter_email], code="E2EPAYZZ", amount=29900, currency="INR", days=30,
+                        status=PlusPaymentStatus.submitted, utr=payment_utr, submitted_at=now, created_at=now,
+                    )
+                )  # fmt: skip
                 await session.commit()
                 token, _ = await issue_enrollment(session, settings, None, ids[admin_email], system_clock())
-                return {"email": admin_email, "enrollment_token": token, "report_id": str(report.id)}
+                return {
+                    "email": admin_email, "enrollment_token": token, "report_id": str(report.id),
+                    "payment_utr": payment_utr,
+                }  # fmt: skip
         finally:
             await engine.dispose()
 

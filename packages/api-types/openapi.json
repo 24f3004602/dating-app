@@ -1871,7 +1871,7 @@
       },
       "PlanOut": {
         "additionalProperties": false,
-        "description": "What the plan costs, as the payment provider will charge it. `available`\nis false while payments aren't set up: the apps then sell nothing.",
+        "description": "What the plan costs, as the payment provider will charge it. `available`\nis false while payments aren't set up: the apps then sell nothing. A\n`subscription` renews every `interval` `period`s; a `pass` (D127) brings\n`days` of the plan for one UPI payment and never renews.",
         "properties": {
           "amount": {
             "anyOf": [
@@ -1899,6 +1899,17 @@
             ],
             "title": "Currency"
           },
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
           "interval": {
             "anyOf": [
               {
@@ -1909,6 +1920,15 @@
               }
             ],
             "title": "Interval"
+          },
+          "kind": {
+            "default": "subscription",
+            "enum": [
+              "subscription",
+              "pass"
+            ],
+            "title": "Kind",
+            "type": "string"
           },
           "period": {
             "anyOf": [
@@ -1934,6 +1954,207 @@
         ],
         "title": "PlanOut",
         "type": "object"
+      },
+      "PlusDecisionIn": {
+        "additionalProperties": false,
+        "description": "Approve (the payment is in the bank, for the right amount) or reject (with why).",
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_found",
+                  "wrong_amount",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "PlusDecisionIn",
+        "type": "object"
+      },
+      "PlusPaymentOut": {
+        "additionalProperties": false,
+        "description": "Paying for the pass (D127): pay exactly `amount` by UPI to `payee_vpa` (the\n`upi_url` opens a UPI app with everything filled in; `qr` is the same link as\na PNG data URL, to scan from another phone), then send the 12-digit UPI\nreference before `open_until`. An admin then finds the payment in the bank.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "open_until": {
+            "format": "date-time",
+            "title": "Open Until",
+            "type": "string"
+          },
+          "payee_name": {
+            "title": "Payee Name",
+            "type": "string"
+          },
+          "payee_vpa": {
+            "title": "Payee Vpa",
+            "type": "string"
+          },
+          "plus_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plus Until"
+          },
+          "qr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_found",
+                  "wrong_amount",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "submitted",
+              "approved",
+              "rejected",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "upi_url": {
+            "title": "Upi Url",
+            "type": "string"
+          },
+          "utr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utr"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "amount",
+          "currency",
+          "days",
+          "payee_vpa",
+          "payee_name",
+          "upi_url",
+          "qr",
+          "utr",
+          "created_at",
+          "open_until",
+          "submitted_at",
+          "decided_at",
+          "reject_reason",
+          "plus_until"
+        ],
+        "title": "PlusPaymentOut",
+        "type": "object"
+      },
+      "PlusPaymentStatus": {
+        "enum": [
+          "open",
+          "submitted",
+          "approved",
+          "rejected",
+          "expired"
+        ],
+        "title": "PlusPaymentStatus",
+        "type": "string"
       },
       "PreferencesIn": {
         "additionalProperties": false,
@@ -2498,6 +2719,22 @@
         "title": "ReadOut",
         "type": "object"
       },
+      "ReferenceIn": {
+        "additionalProperties": false,
+        "description": "The UPI reference (UTR): 12 digits, shown in the UPI app after paying.",
+        "properties": {
+          "utr": {
+            "pattern": "^[0-9]{12}$",
+            "title": "Utr",
+            "type": "string"
+          }
+        },
+        "required": [
+          "utr"
+        ],
+        "title": "ReferenceIn",
+        "type": "object"
+      },
       "RegisterIn": {
         "additionalProperties": false,
         "properties": {
@@ -3015,6 +3252,128 @@
           "enrolled"
         ],
         "title": "StaffMember",
+        "type": "object"
+      },
+      "StaffPlusPayment": {
+        "additionalProperties": false,
+        "description": "A payment as an admin checks it against the bank: the code, the amount and\nthe UPI reference. Nothing about the member: the bank match needs none.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "plus_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plus Until"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_found",
+                  "wrong_amount",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "submitted",
+              "approved",
+              "rejected",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "utr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utr"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "amount",
+          "currency",
+          "days",
+          "utr",
+          "created_at",
+          "submitted_at",
+          "decided_at",
+          "reject_reason",
+          "plus_until"
+        ],
+        "title": "StaffPlusPayment",
         "type": "object"
       },
       "StaffSessionOut": {
@@ -4170,6 +4529,177 @@
           }
         },
         "summary": "Approve or reject a photo",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/plus-payments": {
+      "get": {
+        "operationId": "staff_payments_v1_admin_plus_payments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PlusPaymentStatus",
+              "default": "submitted"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffPlusPayment"
+                  },
+                  "title": "Response Staff Payments V1 Admin Plus Payments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Plus pass payments: waiting to be checked (oldest first) or decided (audited; admins)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/plus-payments/{payment_id}/decision": {
+      "post": {
+        "operationId": "decide_payment_v1_admin_plus_payments__payment_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlusDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffPlusPayment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Approve a payment found in the bank (the pass starts), or reject it with why (admins)",
         "tags": [
           "admin"
         ]
@@ -7445,6 +7975,207 @@
         "summary": "Delete a photo",
         "tags": [
           "photos"
+        ]
+      }
+    },
+    "/v1/me/plus-payment": {
+      "get": {
+        "operationId": "my_plus_payment_v1_me_plus_payment_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlusPaymentOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Plus Payment V1 Me Plus Payment Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          }
+        },
+        "summary": "My Plus pass payment in progress, or the last one decided this week (null if none)",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "operationId": "start_plus_payment_v1_me_plus_payment_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlusPaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Start paying for the Plus pass by UPI, or get the payment already open (web and sideloaded apps only)",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/me/plus-payment/{payment_id}/reference": {
+      "put": {
+        "operationId": "send_reference_v1_me_plus_payment__payment_id__reference_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlusPaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Send the 12-digit UPI reference (UTR) of the payment, for an admin to find in the bank",
+        "tags": [
+          "billing"
         ]
       }
     },

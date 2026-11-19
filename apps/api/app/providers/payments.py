@@ -14,6 +14,12 @@
 
 Nothing about the member is sent to Razorpay: we keep the link between our
 user and their subscription ID ourselves.
+
+- `UpiPayments` (D127, the owner's choice 2026-11-19): no provider at all. The
+  Plus pass is paid by UPI straight to the operator's UPI ID (a `upi://pay`
+  link and its QR code, the NPCI linking format), and an admin confirms each
+  payment against the bank account (billing/passes.py). Nothing renews; there
+  are no webhooks and no keys.
 """
 
 from __future__ import annotations
@@ -52,12 +58,27 @@ class PlanPrice:
     interval: int
 
 
+@dataclass(frozen=True)
+class PassPrice:
+    amount: int  # paise
+    currency: str
+    days: int
+
+
+@dataclass(frozen=True)
+class UpiPayee:
+    vpa: str  # the UPI ID members pay
+    name: str  # the name their UPI app shows
+
+
 class PaymentsUnavailableError(RuntimeError):
     """Payments aren't set up, or the provider can't be reached (retry later)."""
 
 
 class PaymentProvider(Protocol):
     name: str
+    # "subscription": renews through the provider; "pass": a fixed number of days, bought again by hand (D127).
+    kind: str
     public_key: str | None
 
     async def create_subscription(self) -> CreatedSubscription: ...
@@ -76,6 +97,7 @@ def _matches(secret: str, raw_body: bytes, signature: str) -> bool:
 
 class NoPayments:
     name: str = "none"
+    kind: str = "subscription"
     public_key: str | None = None
 
     async def create_subscription(self) -> CreatedSubscription:
@@ -95,6 +117,7 @@ class NoPayments:
 class FakePayments:
     secret: str = "fake-webhook-secret"  # noqa: S105 - a test value, not a credential
     name: str = "razorpay"
+    kind: str = "subscription"
     public_key: str | None = "rzp_test_fake"
     created: list[str] = field(default_factory=list)
     cancelled: list[tuple[str, bool]] = field(default_factory=list)
@@ -118,6 +141,7 @@ class FakePayments:
 
 class RazorpayPayments:
     name: str = "razorpay"
+    kind: str = "subscription"
     public_key: str | None
 
     def __init__(
@@ -180,9 +204,39 @@ class RazorpayPayments:
         await self._client.aclose()
 
 
-def create_payments(settings: Settings) -> NoPayments | FakePayments | RazorpayPayments:
+@dataclass
+class UpiPayments:
+    """The Plus pass, paid by UPI to the operator (D127). Subscriptions don't exist here."""
+
+    payee: UpiPayee
+    price: PassPrice
+    name: str = "upi"
+    kind: str = "pass"
+    public_key: str | None = None
+
+    async def create_subscription(self) -> CreatedSubscription:
+        raise PaymentsUnavailableError("the UPI pass has no subscriptions")
+
+    async def cancel(self, subscription_id: str, *, at_cycle_end: bool) -> None:
+        raise PaymentsUnavailableError("the UPI pass has no subscriptions")
+
+    def verify(self, raw_body: bytes, signature: str) -> bool:
+        return False  # no webhooks: an admin confirms each payment
+
+    async def plan_price(self) -> PlanPrice | None:
+        return None  # a pass has no billing period; see `price`
+
+
+def create_payments(settings: Settings) -> NoPayments | FakePayments | RazorpayPayments | UpiPayments:
     if settings.payments_backend == "fake":
         return FakePayments()
+    if settings.payments_backend == "upi":
+        if not (settings.upi_payee_vpa and settings.upi_payee_name):
+            raise RuntimeError("upi settings missing")  # the settings validator stops this earlier
+        return UpiPayments(
+            payee=UpiPayee(settings.upi_payee_vpa, settings.upi_payee_name),
+            price=PassPrice(settings.plus_price_inr * 100, "INR", settings.plus_pass_days),
+        )
     if settings.payments_backend == "razorpay":
         if not (settings.razorpay_key_id and settings.razorpay_key_secret and settings.razorpay_webhook_secret):
             raise RuntimeError("razorpay settings missing")  # the settings validator stops this earlier

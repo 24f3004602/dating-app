@@ -42,6 +42,7 @@ from app.modules.audit.service import record
 from app.modules.auth.crypto import banned_email_digest
 from app.modules.auth.models import OneTimeCode, Session, SignupInvite
 from app.modules.auth.service import AuthContext, banned_email_key, local_today, revoke_all_sessions
+from app.modules.billing import passes
 from app.modules.billing import service as billing
 from app.modules.calls.models import Call, CallQueueEntry
 from app.modules.calls.service import end_all_for as end_calls_for
@@ -222,6 +223,7 @@ async def sweep(session: AsyncSession, settings: Settings, now: datetime) -> dic
         session, delete(OneTimeCode).where(OneTimeCode.expires_at < now - retention.EXPIRED_CODE)
     )
     counts["payment_events"] = await billing.purge_events(session, now)
+    counts["plus_payments"] = await passes.purge(session, now)
     counts["calls"] = await _count(
         session,
         delete(Call).where(

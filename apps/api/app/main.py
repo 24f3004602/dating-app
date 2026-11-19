@@ -21,6 +21,7 @@ from app.modules.auth.crypto import derive_key
 from app.modules.auth.passwords import Passwords
 from app.modules.auth.router import router as auth_router
 from app.modules.auth.service import AuthContext
+from app.modules.billing.router import admin_router as plus_admin_router
 from app.modules.billing.router import router as billing_router
 from app.modules.calls.router import router as calls_router
 from app.modules.discovery.router import router as discovery_router
@@ -136,6 +137,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.include_router(privacy_router)
     app.include_router(notifications_router)
     app.include_router(billing_router)
+    app.include_router(plus_admin_router)
     app.include_router(calls_router)
     app.include_router(staff_router)
     app.include_router(waitlist_router)

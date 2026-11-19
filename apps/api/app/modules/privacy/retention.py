@@ -28,6 +28,12 @@ DAILY_PICKS_DAYS = 7
 CALL_RECORD = timedelta(days=90)  # (R)
 STALE_QUEUE_ENTRY = timedelta(hours=1)  # a waiting member who stopped sending heartbeats
 
+# The Plus pass (D127): attempts nobody paid for go after a month; payment
+# records are accounting records, kept for the accounting period (tax law asks
+# for about eight years), without the link to a deleted account.
+UNPAID_PLUS_PAYMENT = timedelta(days=30)
+PLUS_PAYMENT_RECORD = timedelta(days=8 * 365)  # (R)
+
 # Authentication.
 ENDED_SESSION = timedelta(days=30)  # after expiry or revocation
 EXPIRED_CODE = timedelta(days=1)
