@@ -1,5 +1,5 @@
 /** LIVE-APP-7 (stage 23, D123): the connection asks for relay-only, sends complete descriptions, and reports its state. */
-import { GATHER_MS, makeLink, type PeerConnectionCtor } from "@/calls/peer";
+import { GATHER_MS, makeLink, type PeerConnectionCtor, QUIET_MS } from "@/calls/peer";
 
 type Listener = (event: never) => void;
 
@@ -77,6 +77,23 @@ test("the offer waits for gathering to finish, so it carries every candidate", a
   peer.fire("icegatheringstatechange");
   await jest.advanceTimersByTimeAsync(0);
   expect(sent).toBe("v=0 offer with relay candidates");
+});
+
+test("once candidates stop coming, the description goes without waiting for the browser's slow 'complete'", async () => {
+  const link = makeLink(Peer, { policy: "relay", servers: [] }, camera);
+  const peer = FakePeer.last as FakePeer;
+  let sent: string | null = null;
+  void link.offer().then((sdp) => (sent = sdp));
+  await jest.advanceTimersByTimeAsync(400);
+  peer.localDescription = { sdp: "v=0 offer, one relay candidate" };
+  peer.fire("icecandidate", { candidate: { candidate: "candidate:1 1 udp 1 203.0.113.1 3478 typ relay" } });
+  await jest.advanceTimersByTimeAsync(100);
+  peer.localDescription = { sdp: "v=0 offer, two relay candidates" };
+  peer.fire("icecandidate", { candidate: { candidate: "candidate:2 1 udp 1 203.0.113.1 3479 typ relay" } });
+  await jest.advanceTimersByTimeAsync(QUIET_MS - 1);
+  expect(sent).toBeNull(); // a candidate came less than the quiet period ago
+  await jest.advanceTimersByTimeAsync(1);
+  expect(sent).toBe("v=0 offer, two relay candidates"); // at 1 s, not at the 4 s cap
 });
 
 test("gathering that never finishes is cut short; the answer takes the offer first", async () => {

@@ -354,6 +354,8 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | LIVE-APP-16 | Live | edge | the phone adapter | no native module: not offered, the package never loads; both camera and microphone or a refusal; the library's connection | jest | pass |
 | NAT-LIVE-1 | Live | happy | a native Android build | prebuild, Gradle release for arm64, R8, the WebRTC library in the APK | ci (manual) | pass: android-apk run 44351502502 |
 | E2E-16 | Live | happy | three people in real Chrome with fake cameras | rules, Start, paired, connected, video covered then shown, the minute counting, End, a like each: a match; a report pauses Live for the one reported | e2e | pass: mobile run 44351500829 (re-run 2026-11-19 after the picomatch advisory was withdrawn) |
+| LIVE-APP-19 | Live | happy | candidates that stop coming | the description goes half a second after the last candidate, not at the 4 s cap | jest | pass (mutation-checked) |
+| LIVE-RELAY-1 | Live | security | a call through Cloudflare's relay (the beta's key, a scratch database) | relay-only policy; every candidate and the selected pair relay to relay; video both ways; hang-up ends both | browser harness | pass 2026-11-19: 18.1 and 16.3 s before D130, 9.3 and 8.6 s after |
 | LIVE-APP-17 | Live | happy | the phone's call sound | starts once the camera is on, stops when it goes off, never without a camera | jest | pass |
 | LIVE-APP-18 | Live | edge | the loudspeaker module | without the native module nothing loads; with it, a video call's start and stop | jest | pass |
 | PLUS-1 | plan | guard | the UPI pass's settings | needs the payee and `PAYMENTS_LIVE`; a beta may sell the pass only; bad UPI IDs refused | api | pass |

@@ -57,7 +57,15 @@ export type Link = {
   close(): void;
 };
 
+/** The longest a description waits for its candidates. */
 export const GATHER_MS = 4000;
+/**
+ * Enough candidates: once some have come, this long without another. Cloudflare's relays
+ * hand out all six of a call's relay candidates within about 150 ms, but Chrome reports
+ * gathering complete only about 10 s later (measured 2026-11-19), so waiting for it cost
+ * the full cap on both sides of every call.
+ */
+export const QUIET_MS = 500;
 
 function stateOf(pc: PeerLike): LinkState {
   // connectionState where supported; the ICE state stands in elsewhere.
@@ -67,7 +75,13 @@ function stateOf(pc: PeerLike): LinkState {
   return (["new", "connecting", "connected", "disconnected", "failed", "closed"] as const).find((s) => s === raw) ?? "new";
 }
 
-export function makeLink(PeerConnection: PeerConnectionCtor, ice: IceConfig, local: StreamLike, gatherMs = GATHER_MS): Link {
+export function makeLink(
+  PeerConnection: PeerConnectionCtor,
+  ice: IceConfig,
+  local: StreamLike,
+  gatherMs = GATHER_MS,
+  quietMs = QUIET_MS,
+): Link {
   const pc = new PeerConnection({
     iceServers: ice.servers.map((s) => ({
       urls: s.urls,
@@ -104,8 +118,10 @@ export function makeLink(PeerConnection: PeerConnectionCtor, ice: IceConfig, loc
   const complete = async (): Promise<string> => {
     if (pc.iceGatheringState !== "complete") {
       await new Promise<void>((resolve) => {
+        let quiet: ReturnType<typeof setTimeout> | undefined;
         const finish = () => {
           clearTimeout(timer);
+          clearTimeout(quiet);
           pc.removeEventListener("icegatheringstatechange", onGathering);
           pc.removeEventListener("icecandidate", onCandidate);
           resolve();
@@ -113,8 +129,14 @@ export function makeLink(PeerConnection: PeerConnectionCtor, ice: IceConfig, loc
         const onGathering = () => {
           if (pc.iceGatheringState === "complete") finish();
         };
+        // Each candidate restarts the quiet period; the end-of-candidates event finishes at once.
         const onCandidate = ((event: { candidate: unknown }) => {
-          if (!event.candidate) finish();
+          if (!event.candidate) {
+            finish();
+            return;
+          }
+          clearTimeout(quiet);
+          quiet = setTimeout(finish, quietMs);
         }) as (e: never) => void;
         const timer = setTimeout(finish, gatherMs);
         pc.addEventListener("icegatheringstatechange", onGathering);
