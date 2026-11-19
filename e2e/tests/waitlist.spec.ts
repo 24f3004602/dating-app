@@ -1,11 +1,12 @@
 /**
- * The waitlist on the landing page (stage 20d, D101-D102): join through the form, the
- * real API and worker; confirm and leave from the emailed links, which take a press,
- * never just opening the page. Errors are tied to their fields; axe on every screen.
+ * The waitlist's emailed links (stage 20d, D101-D102): confirm and leave take a press,
+ * never just opening the page; axe on every screen. Joining moved off the landing page
+ * when sign-up opened (D133), so this joins through the API, as the old form did, to
+ * get a real email from the worker.
  */
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { CONSOLE_URL } from "../env";
+import { API_URL, CONSOLE_URL, E2E_PRIVACY_VERSION } from "../env";
 import { checkA11y, waitlistLinkFromWorkerMail, watchErrors } from "./helpers";
 
 test.use({ baseURL: CONSOLE_URL });
@@ -14,19 +15,11 @@ function unique(name: string): string {
   return `${name}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 }
 
-async function join(page: Page, email: string) {
-  const form = page.getByRole("region", { name: "Next stop: Delhi NCR" });
-  await form.getByLabel("Your email address").fill(email);
-  await form.getByLabel("I'm 18 or over").check();
-  await form.getByRole("button", { name: "Join the waitlist" }).click();
-  await expect(form.getByRole("status")).toContainText("Check your inbox");
-}
-
-test("join, confirm with a press, then leave", async ({ page }) => {
+test("confirm with a press, then leave", async ({ page, request }) => {
   const errors = await watchErrors(page);
   const email = unique("join");
-  await page.goto("/");
-  await join(page, email);
+  const joined = await request.post(`${API_URL}/v1/waitlist`, { data: { email, adult: true, privacy: E2E_PRIVACY_VERSION } });
+  expect(joined.status()).toBe(202);
 
   // Opening the link changes nothing: mail scanners open links too.
   const confirm = await waitlistLinkFromWorkerMail(email, "confirm");
@@ -50,24 +43,6 @@ test("join, confirm with a press, then leave", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("Your address is deleted");
   expect(errors.console).toEqual([]);
   expect(errors.server).toEqual([]);
-});
-
-test("the form names what's wrong, next to the field", async ({ page }) => {
-  await page.goto("/");
-  const form = page.getByRole("region", { name: "Next stop: Delhi NCR" });
-  const email = form.getByLabel("Your email address");
-  await email.fill("not-an-address");
-  await form.getByRole("button", { name: "Join the waitlist" }).click();
-  await expect(email).toHaveAttribute("aria-invalid", "true");
-  await expect(email).toHaveAccessibleDescription(/Enter an email address/);
-
-  await email.fill(unique("adult"));
-  await form.getByRole("button", { name: "Join the waitlist" }).click();
-  const adult = form.getByLabel("I'm 18 or over");
-  await expect(adult).toHaveAttribute("aria-invalid", "true");
-  await expect(adult).toHaveAccessibleDescription(/18 or over/);
-  await expect(email).toHaveValue(/^adult-/); // what they typed is kept
-  await checkA11y(page, "waitlist errors");
 });
 
 test("a link without its token says so and offers nothing to press", async ({ page }) => {

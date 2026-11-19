@@ -29,9 +29,11 @@ x-app-env: &app-env
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
   # Waitlist emails link to the website (D101).
   SITE_URL: https://${DOMAIN}
-  TERMS_VERSION: beta-2026-11-19
-  PRIVACY_VERSION: beta-2026-11-19
-  SIGNUP_INVITE_ONLY: "true"
+  TERMS_VERSION: beta-2026-11-19b
+  PRIVACY_VERSION: beta-2026-11-19b
+  # Sign-up is open to everyone (D133, the owner's choice, 2026-11-19); "true" brings
+  # back invite-only sign-up (the invite list and `datingapp-api invite` still work).
+  SIGNUP_INVITE_ONLY: ${SIGNUP_INVITE_ONLY:-false}
   EMAIL_BACKEND: smtp
   EMAIL_FROM: ${SMTP_USERNAME:?set the Gmail address in .env}
   SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
@@ -141,6 +143,8 @@ services:
     environment:
       API_URL: http://api:8000
       API_PUBLIC_URL: https://api.${DOMAIN}
+      # The member app on the web: the front page's buttons open it (D133).
+      APP_URL: https://app.${DOMAIN}
       BRAND_NAME: ${BRAND_NAME:-Haanji}
       # The name in Devanagari beside the Latin one (D101); its letters must be in
       # apps/web/scripts/devanagari-text.txt. Empty: only the Latin name.

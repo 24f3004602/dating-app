@@ -42,7 +42,8 @@ export default defineConfig({
       command: `npx next start -p ${CONSOLE_PORT} -H 127.0.0.1`,
       cwd: "../apps/web",
       url: CONSOLE_URL,
-      env: { ...process.env, API_URL, PRIVACY_VERSION: E2E_PRIVACY_VERSION } as Record<string, string>,
+      // APP_URL: the landing page's buttons open the member app (D133), here its web build.
+      env: { ...process.env, API_URL, APP_URL: WEB_URL, PRIVACY_VERSION: E2E_PRIVACY_VERSION } as Record<string, string>,
       reuseExistingServer: false,
       timeout: 60_000,
     },

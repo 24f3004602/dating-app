@@ -4,8 +4,8 @@ import { connection } from "next/server";
 import { HeroStory } from "@/app/HeroStory";
 import { MotionToggle } from "@/app/MotionToggle";
 import { RouteDiagram } from "@/app/RouteDiagram";
-import { WaitlistForm } from "@/app/WaitlistForm";
-import { BRAND, BRAND_DEVANAGARI } from "@/lib/config";
+import { StartLinks } from "@/app/StartLinks";
+import { APP_URL, BRAND, BRAND_DEVANAGARI } from "@/lib/config";
 import { heroSceneEnabled } from "@/lib/heroScene";
 import { heroVideoConfig } from "@/lib/heroVideo";
 import { HOME, type Lang, messages } from "@/lib/i18n";
@@ -21,9 +21,13 @@ import styles from "./landing.module.css";
  *
  * The first screen sits on the candlelight loop, like the app's welcome (stage 22b,
  * D121; the owner's request): the loop or its still under the overlay's graphite
- * shade, white words on it, the map on a white enamel panel, the waitlist on its
- * graphite sign. The loop plays once on the page, there; the end of the line keeps
+ * shade, white words on it, the map on a white enamel panel, the way into the app on
+ * its graphite sign. The loop plays once on the page, there; the end of the line keeps
  * the still. Its pause button sits in the sign band, shown only while it plays.
+ *
+ * Sign-up is open (D133, the owner's choice, 2026-11-19), so the sign band and both
+ * panels lead into the member app on the web, the same app as on the phone, where the
+ * waitlist used to be. The app is in English; the Hindi page's links say so.
  */
 export async function Landing({ lang }: { lang: Lang }) {
   await connection(); // rendered per request, so the CSP nonce applies
@@ -36,16 +40,9 @@ export function LandingView({ lang }: { lang: Lang }) {
   const video = heroVideoConfig(process.env);
   // The name in Devanagari, where it's set, belongs on the Hindi page only.
   const name = lang === "hi" && BRAND_DEVANAGARI ? BRAND_DEVANAGARI : BRAND;
-  const form = {
-    email: t.form.email,
-    adult: t.form.adult,
-    consent: t.form.consent(name),
-    privacy: t.form.privacy,
-    submit: t.form.submit,
-    pending: t.form.pending,
-  };
-  // The legal documents are in English: a Hindi page marks its links to them as such.
+  // The legal documents and the app are in English: a Hindi page marks its links to them as such.
   const docLang = lang === "en" ? undefined : "en";
+  const app = { signUp: `${APP_URL}/sign-up`, signIn: `${APP_URL}/sign-in` };
   return (
     <div className={styles.landing}>
       <a className="skip" href="#main">
@@ -60,7 +57,9 @@ export function LandingView({ lang }: { lang: Lang }) {
           <span className={name === BRAND ? styles.latin : styles.devanagari}>{name}</span>
         </p>
         <div className={styles.signEnd}>
-          <p className={styles.status}>{t.status}</p>
+          <a className={styles.signIn} href={app.signIn} hrefLang={docLang}>
+            {t.signIn}
+          </a>
           <MotionToggle target="hero-stage" label={t.pause} />
           <a className={styles.language} href={HOME[t.other.lang]} lang={t.other.lang} hrefLang={t.other.lang}>
             {t.other.name}
@@ -86,7 +85,7 @@ export function LandingView({ lang }: { lang: Lang }) {
             <RouteDiagram words={t.map} scene={heroSceneEnabled(process.env)} />
             <section className={styles.panel} aria-labelledby="join-title">
               <h2 id="join-title">{t.join.heading}</h2>
-              <WaitlistForm lang={lang} words={form} privacyLang={docLang} />
+              <StartLinks words={t.start} links={app} appLang={docLang} />
             </section>
           </section>
         </div>
@@ -144,7 +143,7 @@ export function LandingView({ lang }: { lang: Lang }) {
       <div className={styles.closing}>
         <section className={[styles.panel, styles.last].join(" ")} aria-labelledby="join-end-title">
           <h2 id="join-end-title">{t.join.endHeading}</h2>
-          <WaitlistForm lang={lang} words={form} privacyLang={docLang} />
+          <StartLinks words={t.start} links={app} appLang={docLang} />
         </section>
         <footer className={styles.footer}>
           <p>

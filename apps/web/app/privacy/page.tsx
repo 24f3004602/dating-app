@@ -111,7 +111,11 @@ export default async function Privacy() {
         </li>
       </ul>
 
-      <h2>If you join the waitlist</h2>
+      <h2>If you joined the waitlist</h2>
+      <p>
+        The waitlist closed when sign-up opened to everyone: no new addresses are added.
+        For the addresses already on it:
+      </p>
       <ul>
         <li>
           <strong>What we keep</strong>: your email address, when you joined and

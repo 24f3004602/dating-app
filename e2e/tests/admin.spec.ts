@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { apiEnv, CONSOLE_URL } from "../env";
+import { apiEnv, CONSOLE_URL, WEB_URL } from "../env";
 import { checkA11y, PASSWORD, totp, watchErrors } from "./helpers";
 
 type Fixture = { email: string; enrollment_token: string; report_id: string; payment_utr: string };
@@ -29,9 +29,13 @@ test("the landing page says only what the app does", async ({ page }) => {
   const errors = await watchErrors(page);
   const res = await page.goto("/");
   await expect(page.getByRole("heading", { name: "Fewer, better introductions", level: 1 })).toBeVisible();
-  await expect(page.getByText("Not open yet")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ten likes a day, for everyone" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Join the waitlist" })).toHaveCount(2); // first screen and last stop
+  // Sign-up is open (D133): the sign band and both panels lead into the app.
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveCount(3); // the band, the first screen, the last stop
+  const create = page.getByRole("link", { name: "Create an account" });
+  await expect(create).toHaveCount(2);
+  await expect(create.first()).toHaveAttribute("href", `${WEB_URL}/sign-up`);
+  await expect(page.getByRole("button", { name: "Join the waitlist" })).toHaveCount(0);
   const csp = res?.headers()["content-security-policy"] ?? "";
   expect(csp).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
   expect(csp).toContain("frame-ancestors 'none'");
@@ -42,6 +46,12 @@ test("the landing page says only what the app does", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 }); // reflow
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   expect(errors.console).toEqual([]);
+
+  // The first screen's button opens the app's sign-up, the same screens as on the phone.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await create.first().click();
+  await expect(page).toHaveURL(`${WEB_URL}/sign-up`);
+  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
 });
 
 test("the tester notice pages are linked, readable and accessible", async ({ page }) => {
@@ -49,7 +59,7 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Version beta-2026-11-19/)).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11-19b/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
   await checkA11y(page, "privacy");
   await page.getByRole("link", { name: "Terms for testers" }).click();

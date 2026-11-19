@@ -312,6 +312,12 @@ it isn't available). In order:
    Payments page (admins) lists references waiting; find each in the bank's app or
    statement, check the amount, then Approve (the pass starts) or Reject with why. Refunds
    go from the bank by hand, as the terms say. To stop selling: `PAYMENTS_BACKEND=none`.
+**Sign-up is open (D133, 2026-11-19):** `SIGNUP_INVITE_ONLY` defaults to false in compose;
+set it to `true` in `infra/beta/.env` (then `docker compose up -d --no-deps api worker`) to
+go back to invites (`datingapp-api invite add <email>`). The website's buttons open the app
+at `APP_URL` (compose passes `https://app.${DOMAIN}`). Gmail's daily sending limit caps how
+many sign-up codes go out in a day; a real email provider (gate 1) lifts it.
+
 6. **Razorpay, later (owner):** a Razorpay account with KYC; a plan; test keys first
    (`PAYMENTS_BACKEND=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
    `RAZORPAY_PLAN_ID`) and the webhook (`https://api.<domain>/v1/webhooks/razorpay`, its

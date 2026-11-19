@@ -21,7 +21,8 @@ export type Messages = {
   lang: Lang;
   meta: { title: string; description: string };
   skip: string;
-  status: string;
+  /** The sign band's way into the app (D133). */
+  signIn: string;
   /** The language option in the sign band: the other language, named in itself. */
   other: { lang: Lang; name: string };
   headline: string;
@@ -39,16 +40,8 @@ export type Messages = {
     bothWays: string;
   };
   join: { heading: string; endHeading: string };
-  form: {
-    email: string;
-    adult: string;
-    consent: (brand: string) => string;
-    privacy: string;
-    submit: string;
-    pending: string;
-    done: string;
-    errors: { email: string; adult: string; underage: string; outOfDate: string; tooMany: string; unavailable: string };
-  };
+  /** The panels' ways into the app, and what to expect there (D133). */
+  start: { create: string; signIn: string; note: string };
   route: {
     title: string;
     legendLabel: string;

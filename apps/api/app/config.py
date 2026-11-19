@@ -306,7 +306,6 @@ class Settings(BaseSettings):
                 f"CORS origins must be https in {env}",
             ),
             (not self.site_url.startswith("https://"), f"SITE_URL must be https in {env}"),
-            (env == "beta" and not self.signup_invite_only, "the beta is invite-only (SIGNUP_INVITE_ONLY=true)"),
             # The owner chose to sell the UPI pass in the beta (D127); nothing else live.
             (
                 env == "beta" and self.payments_live and self.payments_backend != "upi",

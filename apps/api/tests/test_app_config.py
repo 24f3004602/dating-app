@@ -53,8 +53,8 @@ BETA = {
     "EMAIL_BACKEND": "smtp",
     "SMTP_HOST": "smtp.gmail.com",
     "SIGNUP_INVITE_ONLY": True,
-    "TERMS_VERSION": "beta-2026-11-19",
-    "PRIVACY_VERSION": "beta-2026-11-19",
+    "TERMS_VERSION": "beta-2026-11-19b",
+    "PRIVACY_VERSION": "beta-2026-11-19b",
     "CORS_ORIGINS": ["https://app.example.in"],
     "SITE_URL": "https://example.in",
 }
@@ -66,6 +66,12 @@ def test_a_beta_server_may_keep_photos_on_its_disk_and_use_the_beta_notice() -> 
     assert not s.is_production
     assert s.storage_backend == "local"
     assert not s.interactive_docs_enabled
+
+
+def test_a_beta_server_may_open_sign_up_to_everyone() -> None:
+    """D133: the owner opened sign-up on 2026-11-19; invites still work where a server wants them."""
+    assert settings_from({**BETA, "SIGNUP_INVITE_ONLY": False}).signup_invite_only is False
+    assert settings_from({**BETA, "SIGNUP_INVITE_ONLY": True}).signup_invite_only is True
 
 
 def test_a_beta_server_may_sell_the_upi_pass_with_the_owners_go() -> None:
@@ -80,7 +86,6 @@ def test_a_beta_server_may_sell_the_upi_pass_with_the_owners_go() -> None:
 @pytest.mark.parametrize(
     ("change", "problem"),
     [
-        ({"SIGNUP_INVITE_ONLY": False}, "the beta is invite-only"),
         ({"EMAIL_BACKEND": "console"}, "a real email backend is required in beta"),
         ({"TERMS_VERSION": "draft-2026-11"}, r"need final \(non-draft\) versions in beta"),
         ({"STORAGE_BACKEND": "memory"}, "a private object-storage bucket is required in beta"),

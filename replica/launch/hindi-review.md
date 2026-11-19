@@ -88,6 +88,13 @@ Write a better version in the last column, or "OK". Leave it empty if unsure.
 | 57 | गोपनीयता सूचना | privacy notice | the footer | OK (reviewed 2026-11-19) |
 | 59 | या लाइव मिलिए, एक मिनट की कॉल पर | Or meet live, on a one-minute call | a new station's name on the route (Live, stage 23, 2026-11-18) | OK (reviewed 2026-11-19) |
 | 60 | किसी ऐसे इंसान से छोटी वीडियो कॉल, जो आपसे दोनों तरफ़ से मेल खाता हो। पहली पाँच कॉल मुफ़्त हैं, हर कॉल एक मिनट तक, और उनका वीडियो तब तक छिपा रहता है, जब तक आप उसे देखना न चुनें। बाद में आप दोनों एक-दूसरे को लाइक करें, तो मैच। | A short video call with someone who fits you both ways. Your first five calls are free, up to a minute each, and their video stays hidden until you choose to see it. Like each other afterwards and it's a match. | under that station's name (Live, stage 23, 2026-11-18) | OK (reviewed 2026-11-19) |
+| 61 | साइन इन करें | Sign in | the sign band, and the second button in both panels (D133, 2026-11-19) |  |
+| 62 | अकाउंट बनाएँ | Create an account | the first button in both panels (D133) |  |
+| 63 | जुड़ना मुफ़्त है, 18 साल या उससे ज़्यादा उम्र के लोगों के लिए। यह आपके ब्राउज़र में खुलता है, फ़ोन पर भी और कंप्यूटर पर भी। ऐप अभी अंग्रेज़ी में है। | Free to join, for adults 18 and over. It opens in your browser, on a phone or a computer. (The Hindi adds: the app is in English for now.) | under the buttons (D133) |  |
+| 64 | अपनी लाइन शुरू करें | Start your line | the heading of the last panel (D133; was the waitlist) |  |
+| 65 | साइन-अप की ओर | Towards sign-up | the direction sign (D133; was "वेटलिस्ट की ओर") |  |
+| 66 | Kinaara अभी एक अस्थायी नाम है। टेस्ट के लिए: | Kinaara is a working name. For the test: | the footer (D133; "invite-only" removed) |  |
+| 67 | , दोनों अंग्रेज़ी में। पूरे दस्तावेज़ बाद में आएँगे। | . Full documents will follow. | the footer (D133; "before any public launch" removed) |  |
 | 58 | , दोनों अंग्रेज़ी में। किसी भी सार्वजनिक लॉन्च से पहले पूरे दस्तावेज़ आएँगे। | . Full documents will follow before any public launch. | the footer | OK (reviewed 2026-11-19) |
 
 **Afterwards (engineering):** corrections go into `apps/web/lib/i18n/hi.ts`; then
@@ -96,5 +103,5 @@ hold only the letters the page uses; a test checks); then the website goes live 
 the `beta-images` workflow and the owner's go (`deploy.md`).
 
 **History:** 2026-11-13, the first sheet (16 lines beside the English, stage 20d):
-the owner, a native Hindi speaker, kept all 16. On 2026-11-19 the owner kept every new line too (42 lines, rows 1-7, 14-29, 32, 33, 36, 38, 40, 42, 44, 46, 48, 50, 52-60), answering "All OK, publish them" with the list in front of them; the Hindi page goes live with the next release. The same day the owner asked for no
+the owner, a native Hindi speaker, kept all 16. On 2026-11-19 the owner kept every new line too (42 lines, rows 1-7, 14-29, 32, 33, 36, 38, 40, 42, 44, 46, 48, 50, 52-60), answering "All OK, publish them" with the list in front of them; the Hindi page goes live with the next release. On 2026-11-19, when sign-up opened (D133), seven lines changed or arrived (rows 61-67); rows 14-27 (the waitlist form) and 34 (towards the waitlist) are no longer on the page. The same day the owner asked for no
 Hindi beside the English and a language option instead (D120); this sheet replaces it.

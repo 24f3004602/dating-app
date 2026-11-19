@@ -2,7 +2,7 @@
  * One language per page (stage 22a, D120; the owner's request): English at /, Hindi at
  * /hi, never one written beside the other. The sign band links each page to the other,
  * named in its own language; the Hindi page passes axe, reflows at 320 px, and its
- * waitlist form answers in Hindi through the real API.
+ * buttons into the app (D133) are in Hindi and say the app is in English.
  */
 import { expect, test } from "@playwright/test";
 
@@ -13,7 +13,7 @@ test.use({ baseURL: CONSOLE_URL });
 
 const DEVANAGARI = /[ऀ-ॿ]/;
 
-test("English has no Hindi but the way to it; the Hindi page is all Hindi and its form answers in Hindi", async ({ page }) => {
+test("English has no Hindi but the way to it; the Hindi page is all Hindi, its buttons too", async ({ page }) => {
   const errors = await watchErrors(page);
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
@@ -31,22 +31,18 @@ test("English has no Hindi but the way to it; the Hindi page is all Hindi and it
   await expect(page.locator("html")).toHaveAttribute("lang", "hi");
   await expect(page.getByRole("heading", { name: "कम, पर बेहतर परिचय", level: 1 })).toBeVisible();
   await expect(page).toHaveTitle(/कम, पर बेहतर परिचय/);
-  await expect(page.getByText("अभी शुरू नहीं हुआ")).toBeVisible();
   await expect(page.getByRole("heading", { name: "रोज़ दस लाइक, सबके लिए" })).toBeVisible();
 
-  // The form in Hindi: an empty try names the field, a good one points to the inbox.
-  const form = page.getByRole("region", { name: "अगला स्टेशन: दिल्ली एनसीआर" });
-  const join = form.getByRole("button", { name: "वेटलिस्ट में शामिल हों" });
-  await join.click();
-  await expect(form.getByLabel("आपका ईमेल पता")).toHaveAttribute("aria-invalid", "true");
-  await expect(form.getByText("कोई ईमेल पता लिखें")).toBeVisible();
-  await form.getByLabel("आपका ईमेल पता").fill(`hindi-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`);
-  await form.getByLabel("मेरी उम्र 18 साल या उससे ज़्यादा है").check();
-  await join.click();
-  await expect(form.getByRole("status")).toContainText("अपने इनबॉक्स में लिंक देखें");
+  // The way into the app, in Hindi; the app is in English, and the links and the note say so.
+  const panel = page.getByRole("region", { name: "अगला स्टेशन: दिल्ली एनसीआर" });
+  const create = panel.getByRole("link", { name: "अकाउंट बनाएँ" });
+  await expect(create).toHaveAttribute("hreflang", "en");
+  await expect(create).toHaveAttribute("href", /\/sign-up$/);
+  await expect(panel.getByRole("link", { name: "साइन इन करें" })).toHaveAttribute("href", /\/sign-in$/);
+  await expect(panel.getByText(/ऐप अभी अंग्रेज़ी में है/)).toBeVisible();
 
   // The documents are in English, and the Hindi page's links to them say so.
-  const notice = page.getByRole("link", { name: "गोपनीयता सूचना (अंग्रेज़ी में)" }).first();
+  const notice = page.getByRole("link", { name: "गोपनीयता सूचना" }).first();
   await expect(notice).toHaveAttribute("hreflang", "en");
 
   await checkA11y(page, "landing in Hindi");

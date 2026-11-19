@@ -20,7 +20,7 @@ export default async function Terms() {
       <h2>Who can join</h2>
       <ul>
         <li>You are 18 or over.</li>
-        <li>You were invited, and you have one account.</li>
+        <li>You have one account.</li>
         <li>Your profile is about you: your own details and photos of you.</li>
       </ul>
 

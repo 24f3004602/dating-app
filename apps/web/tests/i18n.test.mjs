@@ -1,12 +1,12 @@
 // LANG-1..6 (stage 22a, D120; the owner's request): one language per page. English at
 // /, Hindi at /hi, never one written beside the other; the two dictionaries match; the
-// lines the owner reviewed stay word for word; the form answers in the page's language.
+// lines the owner reviewed stay word for word; the way into the app speaks the page's
+// language (the join form it replaced was removed when sign-up opened, D133).
 // (Node strips the types.)
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { langForPath, messages } from "../lib/i18n/index.ts";
-import { joinOutcome, validateJoin } from "../lib/waitlist.ts";
 
 const en = messages("en");
 const hi = messages("hi");
@@ -59,9 +59,10 @@ test("LANG-4: the 16 lines the owner reviewed (2026-11-13) are used word for wor
   );
   assert.equal(hi.terminus.title, "फिर, बातचीत");
   assert.deepEqual(
-    [hi.map.yourLineLong, hi.map.theirsLong, hi.map.yourLine, hi.map.theirs, hi.map.bothWays, hi.join.heading, hi.route.towards],
-    ["आपकी लाइन: आप क्या चाहते हैं", "उनकी लाइन: वे क्या चाहते हैं", "आपकी लाइन", "उनकी", "दोनों तरफ़ से", "अगला स्टेशन: दिल्ली एनसीआर", "वेटलिस्ट की ओर"],
-  );
+    [hi.map.yourLineLong, hi.map.theirsLong, hi.map.yourLine, hi.map.theirs, hi.map.bothWays, hi.join.heading],
+    ["आपकी लाइन: आप क्या चाहते हैं", "उनकी लाइन: वे क्या चाहते हैं", "आपकी लाइन", "उनकी", "दोनों तरफ़ से", "अगला स्टेशन: दिल्ली एनसीआर"],
+  ); // "वेटलिस्ट की ओर" (towards the waitlist) gave way to sign-up when it opened (D133)
+  assert.ok(hi.route.towards);
 });
 
 test("LANG-5: only the landing page's own path is Hindi", () => {
@@ -70,18 +71,13 @@ test("LANG-5: only the landing page's own path is Hindi", () => {
   for (const path of ["/", "/privacy", "/terms", "/hi/anything", "/hindi", "/admin", "/waitlist/confirm"]) assert.equal(langForPath(path), "en", path);
 });
 
-test("LANG-6: the form answers in the page's language, and never claims an email was sent", () => {
-  const bad = validateJoin("not-an-address", "yes", "hi");
-  assert.equal(bad.ok, false);
-  assert.equal(bad.state.message, hi.form.errors.email);
-  assert.equal(validateJoin("a@example.com", undefined, "hi").state.message, hi.form.errors.adult);
-  const done = joinOutcome(202, "", "a@example.com", "hi");
-  assert.equal(done.message, hi.form.done);
-  // "Sent" in Hindi: भेजा / भेज दिया / भेजी (the API answers the same for every address).
-  assert.doesNotMatch(done.message, /भेजा|भेज दिया|भेजी/);
-  assert.equal(joinOutcome(422, "underage", "a@example.com", "hi").message, hi.form.errors.underage);
-  assert.equal(joinOutcome(429, "", "a@example.com", "hi").message, hi.form.errors.tooMany);
-  assert.equal(joinOutcome(503, "", "a@example.com", "hi").message, hi.form.errors.unavailable);
-  // English stays the default, as before.
-  assert.equal(joinOutcome(202, "", "a@example.com").message, en.form.done);
+test("LANG-6: the way into the app speaks the page's language, and the Hindi page says the app is in English", () => {
+  for (const m of [en, hi]) {
+    assert.ok(m.start.create && m.start.signIn && m.start.note && m.signIn);
+  }
+  assert.equal(en.start.create, "Create an account");
+  assert.equal(hi.signIn, hi.start.signIn);
+  assert.match(hi.start.note, /अंग्रेज़ी/); // the app is in English, and the Hindi page says so
+  assert.match(en.start.note, /18/);
+  assert.match(hi.start.note, /18/);
 });

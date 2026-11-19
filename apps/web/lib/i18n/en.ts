@@ -12,7 +12,7 @@ export const en: Messages = {
     description: "Fewer, better introductions: a short daily set of people who want what you want.",
   },
   skip: "Skip to content",
-  status: "Not open yet",
+  signIn: "Sign in",
   other: { lang: "hi", name: "हिन्दी" },
   headline: "Fewer, better introductions.",
   lede: "Up to 15 people a day, and only where what you want fits what they want, both ways.",
@@ -24,31 +24,17 @@ export const en: Messages = {
     theirsLong: "Theirs: what they're looking for",
     bothWays: "Fit both ways",
   },
-  join: { heading: "Next stop: Delhi NCR", endHeading: "Join the waitlist" },
-  form: {
-    email: "Your email address",
-    adult: "I'm 18 or over",
-    consent: (brand) => `We'll email you to confirm, then once when ${brand} opens. Nothing else.`,
-    privacy: "Privacy notice",
-    submit: "Join the waitlist",
-    pending: "Adding you…",
-    done:
-      "Thanks. Check your inbox for a link to confirm your place; it works once, for 7 days. " +
-      "If you've already confirmed, you're on the list and there's nothing more to do.",
-    errors: {
-      email: "Enter an email address, like name@example.com.",
-      adult: "Tick the box to confirm you're 18 or over.",
-      underage: "You must be 18 or over to join.",
-      outOfDate: "This page is out of date. Reload it and try again.",
-      tooMany: "Too many tries from here. Please wait a while and try again.",
-      unavailable: "We couldn't add you just now. Please try again in a minute.",
-    },
+  join: { heading: "Next stop: Delhi NCR", endHeading: "Start your line" },
+  start: {
+    create: "Create an account",
+    signIn: "Sign in",
+    note: "Free to join, for adults 18 and over. It opens in your browser, on a phone or a computer.",
   },
   route: {
     title: "How it works, stop by stop",
     legendLabel: "How to read the line",
     legend: { you: "Your line", them: "Theirs", rings: "Interchange: you fit each other", end: "End of the line" },
-    towards: "Towards the waitlist",
+    towards: "Towards sign-up",
   },
   stations: [
     {
@@ -95,10 +81,10 @@ export const en: Messages = {
   },
   pause: "Pause video",
   footer: {
-    lead: (brand) => `${brand} is a working name. For the invite-only test:`,
+    lead: (brand) => `${brand} is a working name. For the test:`,
     terms: "terms for testers",
     joiner: "and the",
     privacy: "privacy notice",
-    close: ". Full documents will follow before any public launch.",
+    close: ". Full documents will follow.",
   },
 };

@@ -29,13 +29,13 @@ export function DocumentPage({
         <Link className="brand" href="/">
           {BRAND}
         </Link>
-        <span className="badge highlight">Invite-only test</span>
+        <span className="badge highlight">Test version</span>
       </header>
       <main id="main" className="page document">
         <h1>{title}</h1>
         <p className="muted">
-          Version {BETA_VERSION}, {BETA_DATE}. For a small, invite-only test and its waitlist.
-          Full documents will follow before any public launch.
+          Version {BETA_VERSION}, {BETA_DATE}. For the test, which anyone 18 or over can join.
+          Full documents will follow.
         </p>
         {children}
       </main>

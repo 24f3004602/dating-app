@@ -193,6 +193,44 @@
 .plate:active { background: #e9a632; }
 .plate:disabled { background: var(--on-sign-muted); cursor: progress; }
 
+/* The way into the app (D133): the marigold plate and a white-outlined one, as links. */
+.start { display: grid; gap: var(--space-3); }
+.startButtons { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.landing a.plate,
+.landing a.outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.landing a.plate { color: var(--sign); }
+.landing a.outline {
+  min-height: var(--touch-min);
+  padding: 0 var(--space-5);
+  border: 2px solid var(--on-sign);
+  color: var(--on-sign);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+}
+.landing a.outline:hover { background: var(--on-sign); color: var(--sign); }
+.startNote { margin: 0; color: var(--on-sign-muted); line-height: 1.45; max-width: 46ch; }
+
+/* In the sign band: the way back in for members, a marigold plate. */
+.landing a.signIn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  background: var(--line-them);
+  color: var(--sign);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-stretch: 87.5%;
+  text-decoration: none;
+}
+.landing a.signIn:hover { background: #f7c467; }
+
 .fieldError { margin: 0; color: var(--error-on-sign); font-weight: 600; }
 .result:empty { display: none; }
 .result p { margin: 0; }
