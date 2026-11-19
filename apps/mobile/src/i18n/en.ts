@@ -59,7 +59,7 @@ export const en = {
     readTerms: "Read the terms of use",
     readPrivacy: "Read the privacy notice",
     draftNotice: "Draft documents: final versions will follow legal review.",
-    betaNotice: "A short notice for this invite-only test. Full documents will follow before any public launch.",
+    betaNotice: "A short notice for this test. Full documents will follow.",
     submit: "Create account",
   },
   verify: {
