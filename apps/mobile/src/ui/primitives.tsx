@@ -277,15 +277,19 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
   );
 }
 
-// Google's own button image (D134), unaltered, as its branding rules ask: 180 x 40 points.
-const GOOGLE_SIGN_IN = require("../../assets/google/sign-in.png") as number;
+// Google's own G and words (D134), cut unscaled from its button image (155 x 20 points). The button
+// around them is drawn here in Google's colours, as its branding rules allow for a button adapted to
+// the app, so it spans the width like every other button: white fill, a 1-point #747775 border,
+// Google's 4-point corners and 12-point side padding.
+const GOOGLE_SIGN_IN = require("../../assets/google/sign-in-logo-and-words.png") as number;
+export const GOOGLE_BUTTON = { fill: "#ffffff", stroke: "#747775", corner: 4, padding: 12, logoAndWords: { width: 155, height: 20 } } as const;
 
-/** Sign in with Google: Google's button image on a 48-point target, named by its words (WCAG 2.5.3). */
+/** Sign in with Google: Google's G and words in Google's frame, full width, named by its words (WCAG 2.5.3). */
 export function GoogleButton({ label, onPress, busy }: { label: string; onPress: () => void; busy?: boolean }) {
   const press = usePressScale();
   const focusRingStyle = useRing();
   return (
-    <Animated.View style={[press.style, styles.googleWrap]}>
+    <Animated.View style={press.style}>
       <Pressable
         role="button"
         aria-label={label}
@@ -677,9 +681,17 @@ const styles = StyleSheet.create({
   buttonText: { ...type.label, fontFamily: font.sign },
   textDisabled: { color: color.textMuted },
 
-  googleWrap: { alignSelf: "center" },
-  google: { minHeight: touch.min, minWidth: touch.min, alignItems: "center", justifyContent: "center", borderRadius: radius.plate },
-  googleImage: { width: 180, height: 40 },
+  google: {
+    minHeight: touch.min,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: GOOGLE_BUTTON.padding,
+    backgroundColor: GOOGLE_BUTTON.fill,
+    borderColor: GOOGLE_BUTTON.stroke,
+    borderWidth: 1,
+    borderRadius: GOOGLE_BUTTON.corner,
+  },
+  googleImage: GOOGLE_BUTTON.logoAndWords,
   googleBusy: { opacity: 0.4 },
   link: { minHeight: touch.chip, justifyContent: "center", alignSelf: "flex-start" },
   linkText: { ...type.body, color: color.accent, textDecorationLine: "underline" },

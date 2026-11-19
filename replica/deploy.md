@@ -329,7 +329,10 @@ many sign-up codes go out in a day; a real email provider (gate 1) lifts it.
    (the CI APK's debug key: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`; a
    release key gets its own Android client).
 2. **`infra/beta/.env`:** `GOOGLE_CLIENT_ID=` the Web client's ID, `GOOGLE_CLIENT_SECRET=`
-   its secret (checked by format, never printed); compose sets `GOOGLE_REDIRECT_URI`. Then
+   its secret (checked by format, never printed; to check the pair without a user, send a
+   made-up code to `https://oauth2.googleapis.com/token` with them from a script that prints
+   Google's error only: `invalid_grant` means the pair is right, `invalid_client` that it
+   isn't); compose sets `GOOGLE_REDIRECT_URI`. Then
    `docker compose up -d --no-deps api worker`: the apps read the settings at run time, so
    the web app and the APK show the button with no rebuild (the APK needs a build from
    D134 onwards, which carries Google's native part).

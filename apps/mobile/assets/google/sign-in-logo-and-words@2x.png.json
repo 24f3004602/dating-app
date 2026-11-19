@@ -1,0 +1,4 @@
+{
+  "prompt": "Origin (sourced, not generated): cut from Google's own \"Sign in with Google\" button image (light theme, square, Android + Web) in the pre-approved asset bundle developers.google.com/static/identity/images/signin-assets.zip (downloaded 2026-11-19): the standard-colour G and the words only, pixel for pixel and unscaled (155 x 20 points from 12, 10; the rest of the image was plain white inside its border). The button around them is drawn in code in Google's colours (white fill, a 1-point #747775 border, 4-point corners), as Google's branding guidelines (read 2026-11-19) allow for a button adapted to the app's design, so it can span the width like the app's other buttons. D134.",
+  "createdAt": "2026-11-19T16:31:40.401702Z"
+}

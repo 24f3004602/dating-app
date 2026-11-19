@@ -5,7 +5,28 @@ import { AccessibilityInfo, Platform, type StyleProp, StyleSheet, type ViewStyle
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { color, size } from "@/theme/tokens";
-import { Badge, Button, Card, CardTitle, Checkbox, ChoiceGroup, ListRow, Notice, Screen, ScreenEdges, SwitchRow, TextField, Thumb, Title, UNDER_TOP_BAR } from "@/ui/primitives";
+import {
+  Badge,
+  Button,
+  Card,
+  CardTitle,
+  Checkbox,
+  ChoiceGroup,
+  GOOGLE_BUTTON,
+  GoogleButton,
+  ListRow,
+  Notice,
+  Screen,
+  ScreenEdges,
+  SwitchRow,
+  TextField,
+  Thumb,
+  Title,
+  UNDER_TOP_BAR,
+} from "@/ui/primitives";
+
+declare const __dirname: string;
+const { readFileSync } = require("fs") as { readFileSync: (path: string) => { readUInt32BE: (offset: number) => number } };
 
 jest.mock("expo-router", () => ({
   ...require("@/test/expoRouter").expoRouterInPlace(),
@@ -34,6 +55,34 @@ test("a busy button keeps its name, says it's busy and can't be pressed twice", 
   await fireEvent.press(button);
   expect(onPress).not.toHaveBeenCalled();
   expect(screen.queryByText("Save")).toBeNull(); // the spinner shows instead of the text
+});
+
+test("Google's button spans the width like the others: Google's frame, its G and words at their own size (GOOGLE-APP-12)", async () => {
+  await render(<GoogleButton label="Sign in with Google" onPress={jest.fn()} />);
+  const button = screen.getByRole("button", { name: "Sign in with Google" });
+  expect(StyleSheet.flatten(button.props.style as StyleProp<ViewStyle>)).toMatchObject({
+    backgroundColor: "#ffffff",
+    borderColor: "#747775",
+    borderWidth: 1,
+    borderRadius: 4,
+  });
+  // Nothing from the button up narrows it or centres it on its own (it was 180 points wide).
+  for (let node = button.parent; node; node = node.parent) {
+    if (typeof node.type !== "string") continue;
+    const own = StyleSheet.flatten(node.props.style as StyleProp<ViewStyle>) ?? {};
+    expect([own.alignSelf, own.width, own.maxWidth]).toEqual([undefined, undefined, undefined]);
+  }
+  // Google's G and words, drawn at the size they were cut at, so the logo is never stretched.
+  const art = hostsWhere((p) => p.source !== undefined);
+  expect(art).toHaveLength(1);
+  expect(StyleSheet.flatten(art[0]?.props.style as StyleProp<ViewStyle>)).toMatchObject({ width: 155, height: 20 });
+  for (const [suffix, scale] of [["", 1], ["@2x", 2], ["@3x", 3]] as const) {
+    const png = readFileSync(`${__dirname}/../../assets/google/sign-in-logo-and-words${suffix}.png`);
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
+      GOOGLE_BUTTON.logoAndWords.width * scale,
+      GOOGLE_BUTTON.logoAndWords.height * scale,
+    ]);
+  }
 });
 
 test("a disabled button is announced as disabled", async () => {
