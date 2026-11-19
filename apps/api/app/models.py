@@ -1,7 +1,7 @@
 """Import every model so `Base.metadata` is complete (Alembic, tests)."""
 
 from app.db import Base
-from app.modules.accounts.models import Consent, User
+from app.modules.accounts.models import Consent, User, UserIdentity
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import OneTimeCode, Session
 from app.modules.billing.models import PaymentEvent, PlusPayment, Subscription
@@ -50,5 +50,6 @@ __all__ = [
     "StaffRecoveryCode",
     "Subscription",
     "User",
+    "UserIdentity",
     "WaitlistEntry",
 ]

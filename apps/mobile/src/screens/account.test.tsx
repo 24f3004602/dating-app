@@ -47,7 +47,8 @@ test("deleting says what happens, needs the password, then signs out to the date
   }
   await fireEvent.press(screen.getByRole("button", { name: t.account.confirm }));
   expect(await screen.findByText("Enter your password.")).toBeTruthy();
-  expect(calls).toHaveLength(0);
+  const deletions = () => calls.filter((c) => c.path === "/v1/me/deletion");
+  expect(deletions()).toHaveLength(0);
 
   await fireEvent.changeText(screen.getByLabelText(t.account.password), "not my password");
   await fireEvent.press(screen.getByRole("button", { name: t.account.confirm }));
@@ -59,7 +60,7 @@ test("deleting says what happens, needs the password, then signs out to the date
   const goodbye = fill(t.account.goodbye, { date: dateInIndia(purgeAfter) });
   expect(await screen.findByText(goodbye)).toBeTruthy();
   expect(screen.queryByText(t.account.now)).toBeNull(); // signed out: the screen is gone
-  expect(calls.map((c) => c.body)).toEqual([{ password: "not my password" }, { password: PASSWORD }]);
+  expect(deletions().map((c) => c.body)).toEqual([{ password: "not my password" }, { password: PASSWORD }]);
   expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("session_token");
 });
 

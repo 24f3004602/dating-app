@@ -83,6 +83,22 @@ export const en = {
     notVerified: "Confirm your email first. We can send you a new code.",
     blocked: "This account can't sign in. Contact support.",
   },
+  // Sign in with Google (D134).
+  google: {
+    button: "Sign in with Google",
+    or: "or",
+    unavailable: "Google sign-in isn't available on this device.",
+    failed: "That Google sign-in didn't work. Please try again.",
+    returnTitle: "Signing in with Google",
+    working: "One moment…",
+    back: "Back",
+    signedOut: "You're signed out, so nothing was deleted. Sign in, then try again.",
+    finishTitle: "Almost there",
+    finishBody: "You're joining with your Google account, {email}. Two more things, then you're in.",
+    finishLost: "This sign-up took too long, or the page was reloaded. Continue with Google again.",
+    restart: "Start again",
+    submit: "Join",
+  },
   reset: {
     title: "Reset your password",
     requestBody: "Enter your email and we'll send a reset code if it has an account.",
@@ -357,6 +373,15 @@ export const en = {
     reference_used: "That UPI reference has already been sent. Check the number in your UPI app.",
     already_subscribed: "You already have the plan.",
     nothing_to_cancel: "You don't have a plan that renews.",
+    google_unavailable: "Google sign-in isn't available right now. Please try again later.",
+    google_invalid: "That Google sign-in didn't work. Please try again.",
+    google_email_unverified: "Your Google account's email address isn't verified yet. Verify it with Google, then try again.",
+    google_ticket_invalid: "This sign-up took too long. Continue with Google again.",
+    google_link_refused: "This email address already has an account. Sign in with your email and password.",
+    google_mismatch: "That isn't the Google account this account signs in with.",
+    account_exists: "An account with this email address exists now. Continue with Google again.",
+    signup_unavailable: "An account can't be made with this address. Contact support.",
+    not_invited: "Sign-up is by invitation for now.",
   },
   // Live: random one-to-one video calls (stage 23, D123).
   live: {
@@ -512,6 +537,9 @@ export const en = {
     scheduledNoDate: "This account is waiting to be deleted.",
     keep: "Keep my account",
     keepHint: "Signs you in and cancels the deletion. Matches that ended stay ended.",
+    withGoogle: "Your account signs in with Google. To confirm it's you, choose your Google account again: the deletion starts as soon as you do.",
+    withGoogleHint: "Opens Google to confirm it's you.",
+    googleUnavailable: "Confirming with Google isn't available here right now. You can set a password instead: sign out, choose \"Forgot your password?\" on the sign-in screen, then come back here.",
   },
 } as const;
 

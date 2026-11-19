@@ -39,32 +39,41 @@ export const password = z
 const digits = (label: string, len: number) =>
   z.string().trim().regex(new RegExp(`^\\d{1,${len}}$`), { error: `Enter the ${label} as a number.` });
 
+/** The date of birth and the two documents: every way of joining asks for them (D016, D134). */
+const birthAndConsents = {
+  day: digits("day", 2),
+  month: digits("month", 2),
+  year: digits("year", 4),
+  terms: z.boolean().refine((v) => v, { error: "Accept the terms to continue." }),
+  privacy: z.boolean().refine((v) => v, { error: "Confirm you have read the privacy notice." }),
+};
+
+/** What's wrong with a date of birth, if anything: a real date, and 18 or over today in India. */
+function birthProblem(v: { day: string; month: string; year: string }, now: () => Date): string | null {
+  const birth = { year: Number(v.year), month: Number(v.month), day: Number(v.day) };
+  if (!isRealDate(birth.year, birth.month, birth.day) || birth.year < 1900) return "Enter a real date of birth.";
+  const age = ageOn(birth, todayInIndia(now()));
+  if (age < 0 || age > 120) return "Enter a real date of birth.";
+  if (age < ADULT_AGE) return `You must be ${ADULT_AGE} or older to join.`;
+  return null;
+}
+
 export function makeSignUpSchema(now: () => Date = () => new Date()) {
-  return z
-    .object({
-      email,
-      password,
-      day: digits("day", 2),
-      month: digits("month", 2),
-      year: digits("year", 4),
-      terms: z.boolean().refine((v) => v, { error: "Accept the terms to continue." }),
-      privacy: z.boolean().refine((v) => v, { error: "Confirm you have read the privacy notice." }),
-    })
-    .superRefine((v, ctx) => {
-      const birth = { year: Number(v.year), month: Number(v.month), day: Number(v.day) };
-      if (!isRealDate(birth.year, birth.month, birth.day) || birth.year < 1900) {
-        ctx.addIssue({ code: "custom", path: ["day"], message: "Enter a real date of birth." });
-        return;
-      }
-      const age = ageOn(birth, todayInIndia(now()));
-      if (age < 0 || age > 120) {
-        ctx.addIssue({ code: "custom", path: ["day"], message: "Enter a real date of birth." });
-      } else if (age < ADULT_AGE) {
-        ctx.addIssue({ code: "custom", path: ["day"], message: `You must be ${ADULT_AGE} or older to join.` });
-      }
-    });
+  return z.object({ email, password, ...birthAndConsents }).superRefine((v, ctx) => {
+    const problem = birthProblem(v, now);
+    if (problem) ctx.addIssue({ code: "custom", path: ["day"], message: problem });
+  });
 }
 export type SignUpValues = z.input<ReturnType<typeof makeSignUpSchema>>;
+
+/** Finishing a Google sign-up (D134): Google gave the email; the age gate and documents are ours. */
+export function makeGoogleFinishSchema(now: () => Date = () => new Date()) {
+  return z.object(birthAndConsents).superRefine((v, ctx) => {
+    const problem = birthProblem(v, now);
+    if (problem) ctx.addIssue({ code: "custom", path: ["day"], message: problem });
+  });
+}
+export type GoogleFinishValues = z.input<ReturnType<typeof makeGoogleFinishSchema>>;
 
 export function birthdateIso(v: { year: string; month: string; day: string }): string {
   return `${v.year.trim().padStart(4, "0")}-${v.month.trim().padStart(2, "0")}-${v.day.trim().padStart(2, "0")}`;

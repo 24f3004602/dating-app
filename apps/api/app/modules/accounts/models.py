@@ -101,3 +101,19 @@ class Consent(Base):
     version: Mapped[str] = mapped_column(String(32))
     granted_at: Mapped[datetime] = mapped_column(server_default=func.now())
     withdrawn_at: Mapped[datetime | None]
+
+
+class UserIdentity(Base):
+    """A sign-in from another provider linked to an account (D134): Google's subject (a
+    stable account ID). One per provider and account; the account's deletion takes it
+    with it. No tokens are kept.
+    """
+
+    __tablename__ = "user_identities"
+    __table_args__ = (UniqueConstraint("provider", "user_id"),)
+
+    provider: Mapped[str] = mapped_column(String(16), primary_key=True)
+    subject: Mapped[str] = mapped_column(String(255), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime]
+    last_used_at: Mapped[datetime]

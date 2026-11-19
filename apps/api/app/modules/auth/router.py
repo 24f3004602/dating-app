@@ -4,11 +4,16 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request, Response, status
 
+from app.modules.auth import google as google_auth
 from app.modules.auth import service
 from app.modules.auth.deps import AuthCtx, ClientIp, CurrentSession, DbSession
 from app.modules.auth.schemas import (
     Accepted,
     EmailIn,
+    GoogleCompleteIn,
+    GoogleConfigOut,
+    GoogleSignInIn,
+    GoogleSignInOut,
     LoginIn,
     PasswordResetConfirmIn,
     RegisterIn,
@@ -16,6 +21,7 @@ from app.modules.auth.schemas import (
     VerifyEmailIn,
 )
 from app.openapi import problems
+from app.providers.google import GoogleSignIn
 from app.realtime import RealtimeHub
 
 
@@ -65,6 +71,45 @@ async def login(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip
 )
 async def restore(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> SessionOut:
     return await service.login(ctx, db, body, ip, request.headers.get("user-agent"), restore=True)
+
+
+def _google(request: Request) -> GoogleSignIn:
+    found: GoogleSignIn = request.app.state.google
+    return found
+
+
+@router.get("/google", summary="Whether Google sign-in is on, and what the apps need to start it (D134)")
+async def google_config(request: Request, ctx: AuthCtx) -> GoogleConfigOut:
+    client_id = _google(request).client_id
+    return GoogleConfigOut(
+        enabled=client_id is not None, client_id=client_id,
+        redirect_uri=ctx.settings.google_redirect_uri if client_id is not None else None,
+    )  # fmt: skip
+
+
+@router.post(
+    "/google",
+    responses=problems(401, 403, 409),
+    summary="Sign in with Google: the phone's ID token or the web app's code; signed in, or a ticket to finish",
+)
+async def google_sign_in(
+    body: GoogleSignInIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp
+) -> GoogleSignInOut:
+    return await google_auth.sign_in(
+        ctx, db, _google(request), body, ip=ip, user_agent=request.headers.get("user-agent")
+    )
+
+
+@router.post(
+    "/google/complete",
+    status_code=status.HTTP_201_CREATED,
+    responses=problems(400, 403, 409),
+    summary="Finish a Google sign-up: date of birth (18+) and the current documents; opens a session",
+)
+async def google_complete(
+    body: GoogleCompleteIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp
+) -> SessionOut:
+    return await google_auth.complete(ctx, db, body, ip, request.headers.get("user-agent"))
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, responses=problems(401), summary="End this session")

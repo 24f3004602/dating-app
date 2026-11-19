@@ -16,6 +16,7 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   Animated,
+  Image,
   Linking,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -271,6 +272,33 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
         ) : (
           <Text style={[styles.buttonText, buttonText[variant], disabled && styles.textDisabled]}>{label}</Text>
         )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// Google's own button image (D134), unaltered, as its branding rules ask: 180 x 40 points.
+const GOOGLE_SIGN_IN = require("../../assets/google/sign-in.png") as number;
+
+/** Sign in with Google: Google's button image on a 48-point target, named by its words (WCAG 2.5.3). */
+export function GoogleButton({ label, onPress, busy }: { label: string; onPress: () => void; busy?: boolean }) {
+  const press = usePressScale();
+  const focusRingStyle = useRing();
+  return (
+    <Animated.View style={[press.style, styles.googleWrap]}>
+      <Pressable
+        role="button"
+        aria-label={label}
+        aria-disabled={!!busy}
+        aria-busy={!!busy}
+        disabled={!!busy}
+        onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={(state) => [styles.google, focusStyle(state, focusRingStyle)]}
+      >
+        <Image source={GOOGLE_SIGN_IN} style={[styles.googleImage, busy && styles.googleBusy]} aria-hidden />
+        {busy ? <ActivityIndicator style={StyleSheet.absoluteFill} color={color.sign} aria-hidden /> : null}
       </Pressable>
     </Animated.View>
   );
@@ -649,6 +677,10 @@ const styles = StyleSheet.create({
   buttonText: { ...type.label, fontFamily: font.sign },
   textDisabled: { color: color.textMuted },
 
+  googleWrap: { alignSelf: "center" },
+  google: { minHeight: touch.min, minWidth: touch.min, alignItems: "center", justifyContent: "center", borderRadius: radius.plate },
+  googleImage: { width: 180, height: 40 },
+  googleBusy: { opacity: 0.4 },
   link: { minHeight: touch.chip, justifyContent: "center", alignSelf: "flex-start" },
   linkText: { ...type.body, color: color.accent, textDecorationLine: "underline" },
   linkPressed: { color: color.accentPressed },

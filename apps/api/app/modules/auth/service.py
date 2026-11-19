@@ -40,7 +40,7 @@ from app.config import Settings
 from app.errors import ApiError
 from app.jobs import JobQueue
 from app.logs import request_id_var
-from app.modules.accounts.models import Consent, ConsentKind, User, UserStatus
+from app.modules.accounts.models import UNUSABLE_PASSWORD, Consent, ConsentKind, User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.auth import emails
 from app.modules.auth.crypto import (
@@ -273,6 +273,7 @@ def me_out(user: User, settings: Settings, now: datetime, identity: IdentityStat
             identity=identity,
         ),
         created_at=user.created_at,
+        has_password=user.password_hash != UNUSABLE_PASSWORD,
     )
 
 

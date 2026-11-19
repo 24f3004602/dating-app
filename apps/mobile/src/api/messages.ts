@@ -8,6 +8,7 @@ export function messageFor(error: unknown): string {
   if (error.code === "rate_limited") return t.common.tooMany;
   if (error.code === "invalid_credentials") return t.signIn.invalid;
   if (error.code === "email_not_verified") return t.signIn.notVerified;
+  if (error.code === "account_exists") return t.errors.account_exists;
   if (error.code.startsWith("account_")) return t.signIn.blocked;
   if (error.code === "verification_failed") return t.verify.failed;
   if (error.code === "area_change_limited") return t.editProfile.areaLimited;

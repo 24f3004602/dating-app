@@ -20,6 +20,9 @@ export const E2E_DATABASE = "datingapp_e2e_test";
 // The privacy notice version the API expects in this run, and the one the website's
 // waitlist form sends (D101): the app's sign-up uses the same default.
 export const E2E_PRIVACY_VERSION = "draft-2026-11";
+// Sign in with Google (D134): a stand-in Web client, so the apps show the button and build
+// Google's request. Google itself is never reached: the specs catch that page.
+export const E2E_GOOGLE_CLIENT_ID = "123456789012-e2estandin.apps.googleusercontent.com";
 
 function dotenv(path: string): Record<string, string> {
   if (!existsSync(path)) return {};
@@ -70,5 +73,8 @@ export function apiEnv(runId: string): Record<string, string> {
     PAYMENTS_LIVE: "true",
     UPI_PAYEE_VPA: "e2e.payee@example",
     UPI_PAYEE_NAME: "E2E Payee",
+    GOOGLE_CLIENT_ID: E2E_GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: "e2e-stand-in-not-a-secret",
+    GOOGLE_REDIRECT_URI: `${WEB_URL}/auth/google`,
   };
 }

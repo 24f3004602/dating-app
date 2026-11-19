@@ -9,6 +9,9 @@ export type AuthStatus = "loading" | "signedOut" | "signedIn";
 /** Kept in memory only, between sign-up and verification (D045). */
 export type PendingSignUp = { email: string; password: string };
 
+/** Kept in memory only, between Google's answer and the finish screen (D134). */
+export type GoogleSignUp = { ticket: string; email: string; name: string | null };
+
 /** After a deletion request: when everything goes, for the welcome screen (D083). */
 export type DeletionNotice = { purgeAfter: string };
 
@@ -20,6 +23,8 @@ type AuthValue = {
   signOutEverywhere: () => Promise<void>;
   pending: PendingSignUp | null;
   setPending: (value: PendingSignUp | null) => void;
+  googleSignUp: GoogleSignUp | null;
+  setGoogleSignUp: (value: GoogleSignUp | null) => void;
   deletion: DeletionNotice | null;
   /** The server has scheduled the deletion and ended every session: forget this one. */
   accountDeleted: (purgeAfter: string) => Promise<void>;
@@ -32,6 +37,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
   const tokenRef = useRef<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [pending, setPending] = useState<PendingSignUp | null>(null);
+  const [googleSignUp, setGoogleSignUp] = useState<GoogleSignUp | null>(null);
   const [deletion, setDeletion] = useState<DeletionNotice | null>(null);
 
   const forget = useCallback(async () => {
@@ -69,6 +75,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
     tokenRef.current = token;
     await saveToken(token);
     setPending(null);
+    setGoogleSignUp(null);
     setDeletion(null);
     setStatus("signedIn");
   }, []);
@@ -102,8 +109,11 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
   );
 
   const value = useMemo(
-    () => ({ status, api, signIn, signOut, signOutEverywhere, pending, setPending, deletion, accountDeleted }),
-    [status, api, signIn, signOut, signOutEverywhere, pending, deletion, accountDeleted],
+    () => ({
+      status, api, signIn, signOut, signOutEverywhere, pending, setPending, googleSignUp, setGoogleSignUp, deletion,
+      accountDeleted,
+    }),
+    [status, api, signIn, signOut, signOutEverywhere, pending, googleSignUp, deletion, accountDeleted],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

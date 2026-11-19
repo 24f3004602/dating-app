@@ -57,6 +57,30 @@ export default async function Privacy() {
         it for ads.
       </p>
 
+      <h2>If you sign in with Google</h2>
+      <ul>
+        <li>
+          <strong>What Google tells us</strong>: your Google account&apos;s ID
+          number, your email address and whether Google has checked it, and your
+          name. We keep the ID number and the email address, to know it&apos;s
+          you next time. We don&apos;t keep your name. We ask Google for nothing
+          else: no contacts, no photos, and no access to your Google account.
+        </li>
+        <li>
+          <strong>What Google learns</strong>: that you signed in to {BRAND},
+          under Google&apos;s own privacy policy. We send Google nothing about
+          you or what you do in the app.
+        </li>
+        <li>
+          <strong>Your account</strong>: if you already have an account with a
+          Gmail address (or a work address Google runs), signing in with Google
+          opens it. An account made with Google has no password until you set
+          one with &quot;Forgot your password?&quot;; to delete it, you choose
+          your Google account again. The link to your Google account is deleted
+          with your account.
+        </li>
+      </ul>
+
       <h2>If you use Live</h2>
       <ul>
         <li>

@@ -327,6 +327,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether Google sign-in is on, and what the apps need to start it (D134) */
+        get: operations["google_config_v1_auth_google_get"];
+        put?: never;
+        /** Sign in with Google: the phone's ID token or the web app's code; signed in, or a ticket to finish */
+        post: operations["google_sign_in_v1_auth_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/google/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish a Google sign-up: date of birth (18+) and the current documents; opens a session */
+        post: operations["google_complete_v1_auth_google_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login": {
         parameters: {
             query?: never;
@@ -832,7 +867,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Delete my account: hidden and signed out now, everything deleted after 7 days */
+        /** Delete my account (the password, or Google again): hidden and signed out now, deleted after 7 days */
         post: operations["request_deletion_v1_me_deletion_post"];
         delete?: never;
         options?: never;
@@ -1540,8 +1575,9 @@ export interface components {
         };
         /** DeletionIn */
         DeletionIn: {
+            google?: components["schemas"]["GoogleProofIn"] | null;
             /** Password */
-            password: string;
+            password?: string | null;
         };
         /**
          * DeletionOut
@@ -1647,6 +1683,69 @@ export interface components {
          * @enum {string}
          */
         Gender: "woman" | "man" | "nonbinary";
+        /** GoogleCompleteIn */
+        GoogleCompleteIn: {
+            /**
+             * Birthdate
+             * Format: date
+             */
+            birthdate: string;
+            consents: components["schemas"]["ConsentsIn"];
+            /** Ticket */
+            ticket: string;
+        };
+        /**
+         * GoogleConfigOut
+         * @description Whether Google sign-in is on, and what the apps need to start it (all public).
+         */
+        GoogleConfigOut: {
+            /** Client Id */
+            client_id: string | null;
+            /** Enabled */
+            enabled: boolean;
+            /** Redirect Uri */
+            redirect_uri: string | null;
+        };
+        /**
+         * GoogleProofIn
+         * @description Google's answer: the phone app's ID token, or the web app's code with its PKCE verifier.
+         */
+        GoogleProofIn: {
+            /** Code */
+            code?: string | null;
+            /** Code Verifier */
+            code_verifier?: string | null;
+            /** Id Token */
+            id_token?: string | null;
+        };
+        /** GoogleSignInIn */
+        GoogleSignInIn: {
+            /** Code */
+            code?: string | null;
+            /** Code Verifier */
+            code_verifier?: string | null;
+            /** Id Token */
+            id_token?: string | null;
+            /**
+             * Restore
+             * @default false
+             */
+            restore: boolean;
+        };
+        /**
+         * GoogleSignInOut
+         * @description Signed in (`session`), or someone new: `ticket` finishes the account with a date of
+         *     birth and the documents, as any sign-up does (the age gate, D016).
+         */
+        GoogleSignInOut: {
+            /** Email */
+            email?: string | null;
+            /** Name */
+            name?: string | null;
+            session?: components["schemas"]["SessionOut"] | null;
+            /** Ticket */
+            ticket?: string | null;
+        };
         /** Health */
         Health: {
             /**
@@ -1871,6 +1970,11 @@ export interface components {
             created_at: string;
             /** Email */
             email: string;
+            /**
+             * Has Password
+             * @default true
+             */
+            has_password: boolean;
             /**
              * Id
              * Format: uuid
@@ -3954,6 +4058,209 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    google_config_v1_auth_google_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleConfigOut"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    google_sign_in_v1_auth_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignInIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleSignInOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    google_complete_v1_auth_google_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleCompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Rejected (see `code`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A dependency (database, Redis) is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

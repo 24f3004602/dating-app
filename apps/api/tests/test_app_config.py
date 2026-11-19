@@ -53,8 +53,8 @@ BETA = {
     "EMAIL_BACKEND": "smtp",
     "SMTP_HOST": "smtp.gmail.com",
     "SIGNUP_INVITE_ONLY": True,
-    "TERMS_VERSION": "beta-2026-11-19b",
-    "PRIVACY_VERSION": "beta-2026-11-19b",
+    "TERMS_VERSION": "beta-2026-11-19c",
+    "PRIVACY_VERSION": "beta-2026-11-19c",
     "CORS_ORIGINS": ["https://app.example.in"],
     "SITE_URL": "https://example.in",
 }

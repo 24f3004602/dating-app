@@ -26,6 +26,9 @@ PUBLIC = {
     ("POST", "/v1/auth/restore"),
     ("POST", "/v1/auth/password-reset/request"),
     ("POST", "/v1/auth/password-reset/confirm"),
+    ("GET", "/v1/auth/google"),  # public settings: on or off, and the client ID (D134)
+    ("POST", "/v1/auth/google"),  # Google's ID token or code, checked on the server
+    ("POST", "/v1/auth/google/complete"),  # a signed, 15-minute ticket from the step before
     ("GET", "/v1/media/blob/{key:path}"),  # HMAC-signed, 5-minute URLs
     ("WS", "/v1/realtime"),  # a single-use ticket from POST /v1/realtime/ticket
     ("POST", "/v1/admin/auth/login"),

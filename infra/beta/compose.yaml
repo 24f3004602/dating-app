@@ -29,8 +29,12 @@ x-app-env: &app-env
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
   # Waitlist emails link to the website (D101).
   SITE_URL: https://${DOMAIN}
-  TERMS_VERSION: beta-2026-11-19b
-  PRIVACY_VERSION: beta-2026-11-19b
+  TERMS_VERSION: beta-2026-11-19c
+  PRIVACY_VERSION: beta-2026-11-19c
+  # Sign in with Google (D134): off until the owner's Web OAuth client is in .env.
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  GOOGLE_REDIRECT_URI: https://app.${DOMAIN}/auth/google
   # Sign-up is open to everyone (D133, the owner's choice, 2026-11-19); "true" brings
   # back invite-only sign-up (the invite list and `datingapp-api invite` still work).
   SIGNUP_INVITE_ONLY: ${SIGNUP_INVITE_ONLY:-false}

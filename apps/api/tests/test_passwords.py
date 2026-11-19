@@ -87,6 +87,22 @@ def test_verify_never_succeeds_without_a_real_hash() -> None:
     assert not passwords.verify("not-a-hash", PASSWORD)
 
 
+def test_an_account_without_a_password_takes_as_long_as_a_wrong_one() -> None:
+    """A Google-only account (D134): the dummy hash is checked, so timing doesn't tell."""
+    passwords = Passwords("test")
+    checked: list[str] = []
+    real = passwords._hasher
+
+    class Spy:
+        def verify(self, stored: str, password: str) -> bool:
+            checked.append(stored)
+            return real.verify(stored, password)
+
+    passwords._hasher = Spy()  # type: ignore[assignment]
+    assert not passwords.verify("!", PASSWORD)
+    assert checked == [passwords._dummy]
+
+
 def test_rehash_is_needed_when_parameters_change() -> None:
     cheap, strong = Passwords("test"), Passwords("rfc9106_low_memory")
     stored = cheap.hash(PASSWORD)

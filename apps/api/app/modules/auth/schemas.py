@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, EmailStr, Field, StringConstraints, TypeAdapter, ValidationError
+from pydantic import AfterValidator, EmailStr, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
 
 from app.schemas import ApiModel
 
@@ -91,6 +91,9 @@ class MeOut(ApiModel):
     role: str
     verification: Verification
     created_at: datetime
+    # False for an account made with Google that never set a password (D134): it signs
+    # in with Google, and sets a password through "Forgot your password?" when it needs one.
+    has_password: bool = True
 
 
 class SessionOut(ApiModel):
@@ -98,3 +101,52 @@ class SessionOut(ApiModel):
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - the RFC 6750 scheme name
     expires_at: datetime
     user: MeOut
+
+
+# --- Sign in with Google (D134) ------------------------------------------------------
+
+
+class GoogleConfigOut(ApiModel):
+    """Whether Google sign-in is on, and what the apps need to start it (all public)."""
+
+    enabled: bool
+    client_id: str | None
+    # Where Google sends the web app back; null where only the phone app can use it.
+    redirect_uri: str | None
+
+
+class GoogleProofIn(ApiModel):
+    """Google's answer: the phone app's ID token, or the web app's code with its PKCE verifier."""
+
+    id_token: str | None = Field(default=None, min_length=20, max_length=4096, repr=False)
+    code: str | None = Field(default=None, min_length=10, max_length=512, repr=False)
+    code_verifier: str | None = Field(default=None, pattern=r"^[A-Za-z0-9._~-]{43,128}$", repr=False)
+
+    @model_validator(mode="after")
+    def _one_way(self) -> Self:
+        by_token = self.id_token is not None
+        by_code = self.code is not None and self.code_verifier is not None
+        if by_token == by_code or (self.code is None) != (self.code_verifier is None):
+            raise ValueError("send either id_token, or code with code_verifier")
+        return self
+
+
+class GoogleSignInIn(GoogleProofIn):
+    # As on sign-in: keep an account that is waiting to be deleted (D083).
+    restore: bool = False
+
+
+class GoogleSignInOut(ApiModel):
+    """Signed in (`session`), or someone new: `ticket` finishes the account with a date of
+    birth and the documents, as any sign-up does (the age gate, D016)."""
+
+    session: SessionOut | None = None
+    ticket: str | None = Field(default=None, repr=False)
+    email: str | None = None
+    name: str | None = None
+
+
+class GoogleCompleteIn(ApiModel):
+    ticket: str = Field(min_length=20, max_length=1024, repr=False)
+    birthdate: date
+    consents: ConsentsIn

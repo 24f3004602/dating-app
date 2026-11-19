@@ -560,16 +560,30 @@
       "DeletionIn": {
         "additionalProperties": false,
         "properties": {
+          "google": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GoogleProofIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "password": {
-            "maxLength": 1024,
-            "minLength": 1,
-            "title": "Password",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
           }
         },
-        "required": [
-          "password"
-        ],
         "title": "DeletionIn",
         "type": "object"
       },
@@ -804,6 +818,218 @@
         ],
         "title": "Gender",
         "type": "string"
+      },
+      "GoogleCompleteIn": {
+        "additionalProperties": false,
+        "properties": {
+          "birthdate": {
+            "format": "date",
+            "title": "Birthdate",
+            "type": "string"
+          },
+          "consents": {
+            "$ref": "#/components/schemas/ConsentsIn"
+          },
+          "ticket": {
+            "maxLength": 1024,
+            "minLength": 20,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "birthdate",
+          "consents"
+        ],
+        "title": "GoogleCompleteIn",
+        "type": "object"
+      },
+      "GoogleConfigOut": {
+        "additionalProperties": false,
+        "description": "Whether Google sign-in is on, and what the apps need to start it (all public).",
+        "properties": {
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "redirect_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redirect Uri"
+          }
+        },
+        "required": [
+          "enabled",
+          "client_id",
+          "redirect_uri"
+        ],
+        "title": "GoogleConfigOut",
+        "type": "object"
+      },
+      "GoogleProofIn": {
+        "additionalProperties": false,
+        "description": "Google's answer: the phone app's ID token, or the web app's code with its PKCE verifier.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "code_verifier": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9._~-]{43,128}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Verifier"
+          },
+          "id_token": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "minLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Token"
+          }
+        },
+        "title": "GoogleProofIn",
+        "type": "object"
+      },
+      "GoogleSignInIn": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "code_verifier": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9._~-]{43,128}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Verifier"
+          },
+          "id_token": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "minLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Token"
+          },
+          "restore": {
+            "default": false,
+            "title": "Restore",
+            "type": "boolean"
+          }
+        },
+        "title": "GoogleSignInIn",
+        "type": "object"
+      },
+      "GoogleSignInOut": {
+        "additionalProperties": false,
+        "description": "Signed in (`session`), or someone new: `ticket` finishes the account with a date of\nbirth and the documents, as any sign-up does (the age gate, D016).",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ticket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket"
+          }
+        },
+        "title": "GoogleSignInOut",
+        "type": "object"
       },
       "Health": {
         "additionalProperties": false,
@@ -1336,6 +1562,11 @@
           "email": {
             "title": "Email",
             "type": "string"
+          },
+          "has_password": {
+            "default": true,
+            "title": "Has Password",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -5262,6 +5493,237 @@
         ]
       }
     },
+    "/v1/auth/google": {
+      "get": {
+        "operationId": "google_config_v1_auth_google_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleConfigOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Whether Google sign-in is on, and what the apps need to start it (D134)",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "google_sign_in_v1_auth_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleSignInIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleSignInOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Sign in with Google: the phone's ID token or the web app's code; signed in, or a ticket to finish",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/google/complete": {
+      "post": {
+        "operationId": "google_complete_v1_auth_google_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCompleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rejected (see `code`)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A dependency (database, Redis) is unavailable"
+          }
+        },
+        "summary": "Finish a Google sign-up: date of birth (18+) and the current documents; opens a session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v1/auth/login": {
       "post": {
         "operationId": "login_v1_auth_login_post",
@@ -7546,7 +8008,7 @@
             "description": "Rate limited; see `Retry-After`"
           }
         },
-        "summary": "Delete my account: hidden and signed out now, everything deleted after 7 days",
+        "summary": "Delete my account (the password, or Google again): hidden and signed out now, deleted after 7 days",
         "tags": [
           "account"
         ]

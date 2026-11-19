@@ -108,6 +108,12 @@ class Settings(BaseSettings):
     # Invite-only sign-up (stage 18, D096): only emails on the invite list can
     # create an account. Required in beta. Invites expire after this many days.
     signup_invite_only: bool = False
+    # Sign in with Google (D134): the Web OAuth client's ID (the audience of every ID
+    # token, the Android app's too) and its secret (the web app's code exchange, here
+    # only), and where Google sends the web app back. Unset: no Google sign-in.
+    google_client_id: str | None = Field(default=None, pattern=r"^[0-9]+-[A-Za-z0-9_]+\.apps\.googleusercontent\.com$")
+    google_client_secret: SecretStr | None = None
+    google_redirect_uri: str | None = Field(default=None, max_length=200, pattern=r"^https?://[^\s?#]+$")
     invite_days: int = Field(default=30, ge=1, le=90)
 
     # Push notifications (stage 16, D093). "none" sends nothing (the default until
@@ -202,7 +208,8 @@ class Settings(BaseSettings):
 
     @field_validator(
         "cloudflare_turn_key_id", "cloudflare_turn_api_token", "razorpay_key_id", "razorpay_key_secret",
-        "razorpay_webhook_secret", "razorpay_plan_id", "upi_payee_vpa", "upi_payee_name", mode="before",
+        "razorpay_webhook_secret", "razorpay_plan_id", "upi_payee_vpa", "upi_payee_name", "google_client_id",
+        "google_client_secret", "google_redirect_uri", mode="before",
     )  # fmt: skip
     @classmethod
     def _empty_is_unset(cls, v: object) -> object:
@@ -259,6 +266,12 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _google_rules(self) -> Settings:
+        if (self.google_client_id is None) != (self.google_client_secret is None):
+            raise ValueError("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET go together")
+        return self
+
+    @model_validator(mode="after")
     def _calls_rules(self) -> Settings:
         if self.calls_ice == "cloudflare" and not (self.cloudflare_turn_key_id and self.cloudflare_turn_api_token):
             raise ValueError("the cloudflare relay needs CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_API_TOKEN")
@@ -306,6 +319,10 @@ class Settings(BaseSettings):
                 f"CORS origins must be https in {env}",
             ),
             (not self.site_url.startswith("https://"), f"SITE_URL must be https in {env}"),
+            (
+                self.google_redirect_uri is not None and not self.google_redirect_uri.startswith("https://"),
+                f"GOOGLE_REDIRECT_URI must be https in {env}",
+            ),
             # The owner chose to sell the UPI pass in the beta (D127); nothing else live.
             (
                 env == "beta" and self.payments_live and self.payments_backend != "upi",

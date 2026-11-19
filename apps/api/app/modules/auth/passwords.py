@@ -97,8 +97,11 @@ class Passwords:
         return self._hasher.hash(normalize(password))
 
     def verify(self, stored_hash: str | None, password: str) -> bool:
+        # No hash, or no password set (a Google-only account, D134): the dummy is checked
+        # instead, so a refusal takes as long as a wrong password and reveals nothing.
+        usable = stored_hash if stored_hash is not None and stored_hash.startswith("$argon2") else None
         try:
-            return self._hasher.verify(stored_hash or self._dummy, normalize(password)) and stored_hash is not None
+            return self._hasher.verify(usable or self._dummy, normalize(password)) and usable is not None
         except (VerifyMismatchError, VerificationError, InvalidHashError):
             return False
 

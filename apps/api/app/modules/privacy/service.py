@@ -39,6 +39,7 @@ from app.jobs import JobQueue
 from app.modules.accounts.models import Consent, User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.audit.service import record
+from app.modules.auth import google as google_auth
 from app.modules.auth.crypto import banned_email_digest
 from app.modules.auth.models import OneTimeCode, Session, SignupInvite
 from app.modules.auth.service import AuthContext, banned_email_key, local_today, revoke_all_sessions
@@ -51,9 +52,11 @@ from app.modules.matching.service import close_all_open_matches
 from app.modules.media.service import DELETE_OBJECTS, list_photos
 from app.modules.privacy import retention
 from app.modules.privacy.models import DeletedAccount
+from app.modules.privacy.schemas import DeletionIn
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
 from app.modules.staff.models import StaffEnrollment
 from app.modules.waitlist.models import WaitlistEntry
+from app.providers.google import GoogleSignIn
 from app.providers.storage import photo_keys
 from app.ratelimit import Limit
 
@@ -72,12 +75,18 @@ class DeletionRequested:
 
 
 async def request_deletion(
-    ctx: AuthContext, session: AsyncSession, user_id: uuid.UUID, password: str
+    ctx: AuthContext, session: AsyncSession, user_id: uuid.UUID, data: DeletionIn, google: GoogleSignIn
 ) -> DeletionRequested:
     now = ctx.clock()
     await ctx.limiter.hit(DELETE_LIMIT, str(user_id))
     user = (await session.execute(select(User).where(User.id == user_id).with_for_update(key_share=True))).scalar_one()
-    if not ctx.passwords.verify(user.password_hash, password):
+    if data.google is not None:
+        # An account that signs in with Google (D134): the same Google account, just now.
+        if not await google_auth.confirms(ctx, session, google, data.google, user.id):
+            record(session, "account.deletion_google_failed", actor=user.id, target_type="user", target_id=user.id)
+            await session.commit()
+            raise ApiError(403, "google_mismatch", "That isn't the Google account this account signs in with.")
+    elif not ctx.passwords.verify(user.password_hash, data.password or ""):
         record(session, "account.deletion_password_failed", actor=user.id, target_type="user", target_id=user.id)
         await session.commit()
         raise ApiError(403, "password_incorrect", "That password isn't right.")

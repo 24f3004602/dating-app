@@ -19,12 +19,12 @@ router = APIRouter(prefix="/v1", tags=["account"], responses=problems(401, 422, 
     "/me/deletion",
     status_code=status.HTTP_202_ACCEPTED,
     responses=problems(403),
-    summary="Delete my account: hidden and signed out now, everything deleted after 7 days",
+    summary="Delete my account (the password, or Google again): hidden and signed out now, deleted after 7 days",
 )
 async def request_deletion(
     body: DeletionIn, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession
 ) -> DeletionOut:
-    done = await service.request_deletion(ctx, db, auth.user.id, body.password)
+    done = await service.request_deletion(ctx, db, auth.user.id, body, request.app.state.google)
     hub: RealtimeHub = request.app.state.realtime
     await hub.revoke(auth.user.id)  # closes every realtime connection of this account (4401)
     match: Match

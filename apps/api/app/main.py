@@ -39,6 +39,7 @@ from app.modules.staff.challenges import Challenges
 from app.modules.staff.router import router as staff_router
 from app.modules.waitlist.router import router as waitlist_router
 from app.openapi import install_openapi
+from app.providers.google import create_google
 from app.providers.ice import CloudflareIce, create_ice
 from app.providers.identity import NoIdentityVerifier
 from app.providers.payments import create_payments
@@ -90,6 +91,7 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.state.realtime = realtime
     app.state.staff_challenges = Challenges(redis, settings.rate_limit_prefix)
     app.state.payments = create_payments(settings)
+    app.state.google = create_google(settings)
     app.state.ice = ice
     app.state.identity = NoIdentityVerifier()
     app.state.storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
