@@ -115,8 +115,12 @@ export function makeLink(
   pc.addEventListener("iceconnectionstatechange", onState);
 
   /** The local description once gathering is done, or after `gatherMs` with what there is. */
+  // A description without a candidate can't connect (and a relay-only server refuses it).
+  // On Android (react-native-webrtc) the side that answers was refused for having none, so
+  // gathering "complete" or an end-of-candidates event only counts once candidates are in.
+  const hasCandidate = () => /(^|\n)a=candidate:/.test(pc.localDescription?.sdp ?? "");
   const complete = async (): Promise<string> => {
-    if (pc.iceGatheringState !== "complete") {
+    if (!(pc.iceGatheringState === "complete" && hasCandidate())) {
       await new Promise<void>((resolve) => {
         let quiet: ReturnType<typeof setTimeout> | undefined;
         const finish = () => {
@@ -127,12 +131,12 @@ export function makeLink(
           resolve();
         };
         const onGathering = () => {
-          if (pc.iceGatheringState === "complete") finish();
+          if (pc.iceGatheringState === "complete" && hasCandidate()) finish();
         };
         // Each candidate restarts the quiet period; the end-of-candidates event finishes at once.
         const onCandidate = ((event: { candidate: unknown }) => {
           if (!event.candidate) {
-            finish();
+            if (hasCandidate()) finish();
             return;
           }
           clearTimeout(quiet);
@@ -141,6 +145,8 @@ export function makeLink(
         const timer = setTimeout(finish, gatherMs);
         pc.addEventListener("icegatheringstatechange", onGathering);
         pc.addEventListener("icecandidate", onCandidate);
+        // Candidates that came before these listeners count: the quiet period starts now.
+        if (hasCandidate()) quiet = setTimeout(finish, quietMs);
       });
     }
     const sdp = pc.localDescription?.sdp;

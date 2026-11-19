@@ -27,6 +27,7 @@ poll, so a lost hint only slows a call's setup down.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
@@ -403,10 +404,17 @@ async def get(session: AsyncSession, settings: Settings, call_id: uuid.UUID, me:
     return out
 
 
-def _clean(sdp: str, relay_only: bool) -> str:
+logger = logging.getLogger(__name__)
+
+
+def _clean(sdp: str, relay_only: bool, side: str) -> str:
     try:
         return clean_sdp(sdp, relay_only=relay_only)
     except InvalidSdpError as exc:
+        # Why, and which side (never the description: it holds network details).
+        logger.warning(
+            "call description refused", extra={"event": "calls.invalid_sdp", "reason": str(exc), "side": side}
+        )
         raise ApiError(422, "invalid_sdp", "The call's connection details weren't valid.") from exc
 
 
@@ -426,7 +434,7 @@ async def offer(
     _still_connecting(call)
     if call.offer_sdp is not None:
         raise ApiError(409, "offer_sent", "The offer has already been sent.")
-    call.offer_sdp = _clean(sdp, relay_only)
+    call.offer_sdp = _clean(sdp, relay_only, "offer")
     out = await call_out(session, settings, call, me, now)
     await session.commit()
     return out, call.user_b_id
@@ -444,7 +452,7 @@ async def answer(
         raise ApiError(409, "no_offer_yet", "There's no offer to answer yet.")
     if call.answer_sdp is not None:
         raise ApiError(409, "answer_sent", "The answer has already been sent.")
-    call.answer_sdp = _clean(sdp, relay_only)
+    call.answer_sdp = _clean(sdp, relay_only, "answer")
     out = await call_out(session, settings, call, me, now)
     await session.commit()
     return out, call.user_a_id

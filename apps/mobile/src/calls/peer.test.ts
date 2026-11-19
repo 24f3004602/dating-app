@@ -72,11 +72,12 @@ test("the offer waits for gathering to finish, so it carries every candidate", a
   void link.offer().then((sdp) => (sent = sdp));
   await jest.advanceTimersByTimeAsync(0);
   expect(sent).toBeNull(); // still gathering
-  peer.localDescription = { sdp: "v=0 offer with relay candidates" };
+  const gathered = "v=0\r\na=candidate:1 1 udp 1 203.0.113.1 3478 typ relay\r\n";
+  peer.localDescription = { sdp: gathered };
   peer.iceGatheringState = "complete";
   peer.fire("icegatheringstatechange");
   await jest.advanceTimersByTimeAsync(0);
-  expect(sent).toBe("v=0 offer with relay candidates");
+  expect(sent).toBe(gathered);
 });
 
 test("once candidates stop coming, the description goes without waiting for the browser's slow 'complete'", async () => {
@@ -94,6 +95,36 @@ test("once candidates stop coming, the description goes without waiting for the 
   expect(sent).toBeNull(); // a candidate came less than the quiet period ago
   await jest.advanceTimersByTimeAsync(1);
   expect(sent).toBe("v=0 offer, two relay candidates"); // at 1 s, not at the 4 s cap
+});
+
+test("a gathering 'complete' before any candidate doesn't send an empty description", async () => {
+  const link = makeLink(Peer, { policy: "relay", servers: [] }, camera);
+  const peer = FakePeer.last as FakePeer;
+  let sent: string | null = null;
+  void link.answer("v=0 their offer").then((sdp) => (sent = sdp));
+  await jest.advanceTimersByTimeAsync(0);
+  peer.iceGatheringState = "complete"; // reported early, with no candidate yet
+  peer.fire("icegatheringstatechange");
+  peer.fire("icecandidate", { candidate: null });
+  await jest.advanceTimersByTimeAsync(200);
+  expect(sent).toBeNull();
+  peer.localDescription = { sdp: "v=0\r\na=candidate:1 1 udp 1 203.0.113.1 3478 typ relay\r\n" };
+  peer.fire("icecandidate", { candidate: { candidate: "candidate:1 1 udp 1 203.0.113.1 3478 typ relay" } });
+  await jest.advanceTimersByTimeAsync(QUIET_MS);
+  expect(sent).toContain("typ relay");
+});
+
+test("candidates that came before the wait started still count", async () => {
+  const link = makeLink(Peer, { policy: "relay", servers: [] }, camera);
+  const peer = FakePeer.last as FakePeer;
+  peer.setLocalDescription = async () => {
+    peer.localDescription = { sdp: "v=0\r\na=candidate:1 1 udp 1 203.0.113.1 3478 typ relay\r\n" };
+    peer.iceGatheringState = "gathering";
+  };
+  let sent: string | null = null;
+  void link.offer().then((sdp) => (sent = sdp));
+  await jest.advanceTimersByTimeAsync(QUIET_MS);
+  expect(sent).toContain("typ relay"); // no further events, yet it goes after the quiet period
 });
 
 test("gathering that never finishes is cut short; the answer takes the offer first", async () => {
