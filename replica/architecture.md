@@ -161,8 +161,9 @@ Who: **P** public, **M** signed-in member, **Mod** moderator, **Adm** admin.
 | POST /v1/auth/resend-code | same response whether or not the account exists | P | F01 |
 | POST /v1/auth/login, /logout, /logout-all | session lifecycle | P / M | F01 |
 | POST /v1/auth/password-reset/request, /confirm | email code; on confirm, every session is revoked | P | F01 |
-| GET /v1/me; POST /v1/me/deletion | account summary with verification labels (stage 6); delete my account with the password: hidden and signed out now, purged after 7 days (stage 12, D083) | M | F01, F09 |
+| GET /v1/me; POST /v1/me/deletion | account summary with verification labels (stage 6) and whether it has a password (D134); delete my account with the password, or Google again for an account that signs in with Google: hidden and signed out now, purged after 7 days (stage 12, D083) | M | F01, F09 |
 | POST /v1/auth/restore | sign in and keep an account that is waiting to be deleted (otherwise the same as sign-in) | P | F09 |
+| GET /v1/auth/google; POST /v1/auth/google, /google/complete | Sign in with Google (D134): the public settings; the phone's ID token or the web app's code with its PKCE verifier, checked here; a known or linked account signs in, someone new gets a signed 15-minute ticket and finishes with a date of birth and the documents | P | F01 |
 | GET, PUT /v1/me/profile; GET /v1/areas; GET /v1/prompts | edit own profile (stage 7); areas and prompts, never coordinates | M | F02 |
 | GET, PUT /v1/me/preferences | discovery preferences (stage 8) | M | F03 |
 | POST /v1/me/photos; PATCH /v1/me/photos/order; DELETE /v1/me/photos/{id} | upload (multipart), reorder, delete | M | F02 |

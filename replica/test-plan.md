@@ -374,6 +374,22 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | PLUS-APP-2 | plan | edge | after a decision, and store builds | a rejection says why and offers Start again; a confirmed pass offers more days and nothing to cancel; a store build asks nothing | jest | pass |
 | E2E-17 | plan | happy | the pass in the web app | from Live to Plus; the steps and the QR code drawn under the app's CSP; a short reference refused; sent; the checking notice; axe | e2e | written; runs in CI |
 | E2E-4b | plan | happy | an admin approves a payment in the console | the Payments page (axe), Approve, the status, the decided list | e2e (admin.spec.ts) | written; runs in CI |
+| GOOGLE-1 | sign-in | security | Google's ID token, checked here | our audience, Google's issuer, unexpired, Google's signature and key (fetched once, then once more for an unknown key); HS256 and junk refused; Gmail and `hd` addresses vouched for, others not | api | pass |
+| GOOGLE-2 | sign-in | happy | someone new | a ticket; under 18, a tampered ticket and old documents refused; the account active, email verified, no password; the ticket again signs in; next time straight in; audited | api | pass |
+| GOOGLE-3 | sign-in | security | an existing account with the address | unverified refused; verified once but not Gmail or Workspace: the password is asked for, nothing linked; a Workspace address links; a changed Google address still signs in | api | pass |
+| GOOGLE-4 | sign-in | security | an unfinished sign-up with the address | it gives way to the Google account; its password never works | api | pass |
+| GOOGLE-5 | sign-in | guard | account states | suspended refused; waiting to be deleted refused unless kept | api | pass |
+| GOOGLE-6 | sign-in | security | the web app's code | exchanged with its PKCE verifier; a wrong verifier or a used code refused; both ways at once 422; Google down 503 | api | pass |
+| GOOGLE-7 | sign-in | guard | Google not set up | the settings say off; the API refuses | api | pass |
+| GOOGLE-8 | deletion | security | deleting an account without a password | the password can't; another Google account or a sign-in older than ten minutes refused; neither or both 422; the same Google account just now deletes; audited | api | pass |
+| PW-TIMING-1 | sign-in | security | no password set | the dummy hash is checked, so a refusal takes as long as a wrong password | api | pass |
+| GOOGLE-APP-1..3 | sign-in | guard | the button | shown where the API offers Google and the device can use it; hidden when off; a build without Google's native part doesn't ask | jest | pass |
+| GOOGLE-APP-4..7 | sign-in | happy | the phone's Google answer | a known member straight in; someone new: the age gate, the documents, then in; Keep my account with the same answer; cancel silent, no Google on the phone said, the API's refusal explained | jest | pass |
+| GOOGLE-APP-8..10 | sign-in | security | the web app's return | the code and verifier sent once; a cancel goes back where it started; an answer to another request sends nothing | jest | pass |
+| GOOGLE-APP-11 | deletion | happy | an account without a password | no password field; Google asked again (purpose delete); a mismatch explained; deleted, signed out to the date; the web app's deletion finishes on its return | jest | pass |
+| GOOGLE-WEB-1..4 | sign-in | security | the web adapter | Google's URL (client, redirect, code, scope, S256 challenge of the stored verifier, state, nothing secret); the answer taken once, for this tab's request, within 15 minutes; storage refused says failed (no stuck button); no redirect address, no Google | jest | pass |
+| E2E-18 | sign-in | security | Google in a real browser (a stand-in client) | the button on welcome, sign-in and sign-up (axe); Google's request with PKCE and state (caught, never reached); a cancel comes back; a forged answer refused without a request, the code gone from the address bar | e2e | written; runs in CI |
+| GOOGLE-M1 | sign-in | happy | a real Google account, on the beta | the web app and the APK: someone new finishes, signs out, signs in again; a Gmail account with a password account links; deleting asks Google again | manual | planned (needs the owner's OAuth clients) |
 
 ## Results
 

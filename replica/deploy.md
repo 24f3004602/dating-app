@@ -318,6 +318,24 @@ go back to invites (`datingapp-api invite add <email>`). The website's buttons o
 at `APP_URL` (compose passes `https://app.${DOMAIN}`). Gmail's daily sending limit caps how
 many sign-up codes go out in a day; a real email provider (gate 1) lifts it.
 
+**Sign in with Google (D134):** off until the owner's Google Cloud clients exist.
+1. **Google Cloud (owner):** a project; Google Auth Platform, Branding: the app's name, a
+   support email, the home page `https://<domain>`, the privacy notice
+   `https://<domain>/privacy`, the terms `https://<domain>/terms`, the authorized domain
+   `<domain>`; Audience: External, then publish (only the `openid`, `email` and `profile`
+   scopes, which need no verification). Clients: a **Web application** client (JavaScript
+   origin `https://app.<domain>`, redirect URI `https://app.<domain>/auth/google`), and an
+   **Android** client with the package `dev.datingapp.beta` and the signing key's SHA-1
+   (the CI APK's debug key: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`; a
+   release key gets its own Android client).
+2. **`infra/beta/.env`:** `GOOGLE_CLIENT_ID=` the Web client's ID, `GOOGLE_CLIENT_SECRET=`
+   its secret (checked by format, never printed); compose sets `GOOGLE_REDIRECT_URI`. Then
+   `docker compose up -d --no-deps api worker`: the apps read the settings at run time, so
+   the web app and the APK show the button with no rebuild (the APK needs a build from
+   D134 onwards, which carries Google's native part).
+3. **Check:** `https://api.<domain>/v1/auth/google` says `"enabled": true`; then GOOGLE-M1
+   (test-plan.md) on the web app and the phone.
+
 6. **Razorpay, later (owner):** a Razorpay account with KYC; a plan; test keys first
    (`PAYMENTS_BACKEND=razorpay`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
    `RAZORPAY_PLAN_ID`) and the webhook (`https://api.<domain>/v1/webhooks/razorpay`, its
