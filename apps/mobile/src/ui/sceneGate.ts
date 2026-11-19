@@ -1,11 +1,15 @@
 /**
  * Who gets the welcome's 3D map (stage 21b, D122). Reduce motion (the phone's setting or
  * the browser's), checked by the caller with every other animation, keeps the flat map;
- * so does EXPO_PUBLIC_WELCOME_3D=off, for everyone (config.ts). On a phone that's all: the scene
- * draws with the phone's own GL and falls back to the flat map if that fails. In a
- * browser (the web build) the same gates as the website's hero (D119): the data saver, a
- * 2G connection, forced colours, under 4 GB of memory or no WebGL 2 keep the flat map.
- * Pure, so it's unit-tested (sceneGate.test.ts).
+ * so does EXPO_PUBLIC_WELCOME_3D=off, for everyone (config.ts). In a browser (the web
+ * build) the same gates as the website's hero (D119): the data saver, a 2G connection,
+ * forced colours, under 4 GB of memory or no WebGL 2 keep the flat map.
+ *
+ * Phones keep the flat map (D131): the native scene (React Three Fiber's native renderer
+ * on expo-gl, under Hermes) had never run on a phone, and the first release build closed
+ * on the owner's Pixel the moment it loaded (a module failing as it loads is fatal in a
+ * release build, so the scene's own fallback never ran). It comes back once it has run
+ * on a phone. Pure, so it's unit-tested (welcomeMap.test.ts).
  */
 import { Platform } from "react-native";
 
@@ -21,10 +25,10 @@ export type Viewing = {
 
 const TOO_SLOW = new Set(["slow-2g", "2g"]);
 
-/** `viewing` is null on a phone (nothing to ask but reduce motion). */
+/** `viewing` is null on a phone, which keeps the flat map for now (above). */
 export function chooseWelcomeScene(viewing: Viewing | null, enabled: boolean): boolean {
   if (!enabled) return false;
-  if (viewing === null) return true;
+  if (viewing === null) return false;
   if (viewing.saveData || viewing.forcedColors || !viewing.webgl2) return false;
   if (viewing.connection !== null && TOO_SLOW.has(viewing.connection)) return false;
   return viewing.memory === null || viewing.memory >= 4;

@@ -77,8 +77,8 @@ test("MOB-3D-3: the 3D welcome's recording was made for these rings", () => {
 
 const browser = (over: Partial<Viewing> = {}): Viewing => ({ saveData: false, connection: "4g", forcedColors: false, memory: 8, webgl2: true, ...over });
 
-test("MOB-3D-4: a phone gets the scene unless it's switched off; a browser, unless something says otherwise", () => {
-  expect(chooseWelcomeScene(null, true)).toBe(true);
+test("MOB-3D-4: a phone keeps the flat map (D131); a browser gets the scene unless something says otherwise", () => {
+  expect(chooseWelcomeScene(null, true)).toBe(false);
   expect(chooseWelcomeScene(null, false)).toBe(false);
   expect(chooseWelcomeScene(browser(), true)).toBe(true);
   expect(chooseWelcomeScene(browser({ connection: "3g" }), true)).toBe(true);

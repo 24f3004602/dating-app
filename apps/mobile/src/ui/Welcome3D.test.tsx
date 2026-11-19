@@ -13,6 +13,13 @@ import { motion } from "@/theme/tokens";
 import { resetMotionSetting } from "@/ui/motion";
 import { RouteMap } from "@/ui/RouteMap";
 import { type ScenePhase, sceneLoader, Welcome3D } from "@/ui/Welcome3D";
+
+// The loading flow is the same wherever the scene is allowed; since D131 that's a browser
+// (the web build), so these tests describe a capable one.
+jest.mock("@/ui/sceneGate", () => ({
+  ...jest.requireActual("@/ui/sceneGate"),
+  readViewing: () => ({ saveData: false, connection: "4g", forcedColors: false, memory: 8, webgl2: true }),
+}));
 import type { SceneProps } from "@/ui/welcome3d/InterchangeScene";
 import { welcomeMap } from "@/ui/welcomeMap";
 
