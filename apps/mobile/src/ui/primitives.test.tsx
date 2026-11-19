@@ -26,7 +26,8 @@ import {
 } from "@/ui/primitives";
 
 declare const __dirname: string;
-const { readFileSync } = require("fs") as { readFileSync: (path: string) => { readUInt32BE: (offset: number) => number } };
+type FileBytes = { readUInt32BE: (offset: number) => number; equals: (other: FileBytes) => boolean };
+const { readFileSync } = require("fs") as { readFileSync: (path: string) => FileBytes };
 
 jest.mock("expo-router", () => ({
   ...require("@/test/expoRouter").expoRouterInPlace(),
@@ -76,13 +77,16 @@ test("Google's button spans the width like the others: Google's frame, its G and
   const art = hostsWhere((p) => p.source !== undefined);
   expect(art).toHaveLength(1);
   expect(StyleSheet.flatten(art[0]?.props.style as StyleProp<ViewStyle>)).toMatchObject({ width: 155, height: 20 });
+  const assetFile = (name: string) => readFileSync(`${__dirname}/../../assets/google/${name}.png`);
   for (const [suffix, scale] of [["", 1], ["@2x", 2], ["@3x", 3]] as const) {
-    const png = readFileSync(`${__dirname}/../../assets/google/sign-in-logo-and-words${suffix}.png`);
+    const png = assetFile(`sign-in-logo-and-words${suffix}`);
     expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
       GOOGLE_BUTTON.logoAndWords.width * scale,
       GOOGLE_BUTTON.logoAndWords.height * scale,
     ]);
   }
+  // The web app's copy (Expo's web build serves only an image's 1x file) is the 3x file itself.
+  expect(assetFile("sign-in-logo-and-words-web").equals(assetFile("sign-in-logo-and-words@3x"))).toBe(true);
 });
 
 test("a disabled button is announced as disabled", async () => {

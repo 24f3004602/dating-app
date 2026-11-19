@@ -36,6 +36,7 @@ import {
 import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
 import { color, font, motion, radius, signRing, size, space, touch, type } from "@/theme/tokens";
+import { GOOGLE_ART } from "@/ui/googleArt";
 import { easing, FadeImage, nativeDriver, Reveal, usePressScale, useReducedMotion, useScreenEntrance } from "@/ui/motion";
 
 /** React Native Web also reports focus and hover; native platforms report only `pressed`. */
@@ -277,11 +278,11 @@ export function Button({ label, onPress, variant = "primary", disabled, busy, hi
   );
 }
 
-// Google's own G and words (D134), cut unscaled from its button image (155 x 20 points). The button
+// Google's own G and words (D134), cut unscaled from its button image (155 x 20 points; GOOGLE_ART,
+// the 3x pixels on the web). The button
 // around them is drawn here in Google's colours, as its branding rules allow for a button adapted to
 // the app, so it spans the width like every other button: white fill, a 1-point #747775 border,
 // Google's 4-point corners and 12-point side padding.
-const GOOGLE_SIGN_IN = require("../../assets/google/sign-in-logo-and-words.png") as number;
 export const GOOGLE_BUTTON = { fill: "#ffffff", stroke: "#747775", corner: 4, padding: 12, logoAndWords: { width: 155, height: 20 } } as const;
 
 /** Sign in with Google: Google's G and words in Google's frame, full width, named by its words (WCAG 2.5.3). */
@@ -301,7 +302,7 @@ export function GoogleButton({ label, onPress, busy }: { label: string; onPress:
         onPressOut={press.onPressOut}
         style={(state) => [styles.google, focusStyle(state, focusRingStyle)]}
       >
-        <Image source={GOOGLE_SIGN_IN} style={[styles.googleImage, busy && styles.googleBusy]} aria-hidden />
+        <Image source={GOOGLE_ART} style={[styles.googleImage, busy && styles.googleBusy]} aria-hidden />
         {busy ? <ActivityIndicator style={StyleSheet.absoluteFill} color={color.sign} aria-hidden /> : null}
       </Pressable>
     </Animated.View>

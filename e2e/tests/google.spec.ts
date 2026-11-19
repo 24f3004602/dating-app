@@ -1,7 +1,8 @@
 /**
  * Sign in with Google in the web app (D134), against the real API with a stand-in Web
  * client: the button on the welcome, sign-in and sign-up screens, Google's request (a
- * code, PKCE S256, state, only openid email profile), and the return: a cancel goes back
+ * code, PKCE S256, state, only openid email profile), as wide as the sign-in button with
+ * Google's G and words sharp (D135), and the return: a cancel goes back
  * where it started, and an answer to a request this tab never made sends nothing. Google's
  * page itself is never reached (the request is caught here); a real Google sign-in is
  * checked by hand on the beta (test-plan.md, GOOGLE-M1).
@@ -30,6 +31,13 @@ test("Google's page is asked for a code bound to this tab; a cancel comes back; 
   await page.goto(`${WEB_URL}/sign-in`);
   const google = page.getByRole("button", { name: "Sign in with Google" });
   await expect(google).toBeVisible();
+  // D135: as wide as the Sign in button, with Google's 3x pixels (465 x 60) drawn at 155 x 20.
+  const submit = await page.getByRole("button", { name: "Sign in", exact: true }).boundingBox();
+  expect((await google.boundingBox())?.width).toBe(submit?.width);
+  const art = google.locator("img");
+  await expect.poll(() => art.evaluate((el) => [(el as HTMLImageElement).naturalWidth, (el as HTMLImageElement).naturalHeight])).toEqual([465, 60]);
+  const drawn = await art.boundingBox();
+  expect([drawn?.width, drawn?.height]).toEqual([155, 20]);
   await checkA11y(page, "sign-in with Google's button");
   await google.click();
   await page.waitForURL(/^https:\/\/accounts\.google\.com\//);

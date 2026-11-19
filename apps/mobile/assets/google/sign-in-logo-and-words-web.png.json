@@ -1,0 +1,4 @@
+{
+  "prompt": "Origin (sourced, not generated): a byte-for-byte copy of sign-in-logo-and-words@3x.png (Google's standard-colour G and words, cut unscaled from Google's own \"Sign in with Google\" button image in the pre-approved asset bundle developers.google.com/static/identity/images/signin-assets.zip, downloaded 2026-11-19), under a name with no 1x or 2x partner: Expo's web build serves an image's 1x file only, which a phone's browser enlarges and blurs, so the web app draws these 3x pixels at 155 x 20 points instead. D135.",
+  "createdAt": "2026-11-19T17:01:47.477472Z"
+}
