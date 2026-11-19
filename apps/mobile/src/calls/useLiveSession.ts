@@ -7,12 +7,13 @@ import { liveApi, liveKeys } from "@/api/live";
 import { useAuth } from "@/auth/AuthProvider";
 import { onCallUpdated } from "@/calls/events";
 import { makeLink } from "@/calls/peer";
-import { openCamera, peerConnection } from "@/calls/rtc";
+import { callAudio, openCamera, peerConnection } from "@/calls/rtc";
 import { type LiveRtc, LiveSession, type LiveState } from "@/calls/session";
 
 export const platformRtc: LiveRtc = {
   openCamera,
   link: (ice, camera) => makeLink(peerConnection(), ice, camera),
+  callAudio,
 };
 
 export function useLiveSession(rtc: LiveRtc = platformRtc): { state: LiveState; session: LiveSession } {

@@ -24,6 +24,8 @@ jest.mock("react-native-webrtc", () => ({
   RTCPeerConnection: MockPeerConnection,
   RTCView: () => null,
 }));
+const mockInCall = { start: jest.fn(), stop: jest.fn() };
+jest.mock("react-native-incall-manager", () => ({ __esModule: true, default: mockInCall }));
 
 const modules = NativeModules as Record<string, unknown>;
 
@@ -37,7 +39,10 @@ function load(): typeof import("@/calls/rtc") {
 
 afterEach(() => {
   delete modules.WebRTCModule;
+  delete modules.InCallManager;
   mockGetUserMedia.mockReset();
+  mockInCall.start.mockReset();
+  mockInCall.stop.mockReset();
 });
 
 test("without the native module, Live isn't offered on the phone", async () => {
@@ -66,4 +71,18 @@ test("with it: the front camera and microphone, both or a refusal; the library's
   expect(pictureOnly.tracks[0]?.stop).toHaveBeenCalled();
 
   expect(rtc.peerConnection()).toBe(MockPeerConnection);
+});
+
+test("LIVE-APP-18: a video call's sound goes to the loudspeaker on phones that have the module", () => {
+  const without = load();
+  without.callAudio.start();
+  without.callAudio.stop();
+  expect(mockInCall.start).not.toHaveBeenCalled(); // Expo Go, tests: the package is never used
+
+  modules.InCallManager = {};
+  const rtc = load();
+  rtc.callAudio.start();
+  expect(mockInCall.start).toHaveBeenCalledWith({ media: "video", auto: true });
+  rtc.callAudio.stop();
+  expect(mockInCall.stop).toHaveBeenCalledTimes(1);
 });

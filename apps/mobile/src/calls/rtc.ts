@@ -7,10 +7,16 @@
  * react-native-webrtc asks for the camera and microphone permissions itself; when only
  * one is granted it quietly leaves the other out. A call needs both, so that counts as
  * refused here.
+ *
+ * Sound: react-native-webrtc leaves the phone's audio route alone, and Android plays a
+ * call through the earpiece unless told otherwise. react-native-incall-manager (D129)
+ * puts a video call on the loudspeaker (or the headset), keeps the screen on, and puts
+ * everything back afterwards; it is looked up the same way.
  */
 import { NativeModules } from "react-native";
 
 import type { PeerConnectionCtor, StreamLike } from "@/calls/peer";
+import type { CallAudio } from "@/calls/session";
 
 type WebRTC = typeof import("react-native-webrtc");
 let loaded: WebRTC | null | undefined;
@@ -54,3 +60,26 @@ export function peerConnection(): PeerConnectionCtor {
   if (!lib) throw new Error("Live calls need the app's own build on phones");
   return lib.RTCPeerConnection as unknown as PeerConnectionCtor;
 }
+
+type InCall = { start(setup?: { media?: "video" | "audio"; auto?: boolean }): void; stop(): void };
+let inCall: InCall | null | undefined;
+
+function incallManager(): InCall | null {
+  if (inCall === undefined) {
+    inCall = null;
+    if (NativeModules.InCallManager) {
+      try {
+        inCall = (require("react-native-incall-manager") as { default: InCall }).default;
+      } catch {
+        inCall = null;
+      }
+    }
+  }
+  return inCall;
+}
+
+/** While the camera is on: a video call's sound on the loudspeaker, the screen kept on. */
+export const callAudio: CallAudio = {
+  start: () => incallManager()?.start({ media: "video", auto: true }),
+  stop: () => incallManager()?.stop(),
+};

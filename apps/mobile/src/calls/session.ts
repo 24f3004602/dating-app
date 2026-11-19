@@ -33,9 +33,13 @@ export type LiveApi = {
   end(id: string, reason: EndReason): Promise<CallOut>;
 };
 
+/** The phone's call sound while the camera is on (loudspeaker, screen kept on); none on the web. */
+export type CallAudio = { start(): void; stop(): void };
+
 export type LiveRtc = {
   openCamera(): Promise<StreamLike>;
   link(ice: IceConfig, camera: StreamLike): Link;
+  callAudio?: CallAudio;
 };
 
 export type Phase = "idle" | "camera" | "searching" | "connecting" | "live" | "ended";
@@ -130,6 +134,7 @@ export class LiveSession {
   }
 
   private stopCamera(): void {
+    if (this.state.camera) this.deps.rtc.callAudio?.stop();
     this.state.camera?.getTracks().forEach((track) => track.stop());
     this.set({ camera: null });
   }
@@ -160,6 +165,7 @@ export class LiveSession {
           camera.getTracks().forEach((track) => track.stop()); // stopped meanwhile
           return;
         }
+        this.deps.rtc.callAudio?.start();
         this.set({ camera, micOn: true, cameraOn: true });
       } catch (err) {
         if (gen === this.generation) this.set({ phase: "idle", problem: cameraProblem(err) });

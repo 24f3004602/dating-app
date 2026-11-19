@@ -249,3 +249,23 @@ test("muting and turning the camera off change only that kind of track, and a ne
   session.stop();
   expect(session.getState()).toMatchObject({ micOn: true, cameraOn: true, camera: null });
 });
+
+test("LIVE-APP-17: the phone's call sound starts with the camera and stops with it", async () => {
+  const callAudio = { start: jest.fn(), stop: jest.fn() };
+  const { session } = setup({}, { callAudio });
+  await session.start();
+  await flush();
+  expect(callAudio.start).toHaveBeenCalledTimes(1);
+  expect(callAudio.stop).not.toHaveBeenCalled();
+  session.stop();
+  expect(callAudio.stop).toHaveBeenCalledTimes(1);
+  session.stop(); // nothing on: nothing to put back
+  expect(callAudio.stop).toHaveBeenCalledTimes(1);
+
+  const refused = { start: jest.fn(), stop: jest.fn() };
+  const denied = Object.assign(new Error("denied"), { name: "NotAllowedError" });
+  const second = setup({}, { openCamera: jest.fn(async () => Promise.reject(denied)), callAudio: refused });
+  await second.session.start();
+  await flush();
+  expect(refused.start).not.toHaveBeenCalled(); // no camera, no call sound
+});

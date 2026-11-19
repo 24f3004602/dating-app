@@ -21,3 +21,6 @@ export async function openCamera(): Promise<StreamLike> {
 export function peerConnection(): PeerConnectionCtor {
   return window.RTCPeerConnection as unknown as PeerConnectionCtor;
 }
+
+/** Browsers route a call's sound themselves. */
+export const callAudio = undefined;

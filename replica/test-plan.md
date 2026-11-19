@@ -354,6 +354,8 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | LIVE-APP-16 | Live | edge | the phone adapter | no native module: not offered, the package never loads; both camera and microphone or a refusal; the library's connection | jest | pass |
 | NAT-LIVE-1 | Live | happy | a native Android build | prebuild, Gradle release for arm64, R8, the WebRTC library in the APK | ci (manual) | pass: android-apk run 44351502502 |
 | E2E-16 | Live | happy | three people in real Chrome with fake cameras | rules, Start, paired, connected, video covered then shown, the minute counting, End, a like each: a match; a report pauses Live for the one reported | e2e | pass: mobile run 44351500829 (re-run 2026-11-19 after the picomatch advisory was withdrawn) |
+| LIVE-APP-17 | Live | happy | the phone's call sound | starts once the camera is on, stops when it goes off, never without a camera | jest | pass |
+| LIVE-APP-18 | Live | edge | the loudspeaker module | without the native module nothing loads; with it, a video call's start and stop | jest | pass |
 | PLUS-1 | plan | guard | the UPI pass's settings | needs the payee and `PAYMENTS_LIVE`; a beta may sell the pass only; bad UPI IDs refused | api | pass |
 | PLUS-2 | plan | edge | no pass set up | nothing to start (503), nothing in progress | api | pass |
 | PLUS-3 | plan | happy | starting a payment | the price and days; an 8-character code from the unambiguous alphabet; the exact `upi://pay` link; a PNG QR code; 48 hours; a second tap gives the same payment; audited | api | pass |
