@@ -59,7 +59,7 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Version beta-2026-11-19c/)).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11-20/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
   await checkA11y(page, "privacy");
   await page.getByRole("link", { name: "Terms for testers" }).click();

@@ -135,6 +135,37 @@ export default async function Privacy() {
         </li>
       </ul>
 
+      <h2>Ads in the Android app</h2>
+      <ul>
+        <li>
+          <strong>Where</strong>: members without {BRAND} Plus may see ads from
+          Google AdMob in the Android app: a banner at the foot of Today, Likes
+          and Matches, and now and then a full-screen ad when you come back to
+          Today after deciding about a few people. Never in chats, Live calls,
+          profiles, Safety, payments or sign-up, and never in your first day.
+          The web app has no ads.
+        </li>
+        <li>
+          <strong>What Google receives</strong>: your phone&apos;s advertising
+          ID, its IP address, the kind of phone and app, and what happens with
+          each ad (shown, tapped), to show ads, limit how often you see them,
+          measure them and stop fraud, under Google&apos;s own privacy policy
+          and for as long as it keeps such data.
+        </li>
+        <li>
+          <strong>What we ask for</strong>: non-personalised ads only, suitable
+          for teens and up, so they aren&apos;t chosen from your activity in
+          other apps or sites. We send Google nothing from your account: not
+          your name, profile, preferences, matches, messages or calls.
+        </li>
+        <li>
+          <strong>Your choices</strong>: with Plus you see no ads, and your app
+          doesn&apos;t start Google&apos;s ad service at all. You can also
+          delete or reset your advertising ID in Android&apos;s settings
+          (Privacy, then Ads).
+        </li>
+      </ul>
+
       <h2>If you joined the waitlist</h2>
       <p>
         The waitlist closed when sign-up opened to everyone: no new addresses are added.
@@ -197,7 +228,8 @@ export default async function Privacy() {
           the codes. Cloudflare&apos;s relay servers carry Live calls between the
           two devices. On the Android app, Expo and Google deliver notifications;
           these say only things like &quot;You have a new message.&quot;, never
-          names or message text.
+          names or message text. Google AdMob shows the Android app&apos;s ads to
+          members without Plus (above).
         </li>
       </ul>
 

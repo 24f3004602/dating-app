@@ -22,6 +22,10 @@ export default async function Terms() {
         <li>You are 18 or over.</li>
         <li>You have one account.</li>
         <li>Your profile is about you: your own details and photos of you.</li>
+        <li>
+          You use {BRAND} for yourself, to meet people: not for a business, an
+          agency or anyone else.
+        </li>
       </ul>
 
       <h2>Be respectful</h2>
@@ -38,6 +42,14 @@ export default async function Terms() {
         <li>pretend to be someone else;</li>
         <li>
           ask anyone for money, sell things, or send spam or links to scams;
+        </li>
+        <li>
+          offer, ask for or pay for dates or company in return for money, gifts
+          or favours, including &quot;sugar&quot; arrangements;
+        </li>
+        <li>
+          run or promote a matchmaking, marriage or introduction service,
+          including one that introduces people from other countries;
         </li>
         <li>
           share other testers&apos; details, photos or messages outside the app;
@@ -91,6 +103,10 @@ export default async function Terms() {
           shows; then you send us the payment&apos;s 12-digit reference. Plus
           starts once we&apos;ve found the payment in our bank account, usually
           within a day. We never ask for money in chats or calls.
+        </li>
+        <li>
+          <strong>No ads</strong>: in the Android app, members without Plus may
+          see ads (the privacy notice explains them). With Plus, you see none.
         </li>
         <li>
           <strong>No auto-renewal</strong>: a pass simply ends. Buying another
