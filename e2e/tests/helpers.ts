@@ -92,8 +92,12 @@ export async function signUp(page: Page, email: string, { keepTourOffer = false 
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   await page.getByLabel("Code", { exact: true }).fill(await codeFromWorkerMail(email));
   await page.getByRole("button", { name: "Confirm" }).click();
+  // The offer comes first, and the profile behind it is hidden from assistive tech until it's answered.
+  await expect(page.getByRole("dialog", { name: "App tour" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Let's set up your profile", includeHidden: true })).toBeAttached();
+  if (keepTourOffer) return;
+  await dismissTourOffer(page);
   await expect(page.getByRole("heading", { name: "Let's set up your profile" })).toBeVisible();
-  if (!keepTourOffer) await dismissTourOffer(page);
 }
 
 /** From the empty profile: a profile, then two photos. Ends on the profile, ready to be introduced. */
