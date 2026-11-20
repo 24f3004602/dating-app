@@ -25,6 +25,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { API_URL } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, radius, space } from "@/theme/tokens";
+import { useTour } from "@/tour/TourProvider";
 import { FormField } from "@/ui/FormField";
 import { MoreButton } from "@/ui/MoreButton";
 import { Body, Button, CardTitle, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, SwitchRow, TextField, Thumb, Title } from "@/ui/primitives";
@@ -51,6 +52,7 @@ export function ProfileScreen() {
   const { signOut, signOutEverywhere } = useAuth();
   const profile = useMyProfile();
   const me = useMe();
+  const tour = useTour();
 
   if (profile.isPending) return <Loading label={t.common.loading} />;
   if (profile.isError) {
@@ -61,6 +63,8 @@ export function ProfileScreen() {
     );
   }
   const p = profile.data;
+  // The app tour (D136), any time: with the places when there's a profile, on its own before.
+  const tourRow = tour ? <ListRow label={t.tour.replay} hint={t.tour.replayHint} onPress={tour.replay} /> : null;
   const labels = me.data
     ? [t.profile.ageDeclared, me.data.verification.email === "verified" ? t.profile.emailVerified : null, t.profile.identityNotChecked]
     : [];
@@ -92,7 +96,10 @@ export function ProfileScreen() {
           <ListRow label={t.profile.privacy} hint={privacyHint(p)} opens onPress={() => router.push("/privacy")} />
           <ListRow label={t.safety.open} opens onPress={() => router.push("/safety")} />
           <ListRow label={t.notifications.open} opens onPress={() => router.push("/notifications")} />
+          {tourRow}
         </View>
+      ) : tourRow ? (
+        <View style={styles.list}>{tourRow}</View>
       ) : null}
       {/* The account comes last and quiet: signing out ends sessions, not data; deleting asks on its own screen. */}
       <View style={styles.account}>

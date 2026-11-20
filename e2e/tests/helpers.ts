@@ -67,8 +67,18 @@ export async function watchErrors(page: Page) {
   return found;
 }
 
-/** Sign up as a 27-year-old and verify with the mailed code. Ends on the empty profile. */
-export async function signUp(page: Page, email: string) {
+/** The app tour's offer (D136), shown once to someone new on each browser: not now. */
+export async function dismissTourOffer(page: Page) {
+  const tour = page.getByRole("dialog", { name: "App tour" });
+  await tour.getByRole("button", { name: "Not now" }).click();
+  await expect(tour).toHaveCount(0);
+}
+
+/**
+ * Sign up as a 27-year-old and verify with the mailed code. Ends on the empty profile, with
+ * the app tour's offer answered "Not now" (tour.spec.ts keeps it, to take the tour).
+ */
+export async function signUp(page: Page, email: string, { keepTourOffer = false }: { keepTourOffer?: boolean } = {}) {
   await page.goto("/");
   await page.getByRole("button", { name: "Create an account" }).click();
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -83,6 +93,7 @@ export async function signUp(page: Page, email: string) {
   await page.getByLabel("Code", { exact: true }).fill(await codeFromWorkerMail(email));
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByRole("heading", { name: "Let's set up your profile" })).toBeVisible();
+  if (!keepTourOffer) await dismissTourOffer(page);
 }
 
 /** From the empty profile: a profile, then two photos. Ends on the profile, ready to be introduced. */

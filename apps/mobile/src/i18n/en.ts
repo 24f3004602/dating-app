@@ -541,6 +541,66 @@ export const en = {
     withGoogleHint: "Opens Google to confirm it's you.",
     googleUnavailable: "Confirming with Google isn't available here right now. You can set a password instead: sign out, choose \"Forgot your password?\" on the sign-in screen, then come back here.",
   },
+  // The app tour (D136): offered once to someone new, any time from You; read aloud if they like.
+  // Each stop's words are what the voice says too (its title, then its words), so text and voice never differ.
+  tour: {
+    label: "App tour",
+    offerTitle: "Welcome to {brand}",
+    offerBody: "A short tour shows you around: where you'll meet people, how a match happens, and how to stay safe.",
+    readAloud: "Read it aloud",
+    start: "Start the tour",
+    later: "Not now",
+    laterHint: "You can take it any time from You, under App tour.",
+    progress: "{n} of {total}",
+    tapStops: "You can also tap a stop on the line below to go straight to it.",
+    back: "Back",
+    next: "Next",
+    done: "Done",
+    close: "Close the tour",
+    listen: "Listen again",
+    speaking: "Reading aloud",
+    noVoice: "Reading aloud isn't available in this browser. Everything the tour says is written here.",
+    voiceFailed: "Reading aloud didn't work on this device, so it's off for now. Everything the tour says is written here.",
+    createProfile: "Create your profile",
+    replay: "App tour",
+    replayHint: "How the app works, read aloud if you like",
+    aMinute: "a minute",
+    minutes: "{n} minutes",
+    stops: {
+      today: {
+        title: "Today",
+        body: "Every day you get a short set of introductions: people whose intention and preferences fit yours, both ways. Open a profile to like or pass. Everyone gets the same few likes a day. Introductions start once your profile has 2 approved photos.",
+      },
+      likes: {
+        title: "Likes",
+        body: "People who liked you wait here until you decide. Like them back and it's a match.",
+      },
+      live: {
+        title: "Live",
+        body: "Meet someone new on a short video call, only with people whose preferences match yours. Their video stays hidden until you choose to see it, and you can end, move on or report at any moment. If you both like each other afterwards, it's a match.",
+      },
+      matches: {
+        title: "Matches",
+        body: "Everyone you've matched with, and your chats. Only matches can message each other. When a few people are waiting for your reply, new likes wait until you've answered.",
+      },
+      you: {
+        title: "You",
+        body: "Your profile and photos, who you'd like to meet, notifications, and privacy, where you can pause introductions or choose who sees you. New photos are reviewed before anyone else sees them.",
+      },
+      safety: {
+        title: "Staying safe",
+        body: "On a profile, Block and Report are at the end. In a chat, they're under More options, with Unmatch. Reports are private, and you can follow them under Safety. Never send money, or share an OTP or UPI PIN, with someone you haven't met.",
+      },
+      finish: {
+        title: "That's the tour",
+        body: "You can take it again any time from You, under App tour.",
+      },
+    },
+    // Live's allowance, from the server's own numbers (never written into the words).
+    liveFree: "Your first {n} calls are free, up to {length} each. After that, calls come with {plan}.",
+    // Said first on the last stop while there's no profile yet.
+    startProfile: "Start with your profile: your intention, and 2 photos for review.",
+  },
 } as const;
 
 export const t = en;

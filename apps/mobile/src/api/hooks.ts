@@ -16,9 +16,11 @@ export type MyProfile = Schemas["MyProfileOut"];
 export type Photo = Schemas["PhotoOut"];
 export type ProfileBody = Schemas["ProfileIn"];
 
-export function useMyProfile() {
+/** `enabled: false` waits until it's needed (the app tour asks only while it's open). */
+export function useMyProfile({ enabled = true }: { enabled?: boolean } = {}) {
   const { api } = useAuth();
   return useQuery({
+    enabled,
     queryKey: keys.profile,
     queryFn: async (): Promise<MyProfile | null> => {
       try {

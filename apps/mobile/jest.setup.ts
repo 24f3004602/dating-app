@@ -32,6 +32,16 @@ jest.mock("expo-notifications", () => ({
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
+// expo-speech has no native module under Jest: what the app tour would say is recorded (D136).
+jest.mock("expo-speech", () => ({
+  speak: jest.fn(),
+  stop: jest.fn(async () => undefined),
+  getAvailableVoicesAsync: jest.fn(async () => []),
+  isSpeakingAsync: jest.fn(async () => false),
+  maxSpeechInputLength: 4000,
+  VoiceQuality: { Default: "Default", Enhanced: "Enhanced" },
+}));
+
 // A screen's top-bar actions render in place under Jest (no navigator; src/test/expoRouter.ts).
 // Files that mock expo-router themselves win.
 jest.mock("expo-router", () => require("@/test/expoRouter").expoRouterInPlace());

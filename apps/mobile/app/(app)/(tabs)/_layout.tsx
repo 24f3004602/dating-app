@@ -2,6 +2,7 @@ import { TabList, TabSlot, TabTrigger, Tabs } from "expo-router/ui";
 import { StyleSheet } from "react-native";
 
 import { t } from "@/i18n/en";
+import { TourStage } from "@/tour/TourStage";
 import { color } from "@/theme/tokens";
 import { LineBar, Stop } from "@/ui/LineTabBar";
 import { BETWEEN_BARS, ScreenEdges } from "@/ui/primitives";
@@ -14,9 +15,12 @@ export default function TabsLayout() {
   return (
     <Tabs style={styles.root}>
       <SignBand />
-      {/* The band covers the top edge and the bar the bottom one. */}
+      {/* The band covers the top edge and the bar the bottom one. The app tour's card (D136)
+          sits over the place it describes, between the two. */}
       <ScreenEdges.Provider value={BETWEEN_BARS}>
-        <TabSlot style={styles.slot} />
+        <TourStage>
+          <TabSlot style={styles.slot} />
+        </TourStage>
       </ScreenEdges.Provider>
       <TabList asChild>
         <LineBar label={t.tabs.label}>

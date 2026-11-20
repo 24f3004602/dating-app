@@ -333,6 +333,16 @@ export function ExternalLink({ label, url }: { label: string; url: string }) {
   );
 }
 
+/** An action set like a link (Close the tour, Listen again): underlined, with a 44-point target. */
+export function TextButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const focusRingStyle = useRing();
+  return (
+    <Pressable role="button" aria-label={label} onPress={onPress} style={(state) => [styles.link, focusStyle(state, focusRingStyle)]}>
+      {({ pressed }) => <Text style={[styles.linkText, pressed && styles.linkPressed]}>{label}</Text>}
+    </Pressable>
+  );
+}
+
 type FieldProps = TextInputProps & { label: string; error?: string; hint?: string };
 
 export function TextField({ label, error, hint, style, multiline, onFocus, onBlur, ...input }: FieldProps) {

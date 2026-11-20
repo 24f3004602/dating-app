@@ -10,7 +10,7 @@
 import { expect, test } from "@playwright/test";
 
 import { PHOTO } from "../env";
-import { checkA11y, codeFromWorkerMail, PASSWORD, watchErrors } from "./helpers";
+import { checkA11y, codeFromWorkerMail, dismissTourOffer, PASSWORD, watchErrors } from "./helpers";
 
 test("sign up, verify, create a profile, add a photo, set privacy, sign out", async ({ page }) => {
   const errors = await watchErrors(page); // console errors, policy breaches and 5xx answers
@@ -44,8 +44,12 @@ test("sign up, verify, create a profile, add a photo, set privacy, sign out", as
   await page.getByLabel("Code", { exact: true }).fill(code);
   await page.getByRole("button", { name: "Confirm" }).click();
 
-  // No profile yet: the empty state, with honest labels.
+  // No profile yet: the empty state, with honest labels. Someone new is offered the app
+  // tour first (D136; tour.spec.ts takes it): not now.
   await expect(page.getByRole("heading", { name: "Let's set up your profile" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "App tour" })).toBeVisible();
+  await checkA11y(page, "tour-offer");
+  await dismissTourOffer(page);
   await expect(page.getByText("Age declared · Email verified · Identity not checked")).toBeVisible();
   await checkA11y(page, "profile-empty");
   await page.getByRole("button", { name: "Create your profile" }).click();

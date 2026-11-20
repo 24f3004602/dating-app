@@ -17,9 +17,10 @@ export type PlanOut = Schemas["PlanOut"];
 export type SubscriptionOut = Schemas["SubscriptionOut"];
 export type PlusPaymentOut = Schemas["PlusPaymentOut"];
 
-export function useLive() {
+/** `enabled: false` waits until it's needed (the app tour asks only while it's open). */
+export function useLive({ enabled = true }: { enabled?: boolean } = {}) {
   const { api } = useAuth();
-  return useQuery({ queryKey: liveKeys.live, queryFn: () => unwrap(api.GET("/v1/live")) });
+  return useQuery({ queryKey: liveKeys.live, queryFn: () => unwrap(api.GET("/v1/live")), enabled });
 }
 
 export function useAcceptLiveRules() {
