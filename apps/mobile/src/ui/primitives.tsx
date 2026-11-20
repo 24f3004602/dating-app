@@ -426,9 +426,13 @@ export function Checkbox({ label, checked, onChange, error }: { label: string; c
 export function SwitchRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <View style={styles.switchRow}>
+      {/* The label is a second place to tap, not a second stop for the Tab key: React Native
+          Web's Pressable makes itself tabbable (tabIndex 0) unless told otherwise, whatever
+          `focusable` says, which put a hidden stop before every switch (found 2026-11-20). */}
       <Pressable
         accessible={false}
         focusable={false}
+        tabIndex={-1}
         aria-hidden
         importantForAccessibility="no-hide-descendants"
         onPress={() => onChange(!value)}

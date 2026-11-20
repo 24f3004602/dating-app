@@ -297,6 +297,11 @@ test("a setting that takes effect at once is a switch named by its label, and th
   expect(onChange).toHaveBeenLastCalledWith(true);
   // The label is a second place to tap, not a second control: screen readers meet only the switch.
   expect(screen.queryByText("Pause new introductions")).toBeNull();
+  // Nor a stop for the Tab key on the web (React Native Web's Pressable is tabbable unless told).
+  const label = screen.getByText("Pause new introductions", { includeHiddenElements: true });
+  let host = label.parent;
+  while (host && host.props.onClick === undefined && host.props.tabIndex === undefined) host = host.parent;
+  expect(host?.props.tabIndex).toBe(-1);
   await fireEvent.press(screen.getByText("Pause new introductions", { includeHiddenElements: true }));
   expect(onChange).toHaveBeenLastCalledWith(true);
   expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
