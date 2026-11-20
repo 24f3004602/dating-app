@@ -54,6 +54,8 @@ Success is measured in a single-city beta (`replica/fixes.md`, A3): profiles com
 
 - **Working name: Kinaara** ("shore" in Hindi and Urdu), not yet cleared (trademark search pending).
 - **Calm and honest:** no urgency, countdowns, streaks, confetti or other gamification (D098).
+- **Ads (D137, the owner's choice):** only in the Android app and only for members without Plus; non-personalised;
+  never in chats, Live, profiles, Safety, payments, sign-up, the tour or someone's first day.
 - **No people in visuals:** stock with people would imply members who don't exist, and stock licences bar people in dating promotion (D099).
 - **Never manufacture** likes, matches, messages, members, verification badges or activity, in product or in marketing.
 

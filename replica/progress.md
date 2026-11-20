@@ -4,6 +4,14 @@ Updated: 2026-11-20
 
 ## Current phase
 
+**Stage 25 (launch, ads and the Reel, D137-D139) has started (2026-11-20), at the owner's request:** "now every thing is working , now make a strategy to launch it and video to post it on instagram for getting views and make it available for google ads and also turn off ads when subscription is on"; then "Both" (ads in the app and Google Search ads) and "Banners + full-screen ads".
+- **25a, ads in the Android app (D137): built and tested; off by default.** Banners on Today, Likes and Matches; full-screen ads only at a natural break, capped; non-personalised; none with Plus (the SDK never starts), none in the web app. Real ads need the app public on Google Play and the owner's AdMob IDs (deploy.md, In-app ads).
+- **25b, documents `beta-2026-11-20` (D139):** the privacy notice gains ads; the terms gain Google's dating-certification bans and Plus's no ads. Not yet released.
+- **25c, the Reel (D138):** `marketing/reel`, English and Hinglish, rendered by the `reel` workflow; samples checked by eye.
+- **25d, the launch plan (D139):** `replica/launch/launch-plan.md` and the Play listing (`listing.json`, linted).
+- **Found and fixed:** BUG-006, a hidden Tab stop before every switch in the web app.
+- **Not yet:** CI on these commits, the Reel's MP4s, the owner's go for releasing the documents and the app, a test-ads APK on the owner's Pixel (NAT-ADS-1).
+
 **Stage 24 (the app tour, D136) has started (2026-11-20), at the owner's request:** "add interactive app tour in text and voice for new user so that they can understaand how to use it and what features do my app has".
 - **24a, the app tour: built, tested, CI green, released to the beta and on the owner's Pixel (2026-11-20, the owner's "release when green").**
   - **What:** a card over the place it describes walks the line in 7 stops (Today, Likes, Live, Matches, You, Staying safe, the end), each opening its real place behind the card; a tap on a stop takes the tour there; offered once per device to an account under 30 days old, and any time from You (App tour). Read aloud by the device's own voice (expo-speech 58.0.4: Android's text-to-speech, the browser's speech in the web app), Indian English first, exactly the card's words, a sentence at a time; off on request (remembered) or with a phone's screen reader; a failing voice falls back once, then turns off and says so. Live's numbers come from the server; Plus isn't priced in it. A new native module, so the phone needs a new APK.
@@ -570,6 +578,8 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 9. ~~**Sign in with Google (D134):** the Web client's ID and secret in `infra/beta/.env`~~ **Done 2026-11-19:** in `.env`, checked, the API restarted; Google is on in the beta. A release signing key (Play) will need its own Android client.
 
 ## Next
+
+**Stage 25 (2026-11-20):** ads in the app (off), documents `beta-2026-11-20`, the Reel and the launch plan are built. Next: CI and the Reel's render, the owner's go for the release, then phase 0 of the launch plan (the Mumbai server, the lawyer, the Play, AdMob, Google Ads and Meta accounts).
 
 **Stage 24 (2026-11-20):** the app tour (D136) is live in the web app and on the owner's Pixel; its voice speaks Indian English on the phone. Next: the owner takes it (You, App tour) and says what to change; TalkBack with the tour (NAT-TOUR-1); then the rest of GOOGLE-M1.
 

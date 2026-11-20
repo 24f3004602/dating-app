@@ -42,6 +42,8 @@ Where members meet, decide and talk: today's introductions, a person's profile, 
 
 - Working name Kinaara ("shore"), provisional and configurable (`BRAND_NAME`): never baked into images.
 - Calm and honest: no urgency, countdowns, streaks, confetti or gamification (D098).
+- Ads (D137, the owner's choice): only in the Android app, only for members without Plus, non-personalised, never in chats, Live,
+  profiles, Safety, payments, sign-up, the tour or someone's first day; full-screen ones only at natural breaks.
 - No people in visuals (D099). Never manufacture likes, matches, messages, members, badges or activity.
 
 ## Evidence on Hand

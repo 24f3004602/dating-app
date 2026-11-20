@@ -274,6 +274,28 @@ The privacy notice promises all this within 30 days of the end.
 - **Documents:** the notice hasn't had legal review.
 - **Email:** Gmail's sending limits apply.
 - **Staff sign-in limits:** the console's server doesn't pass the visitor's IP to the API, so per-IP limits on staff sign-in count all staff together. That's stricter, not weaker, but an attack on the console could lock staff out for a while.
+### In-app ads (D137): switching them on
+
+Built and off. Ads exist only in Android builds made with `ads` set to `test` or `live` in the
+`android-apk` workflow; the web app never has them. In order:
+
+1. **The documents:** `beta-2026-11-20` names ads in the privacy notice. Release it (the website,
+   the API's compose and the app image together, as for every version) before any build with
+   ads reaches testers, and tell existing testers first.
+2. **Test ads on a phone:** run `android-apk` with `ads: test`: Google's test units ("Test Ad")
+   under Google's test app ID. Install on the owner's phone only.
+3. **The owner's accounts:** Google Play (the app public there: AdMob links only store-listed
+   Android apps) and AdMob: add the Android app, link it to the Play listing, make a banner unit
+   and an interstitial unit. Set AdMob's blocking controls (dating, matrimonial and adult
+   categories; competitors' URLs). Put `app-ads.txt` with the publisher line AdMob shows on
+   kinaara.online.
+4. **A live build:** `android-apk` with `ads: live` and the app ID and both unit IDs (public IDs,
+   not secrets). `app.config.ts` refuses a live build with missing or test IDs. Upload the
+   release build to Play, not this debug-signed APK.
+
+Plus members never see ads and their app never starts the SDK. To turn ads off, build with
+`ads: off`.
+
 ### Live calls and the plan: switching them on (stage 23, D123, D124)
 
 Live and the plan are built but off on the beta until these settings are in:

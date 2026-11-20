@@ -91,6 +91,22 @@ Evidence: uiautomator view bounds and the window's `statusBars` inset (151 px); 
 Suspected cause: confirmed. `Screen` padded all four edges with SafeAreaView, so the inset the bar already covers was added again. The web build's top inset is 0, so the browser tests couldn't see it.
 Status: fixed (stage 20e slice 2, not yet committed). A `ScreenEdges` context: the stacks leave the top to their bar, the tabs leave the top to the band and the bottom to the line bar, and the welcome screen pads every edge. MOB-20 mutation-checked: removing the fix fails all 3 cases. Measured on the phone afterwards: 24 dp.
 
+### BUG-006: a hidden Tab stop before every switch in the web app
+
+- Severity: S3
+- Flow / case: keyboard use of a setting (Privacy's Pause, the notification kinds, the tour's Read it aloud)
+- Screen: Privacy, Notifications, the app tour's card
+- Build: working tree on `1a96747` (stage 25)  Browser / device: Chrome 1xx through the react-native-web preview
+
+Steps
+1. Open the tour's offer and press Tab from the card's heading.
+
+Expected: focus moves to the switch, then to the buttons.
+Actual: focus first lands on the switch's label, a box with nothing for a screen reader (it is `aria-hidden`), with the browser's focus ring around it; then the switch.
+Evidence: the label rendered as `<div aria-hidden="true" tabindex="0">` (the preview's DOM, 2026-11-20).
+Suspected cause: confirmed. React Native Web's Pressable sets `tabIndex` 0 unless one is given, whatever `focusable={false}` says.
+Status: fixed (stage 25): the label has `tabIndex={-1}`; MOB-35 checks it (and fails without the fix). After the fix the Tab order is the switch, then the buttons, then the line bar.
+
 ## To check
 
 - **A dev-only "NAVIGATE … was not handled by any navigator" console error** (2026-11-11, Expo Go 58.0.5 on the owner's Pixel 8 Pro). It appeared once, when an `exp://…/--/discover` link was sent to an app still running a bundle from a dev server that had just been stopped. The app still opened on Today. Not reproduced on a cold start with the same link. Check in a development build: open a deep link (a notification, a reset email) while the app is starting.

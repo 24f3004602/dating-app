@@ -338,6 +338,14 @@ A modal bottom sheet: white, square, under a 2-point graphite rule, 24 padding, 
 ### Tour card (D136)
 The app tour's card is the sheet's cousin, docked over the place it describes rather than over everything: white and square under a 2-point graphite rule, at most 560 wide, the place showing through the graphite scrim at 0.4 above it, the sign band and the line bar left uncovered (the bar stays live, so its stops move the tour). Its head is the tour's own line: one station roundel (18, 3-point graphite) per stop on a teal rail, the ones reached filled graphite, with "n of 7" in caption beside it. Then the stop's name on a graphite plate in the sign face, its words in body type, and once, a caption that the stops can be tapped. The controls never scroll away: Read it aloud (Android's switch), Back and Next as a secondary and a primary plate side by side (Done on the last stop; Create your profile above them, as the one marigold plate, while there's no profile), and Listen again and Close the tour as underlined teal text buttons at either end of the last row. The offer is the same card without the line: Start the tour (marigold), Not now, and where to find it later. It rises once as it appears and the words fade between stops (fast), both still with reduce motion. The card's name takes focus when it appears; between stops focus stays on the button pressed and the new words are a polite live region.
 
+### Ad banner (D137)
+In builds with ads, members without Plus see Google's anchored adaptive banner at the foot of
+Today, Likes and Matches only, between the place and the line bar: a 1-point platform-line
+hairline over it and the word "Ad" in caption type (read as "Advertisement"), so it never passes
+for the app's own content. It takes no room when there's no ad. Full-screen ads are Google's own
+screens, only at a natural break (back on Today from a profile). Never in chats, Live, profiles,
+Safety, payments, sign-up or the tour; nothing in the web app.
+
 ### Chat
 Two lines of square plates: yours teal with white text on the right, theirs marigold with ink text on the left, each with who and when beneath in caption. A removed message is white with a platform-line border and muted text, never italic (Anek has none).
 
