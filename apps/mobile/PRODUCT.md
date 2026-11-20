@@ -34,7 +34,7 @@ Where members meet, decide and talk: today's introductions, a person's profile, 
 
 ## Capabilities and Constraints
 
-- React Native with Expo Router; motion only with React Native's own Animated (no new native libraries without the owner's go, D098); accessible primitives in `src/ui/primitives.tsx`; tokens in `src/theme/tokens.ts`, kept equal to `replica/design/tokens.json` by a test.
+- React Native with Expo Router; motion only with React Native's own Animated (no new native libraries without the owner's go, D098; expo-speech reads the app tour aloud at the owner's request, D136); accessible primitives in `src/ui/primitives.tsx`; tokens in `src/theme/tokens.ts`, kept equal to `replica/design/tokens.json` by a test.
 - The app's CSP (`infra/beta/app-csp.txt`) allows fonts only from its own origin and data URLs.
 - Every screen has empty, loading, error and filled states; the web e2e suite with axe runs on each change.
 

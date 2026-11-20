@@ -1,8 +1,14 @@
 # Progress
 
-Updated: 2026-11-19
+Updated: 2026-11-20
 
 ## Current phase
+
+**Stage 24 (the app tour, D136) has started (2026-11-20), at the owner's request:** "add interactive app tour in text and voice for new user so that they can understaand how to use it and what features do my app has".
+- **24a, the app tour: built and tested locally; not yet in CI, released or on the phone.**
+  - **What:** a card over the place it describes walks the line in 7 stops (Today, Likes, Live, Matches, You, Staying safe, the end), each opening its real place behind the card; a tap on a stop takes the tour there; offered once per device to an account under 30 days old, and any time from You (App tour). Read aloud by the device's own voice (expo-speech 58.0.4: Android's text-to-speech, the browser's speech in the web app), Indian English first, exactly the card's words, a sentence at a time; off on request (remembered) or with a phone's screen reader; a failing voice falls back once, then turns off and says so. Live's numbers come from the server; Plus isn't priced in it. A new native module, so the phone needs a new APK.
+  - **Checks:** app Jest 226 (TOUR-APP-1..10; 6 mutations caught) and `tsc` clean; a react-native-web preview of the real card at 390, 320 and 1280 px under the app's CSP (four layout faults found and fixed first; test-plan Results); E2E-19 written, and the sign-up helper and the onboarding spec answer the new offer.
+  - **Not yet:** CI (mobile with e2e), the release to the beta (the app image; the API is unchanged) and the APK on the owner's Pixel (NAT-TOUR-1: the voice, TalkBack, Back).
 
 **Stage 23 (Live calls and the plan, D123-D125) has started (2026-11-18), at the owner's request:** "mera mobile app aur website aisa bnao ki log iski tarf attract ho ... dono mein same frontend hona chahiye ... isme ek random video call with strangers vaali option bhi daalo. pehli 5 calls ek minute ke liye free rakho fir subscription mode on karo."
 - **23a, Live and the plan: built and tested; committed as `776eb12`. Not live; off on the beta until the owner's relay key and documents (deploy.md, "Live calls and the plan").**
@@ -562,6 +568,8 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 9. ~~**Sign in with Google (D134):** the Web client's ID and secret in `infra/beta/.env`~~ **Done 2026-11-19:** in `.env`, checked, the API restarted; Google is on in the beta. A release signing key (Play) will need its own Android client.
 
 ## Next
+
+**Stage 24 (2026-11-20):** the app tour (D136) is built and tested locally. Next: CI, then the owner's go for the release (the app image and the APK), then NAT-TOUR-1 on the owner's Pixel.
 
 **Stage 23 (2026-11-19):** Live, the UPI pass, open sign-up and the documents are live on the beta (above). Sign in with Google (23e, D134) is on in the beta, and the owner's phone signed in with it. The full-width Google button (D135) is live in the web app and on the owner's phone. Next: the rest of GOOGLE-M1 (a sign-in on the web app, someone new through Google, deleting through Google).
 
