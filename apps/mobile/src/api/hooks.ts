@@ -196,6 +196,8 @@ export function useDecide() {
   const { api } = useAuth();
   const qc = useQueryClient();
   return useMutation({
+    // Named, so in-app ads can count decisions for their natural breaks (D137).
+    mutationKey: ["decide"],
     mutationFn: (body: Schemas["InteractionIn"]) => unwrap(api.POST("/v1/interactions", { body })),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: discoveryKeys.today });

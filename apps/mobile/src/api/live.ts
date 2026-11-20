@@ -37,9 +37,10 @@ export function usePlan() {
   return useQuery({ queryKey: liveKeys.plan, queryFn: () => unwrap(api.GET("/v1/plan")), staleTime: 10 * 60_000 });
 }
 
-export function useSubscription() {
+/** `enabled: false` never asks (a build without ads has no use for it outside the plan screen). */
+export function useSubscription({ enabled = true }: { enabled?: boolean } = {}) {
   const { api } = useAuth();
-  return useQuery({ queryKey: liveKeys.subscription, queryFn: () => unwrap(api.GET("/v1/me/subscription")) });
+  return useQuery({ queryKey: liveKeys.subscription, queryFn: () => unwrap(api.GET("/v1/me/subscription")), enabled });
 }
 
 /** The pass payment in progress (D127): while it's being checked, look again every 30 seconds. */

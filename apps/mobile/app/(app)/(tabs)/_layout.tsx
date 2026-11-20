@@ -1,6 +1,7 @@
 import { TabList, TabSlot, TabTrigger, Tabs } from "expo-router/ui";
 import { StyleSheet } from "react-native";
 
+import { AdBanner } from "@/ads/AdBanner";
 import { t } from "@/i18n/en";
 import { TourStage } from "@/tour/TourStage";
 import { color } from "@/theme/tokens";
@@ -22,6 +23,8 @@ export default function TabsLayout() {
           <TabSlot style={styles.slot} />
         </TourStage>
       </ScreenEdges.Provider>
+      {/* The lists' banner (D137), above the line; nothing in the web app or for Plus. */}
+      <AdBanner />
       <TabList asChild>
         <LineBar label={t.tabs.label}>
           <TabTrigger name="discover" href="/discover" asChild>

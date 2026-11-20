@@ -1,6 +1,7 @@
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
+import { AdsProvider } from "@/ads/AdsProvider";
 import { useAuth } from "@/auth/AuthProvider";
 import { useReducedMotion } from "@/ui/motion";
 import { t } from "@/i18n/en";
@@ -20,15 +21,18 @@ export default function AppLayout() {
     <RealtimeProvider>
       {/* The app tour (D136): offered to someone new, any time from You. */}
       <TourProvider>
-        <NotificationRouter />
-        <StatusBar style="light" />
-        {/* The top bar covers the top edge; the tabs set their own edges. */}
-        <ScreenEdges.Provider value={UNDER_TOP_BAR}>
-          <Stack screenOptions={{ ...signHeader, headerShown: true, title: "", animation: reduced ? "none" : "default" }}>
-            {/* The four main places carry their own sign band and bottom bar (stage 20e). */}
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-        </ScreenEdges.Provider>
+        {/* In-app ads (D137): the Android app only, for members without Plus. */}
+        <AdsProvider>
+          <NotificationRouter />
+          <StatusBar style="light" />
+          {/* The top bar covers the top edge; the tabs set their own edges. */}
+          <ScreenEdges.Provider value={UNDER_TOP_BAR}>
+            <Stack screenOptions={{ ...signHeader, headerShown: true, title: "", animation: reduced ? "none" : "default" }}>
+              {/* The four main places carry their own sign band and bottom bar (stage 20e). */}
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+          </ScreenEdges.Provider>
+        </AdsProvider>
       </TourProvider>
     </RealtimeProvider>
   );

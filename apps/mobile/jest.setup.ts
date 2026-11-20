@@ -42,6 +42,9 @@ jest.mock("expo-speech", () => ({
   VoiceQuality: { Default: "Default", Enhanced: "Enhanced" },
 }));
 
+// Google's ads SDK has no native module under Jest: stand-ins that record what was asked (D137).
+jest.mock("react-native-google-mobile-ads", () => require("@/test/googleMobileAds").fakeGoogleMobileAds());
+
 // A screen's top-bar actions render in place under Jest (no navigator; src/test/expoRouter.ts).
 // Files that mock expo-router themselves win.
 jest.mock("expo-router", () => require("@/test/expoRouter").expoRouterInPlace());

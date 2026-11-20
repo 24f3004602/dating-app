@@ -460,6 +460,8 @@ export const en = {
     name: "{brand} Plus",
     what: "What you get",
     perks: ["Live video calls after your free ones", "Calls up to {minutes} minutes instead of one"],
+    // Shown with the perks only in builds that have ads (D137).
+    noAds: "No ads in the app",
     fairness: "The same price for everyone. It never changes who sees you or how many likes you get.",
     renews: "Renews automatically every {period}. Stop renewing at any time here; you keep it until the end of what you've paid for.",
     subscribe: "Get {plan}",
@@ -540,6 +542,11 @@ export const en = {
     withGoogle: "Your account signs in with Google. To confirm it's you, choose your Google account again: the deletion starts as soon as you do.",
     withGoogleHint: "Opens Google to confirm it's you.",
     googleUnavailable: "Confirming with Google isn't available here right now. You can set a password instead: sign out, choose \"Forgot your password?\" on the sign-in screen, then come back here.",
+  },
+  // In-app ads (D137): the Android app only, for members without Plus.
+  ads: {
+    label: "Ad",
+    spoken: "Advertisement",
   },
   // The app tour (D136): offered once to someone new, any time from You; read aloud if they like.
   // Each stop's words are what the voice says too (its title, then its words), so text and voice never differ.

@@ -16,6 +16,24 @@ on:
         description: The working name shown in the app
         required: true
         default: Kinaara
+      ads:
+        description: "In-app ads (D137): off, test (Google's test ads) or live (the owner's AdMob IDs below)"
+        required: true
+        default: "off"
+        type: choice
+        options: ["off", "test", "live"]
+      admob_app_id:
+        description: "Live ads only: the AdMob app ID (ca-app-pub-...~...)"
+        required: false
+        default: ""
+      admob_banner_id:
+        description: "Live ads only: the banner ad unit ID (ca-app-pub-.../...)"
+        required: false
+        default: ""
+      admob_interstitial_id:
+        description: "Live ads only: the full-screen (interstitial) ad unit ID"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -31,6 +49,10 @@ jobs:
     env:
       DOMAIN: ${{ inputs.domain }}
       BRAND_NAME: ${{ inputs.brand_name }}
+      ADS: ${{ inputs.ads }}
+      ADMOB_APP_ID: ${{ inputs.admob_app_id }}
+      ADMOB_BANNER_ID: ${{ inputs.admob_banner_id }}
+      ADMOB_INTERSTITIAL_ID: ${{ inputs.admob_interstitial_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -39,6 +61,10 @@ jobs:
         run: |
           [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || { echo "not a domain: $DOMAIN"; exit 1; }
           [[ "$BRAND_NAME" =~ ^[A-Za-z][A-Za-z0-9\ ]{0,39}$ ]] || { echo "not a name: $BRAND_NAME"; exit 1; }
+          # AdMob IDs are public (they ship inside the app); the app's config checks their shape again.
+          for id in "$ADMOB_APP_ID" "$ADMOB_BANNER_ID" "$ADMOB_INTERSTITIAL_ID"; do
+            [[ -z "$id" || "$id" =~ ^ca-app-pub-[0-9]{16}[~/][0-9]{10}$ ]] || { echo "not an AdMob ID: $id"; exit 1; }
+          done
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
@@ -54,10 +80,14 @@ jobs:
             echo "APP_VARIANT=beta"
             echo "EXPO_PUBLIC_API_URL=https://api.$DOMAIN"
             echo "EXPO_PUBLIC_WEB_URL=https://$DOMAIN"
-            echo "EXPO_PUBLIC_TERMS_VERSION=beta-2026-11-19c"
-            echo "EXPO_PUBLIC_PRIVACY_VERSION=beta-2026-11-19c"
+            echo "EXPO_PUBLIC_TERMS_VERSION=beta-2026-11-20"
+            echo "EXPO_PUBLIC_PRIVACY_VERSION=beta-2026-11-20"
             echo "EXPO_PUBLIC_BRAND_NAME=$BRAND_NAME"
             echo "EXPO_PUBLIC_WEB_CHECKOUT=1"
+            echo "EXPO_PUBLIC_ADS=$ADS"
+            echo "ADMOB_ANDROID_APP_ID=$ADMOB_APP_ID"
+            echo "EXPO_PUBLIC_ADMOB_BANNER_ID=$ADMOB_BANNER_ID"
+            echo "EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID=$ADMOB_INTERSTITIAL_ID"
           } >> "$GITHUB_ENV"
       - name: Generate the native project
         working-directory: apps/mobile

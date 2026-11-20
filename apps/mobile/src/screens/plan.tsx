@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { Image, Linking, Platform, StyleSheet, View } from "react-native";
 
+import { ADS_IN_BUILD } from "@/ads/config";
 import {
   type PlanOut,
   type SubscriptionOut,
@@ -221,7 +222,7 @@ export function PlanScreen({ canPay = WEB_CHECKOUT }: { canPay?: boolean } = {})
       {plan.data.available ? <Heading>{isPass ? passLine(plan.data) : priceLine(plan.data)}</Heading> : null}
       <Body muted>{t.plan.what}</Body>
       <View style={{ gap: space.sm }}>
-        {t.plan.perks.map((perk, i) => (
+        {(ADS_IN_BUILD ? [...t.plan.perks, t.plan.noAds] : t.plan.perks).map((perk, i) => (
           <Body key={perk}>{`${i + 1}. ${fill(perk, { minutes })}`}</Body>
         ))}
       </View>
