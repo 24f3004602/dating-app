@@ -1,0 +1,45 @@
+name: reel
+
+# The Instagram Reel (D138), rendered by hand: Chrome draws every frame of
+# marketing/reel/reel.html and ffmpeg joins them into MP4s (English and Hinglish, 1080 x 1920,
+# 30 fps, H.264 with a silent AAC track) with a cover each, kept for 14 days. Nothing is posted
+# anywhere: the owner uploads them to Instagram.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Chrome and ffmpeg
+        run: |
+          google-chrome --version
+          command -v ffmpeg || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          ffmpeg -version | head -1
+      - name: Render the reel (English and Hinglish)
+        run: node marketing/reel/render.mjs en hi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reel
+          path: |
+            marketing/reel/out/*.mp4
+            marketing/reel/out/*.jpg
+            marketing/reel/out/samples/*.png
+          retention-days: 14
+          if-no-files-found: error

@@ -1,0 +1,252 @@
+<!doctype html>
+<!--
+  The Instagram Reel (D138): 1080 x 1920, 23 seconds, drawn frame by frame by render.mjs, which
+  calls window.render(t) for each frame. Nothing moves on its own: every position comes from t.
+  The Interchange's own world (the app's tokens, Anek, the two lines, roundels, sign plates and
+  the two rings) and one real capture of the app. No people, no members, no numbers we don't use.
+  Key words stay inside Instagram's safe area (about 260 px from the top, 640 from the bottom,
+  80 at the sides). ?lang=en (English) or ?lang=hi (Hinglish).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kinaara reel</title>
+<style>
+@font-face { font-family: "Anek-Text"; src: url(../../apps/mobile/assets/fonts/anek-text.ttf); }
+@font-face { font-family: "Anek-Sign"; src: url(../../apps/mobile/assets/fonts/anek-sign.ttf); }
+@font-face { font-family: "Anek-Display"; src: url(../../apps/mobile/assets/fonts/anek-display.ttf); }
+:root {
+  --bg: #ffffff; --surface: #f5f3f0; --sign: #1c1b19; --on-sign: #ffffff; --on-sign-muted: #d6d2cb;
+  --text: #1c1b19; --muted: #5c5852; --teal: #0e6670; --marigold: #f5b544;
+}
+html, body { margin: 0; background: #000; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); font-family: "Anek-Text"; color: var(--text); }
+.layer { position: absolute; inset: 0; }
+.plate { display: inline-block; background: var(--sign); color: var(--on-sign); font-family: "Anek-Sign"; line-height: 1; }
+.rails { position: absolute; display: grid; gap: 8px; }
+.rails span { display: block; height: 14px; }
+.rails span:first-child { background: var(--teal); }
+.rails span:last-child { background: var(--marigold); }
+
+/* 1. The hook, on graphite. */
+#hook { background: var(--sign); }
+#hook .lines { position: absolute; left: 80px; top: 540px; font-family: "Anek-Display"; font-size: 124px; line-height: 120px; color: var(--on-sign); }
+#hook .lines div { will-change: transform, opacity; }
+#hook .rails { left: 80px; top: 990px; width: 920px; }
+
+/* 2. The lines meet at the interchange. */
+#meet .slogan { position: absolute; left: 80px; right: 80px; top: 1150px; text-align: center; font-family: "Anek-Sign"; font-size: 76px; line-height: 84px; }
+#meet .brand { position: absolute; left: 0; right: 0; top: 1010px; text-align: center; }
+#meet .brand .plate { font-size: 92px; padding: 10px 26px; letter-spacing: 4px; }
+
+/* 3. The stops on the line. */
+#stops .heading { position: absolute; left: 80px; top: 270px; font-family: "Anek-Sign"; font-size: 46px; color: var(--muted); }
+#stops .rail { position: absolute; top: 380px; width: 14px; }
+#stops .stop { position: absolute; left: 0; width: 1080px; height: 190px; }
+#stops .roundel { position: absolute; left: 136px; top: -30px; width: 60px; height: 60px; box-sizing: border-box; border-radius: 50%; border: 10px solid var(--sign); background: var(--bg); }
+#stops .name { position: absolute; left: 236px; top: -36px; }
+#stops .name .plate { font-size: 54px; padding: 8px 18px; }
+#stops .words { position: absolute; left: 236px; top: 44px; width: 764px; font-size: 38px; line-height: 48px; }
+
+/* 4. The real app. */
+#app { background: var(--surface); }
+#app .caption { position: absolute; left: 80px; right: 80px; top: 270px; }
+#app .caption .plate { font-size: 58px; padding: 8px 20px; }
+#app .caption p { margin: 20px 0 0; font-size: 42px; line-height: 54px; }
+#app .phone { position: absolute; left: 240px; top: 520px; width: 560px; border: 20px solid var(--sign); border-radius: 56px; overflow: hidden; background: var(--bg); }
+#app .phone img { display: block; width: 560px; }
+
+/* 5. Where to find it, on graphite. */
+#end { background: var(--sign); color: var(--on-sign); text-align: center; }
+#end .brand { position: absolute; left: 0; right: 0; top: 700px; font-family: "Anek-Display"; font-size: 136px; line-height: 136px; }
+#end .facts { position: absolute; left: 80px; right: 80px; top: 880px; font-size: 46px; line-height: 58px; color: var(--on-sign-muted); }
+#end .url { position: absolute; left: 0; right: 0; top: 990px; font-family: "Anek-Sign"; font-size: 96px; line-height: 100px; }
+#end .rails { left: 240px; width: 600px; top: 1110px; }
+#end .bio { position: absolute; left: 0; right: 0; top: 1180px; font-size: 44px; color: var(--on-sign-muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="meet">
+    <svg width="1080" height="1920" viewBox="0 0 1080 1920" style="position:absolute;inset:0">
+      <path id="teal-line" d="M -40 600 H 360 L 540 780" fill="none" stroke="#0e6670" stroke-width="30" stroke-linejoin="miter" />
+      <path id="marigold-line" d="M 1120 960 H 720 L 540 780" fill="none" stroke="#f5b544" stroke-width="30" stroke-linejoin="miter" />
+      <circle id="ring-teal" cx="540" cy="780" r="78" fill="none" stroke="#0e6670" stroke-width="18" />
+      <circle id="ring-marigold" cx="540" cy="780" r="78" fill="none" stroke="#f5b544" stroke-width="18" />
+    </svg>
+    <div class="brand"><span class="plate" id="meet-brand">KINAARA</span></div>
+    <div class="slogan" id="slogan"></div>
+  </div>
+
+  <div class="layer" id="stops">
+    <div class="heading" id="stops-heading"></div>
+    <div class="rail" id="rail-teal" style="left:146px;background:#0e6670"></div>
+    <div class="rail" id="rail-marigold" style="left:172px;background:#f5b544"></div>
+    <div id="stop-list"></div>
+  </div>
+
+  <div class="layer" id="app">
+    <div class="caption" id="app-caption"><span class="plate" id="app-plate"></span><p id="app-words"></p></div>
+    <div class="phone" id="phone"><img src="app-live.png" alt=""></div>
+  </div>
+
+  <div class="layer" id="end">
+    <svg width="1080" height="1920" viewBox="0 0 1080 1920" style="position:absolute;inset:0">
+      <circle id="end-ring-a" cx="490" cy="520" r="78" fill="none" stroke="#ffffff" stroke-width="18" />
+      <circle id="end-ring-b" cx="590" cy="520" r="78" fill="none" stroke="#f5b544" stroke-width="18" />
+    </svg>
+    <div class="brand" id="end-brand">Kinaara</div>
+    <div class="facts" id="end-facts"></div>
+    <div class="url" id="end-url">kinaara.online</div>
+    <div class="rails" id="end-rails"><span></span><span></span></div>
+    <div class="bio" id="end-bio"></div>
+  </div>
+
+  <div class="layer" id="hook">
+    <div class="lines" id="hook-lines"></div>
+    <div class="rails" id="hook-rails"><span></span><span></span></div>
+  </div>
+</div>
+<script>
+const WORDS = {
+  en: {
+    hook: ["Tired of", "endless", "swiping?"],
+    slogan: "Fewer, better introductions.",
+    stopsHeading: "How it works",
+    stops: [
+      ["Today", "A short daily set of people who want what you want."],
+      ["Likes", "The same few likes for everyone. Never sold."],
+      ["Live", "Short video calls. Their video stays hidden until you choose."],
+      ["Matches", "Chat only when you both said yes."],
+      ["Safety", "Block, report and photo review. Always free."],
+    ],
+    appPlate: "The real app",
+    appWords: "Take the tour inside, in words or read aloud.",
+    facts: "Free to join · 18+ · Delhi NCR · Beta",
+    bio: "Link in bio",
+  },
+  hi: {
+    hook: ["Swipe karte", "karte thak", "gaye?"],
+    slogan: "Kam log. Sahi log.",
+    stopsHeading: "Kaise kaam karta hai",
+    stops: [
+      ["Today", "Roz ek chhota set: log jo wahi chahte hain jo aap."],
+      ["Likes", "Likes sabke liye barabar. Kabhi bikte nahi."],
+      ["Live", "Short video call. Unka video tab tak hidden, jab tak aap na chaho."],
+      ["Matches", "Baat tabhi, jab dono ne haan kaha."],
+      ["Safety", "Block, report, photo review. Hamesha free."],
+    ],
+    appPlate: "Asli app",
+    appWords: "Andar tour hai: padho, ya sun lo.",
+    facts: "Free · 18+ · Delhi NCR · Beta",
+    bio: "Link bio mein",
+  },
+};
+const lang = new URLSearchParams(location.search).get("lang") === "hi" ? "hi" : "en";
+const W = WORDS[lang];
+document.documentElement.lang = lang === "hi" ? "en-IN" : "en";
+window.REEL_DURATION = 23;
+
+const $ = (id) => document.getElementById(id);
+$("hook-lines").innerHTML = W.hook.map((l) => `<div>${l}</div>`).join("");
+$("slogan").textContent = W.slogan;
+$("stops-heading").textContent = W.stopsHeading;
+$("app-plate").textContent = W.appPlate;
+$("app-words").textContent = W.appWords;
+$("end-facts").textContent = W.facts;
+$("end-bio").textContent = W.bio;
+const STOP_Y = [380, 575, 770, 965, 1160];
+$("stop-list").innerHTML = W.stops
+  .map(([name, words], i) => `<div class="stop" id="stop-${i}" style="top:${STOP_Y[i]}px"><div class="roundel"></div><div class="name"><span class="plate">${name}</span></div><div class="words">${words}</div></div>`)
+  .join("");
+
+const clamp = (x) => Math.min(1, Math.max(0, x));
+const out3 = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const io = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const p = (t, start, dur) => out3((t - start) / dur);
+const show = (el, o, dy = 0, scale = 1) => { el.style.opacity = o; el.style.transform = `translateY(${dy}px) scale(${scale})`; };
+const layer = (id, o) => { $(id).style.opacity = o; $(id).style.visibility = o > 0 ? "visible" : "hidden"; };
+
+const tealLen = $("teal-line").getTotalLength();
+const marigoldLen = $("marigold-line").getTotalLength();
+
+window.render = (t) => {
+  // 1. The hook (0-3.3 s): words rise in on graphite, the two rails draw, then the sign lifts away.
+  const lift = io((t - 2.9) / 0.45);
+  $("hook").style.transform = `translateY(${-1920 * lift}px)`;
+  $("hook").style.visibility = lift < 1 ? "visible" : "hidden";
+  [...$("hook-lines").children].forEach((line, i) => {
+    const k = p(t, 0.15 + i * 0.22, 0.5);
+    show(line, k, 40 * (1 - k));
+  });
+  const rails = p(t, 0.9, 1.0);
+  $("hook-rails").style.width = `${920 * rails}px`;
+
+  // 2. The meeting (3.0-7.1 s): the two lines run in, the rings meet and hook, the name and the line.
+  layer("meet", 1 - p(t, 6.85, 0.3));
+  const draw = p(t, 3.1, 1.2);
+  $("teal-line").style.strokeDasharray = tealLen;
+  $("teal-line").style.strokeDashoffset = tealLen * (1 - draw);
+  $("marigold-line").style.strokeDasharray = marigoldLen;
+  $("marigold-line").style.strokeDashoffset = marigoldLen * (1 - draw);
+  const rings = p(t, 4.25, 0.9);
+  const gap = 160 - 118 * rings;
+  $("ring-teal").setAttribute("cx", 540 - gap / 2);
+  $("ring-marigold").setAttribute("cx", 540 + gap / 2);
+  $("ring-teal").style.opacity = p(t, 4.1, 0.3);
+  $("ring-marigold").style.opacity = p(t, 4.1, 0.3);
+  const brand = p(t, 5.1, 0.4);
+  show($("meet-brand"), brand, 24 * (1 - brand));
+  const slogan = p(t, 5.45, 0.45);
+  show($("slogan"), slogan, 24 * (1 - slogan));
+
+  // 3. The stops (7.0-17.3 s): the rails draw down; each stop arrives in turn and stays.
+  layer("stops", p(t, 7.0, 0.3) * (1 - p(t, 17.15, 0.3)));
+  show($("stops-heading"), p(t, 7.1, 0.4));
+  const STOP_AT = (i) => 7.5 + i * 1.85;
+  const railEnd = STOP_Y[Math.min(4, Math.max(0, Math.floor((t - 7.3) / 1.85)))];
+  const railK = p(t, 7.2, 0.5);
+  const reach = t < STOP_AT(4) ? railEnd + 40 : STOP_Y[4] + 40;
+  for (const id of ["rail-teal", "rail-marigold"]) $(id).style.height = `${Math.max(0, (reach - 380) * railK)}px`;
+  STOP_Y.forEach((_, i) => {
+    const el = $(`stop-${i}`);
+    const at = STOP_AT(i);
+    el.style.visibility = t >= at ? "visible" : "hidden";
+    const r = p(t, at, 0.25);
+    show(el.querySelector(".roundel"), r, 0, 0.6 + 0.4 * r);
+    const n = p(t, at + 0.08, 0.3);
+    el.querySelector(".name").style.opacity = n;
+    el.querySelector(".name").style.transform = `translateX(${-30 * (1 - n)}px)`;
+    const w = p(t, at + 0.18, 0.35);
+    show(el.querySelector(".words"), w, 18 * (1 - w));
+  });
+
+  // 4. The real app (17.2-20.6 s): the caption, then the phone rises in.
+  layer("app", p(t, 17.2, 0.3) * (1 - p(t, 20.45, 0.3)));
+  const cap = p(t, 17.35, 0.4);
+  show($("app-caption"), cap, 20 * (1 - cap));
+  const phone = p(t, 17.5, 0.7);
+  show($("phone"), phone, 260 * (1 - phone));
+
+  // 5. Where to find it (20.5-23 s): the rings joined, the name, the facts and the address.
+  layer("end", p(t, 20.5, 0.3));
+  const ends = p(t, 20.6, 0.6);
+  $("end-ring-a").style.opacity = ends;
+  $("end-ring-b").style.opacity = ends;
+  $("end-ring-a").setAttribute("cx", 470 + 20 * ends);
+  $("end-ring-b").setAttribute("cx", 610 - 20 * ends);
+  const b = p(t, 20.75, 0.45);
+  show($("end-brand"), b, 20 * (1 - b));
+  const f = p(t, 20.95, 0.45);
+  show($("end-facts"), f, 16 * (1 - f));
+  const u = p(t, 21.15, 0.45);
+  show($("end-url"), u, 16 * (1 - u));
+  $("end-rails").style.opacity = u;
+  $("end-rails").style.width = `${600 * p(t, 21.3, 0.6)}px`;
+  $("end-rails").style.left = `${540 - 300 * p(t, 21.3, 0.6)}px`;
+  show($("end-bio"), p(t, 21.5, 0.45));
+};
+window.render(0);
+</script>
+</body>
+</html>

@@ -98,3 +98,6 @@ e2e/.run/
 **/.impeccable/live/deferred-svelte-component-accepts.json
 **/.impeccable/live/*.png
 # impeccable-ignore-end
+
+# The Reel's rendered frames and videos (D138): CI keeps them as an artifact.
+marketing/reel/out/
