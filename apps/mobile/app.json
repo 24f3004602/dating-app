@@ -53,7 +53,7 @@
         "expo-build-properties",
         {
           "android": {
-            "extraProguardRules": "-dontwarn org.webrtc.Dav1dDecoder$Natives"
+            "extraProguardRules": "-dontwarn org.webrtc.Dav1dDecoder$Natives\n# Google's ads SDK brings WorkManager 2.7.0 and Room 2.2.5, whose database Room creates by name at\n# startup; R8's full mode kept the class but dropped its constructor, and every launch crashed (D137).\n-keep class androidx.work.impl.WorkDatabase_Impl { *; }\n-keepclassmembers class * extends androidx.room.RoomDatabase { <init>(); }"
           }
         }
       ]

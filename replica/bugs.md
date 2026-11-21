@@ -6,7 +6,7 @@ workaround, or visibly wrong; S4 cosmetic. Only reproduced bugs go here;
 suspicions go under "To check". Defects found and fixed inside a stage, before
 its commit, are listed in that stage's "Found and fixed" notes in `progress.md`.
 
-Open: S1 0, S2 0, S3 0, S4 0.
+Open: S1 1, S2 0, S3 0, S4 0.
 
 ### BUG-001: the 404 page's scripts and styles are blocked by the CSP
 
@@ -106,6 +106,22 @@ Actual: focus first lands on the switch's label, a box with nothing for a screen
 Evidence: the label rendered as `<div aria-hidden="true" tabindex="0">` (the preview's DOM, 2026-11-20).
 Suspected cause: confirmed. React Native Web's Pressable sets `tabIndex` 0 unless one is given, whatever `focusable={false}` says.
 Status: fixed (stage 25): the label has `tabIndex={-1}`; MOB-35 checks it (and fails without the fix). After the fix the Tab order is the switch, then the buttons, then the line bar.
+
+### BUG-007: every launch of an APK with Google's ads SDK crashed
+
+- Severity: S1
+- Flow / case: opening the Android app
+- Screen: none (before the first screen)
+- Build: android-apk run 44778292140 (`4ce7784`, `ads: test`)  Browser / device: Pixel 8 Pro, Android 17
+
+Steps
+1. Install the APK over the last one and open it.
+
+Expected: the app opens (with test ads for a member without Plus).
+Actual: it closed at once: `RuntimeException: Unable to get provider androidx.startup.InitializationProvider`, caused by `Failed to create an instance of androidx.work.impl.WorkDatabase`.
+Evidence: logcat on the owner's phone (2026-11-21, 06:30 IST); the APK holds work-runtime 2.7.0, room-runtime 2.2.5 and sqlite 2.1.0, none of which the previous APK had.
+Suspected cause: confirmed by the error. Google's ads SDK brings WorkManager 2.7.0, which starts at launch whatever the ads setting, and its Room 2.2.5 creates `WorkDatabase_Impl` by name; R8's full mode (Android Gradle Plugin 8) kept the class but not its no-argument constructor, so Room couldn't instantiate it. Every build with the package would have crashed, ads on or off. The unit and browser tests can't see a release build's shrinking.
+Status: fixed in the build config (`-keep class androidx.work.impl.WorkDatabase_Impl { *; }` and the constructors of every `RoomDatabase`), to be confirmed on the phone (NAT-ADS-1). The owner's phone went straight back to the previous APK (run 44671160795), which opens.
 
 ## To check
 
