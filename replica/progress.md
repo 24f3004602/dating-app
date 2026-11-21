@@ -10,7 +10,11 @@ Updated: 2026-11-20
 - **25c, the Reel (D138):** `marketing/reel`, English and Hinglish, rendered by the `reel` workflow; samples checked by eye.
 - **25d, the launch plan (D139):** `replica/launch/launch-plan.md` and the Play listing (`listing.json`, linted).
 - **Found and fixed:** BUG-006, a hidden Tab stop before every switch in the web app.
-- **Not yet:** CI on these commits, the Reel's MP4s, the owner's go for releasing the documents and the app, a test-ads APK on the owner's Pixel (NAT-ADS-1).
+- **CI green on `4ce7784`:** mobile 44778237541 (Jest 234, e2e 22/22), api 44778237449 (the whole suite, the new documents version included), images, beta-stack 44778237464 (a sign-up with the new consents), `beta-images` 44778708023 (all three images).
+- **The Reel rendered (2026-11-21):** the first `reel` run stopped at the job's 30 minutes, waiting on ffmpeg's apt install with its output hidden (ffmpeg isn't on the runner image); fixed in `787e170` (no prompts, time limits, visible output). Run 44845254306: 690 frames a language, H.264 1080 x 1920 at 30 fps with AAC, 23.0 s, 875 KB (English) and 866 KB (Hinglish), covers; its sample frames match the local preview. The two videos and covers are on the owner's Desktop, in `Kinaara Reel`.
+- **Released (2026-11-21, the owner's "release when memory allows", then "Done, go ahead"):** about 0.75 GB was available (Chrome and VS Code stayed open), so each step checked memory first. A backup (`db-20261121T004836Z.dump`, 40 tables, and the photos); the running website and app tagged `rollback-20261121a`; the website and app images from `beta-images` 44778708023 (hashes checked) loaded; web, edge, api and worker recreated (postgres, redis and the tunnel kept three days' uptime); the API runs `beta-2026-11-20`. **Checked live:** the website, the app, `/privacy`, `/terms` and `/readyz` answer 200; the privacy notice shows `beta-2026-11-20` and "Ads in the Android app"; the terms show the new bans and Plus's "No ads"; headless Chrome: the app's code has the tour and the new version, no console error or CSP violation. Older APKs can still sign in, but their sign-ups are refused until the new APK is installed.
+- **The test-ads APK** (android-apk run 44778292140, `ads: test`): 50,179,566 bytes, SHA-256 `b2586b098847c73931551a3f79867cde4a3c5fac0b5dccfc7010e5d5d0f23aa5` (as CI's), with Google's ads SDK, Google's test app ID, measurement held, the speech module and documents `beta-2026-11-20` inside. **Not installed yet:** the phone wasn't connected (NAT-ADS-1).
+- Two background jobs (the CI watcher and an image download) were stopped by Claude Code for low memory; neither was restarted until the owner asked.
 
 **Stage 24 (the app tour, D136) has started (2026-11-20), at the owner's request:** "add interactive app tour in text and voice for new user so that they can understaand how to use it and what features do my app has".
 - **24a, the app tour: built, tested, CI green, released to the beta and on the owner's Pixel (2026-11-20, the owner's "release when green").**
@@ -579,7 +583,7 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 
 ## Next
 
-**Stage 25 (2026-11-20):** ads in the app (off), documents `beta-2026-11-20`, the Reel and the launch plan are built. Next: CI and the Reel's render, the owner's go for the release, then phase 0 of the launch plan (the Mumbai server, the lawyer, the Play, AdMob, Google Ads and Meta accounts).
+**Stage 25 (2026-11-21):** documents `beta-2026-11-20` and the app are live on the beta; ads in the app are built (off in every build but a test one); the Reel's videos are on the owner's Desktop; the launch plan is written. Next: the test-ads APK on the owner's phone once it's connected (NAT-ADS-1), then phase 0 of the launch plan (the Mumbai server, the lawyer, the Play, AdMob, Google Ads and Meta accounts).
 
 **Stage 24 (2026-11-20):** the app tour (D136) is live in the web app and on the owner's Pixel; its voice speaks Indian English on the phone. Next: the owner takes it (You, App tour) and says what to change; TalkBack with the tour (NAT-TOUR-1); then the rest of GOOGLE-M1.
 
