@@ -6,7 +6,7 @@ workaround, or visibly wrong; S4 cosmetic. Only reproduced bugs go here;
 suspicions go under "To check". Defects found and fixed inside a stage, before
 its commit, are listed in that stage's "Found and fixed" notes in `progress.md`.
 
-Open: S1 1, S2 0, S3 0, S4 0.
+Open: S1 0, S2 0, S3 0, S4 0.
 
 ### BUG-001: the 404 page's scripts and styles are blocked by the CSP
 
@@ -121,7 +121,7 @@ Expected: the app opens (with test ads for a member without Plus).
 Actual: it closed at once: `RuntimeException: Unable to get provider androidx.startup.InitializationProvider`, caused by `Failed to create an instance of androidx.work.impl.WorkDatabase`.
 Evidence: logcat on the owner's phone (2026-11-21, 06:30 IST); the APK holds work-runtime 2.7.0, room-runtime 2.2.5 and sqlite 2.1.0, none of which the previous APK had.
 Suspected cause: confirmed by the error. Google's ads SDK brings WorkManager 2.7.0, which starts at launch whatever the ads setting, and its Room 2.2.5 creates `WorkDatabase_Impl` by name; R8's full mode (Android Gradle Plugin 8) kept the class but not its no-argument constructor, so Room couldn't instantiate it. Every build with the package would have crashed, ads on or off. The unit and browser tests can't see a release build's shrinking.
-Status: fixed in the build config (`-keep class androidx.work.impl.WorkDatabase_Impl { *; }` and the constructors of every `RoomDatabase`), to be confirmed on the phone (NAT-ADS-1). The owner's phone went straight back to the previous APK (run 44671160795), which opens.
+Status: fixed (`db7a576`): `-keep class androidx.work.impl.WorkDatabase_Impl { *; }` and the constructors of every `RoomDatabase`, through expo-build-properties. Confirmed on the owner's phone: the APK from android-apk run 44847809342 (SHA-256 `53b4b3b4aa7964fc9f4b2f4510f78bf71ee052d6b1bd5c3719c0f69e30afb36c`, as CI's) opens with no crash. In between, the phone went straight back to the previous APK (run 44671160795).
 
 ## To check
 
