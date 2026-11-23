@@ -37,6 +37,10 @@ CONTACT_EMAIL=
 SMTP_USERNAME=
 SMTP_PASSWORD=
 
+# The hourly health check (health_check.py, D143) emails CONTACT_EMAIL when
+# something breaks; uncomment to send its alerts somewhere else.
+# ALERT_EMAIL=
+
 # Generated. Changing APP_SECRET_KEY later voids live codes, photo links, the
 # invite list and staff authenticators (deploy.md).
 POSTGRES_PASSWORD=$(secret)
