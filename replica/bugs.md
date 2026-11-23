@@ -123,6 +123,23 @@ Evidence: logcat on the owner's phone (2026-11-21, 06:30 IST); the APK holds wor
 Suspected cause: confirmed by the error. Google's ads SDK brings WorkManager 2.7.0, which starts at launch whatever the ads setting, and its Room 2.2.5 creates `WorkDatabase_Impl` by name; R8's full mode (Android Gradle Plugin 8) kept the class but not its no-argument constructor, so Room couldn't instantiate it. Every build with the package would have crashed, ads on or off. The unit and browser tests can't see a release build's shrinking.
 Status: fixed (`db7a576`): `-keep class androidx.work.impl.WorkDatabase_Impl { *; }` and the constructors of every `RoomDatabase`, through expo-build-properties. Confirmed on the owner's phone: the APK from android-apk run 44847809342 (SHA-256 `53b4b3b4aa7964fc9f4b2f4510f78bf71ee052d6b1bd5c3719c0f69e30afb36c`, as CI's) opens with no crash. In between, the phone went straight back to the previous APK (run 44671160795).
 
+### BUG-008: a backup could fail without a trace and leave an empty dump
+
+- Severity: S2
+- Flow / case: the home-mode daily backup (Task Scheduler, `backup.sh`)
+- Screen: none
+- Build: `backup.sh` and `schedule-backup.ps1` up to `e31779d`  Browser / device: the owner's laptop (home mode)
+
+Steps
+1. Let the scheduled task start (at 03:00, or on sign-in after a missed 03:00).
+2. Close its console window, or sign out, before it finishes.
+
+Expected: no file that looks like a backup unless it is complete and checked; the failure is logged.
+Actual: a 0-byte `db-20261123T035550Z.dump` with no photo archive, and nothing in `backup.log` (task result 0xC000013A, a closed console).
+Evidence: the backup folder and the task's last result, 2026-11-23 (security audit, D141).
+Suspected cause: confirmed. The script wrote straight to the final names, checked only at the end and logged only success; the task ran in a visible console window that could be closed mid-run.
+Status: fixed (D142). Files are written as `.part`, checked (the dump's table of contents read back; the archive holds `media/`), then named; a failure or a TERM, HUP or INT logs `backup FAILED at <time> (<step>)` and removes its partial files; empty dumps are removed; pruning keeps the newest 3 good backups. The task runs through `conhost --headless` (no window). `backup-test.sh`: 29 cases pass (17 fail on the old script), also under dash in CI; a fresh backup taken and restored by `restore-check.sh` (40 tables, migration 0017). It still runs only while the owner is signed in; a missed day is caught up at the next sign-in.
+
 ## To check
 
 - **The website's settings fall back to this machine in production** (prodlint `stale-fallback`, 2026-11-23). `apps/web/lib/config.ts` uses `http://127.0.0.1:8000` for `API_URL` and `http://127.0.0.1:8081` for `APP_URL` when unset, and `proxy.ts` the same for the CSP's image origin, whatever `NODE_ENV` is; the app's release builds refuse missing URLs (`app.config.ts`), the website doesn't. The beta's compose sets all three, so nothing is wrong live; a deploy without them would start, and its Create an account buttons would point at the visitor's own machine. Fix to try: refuse to start in production without them (Next.js `instrumentation.ts`, which runs at server start, not at build), with CI's `next start` given the values.

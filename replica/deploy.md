@@ -113,8 +113,9 @@ docker compose up -d && docker compose ps
 - **The token and `.env`** stay on this computer. Never send them in chat.
 
 **3. Then, as on a server:** follow steps 4–7 below (first admin, testers, running it day to day, the APK). Two things differ for backups:
-- Schedule it once: `powershell -NoProfile -ExecutionPolicy Bypass -File infra/beta/schedule-backup.ps1`. That runs `backup.sh` at 03:00 every day (or as soon as the laptop is next on), keeps 7 days in `%USERPROFILE%\datingapp-backups`, logs to `backup.log` there, and runs once straight away. By hand: `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` from Git Bash.
-- Glance at `backup.log` now and then: one line a day, with no `tar:` or `error`.
+- Schedule it once: `powershell -NoProfile -ExecutionPolicy Bypass -File infra/beta/schedule-backup.ps1` (add `-NoRun` to skip the run it starts straight away). That runs `backup.sh` at 03:00 every day, or as soon as you're next signed in, through a headless console (no window to close by mistake; D142), keeps 7 days in `%USERPROFILE%\datingapp-backups` (always the newest 3 good ones), and logs to `backup.log` there. By hand: `BACKUP_DIR="$HOME/datingapp-backups" ./backup.sh` from Git Bash; add `BACKUP_PRUNE=no` to keep every older backup that time.
+- Glance at `backup.log` now and then: a `backup:` line a day naming the tables and sizes. A failure is one line, `backup FAILED at <time> (<step>)`, and leaves no file that looks like a backup. `grep FAILED backup.log` finds them.
+- After a release, and once a month, prove the newest backup restores: `./restore-check.sh "$HOME/datingapp-backups/<newest db-*.dump>"` (a throwaway database with no network; counts only).
 - Copy the backups weekly to a drive kept somewhere safe: one computer is one point of failure.
 
 **The background video (D099):** the candlelight loop is served through Cloudflare by the owner's choice, although Cloudflare's CDN terms don't allow video from your own server on the free plan. If Cloudflare objects, or to save bandwidth, switch it off:
@@ -245,7 +246,7 @@ docker compose up -d && docker compose ps
 - **Backups:** `crontab -e`, then add:
   - `30 21 * * * $HOME/dating-app/infra/beta/backup.sh >> $HOME/backup.log 2>&1`
 
-  That runs 03:00 India time and keeps 7 days in `/var/backups/datingapp-beta`. Make the folder once: `sudo install -d -o $USER /var/backups/datingapp-beta`.
+  That runs 03:00 India time and keeps 7 days in `/var/backups/datingapp-beta` (always the newest 3 good ones). Make the folder once: `sudo install -d -o $USER /var/backups/datingapp-beta`. Failures log `backup FAILED at <time> (<step>)` and leave no partial file (D142); after each release, `./restore-check.sh /var/backups/datingapp-beta/<newest db-*.dump>`.
 - **Health:** `docker compose ps`; `docker compose logs --tail 100 api worker`. Logs rotate at 3 × 10 MB per service.
 - **Updates:** `git pull && docker compose build && docker compose run --rm migrate && docker compose up -d`.
 - **Restore** a database backup into a fresh volume: `docker compose up -d postgres`, then `docker compose exec -T postgres pg_restore -U postgres -d datingapp --clean --if-exists < db-<time>.dump`. Photos: `docker compose exec -T api tar xzf - -C /app/var < media-<time>.tgz`.
