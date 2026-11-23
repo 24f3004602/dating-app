@@ -28,7 +28,8 @@ BRAND_NAME=Haanji
 
 # Shown on the tester notice (/terms, /privacy): who runs the test, and an
 # address you read. Testers write here for questions, copies of their data or
-# complaints.
+# complaints. The address is also security.txt's contact for security reports
+# (D145), and the health check writes here (D143).
 OPERATOR_NAME=
 CONTACT_EMAIL=
 

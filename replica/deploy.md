@@ -109,6 +109,7 @@ docker compose up -d && docker compose ps
   - Cloudflare shows the tunnel **Healthy**;
   - `https://app.<domain>` opens the app;
   - `https://<domain>/privacy` shows your name, your contact and the Cloudflare wording;
+  - `https://<domain>/.well-known/security.txt` gives the same contact for security reports (D145), and `app.` and `api.` redirect there;
   - `https://api.<domain>/readyz` answers.
 - **The token and `.env`** stay on this computer. Never send them in chat.
 
