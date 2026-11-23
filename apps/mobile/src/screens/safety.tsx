@@ -173,6 +173,8 @@ export function ReportScreen({ subjectId, name, matchId, callId }: { subjectId: 
       <Screen>
         <Notice kind="success">{t.report.sent}</Notice>
         <Button label={t.report.toSafety} onPress={() => router.replace("/safety")} />
+        {/* Someone who has just reported may need the helplines too (D140). */}
+        <Button label={t.report.toGuide} variant="secondary" onPress={() => router.push("/safety/guide")} />
       </Screen>
     );
   }
@@ -295,19 +297,28 @@ function BlockedRow({ userId, name, blockedAt }: { userId: string; name: string;
 }
 
 export function SafetyScreen() {
+  const router = useRouter();
   const blocks = useBlocks();
   const reports = useMyReports();
+  // The safety guide (D140) needs no connection, so it's offered even when the lists below fail.
+  const guide = (
+    <View style={styles.list}>
+      <ListRow label={t.safetyGuide.open} hint={t.safetyGuide.openHint} opens onPress={() => router.push("/safety/guide")} />
+    </View>
+  );
   if (blocks.isPending || reports.isPending) return <Loading label={t.common.loading} />;
   if (blocks.isError || reports.isError) {
     return (
       <Screen>
         <Notice kind="error">{messageFor(blocks.error ?? reports.error)}</Notice>
+        {guide}
       </Screen>
     );
   }
   return (
     <Screen>
       <Title>{t.safety.title}</Title>
+      {guide}
       <Notices />
       <Heading>{t.safety.blocked}</Heading>
       {blocks.data.length === 0 ? <Body muted>{t.safety.noBlocked}</Body> : <Body muted>{t.safety.unblockHint}</Body>}

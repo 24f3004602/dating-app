@@ -24,7 +24,7 @@ import { VideoView } from "@/calls/VideoView";
 import { BRAND } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, font, radius, space, type } from "@/theme/tokens";
-import { Body, Button, Caption, Heading, Loading, Notice, Plate, Screen, Title } from "@/ui/primitives";
+import { Body, Button, Caption, Heading, ListRow, Loading, Notice, Plate, Screen, Title } from "@/ui/primitives";
 
 export const planName = () => fill(t.plan.name, { brand: BRAND });
 
@@ -131,6 +131,10 @@ function Lobby({ live, problem, onStart }: { live: LiveOut; problem: string | nu
         <Button label={fill(t.live.seePlan, { plan: planName() })} variant="secondary" onPress={() => router.push("/plan")} />
       ) : null}
       <Caption>{t.live.relayNote}</Caption>
+      {/* Staying safe on calls, and who to call: the safety guide (D140). */}
+      <View style={styles.guide}>
+        <ListRow label={t.safetyGuide.open} hint={t.safetyGuide.openHint} opens onPress={() => router.push("/safety/guide")} />
+      </View>
     </>
   );
 }
@@ -302,6 +306,8 @@ export function LiveScreen({ rtc }: { rtc?: LiveRtc } = {}) {
 
 const styles = StyleSheet.create({
   rules: { gap: space.md },
+  // The guide's row follows text, so its list closes its top with a line.
+  guide: { borderTopWidth: 1, borderTopColor: color.border },
   // The call: 3:4, graphite, their video over a marigold rail (their line), yours in a teal frame (yours).
   // 4:5, the shape photos are kept in (D105).
   stage: { width: "100%", aspectRatio: 4 / 5, backgroundColor: color.sign, overflow: "hidden" },

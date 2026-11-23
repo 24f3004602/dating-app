@@ -3,7 +3,7 @@
  * and likes him, he likes her back, and they chat. Every update after the
  * first page load arrives through the realtime connection: neither page is
  * reloaded. Also covers the hurtful-word prompt and the money safety tip,
- * with axe on the chat and the matches list.
+ * with axe on the chat and the matches list, and the safety guide from Safety.
  */
 import { type Browser, expect, type Page, test } from "@playwright/test";
 
@@ -105,6 +105,17 @@ test("two people match and chat, live", async ({ browser }) => {
   await expect(meera.getByText("Kabir: Scam, or asking for money. Received")).toBeVisible();
   await expect(meera.getByRole("button", { name: "Unblock Kabir" })).toBeVisible();
   await checkA11y(meera, "safety");
+
+  // E2E-20: the safety guide (D140) from Safety: its sections, and the helplines one press from the dialer.
+  await meera.getByRole("button", { name: "Safety guide" }).click();
+  await expect(meera.getByRole("heading", { name: "Safety guide", level: 1 })).toBeVisible();
+  for (const section of ["Money and scams", "On video calls", "Meeting in person", "If something goes wrong", "Who to call"]) {
+    await expect(meera.getByRole("heading", { name: section, level: 2 })).toBeVisible();
+  }
+  await expect(meera.getByRole("button", { name: "Call 112, Emergency" })).toHaveCount(2); // at the top, and in the list
+  await expect(meera.getByRole("button", { name: "Call 1930, Cyber Crime Helpline" })).toBeVisible();
+  await expect(meera.getByRole("link", { name: "cybercrime.gov.in" })).toBeVisible();
+  await checkA11y(meera, "safety guide");
 
   for (const found of errors) {
     expect(found.server).toEqual([]);

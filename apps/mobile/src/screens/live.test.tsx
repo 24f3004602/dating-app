@@ -76,6 +76,13 @@ test("LIVE-APP-8: the rules come first, then Start", async () => {
   expect(screen.getByText(t.live.relayNote)).toBeTruthy();
 });
 
+test("SAFE-GUIDE-APP-4: Live's lobby leads to the safety guide", async () => {
+  const { api } = fakeApi({ "GET /v1/live": () => live() });
+  await renderWithApp(<SignedIn><LiveScreen rtc={fakeRtc()} /></SignedIn>, api);
+  await fireEvent.press(await screen.findByRole("button", { name: t.safetyGuide.open }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/safety/guide");
+});
+
 test("LIVE-APP-9: what's in the way, with the way forward", async () => {
   const plan = fill(t.plan.name, { brand: BRAND });
   const { api } = fakeApi({ "GET /v1/live": () => live({ ready: "no_calls_left", free_calls_left: 0 }) });

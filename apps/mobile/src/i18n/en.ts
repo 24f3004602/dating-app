@@ -285,6 +285,7 @@ export const en = {
     chooseReason: "Choose what's wrong.",
     sent: "Thanks for telling us. We'll review it, and you can follow it under Safety.",
     toSafety: "Go to Safety",
+    toGuide: "Read the safety guide",
   },
   safety: {
     title: "Safety",
@@ -306,6 +307,87 @@ export const en = {
       in_review: "Being reviewed",
       actioned: "Action taken",
       dismissed: "Reviewed: no action needed",
+    },
+  },
+  // The safety guide (S11, D140): static guidance for India. The helplines were checked
+  // against Government of India sources on 2026-11-23 (decision log); every number the
+  // points mention must be one of them (a test keeps the two together).
+  safetyGuide: {
+    title: "Safety guide",
+    open: "Safety guide",
+    openHint: "Tips for chats, calls and dates, and who to call",
+    intro: "How to look after yourself while you chat, call and meet, and where to get help if something goes wrong.",
+    danger: "In danger right now? Call 112, India's emergency number.",
+    sections: [
+      {
+        title: "Getting to know someone",
+        points: [
+          "Take your time. Keep chatting here until you feel you know them: there's no rush to share your number or move to another app.",
+          "We review new photos before anyone sees them, but we can't confirm that they show the person you're talking to.",
+          "Keep your home address, workplace and daily routine to yourself until you trust someone.",
+          "Take care if someone rushes you to another app, asks early about your money or family, or tells a story that keeps changing.",
+        ],
+      },
+      {
+        title: "Money and scams",
+        points: [
+          "Never send money, gift cards or crypto to someone you met here, however urgent the reason: a hospital bill, a parcel stuck at customs, a ticket or a sure investment.",
+          "Your UPI PIN is only for paying. Nobody needs it, or an OTP, to send you money.",
+          "Don't install an app, share your screen or scan a QR code because someone you met here asked you to.",
+          "Our team will never ask for your password, a code we've emailed you or your UPI PIN.",
+        ],
+      },
+      {
+        title: "On video calls",
+        points: [
+          "We don't record calls, but the other person could, without you knowing. Don't show or say anything you wouldn't want kept.",
+          "Their video stays hidden until you choose to see it. You can end the call, move on or report at any moment, and a report ends the call at once.",
+          "If someone threatens to share a recording or photo of you unless you pay, stop replying and don't pay anything, not even a small amount. Keep screenshots, report them here, and report it at cybercrime.gov.in or on 1930.",
+        ],
+      },
+      {
+        title: "Meeting in person",
+        points: [
+          "Meet somewhere busy and public, like a café, for the first few dates.",
+          "Tell a friend who you're meeting, where and when, and check in with them afterwards.",
+          "Get there and back on your own: your own vehicle, the metro or a cab you booked yourself, with the trip shared with a friend.",
+          "Keep your phone charged and your drink in sight.",
+          "You can leave whenever you want. You don't owe anyone a second date or anything else, and you can say no at any point.",
+        ],
+      },
+      {
+        title: "If something goes wrong",
+        points: [
+          "Block someone and you won't see each other anywhere in the app again; a match between you ends too.",
+          "Report anything that worries you, even if you're not sure: at the end of their profile, under More options in a chat, or during a call. Reports are private, and you can follow yours under Safety.",
+          "If someone here might be under 18, report them.",
+          "If you've lost money, call 1930 straight away: the sooner it's reported, the better the chance of stopping it.",
+        ],
+      },
+    ],
+    helplines: {
+      title: "Who to call",
+      intro: "Calls to these numbers are free.",
+      items: [
+        { number: "112", name: "Emergency", about: "Police, fire or an ambulance, anywhere in India, any time." },
+        {
+          number: "181",
+          name: "Women Helpline",
+          about: "Help for women facing violence or harassment, at home or outside, any time. It can connect you to the police, a hospital or legal help.",
+        },
+        {
+          number: "1930",
+          name: "Cyber Crime Helpline",
+          // The portal's own link follows these words, so they don't repeat its address.
+          about: "For money lost to online fraud. Blackmail and other online crimes can be reported on the national portal.",
+        },
+        { number: "14416", name: "Tele MANAS", about: "Someone to talk to if you're upset, anxious or low, any time, in your language." },
+      ],
+      call: "Call {number}",
+      // The button's name: it starts with what it says (WCAG 2.5.3), then whose number it is.
+      callName: "Call {number}, {name}",
+      portal: "cybercrime.gov.in",
+      checked: "Numbers from Government of India sources, checked in November 2026.",
     },
   },
   notifications: {

@@ -91,6 +91,19 @@ test("a report from a profile can skip blocking; errors get the app's words", as
   await fireEvent.press(screen.getByRole("button", { name: t.report.send }));
   expect(await screen.findByText(t.report.sent)).toBeTruthy();
   expect(calls.at(-1)?.body).toEqual({ subject_id: "u2", reason: "fake", block: false });
+  // SAFE-GUIDE-APP-4: once it's sent, the safety guide (and its helplines) is one press away.
+  await fireEvent.press(screen.getByRole("button", { name: t.report.toGuide }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/safety/guide");
+});
+
+test.each([
+  ["load", { "GET /v1/blocks": () => ({ status: 200, body: [] }), "GET /v1/reports/mine": () => ({ status: 200, body: [] }) }],
+  ["fail", {}],
+])("SAFE-GUIDE-APP-4: the Safety screen opens the safety guide when its lists %s", async (_, routes) => {
+  const { api } = fakeApi(routes);
+  await renderWithApp(<SafetyScreen />, api);
+  await fireEvent.press(await screen.findByRole("button", { name: t.safetyGuide.open }));
+  expect(mockRouter.push).toHaveBeenCalledWith("/safety/guide");
 });
 
 test("the Safety screen lists blocks (with unblock) and report statuses", async () => {
