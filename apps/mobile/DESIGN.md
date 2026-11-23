@@ -346,6 +346,9 @@ for the app's own content. It takes no room when there's no ad. Full-screen ads 
 screens, only at a natural break (back on Today from a profile). Never in chats, Live, profiles,
 Safety, payments, sign-up or the tour; nothing in the web app.
 
+### Safety guide (D140)
+One calm column of words, never a sheet or a card: the title, a muted intro, then the emergency line in body type with Call 112 as a secondary plate under it (calling ends nothing, so it isn't crimson). Each section is a level-2 heading over a station list: a line on top and a line under each point, the points in body type with no glyph bullets (the lines separate them). Who to call lists each helpline as an item: its number on a graphite plate, like a station's code, with its name beside it in the sign face, one sentence in body type and a full-width secondary Call plate; the cyber crime portal is an underlined teal link above its plate. A caption dates the numbers. A Call plate opens the phone's dialer with the number filled in; nothing calls by itself.
+
 ### Chat
 Two lines of square plates: yours teal with white text on the right, theirs marigold with ink text on the left, each with who and when beneath in caption. A removed message is white with a platform-line border and muted text, never italic (Anek has none).
 
