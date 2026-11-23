@@ -8,6 +8,8 @@
 *.keystore
 credentials*.json
 service-account*.json
+# Security audit reports name unfixed weaknesses: never in this public repo.
+SECURITY_AUDIT_REPORT*.md
 
 # --- Python ---
 __pycache__/

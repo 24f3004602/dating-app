@@ -4,6 +4,8 @@ Updated: 2026-11-23
 
 ## Current phase
 
+**Security audit (2026-11-23, D141), at the owner's request:** "use https://github.com/codemyhobby100/security-checks to check security in my app". 86 checks: 54 pass, 15 partial, 5 fail, 12 n/a. The application code passes nearly everything; the 5 fails are operational. The report with evidence and fixes is `SECURITY_AUDIT_REPORT.md` (git-ignored: the repo is public). Fixes wait for the owner's go.
+
 **Stage 26 (the safety guide, D140) has started (2026-11-23), at the owner's "continue":** the feature matrix's last unbuilt safety row (S11, the safety centre).
 - **26a, the in-app safety guide: built and tested; CI green; not released.** `/safety/guide`: Call 112 first; five sections (getting to know someone, money and scams, video calls, meeting in person, if something goes wrong); Who to call (112, 181, 1930 with cybercrime.gov.in, 14416), each a Call button that opens the dialer with the number filled in. Reached from Safety (even when its lists fail), after a report is sent, and from Live's lobby. Static: nothing fetched or kept. The numbers were checked against Government of India sources on 2026-11-23 (D140 names them and what stays uncertain).
 - **Checks:** app Jest 240 (SAFE-GUIDE-APP-1..4; 6 mutations caught) and `tsc` clean; a react-native-web preview at 390, 320 and 1280 px under the app's CSP (`e2e/.run/guide-preview`: axe clean, no overflow, no console error; it found the 1930 entry naming the portal twice, now reworded); E2E-20 added to the chat spec (compiles; runs in CI).
