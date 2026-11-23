@@ -133,9 +133,13 @@ jobs:
 
       - name: Backup
         run: |
+          # The script's failure, interruption and pruning rules, against a stand-in docker (D142).
+          sh ./backup-test.sh ./backup.sh
           BACKUP_DIR="$RUNNER_TEMP/backups" ./backup.sh
           ls -l "$RUNNER_TEMP/backups"
           test -s "$(ls "$RUNNER_TEMP"/backups/db-*.dump)"
+          # The dump restores into a scratch database, every error fatal.
+          ./restore-check.sh "$(ls "$RUNNER_TEMP"/backups/db-*.dump)"
 
       - name: Logs on failure
         if: failure()
