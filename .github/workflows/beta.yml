@@ -99,6 +99,16 @@ jobs:
           grep -q 'If you joined the waitlist' privacy.html
           grep -q 'CI operator' privacy.html
           grep -q 'contact@example.com' privacy.html
+          # security.txt (RFC 9116, D145): the notice's contact, an expiry, the canonical address;
+          # the app and API hosts redirect to it.
+          c -f https://beta.test/.well-known/security.txt > security.txt
+          grep -qx 'Contact: mailto:contact@example.com' security.txt
+          grep -qx 'Canonical: https://beta.test/.well-known/security.txt' security.txt
+          grep -Eqx 'Expires: 20[0-9]{2}-[0-9]{2}-[0-9]{2}T00:00:00.000Z' security.txt
+          c -o /dev/null -w '%{content_type}' https://beta.test/.well-known/security.txt | grep -q '^text/plain'
+          for host in app api; do
+            test "$(c -o /dev/null -w '%{http_code} %{redirect_url}' "https://$host.beta.test/.well-known/security.txt")" = "308 https://beta.test/.well-known/security.txt"
+          done
           c -f https://beta.test/terms | grep -q 'Terms for testers'
           test "$(c -o /dev/null -w '%{http_code} %{redirect_url}' https://beta.test/admin)" = "307 https://beta.test/admin/login"
 

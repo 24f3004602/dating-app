@@ -28,6 +28,12 @@
 	# IPs and photo links). The API logs requests with truncated IPs.
 }
 
+# One security.txt for every host (RFC 9116 allows a redirect): the website's (D145).
+# Always https: at home Cloudflare holds the certificate, whatever SITE_SCHEME is.
+(security_txt) {
+	redir /.well-known/security.txt https://{$DOMAIN}/.well-known/security.txt 308
+}
+
 {$SITE_SCHEME}{$DOMAIN} {
 	import common
 	reverse_proxy web:3000
@@ -35,11 +41,13 @@
 
 {$SITE_SCHEME}api.{$DOMAIN} {
 	import common
+	import security_txt
 	reverse_proxy api:8000
 }
 
 {$SITE_SCHEME}app.{$DOMAIN} {
 	import common
+	import security_txt
 	header {
 		Content-Security-Policy "{$APP_CSP}"
 		X-Frame-Options "DENY"
