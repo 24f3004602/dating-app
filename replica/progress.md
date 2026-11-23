@@ -5,11 +5,12 @@ Updated: 2026-11-23
 ## Current phase
 
 **Stage 26 (the safety guide, D140) has started (2026-11-23), at the owner's "continue":** the feature matrix's last unbuilt safety row (S11, the safety centre).
-- **26a, the in-app safety guide: built and tested; CI next; not released.** `/safety/guide`: Call 112 first; five sections (getting to know someone, money and scams, video calls, meeting in person, if something goes wrong); Who to call (112, 181, 1930 with cybercrime.gov.in, 14416), each a Call button that opens the dialer with the number filled in. Reached from Safety (even when its lists fail), after a report is sent, and from Live's lobby. Static: nothing fetched or kept. The numbers were checked against Government of India sources on 2026-11-23 (D140 names them and what stays uncertain).
+- **26a, the in-app safety guide: built and tested; CI green; not released.** `/safety/guide`: Call 112 first; five sections (getting to know someone, money and scams, video calls, meeting in person, if something goes wrong); Who to call (112, 181, 1930 with cybercrime.gov.in, 14416), each a Call button that opens the dialer with the number filled in. Reached from Safety (even when its lists fail), after a report is sent, and from Live's lobby. Static: nothing fetched or kept. The numbers were checked against Government of India sources on 2026-11-23 (D140 names them and what stays uncertain).
 - **Checks:** app Jest 240 (SAFE-GUIDE-APP-1..4; 6 mutations caught) and `tsc` clean; a react-native-web preview at 390, 320 and 1280 px under the app's CSP (`e2e/.run/guide-preview`: axe clean, no overflow, no console error; it found the 1930 entry naming the portal twice, now reworded); E2E-20 added to the chat spec (compiles; runs in CI).
 - **prodlint** (the owner's scan, 2026-11-23): triaged in test-plan Results; no defect in the product; the website's settings fall back to 127.0.0.1 in production (bugs.md, To check).
 - **Found and fixed:** the feature matrix's plan row had an unquoted comma in its name (7 columns, older than this stage); quoted.
-- **Not yet:** CI; the release with the owner's go; the phone (NAT-GUIDE-1); the website's public page (26b).
+- **CI green on `a1a4f71`:** mobile 45114019847 (Jest 240, e2e 22/22: the chat spec with E2E-20 in 25.0 s), beta-stack 45114019873.
+- **Not yet:** the release with the owner's go; the phone (NAT-GUIDE-1); the website's public page (26b).
 
 **Stage 25 (launch, ads and the Reel, D137-D139) has started (2026-11-20), at the owner's request:** "now every thing is working , now make a strategy to launch it and video to post it on instagram for getting views and make it available for google ads and also turn off ads when subscription is on"; then "Both" (ads in the app and Google Search ads) and "Banners + full-screen ads".
 - **25a, ads in the Android app (D137): built and tested; off by default.** Banners on Today, Likes and Matches; full-screen ads only at a natural break, capped; non-personalised; none with Plus (the SDK never starts), none in the web app. Real ads need the app public on Google Play and the owner's AdMob IDs (deploy.md, In-app ads).
@@ -591,7 +592,7 @@ Stage 19 (motion and visual polish, D098) **done: CI passed on `4b68e81`** (mobi
 
 ## Next
 
-**Stage 26 (2026-11-23):** the safety guide (D140) is built and tested. Next: CI, then the release with the owner's go and NAT-GUIDE-1 on the phone; then 26b (the guide on the website) and screen-capture blocking during Live calls on Android (T38).
+**Stage 26 (2026-11-23):** the safety guide (D140) is built, tested and green in CI. Next: the release with the owner's go and NAT-GUIDE-1 on the phone; then 26b (the guide on the website) and screen-capture blocking during Live calls on Android (T38).
 
 **Stage 25 (2026-11-21):** documents `beta-2026-11-20` and the app are live on the beta; ads in the app are built (off in every build but a test one); the Reel's videos are on the owner's Desktop; the launch plan is written. Next: the test-ads APK on the owner's phone once it's connected (NAT-ADS-1), then phase 0 of the launch plan (the Mumbai server, the lawyer, the Play, AdMob, Google Ads and Meta accounts).
 
