@@ -101,6 +101,9 @@ jobs:
           ls -l
           unzip -l app-release.apk | grep -E "libjingle_peerconnection_so\.so" || { echo "the WebRTC native library is missing"; exit 1; }
           unzip -p app-release.apk AndroidManifest.xml > /dev/null
+          # Google Play's rules: target API 36 (since 31 August 2026) and native libraries ready
+          # for 16 KB memory pages (apk_check.py, its sources inside).
+          python3 "$GITHUB_WORKSPACE/apps/mobile/scripts/apk_check.py" app-release.apk --min-target 36
           sha256sum app-release.apk | tee app-release.apk.sha256
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

@@ -50,6 +50,8 @@ jobs:
           npm test -w @datingapp/web
           npm run build -w @datingapp/web
           npm run typecheck -w @datingapp/web
+      - name: Google Play's build rules checker (target SDK, 16 KB pages; the APK itself in android-apk)
+        run: python3 -m unittest discover -v -s apps/mobile/scripts -p "test_*.py"
 
   e2e:
     needs: checks
