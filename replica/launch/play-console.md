@@ -58,8 +58,8 @@ Independent security review: no. Families policy: not applicable (adults only).
 ## 4. To build before the first upload
 
 1. **A web page for account deletion** (Play: the page must let people ask for deletion without
-   the app, name the app as on Play, and say what is kept and for how long): **built and tested
-   (stage 27c, D150); live after the website's next release.** The form's "Delete account URL":
+   the app, name the app as on Play, and say what is kept and for how long): **live since
+   2026-11-24 (stage 27c, D150).** The form's "Delete account URL":
    `https://kinaara.online/delete-account`. It names "Kinaara: Serious Dating", puts the way
    first (in the app; or sign in to the web app, with a button), then those who can't sign in
    (password reset, Google, or write from the account's address: `datingapp-api delete-account`,
