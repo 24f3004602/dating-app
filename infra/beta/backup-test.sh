@@ -2,10 +2,14 @@
 # Tests backup.sh (D142) against a stand-in `docker`: no container is touched.
 # A good run, an empty dump, an archive without photos, docker failing, a run
 # interrupted by TERM or HUP (a closed window), leftovers from a killed run, and
-# pruning (7 days, the newest 3 good ones kept, empty dumps removed).
+# pruning (7 days, the newest 3 good ones kept, empty dumps removed). The encrypted
+# copy (D149) with real GnuPG and a throwaway key from backup-key.sh: copies open to
+# the originals, .env's setting, no key, no drive, gpg failing, a cut-off copy, and
+# pruning copies by the time in their names.
 #   sh backup-test.sh [path/to/backup.sh]     (CI runs it in beta-stack)
 set -u
 script=${1:-$(dirname "$0")/backup.sh}
+keyscript=$(dirname "$script")/backup-key.sh
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/bin" "$work/beta" "$work/media/media"
@@ -104,6 +108,98 @@ printf 'x' > "$d/db-20261001T000000Z.dump"; touch -d "50 days ago" "$d/db-202610
 BACKUP_PRUNE=no MODE=ok run "$d"
 check "no prune: the old backup stays" "[ -f $d/db-20261001T000000Z.dump ]"
 check "no prune: the empty dump still goes" "[ ! -f $d/db-20261002T000000Z.dump ]"
+
+# 9. The key (backup-key.sh): made once, never replaced.
+check "gpg is installed" "command -v gpg > /dev/null"
+keys="$work/keys"
+BACKUP_KEY_FILE="$keys/public.asc" sh "$keyscript" new "$keys/owner" > "$work/key.log" 2>&1; s=$?
+check "key: made (public key, private key, passphrase)" "[ $s -eq 0 ] && [ -s '$keys/public.asc' ] && [ -s '$keys/owner/private-key.asc' ] && [ -s '$keys/owner/passphrase.txt' ]"
+BACKUP_KEY_FILE="$keys/public.asc" sh "$keyscript" new "$keys/again" > "$work/key2.log" 2>&1; s=$?
+check "key: an existing key is never replaced" "[ $s -ne 0 ] && [ ! -e '$keys/again/private-key.asc' ]"
+echo wrong > "$work/wrong.txt"
+mkdir -p "$work/gh"
+copyrun() { PATH="$work/bin:$PATH" BACKUP_DIR="$1" BACKUP_COPY_DIR="$2" BACKUP_KEY_FILE="${3:-$keys/public.asc}" sh "$work/beta/backup.sh" > "$1.log" 2>&1; }
+
+# 10. A good run with a copy (a folder name with a space, like Google Drive's): both files
+# encrypted, complete, in the classic format, and they open to the originals.
+d="$work/t10"; mkdir -p "$work/my drive"; c="$work/my drive/Kinaara backups"
+MODE=ok copyrun "$d" "$c"; s=$?
+check "copy: exits 0" "[ $s -eq 0 ]"
+check "copy: two copies, nothing partial" "[ \$(count '$c' '*.gpg') -eq 2 ] && [ \$(count '$c' '*.part') -eq 0 ]"
+check "copy: logs its line after the backup's" "grep -q '^backup: ' $d.log && grep -q '^encrypted copy: db-.*\.dump\.gpg and media-.*\.tgz\.gpg in ' $d.log"
+dump=$(ls "$d"/db-*.dump); arc=$(ls "$d"/media-*.tgz); dname=${dump##*/}; aname=${arc##*/}
+check "copy: the dump's copy opens to the dump" "sh '$keyscript' check '$keys/owner/private-key.asc' '$keys/owner/passphrase.txt' '$c/$dname.gpg' '$dump' > /dev/null 2>&1"
+check "copy: the archive's copy opens to the archive" "sh '$keyscript' check '$keys/owner/private-key.asc' '$keys/owner/passphrase.txt' '$c/$aname.gpg' '$arc' > /dev/null 2>&1"
+check "copy: a wrong passphrase doesn't open it" "! sh '$keyscript' check '$keys/owner/private-key.asc' '$work/wrong.txt' '$c/$dname.gpg' > /dev/null 2>&1"
+check "copy: the classic format (MDC, not AEAD)" "gpg --homedir '$work/gh' --batch --list-only --list-packets '$c/$dname.gpg' 2>&1 | grep -q '^:encrypted data packet:'"
+check "copy: the copy is not the plain file" "! cmp -s '$c/$dname.gpg' '$dump'"
+
+# 11. The folder comes from .env when the environment doesn't name it (quoted, CR LF);
+# an empty BACKUP_COPY_DIR in the environment turns the copy off.
+printf 'OTHER=1\r\nBACKUP_COPY_DIR="%s"\r\n' "$work/env copies" > "$work/beta/.env"
+d="$work/t11"; MODE=ok PATH="$work/bin:$PATH" BACKUP_DIR="$d" BACKUP_KEY_FILE="$keys/public.asc" sh "$work/beta/backup.sh" > "$d.log" 2>&1; s=$?
+check ".env: copies go to its folder" "[ $s -eq 0 ] && [ \$(count '$work/env copies' '*.gpg') -eq 2 ]"
+d="$work/t11b"; BACKUP_COPY_DIR= MODE=ok PATH="$work/bin:$PATH" BACKUP_DIR="$d" BACKUP_KEY_FILE="$keys/public.asc" sh "$work/beta/backup.sh" > "$d.log" 2>&1; s=$?
+check ".env: an empty BACKUP_COPY_DIR here turns it off" "[ $s -eq 0 ] && ! grep -q 'encrypted copy' $d.log"
+rm -f "$work/beta/.env"
+
+# 12. No key: the backup stays, the copy fails with one line.
+d="$work/t12"; MODE=ok copyrun "$d" "$work/t12-copies" "$work/missing.asc"; s=$?
+check "no key: exits non-zero" "[ $s -ne 0 ]"
+check "no key: the backup itself is published" "[ \$(count $d 'db-*.dump') -eq 1 ] && grep -q '^backup: ' $d.log"
+check "no key: logs FAILED (encrypted copy: key)" "grep -q '(encrypted copy: key)$' $d.log"
+
+# 13. The drive is missing (Google Drive not running): FAILED at the folder, no folder made.
+d="$work/t13"; MODE=ok copyrun "$d" "$work/no-such-drive/Kinaara backups"; s=$?
+check "no drive: exits non-zero, logs FAILED (encrypted copy: folder)" "[ $s -ne 0 ] && grep -q '(encrypted copy: folder)$' $d.log"
+check "no drive: nothing made" "[ ! -e '$work/no-such-drive' ]"
+
+# 14. gpg fails halfway: no partial copy remains, and FAILED names the file.
+mkdir -p "$work/badgpg"
+cat > "$work/badgpg/gpg" <<'EOF'
+#!/bin/sh
+prev=
+for a in "$@"; do
+  [ "$prev" = --output ] && printf 'partial' > "$a"
+  prev=$a
+done
+exit 2
+EOF
+chmod +x "$work/badgpg/gpg"
+d="$work/t14"; c="$work/t14-copies"
+MODE=ok PATH="$work/badgpg:$work/bin:$PATH" BACKUP_DIR="$d" BACKUP_COPY_DIR="$c" BACKUP_KEY_FILE="$keys/public.asc" sh "$work/beta/backup.sh" > "$d.log" 2>&1; s=$?
+check "gpg fails: exits non-zero, FAILED names the dump" "[ $s -ne 0 ] && grep -q '(encrypted copy: db-.*\.dump)$' $d.log"
+check "gpg fails: no partial copy remains" "[ \$(count $c '*') -eq 0 ]"
+
+# 15. A cut-off copy (gpg's output truncated) fails the check and is removed.
+mkdir -p "$work/cutgpg"
+cat > "$work/cutgpg/gpg" <<EOF
+#!/bin/sh
+"$(command -v gpg)" "\$@"; s=\$?
+prev=; out=
+for a in "\$@"; do [ "\$prev" = --output ] && out=\$a; prev=\$a; done
+if [ -n "\$out" ] && [ -f "\$out" ]; then head -c 100 "\$out" > "\$out.cut" && mv "\$out.cut" "\$out"; fi
+exit \$s
+EOF
+chmod +x "$work/cutgpg/gpg"
+d="$work/t15"; c="$work/t15-copies"
+MODE=ok PATH="$work/cutgpg:$work/bin:$PATH" BACKUP_DIR="$d" BACKUP_COPY_DIR="$c" BACKUP_KEY_FILE="$keys/public.asc" sh "$work/beta/backup.sh" > "$d.log" 2>&1; s=$?
+check "cut-off copy: exits non-zero, FAILED names the dump" "[ $s -ne 0 ] && grep -q '(encrypted copy: db-.*\.dump)$' $d.log"
+check "cut-off copy: nothing left in the folder" "[ \$(count $c '*') -eq 0 ]"
+
+# 16. Pruning copies by the time in their names: older than 7 days go, the newest 3 stay
+# (the new one and 2 old), names that aren't times are never touched or counted.
+d="$work/t16"; c="$work/t16-copies"; mkdir -p "$c"
+old() { printf 'x' > "$c/db-$1.dump.gpg"; printf 'x' > "$c/media-$1.tgz.gpg"; }
+old 20200101T000000Z; old 20200102T000000Z; old 20200103T000000Z; old 20200104T000000Z
+printf 'x' > "$c/notes.txt"; printf 'x' > "$c/db-latest.dump.gpg"
+MODE=ok copyrun "$d" "$c"
+check "copy prune: the newest 3 stay" "[ -f '$c/db-20200104T000000Z.dump.gpg' ] && [ -f '$c/db-20200103T000000Z.dump.gpg' ] && [ -f '$c/media-20200103T000000Z.tgz.gpg' ] && [ \$(count '$c' 'db-2*.dump.gpg') -eq 3 ]"
+check "copy prune: older ones go, with their archives" "[ ! -f '$c/db-20200102T000000Z.dump.gpg' ] && [ ! -f '$c/media-20200101T000000Z.tgz.gpg' ] && grep -q 'pruned copy db-20200101T000000Z.dump.gpg' $d.log"
+check "copy prune: other files stay" "[ -f '$c/notes.txt' ] && [ -f '$c/db-latest.dump.gpg' ]"
+d="$work/t16b"; c="$work/t16b-copies"; mkdir -p "$c"; old 20200101T000000Z
+BACKUP_PRUNE=no MODE=ok copyrun "$d" "$c"
+check "copy prune: BACKUP_PRUNE=no keeps old copies" "[ -f '$c/db-20200101T000000Z.dump.gpg' ]"
 
 echo "passed $pass, failed $failed"
 [ "$failed" -eq 0 ]

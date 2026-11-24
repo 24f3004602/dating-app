@@ -6,6 +6,8 @@ Conditions (each fails until fixed):
 - services: every service of the compose project runs, and is healthy where it has a check;
 - ready: the API answers /readyz at its public address (tunnel, edge and API together);
 - backup: the newest good database backup is under 36 hours old;
+- copy: when BACKUP_COPY_DIR is set in .env, the newest encrypted copy there (D149) is under
+  36 hours old, by the time in its name (it fails when the folder is gone: Google Drive stopped);
 - jobs: no background job has waited more than 30 minutes;
 - errors: fewer than 5 server errors (5xx) in the API's last hour;
 - sign-ins: fewer than 50 failed member sign-ins in the last hour (rate limits allow a few per address);
@@ -30,6 +32,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import smtplib
 import socket
@@ -148,6 +151,24 @@ def backup_problem(backup_dir: Path, now: float, max_age_h: float = BACKUP_MAX_A
     age_h = (now - newest.stat().st_mtime) / 3600
     note = f"{newest.name}, {age_h:.0f} h old"
     return (f"the newest backup is {age_h:.0f} hours old ({newest.name})" if age_h > max_age_h else None), note
+
+
+COPY_NAME = re.compile(r"db-(\d{8}T\d{6}Z)\.dump\.gpg")
+
+
+def copy_problem(copy_dir: Path, now: float, max_age_h: float = BACKUP_MAX_AGE_H) -> tuple[str | None, str]:
+    """The newest encrypted copy (D149), dated by its name: a sync client may change file dates.
+    The folder itself is never named: it is a setting's value."""
+    if not copy_dir.is_dir():
+        return "the encrypted copies' folder (BACKUP_COPY_DIR) isn't there: is Google Drive running?", "folder missing"
+    stamps = [m.group(1) for p in copy_dir.glob("db-*.dump.gpg")
+              if (m := COPY_NAME.fullmatch(p.name)) and p.is_file() and p.stat().st_size > 0]  # fmt: skip
+    if not stamps:
+        return "no encrypted copy in BACKUP_COPY_DIR", "none"
+    newest = max(stamps)
+    age_h = (now - datetime.strptime(newest, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC).timestamp()) / 3600
+    note = f"db-{newest}.dump.gpg, {age_h:.0f} h old"
+    return (f"the newest encrypted copy is {age_h:.0f} hours old (db-{newest}.dump.gpg)" if age_h > max_age_h else None), note
 
 
 def new_failures(log: Path, offset: int, marker: str = "backup FAILED") -> tuple[list[str], int]:
@@ -313,6 +334,8 @@ def collect(
     r.notes["ready"] = f"https://api.{domain}/readyz answered 200"
 
     r.problems["backup"], r.notes["backup"] = backup_problem(backup_dir, now)
+    if env.get("BACKUP_COPY_DIR"):
+        r.problems["copy"], r.notes["copy"] = copy_problem(Path(env["BACKUP_COPY_DIR"]), now)
     failures, r.log_offset = new_failures(backup_dir / "backup.log", int(state.get("log_offset", 0) or 0))  # type: ignore[arg-type]
     r.events += failures
     offset = int(state.get("update_log_offset", 0) or 0)  # type: ignore[arg-type]

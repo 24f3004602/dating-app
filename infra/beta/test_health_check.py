@@ -1,4 +1,4 @@
-"""Tests for health_check.py (D143): HEALTH-1..9 in replica/test-plan.md.
+"""Tests for health_check.py (D143, D149): HEALTH-1..10 in replica/test-plan.md.
 
     python -m unittest -v test_health_check      (from infra/beta; CI's beta-stack runs it)
 """
@@ -8,8 +8,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-import time
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -256,6 +256,48 @@ class MessageTests(unittest.TestCase):
                 self.assertEqual(hc.main([]), 1)  # still failing, but the alert went out
             self.assertEqual(sent, ["[Kinaara beta] Problem: ready"])
             self.assertIn("ready", json.loads((d / "health-state.json").read_text(encoding="utf-8"))["failing"])
+
+
+def copy_name(hours_ago: float) -> str:
+    made = datetime.fromtimestamp(NOW - hours_ago * 3600, UTC)
+    return f"db-{made:%Y%m%dT%H%M%SZ}.dump.gpg"
+
+
+class CopyTests(unittest.TestCase):
+    def test_copy_age_by_name(self) -> None:  # HEALTH-10
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            self.assertEqual(hc.copy_problem(d, NOW)[0], "no encrypted copy in BACKUP_COPY_DIR")
+            (d / copy_name(40)).write_bytes(b"x")
+            self.assertIn("40 hours old", hc.copy_problem(d, NOW)[0])
+            fresh = d / copy_name(5)
+            fresh.write_bytes(b"x")
+            os.utime(fresh, (NOW - 90 * 86400, NOW - 90 * 86400))  # the file's own date doesn't count
+            (d / "db-latest.dump.gpg").write_bytes(b"x")  # not a time: ignored
+            (d / copy_name(1)).write_bytes(b"")  # empty: ignored
+            (d / (copy_name(1) + ".part")).write_bytes(b"x")  # unfinished: ignored
+            problem, note = hc.copy_problem(d, NOW)
+            self.assertIsNone(problem)
+            self.assertEqual(note, f"{fresh.name}, 5 h old")
+            gone = hc.copy_problem(d / "gone", NOW)[0]
+            self.assertIn("isn't there", gone)
+            self.assertNotIn(str(d), gone)  # the folder is a setting: never in a message
+
+    def test_copy_checked_only_when_set(self) -> None:  # HEALTH-10
+        with Backups() as d:
+            self.assertNotIn("copy", run_collect(d).problems)
+            (d / "copies").mkdir()
+            (d / "copies" / copy_name(2)).write_bytes(b"x")
+            with mock.patch.dict(ENV, {"BACKUP_COPY_DIR": str(d / "copies")}):
+                r = run_collect(d)
+                self.assertIsNone(r.problems["copy"])
+                self.assertEqual(r.failing, {})
+            with mock.patch.dict(ENV, {"BACKUP_COPY_DIR": str(d / "missing")}):
+                r = run_collect(d)
+                self.assertEqual(set(r.failing), {"copy"})
+                subject, body = hc.compose_message("alert", r, "Kinaara", "laptop", NOW)
+                self.assertEqual(subject, "[Kinaara beta] Problem: copy")
+                self.assertNotIn(str(d), body)
 
 
 if __name__ == "__main__":

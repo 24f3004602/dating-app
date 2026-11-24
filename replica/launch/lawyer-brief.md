@@ -44,7 +44,7 @@ The full table is `replica/privacy-data-inventory.md` in the project. In short:
 | Live calls | never recorded by us; a record of each call (the two members, when it was paired, connected and ended, how it ended) for 90 days (to confirm), longer only while an open report names it |
 | Plus payments (code, amount, the UPI reference, dates) | 8 years as accounting records, unlinked from the account after deletion (to confirm) |
 | security logs (truncated IP, route, status) | 1 year |
-| backups | 7 days on the server today; encrypted copies off the computer planned |
+| backups (the database and photos) | 7 days on the computer, and an encrypted copy in the owner's Google Drive for 7 days (then up to 30 days in Drive's trash); only the owner holds the key |
 
 **Deletion:** a member can delete the account in the app; it can be restored for 7 days, then
 everything is purged except the listed exceptions (reports under review, consent proof, payment
@@ -59,8 +59,9 @@ records, a hash of a banned email for a year).
 | Google AdMob | ads in the Android app (when switched on) | device and ad data, no account data |
 | Cloudflare | the tunnel to the website; the relay for Live calls | connection data; call media passes through the relay, encrypted |
 | Expo (and Google, Apple) | delivering notifications | a device token and a fixed sentence (no names or messages) |
+| Google (Drive) | keeping the daily backup's encrypted copy (since 24 November) | encrypted files and their names, sizes and dates; not their contents (the key is only the owner's) |
 
-No data processing agreements are signed yet; Gmail is a personal account.
+No data processing agreements are signed yet; Gmail is a personal account, and Drive is the owner's own Google account. The privacy notice doesn't name Google Drive yet: its next version will.
 
 ## 5. Questions for you
 

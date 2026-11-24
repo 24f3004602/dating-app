@@ -153,13 +153,22 @@ jobs:
 
       - name: Backup
         run: |
-          # The script's failure, interruption and pruning rules, against a stand-in docker (D142).
+          # The script's failure, interruption and pruning rules, against a stand-in docker (D142),
+          # and its encrypted copy with real GnuPG (D149).
           sh ./backup-test.sh ./backup.sh
           BACKUP_DIR="$RUNNER_TEMP/backups" ./backup.sh
           ls -l "$RUNNER_TEMP/backups"
           test -s "$(ls "$RUNNER_TEMP"/backups/db-*.dump)"
           # The dump restores into a scratch database, every error fatal.
           ./restore-check.sh "$(ls "$RUNNER_TEMP"/backups/db-*.dump)"
+          # The encrypted copy of a real backup (D149), with a throwaway key: it opens with the
+          # private key and passphrase, byte for byte the dump it copies, which then restores.
+          BACKUP_KEY_FILE="$RUNNER_TEMP/backup-key.asc" sh ./backup-key.sh new "$RUNNER_TEMP/key"
+          BACKUP_DIR="$RUNNER_TEMP/copied" BACKUP_COPY_DIR="$RUNNER_TEMP/copies" BACKUP_KEY_FILE="$RUNNER_TEMP/backup-key.asc" ./backup.sh | tee copy.log
+          grep -q '^encrypted copy: db-' copy.log
+          dump=$(ls "$RUNNER_TEMP"/copied/db-*.dump)
+          sh ./backup-key.sh check "$RUNNER_TEMP/key/private-key.asc" "$RUNNER_TEMP/key/passphrase.txt" "$RUNNER_TEMP/copies/${dump##*/}.gpg" "$dump"
+          ./restore-check.sh "$dump"
 
       - name: Image updates
         run: |

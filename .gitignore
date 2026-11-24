@@ -103,3 +103,6 @@ e2e/.run/
 
 # The Reel's rendered frames and videos (D138): CI keeps them as an artifact.
 marketing/reel/out/
+
+# The public key for the encrypted backup copies (D149): deployment-specific, made by backup-key.sh.
+infra/beta/backup-key.asc
