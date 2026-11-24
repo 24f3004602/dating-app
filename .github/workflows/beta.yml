@@ -73,7 +73,7 @@ jobs:
           grep -qi "^content-security-policy: default-src 'self'; script-src 'self';" app.h
           grep -qi "connect-src 'self' blob: data: https://api.beta.test wss://api.beta.test;" app.h
           grep -qi "media-src 'self' https://beta.test;" app.h
-          grep -qi "^strict-transport-security: max-age=31536000" app.h
+          grep -qi "^strict-transport-security: max-age=31536000; includeSubDomains" app.h
           grep -qi "^x-frame-options: DENY" app.h
           if grep -qi "^server:" app.h; then echo "Server header present" && exit 1; fi
           c -f https://app.beta.test/delete-account | grep -q '<div id="root">'  # deep links get the app shell
@@ -201,7 +201,7 @@ jobs:
           tunnel -D - -o /dev/null -H 'Host: app.beta.test' http://edge/ > app.h
           grep -q '^HTTP/1.1 200' app.h
           grep -qi "^content-security-policy: default-src 'self'; script-src 'self';" app.h
-          grep -qi '^strict-transport-security: max-age=31536000' app.h
+          grep -qi '^strict-transport-security: max-age=31536000; includeSubDomains' app.h
           tunnel -H 'Host: app.beta.test' http://edge/ | grep -q '<div id="root">'
 
           tunnel -H 'Host: beta.test' http://edge/privacy > privacy.html

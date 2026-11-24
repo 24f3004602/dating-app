@@ -48,6 +48,7 @@ POSTGRES_PASSWORD=$(secret)
 OWNER_PASSWORD=$(secret)
 RUNTIME_PASSWORD=$(secret)
 APP_SECRET_KEY=$(secret)
+REDIS_PASSWORD=$(secret)
 
 # The app's Content-Security-Policy (from app-csp.txt).
 APP_CSP="$csp"

@@ -23,7 +23,8 @@ x-app-env: &app-env
   DATABASE_URL: postgresql+psycopg://app_runtime:${RUNTIME_PASSWORD:?run make-env.sh}@postgres:5432/datingapp
   MIGRATIONS_DATABASE_URL: postgresql+psycopg://app_owner:${OWNER_PASSWORD:?run make-env.sh}@postgres:5432/datingapp
   DB_RUNTIME_ROLE: app_runtime
-  REDIS_URL: redis://redis:6379/0
+  # A password even on the private network (D147): a foothold in one container doesn't open Redis.
+  REDIS_URL: redis://:${REDIS_PASSWORD:?run make-env.sh}@redis:6379/0
   CORS_ORIGINS: '["https://app.${DOMAIN:?run make-env.sh}"]'
   # Caddy and the console's server, on this private network only.
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
@@ -94,9 +95,12 @@ services:
     restart: unless-stopped
     logging: *logging
     # Rate limits and realtime fan-out only: nothing to persist.
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--requirepass", "${REDIS_PASSWORD:?run make-env.sh}"]
+    # redis-cli reads the password from REDISCLI_AUTH, so it never sits on a command line.
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?run make-env.sh}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 20

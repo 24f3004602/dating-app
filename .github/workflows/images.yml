@@ -100,7 +100,15 @@ jobs:
       - name: Web starts as non-root, sets its policy and protects the console on the server
         run: |
           test "$(docker run --rm datingapp-web:ci id -u)" = "1000"
-          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e PORT=3000 datingapp-web:ci
+          # Without its settings the website refuses to start (D147), rather than pointing at this machine.
+          set +e
+          timeout 60 docker run --rm --network host -e API_URL=http://127.0.0.1:8000 -e PORT=3001 datingapp-web:ci > guard.log 2>&1
+          guard=$?
+          set -e
+          cat guard.log
+          test "$guard" = 1
+          grep -q 'APP_URL' guard.log
+          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e APP_URL=http://127.0.0.1:8081 -e SITE_URL=http://127.0.0.1:3000 -e PORT=3000 datingapp-web:ci
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/ > /dev/null && break; sleep 1; done
           curl -s -D headers.txt -o /dev/null http://127.0.0.1:3000/
           grep -qi "content-security-policy: default-src 'self'; script-src 'self' 'nonce-" headers.txt
