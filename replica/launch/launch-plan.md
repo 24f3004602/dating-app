@@ -161,7 +161,7 @@ once on; cost per active member by channel.
 the email provider; the moderation rota; Google's certification (Search); Meta's permission
 (Instagram).
 
-**Before Play production:** the Play Console account; a release signing key (Play App Signing) and
+**Before Play production** (the answers and the gaps: `play-console.md`, 2026-11-24): the Play Console account; a release signing key (Play App Signing) and
 its own Android OAuth client for Google sign-in; the closed test (12+ testers, 14 days); the Data
 safety form (account, photos, messages, area, device IDs for ads, "Contains ads"); the content
 rating questionnaire (adults only); the listing (`listing.json`, linted) with screenshots of the
