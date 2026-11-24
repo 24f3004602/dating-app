@@ -122,6 +122,15 @@ class ReadingTests(unittest.TestCase):
             self.assertEqual(hc.new_failures(log, 10_000)[0], ["backup FAILED at x (photos check)"])
             self.assertEqual(hc.new_failures(d / "missing.log", 5), ([], 0))
 
+    def test_update_failures(self) -> None:  # HEALTH-4
+        with Backups() as d:
+            (d / "update.log").write_text("x update: nothing new\nx update FAILED (restart)\n", encoding="utf-8")
+            r = run_collect(d)
+            self.assertEqual(r.events, ["x update FAILED (restart)"])
+            state = hc.next_state({}, r, "alert", NOW)
+            self.assertEqual(state["update_log_offset"], (d / "update.log").stat().st_size)
+            self.assertEqual(run_collect(d, state=state).events, [])
+
     def test_server_errors(self) -> None:  # HEALTH-5
         text = "\n".join([access_line(200), access_line(503), "api-1  | " + access_line(500), "not json",
                           json.dumps([1, 2]), json.dumps({"event": "other", "status": 500}), access_line(404)])  # fmt: skip

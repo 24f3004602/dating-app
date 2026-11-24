@@ -11,7 +11,7 @@ Conditions (each fails until fixed):
 - sign-ins: fewer than 50 failed member sign-ins in the last hour (rate limits allow a few per address);
 - disk: at least 5 GB free.
 Events (reported once):
-- a new "backup FAILED" line in backup.log; a new failed background job;
+- a new "backup FAILED" line in backup.log or "update FAILED" in update.log; a new failed background job;
 - any failed staff sign-in, two-factor or enrolment attempt (the console holds the most power).
 
 Email goes through the beta's own SMTP settings in .env, to ALERT_EMAIL, else CONTACT_EMAIL,
@@ -85,6 +85,7 @@ class Results:
     notes: dict[str, str] = field(default_factory=dict)
     events: list[str] = field(default_factory=list)
     log_offset: int = 0
+    update_log_offset: int = 0
     failed_jobs: int | None = None
 
     @property
@@ -149,8 +150,8 @@ def backup_problem(backup_dir: Path, now: float, max_age_h: float = BACKUP_MAX_A
     return (f"the newest backup is {age_h:.0f} hours old ({newest.name})" if age_h > max_age_h else None), note
 
 
-def new_failures(log: Path, offset: int) -> tuple[list[str], int]:
-    """`backup FAILED` lines written since `offset`; a log that shrank is read from the start."""
+def new_failures(log: Path, offset: int, marker: str = "backup FAILED") -> tuple[list[str], int]:
+    """Lines with `marker` written since `offset`; a log that shrank is read from the start."""
     try:
         size = log.stat().st_size
     except FileNotFoundError:
@@ -160,7 +161,7 @@ def new_failures(log: Path, offset: int) -> tuple[list[str], int]:
     with log.open("rb") as fh:
         fh.seek(offset)
         chunk = fh.read()
-    lines = [line.strip() for line in chunk.decode("utf-8", "replace").splitlines() if "backup FAILED" in line]
+    lines = [line.strip() for line in chunk.decode("utf-8", "replace").splitlines() if marker in line]
     return lines, size
 
 
@@ -221,6 +222,7 @@ def next_state(state: dict[str, object], results: Results, kind: str | None, now
     new: dict[str, object] = dict(state)
     new["failing"] = {name: since.get(name, now) for name in results.failing}
     new["log_offset"] = results.log_offset
+    new["update_log_offset"] = results.update_log_offset
     if results.failed_jobs is not None:
         new["failed_jobs"] = results.failed_jobs
     new["last_run"] = now
@@ -312,6 +314,9 @@ def collect(
 
     r.problems["backup"], r.notes["backup"] = backup_problem(backup_dir, now)
     failures, r.log_offset = new_failures(backup_dir / "backup.log", int(state.get("log_offset", 0) or 0))  # type: ignore[arg-type]
+    r.events += failures
+    offset = int(state.get("update_log_offset", 0) or 0)  # type: ignore[arg-type]
+    failures, r.update_log_offset = new_failures(backup_dir / "update.log", offset, "update FAILED")
     r.events += failures
 
     since = float(state.get("last_run", 0) or 0) or now - 3600  # type: ignore[arg-type]
