@@ -140,6 +140,12 @@ jobs:
           ss -ltnH | awk '{print $4}' | sort -u
           if ss -ltnH | awk '{print $4}' | grep -Eq ':(5432|6379|8000|3000)$'; then echo "an internal port is published" && exit 1; fi
           ss -ltnH | awk '{print $4}' | grep -Eq ':443$'
+          # Redis needs its password (D147): a client without it gets NOAUTH; the worker's URL works.
+          noauth=$(docker compose exec -T redis sh -c 'env -u REDISCLI_AUTH redis-cli ping' 2>&1 || true)
+          echo "without the password: $noauth"
+          echo "$noauth" | grep -q '^NOAUTH'
+          test "$(docker compose exec -T redis redis-cli ping)" = PONG
+          docker compose exec -T worker python -c "import os, redis; assert redis.Redis.from_url(os.environ['REDIS_URL']).ping()"
 
       - name: Health check tests
         # The hourly health check's checks, alerts, reminders and recoveries (D143), with stand-ins.
