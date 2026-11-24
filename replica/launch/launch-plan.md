@@ -146,6 +146,13 @@ Prices read 2026-11-24 on each provider's own page (sources at the end), at that
 US$1 = ₹93.00, rounded. Most providers add 18% GST for Indian buyers. Paid so far: the domain's
 first year (₹99).
 
+**The owner's lean choice (2026-11-24, D151):** a friend's self-built server instead of the
+Lightsail server, the owner's Gmail (up to 500 emails a day) instead of SES, and Instagram and
+personal networks instead of paid marketing. So the cash needed for the launch is the Play fee
+and the lawyer's review (about ₹12,000-42,000 with the trademark and a reserve); the paid items
+below come in when the limits are reached. The running costs, the team, salaries and funding are
+in `business-plan.md`.
+
 **Needed for the launch**
 
 | what | cost | when | notes |
