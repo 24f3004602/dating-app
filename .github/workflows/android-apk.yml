@@ -90,9 +90,14 @@ jobs:
           java-version: "17"
       - run: npm ci
       - name: The build's settings (the beta's public ones)
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           {
             echo "APP_VARIANT=beta"
+            # Each build's own number (stage 28d): Android won't install a lower versionCode over a
+            # higher one, and Play takes each number once. The version members see is 0.1.<number>.
+            echo "ANDROID_VERSION_CODE=$RUN_NUMBER"
             # The app's permanent Android identity (D154): from the domain, whatever the brand becomes.
             echo "ANDROID_PACKAGE=online.kinaara.app"
             echo "EXPO_PUBLIC_API_URL=https://api.$DOMAIN"
@@ -133,8 +138,8 @@ jobs:
           [ "$got" = "$want" ] || { echo "the APK isn't signed with the app's key: $got"; exit 1; }
           rm signer.txt
           # Google Play's rules: target API 36 (since 31 August 2026) and native libraries ready
-          # for 16 KB memory pages (apk_check.py, its sources inside).
-          python3 "$GITHUB_WORKSPACE/apps/mobile/scripts/apk_check.py" app-release.apk --min-target 36
+          # for 16 KB memory pages; and this build's own versionCode (apk_check.py, its sources inside).
+          python3 "$GITHUB_WORKSPACE/apps/mobile/scripts/apk_check.py" app-release.apk --min-target 36 --version-code "$ANDROID_VERSION_CODE"
           sha256sum app-release.apk | tee app-release.apk.sha256
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -159,6 +164,7 @@ jobs:
       REPO: ${{ github.repository }}
       SHA: ${{ github.sha }}
       RUN: ${{ github.run_id }}
+      BUILD: ${{ github.run_number }}
       CERT: ${{ vars.ANDROID_CERT_SHA256 }}
     steps:
       - name: Publish the APK as the latest release
@@ -169,7 +175,7 @@ jobs:
           day=$(date -u +%Y%m%d)
           tag="android-$day-${SHA::7}"
           {
-            echo "Kinaara for Android, built from ${SHA::7} on $(date -u +'%-d %B %Y')."
+            echo "Kinaara for Android, build $BUILD (version 0.1.$BUILD), from ${SHA::7} on $(date -u +'%-d %B %Y')."
             echo
             echo "- Download: kinaara.apk below (Android 7.0 or later, 64-bit phones)."
             echo "- SHA-256 of the file: \`$(cut -d' ' -f1 kinaara.apk.sha256)\`"

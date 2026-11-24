@@ -140,6 +140,23 @@ Evidence: the backup folder and the task's last result, 2026-11-23 (security aud
 Suspected cause: confirmed. The script wrote straight to the final names, checked only at the end and logged only success; the task ran in a visible console window that could be closed mid-run.
 Status: fixed (D142). Files are written as `.part`, checked (the dump's table of contents read back; the archive holds `media/`), then named; a failure or a TERM, HUP or INT logs `backup FAILED at <time> (<step>)` and removes its partial files; empty dumps are removed; pruning keeps the newest 3 good backups. The task runs through `conhost --headless` (no window). `backup-test.sh`: 29 cases pass (17 fail on the old script), also under dash in CI; a fresh backup taken and restored by `restore-check.sh` (40 tables, migration 0017). It still runs only while the owner is signed in; a missed day is caught up at the next sign-in.
 
+### BUG-009: the font test rewrote the Hindi letter list, so a second run passed
+
+- Severity: S3
+- Flow / case: WEB-FONT-2 and WEB-FONT-3 (`apps/web/tests/fonts.test.mjs`)
+- Screen: none
+- Build: up to `9700f24`  Browser / device: the laptop (node --test)
+
+Steps
+1. Add a Hindi word with a letter the font subsets may lack (stage 28d: अधिकारी, with ध).
+2. Run the website's tests twice.
+
+Expected: both runs fail until the letter list is regenerated on purpose and the fonts are rebuilt.
+Actual: the first run failed 2 tests, the second passed: WEB-FONT-3 regenerated `scripts/devanagari-text.txt` in place to compare it, leaving the new list behind, and WEB-FONT-2 checks letters against that list, not against the fonts.
+Evidence: `git status` showed the list changed with no edit; the first run 41 of 43, the next six 43 of 43.
+Suspected cause: confirmed (the test ran `devanagari-text.mjs`, which wrote into `scripts/`).
+Status: fixed. The script takes an output folder; the test regenerates into a temporary one and compares, so a stale list fails on every run (checked: two runs on the old list both fail and leave it untouched). Harmless this time: the committed subsets (13 Nov) already hold ध, from Hindi lines since removed; rebuilt from their own characters they match byte for byte (the source is now pinned in `build_fonts.py`). Still open: the tests check the list, not the font files.
+
 ## To check
 
 - **A dev-only "NAVIGATE … was not handled by any navigator" console error** (2026-11-11, Expo Go 58.0.5 on the owner's Pixel 8 Pro). It appeared once, when an `exp://…/--/discover` link was sent to an app still running a bundle from a dev server that had just been stopped. The app still opened on Today. Not reproduced on a cold start with the same link. Check in a development build: open a deep link (a notification, a reset email) while the app is starting.

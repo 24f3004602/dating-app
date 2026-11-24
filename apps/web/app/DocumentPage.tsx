@@ -14,7 +14,8 @@ export function Contact() {
   );
 }
 
-/** The shared frame for the tester notice pages, and the deletion page (not versioned). */
+/** The shared frame for the tester notice pages, and the deletion, Android and complaints pages
+ * (not versioned). */
 export function DocumentPage({
   title,
   children,
@@ -50,7 +51,8 @@ export function DocumentPage({
           <Link href="/terms">Terms for testers</Link> ·{" "}
           <Link href="/privacy">Privacy notice</Link> ·{" "}
           <Link href="/android">Android app</Link> ·{" "}
-          <Link href="/delete-account">Delete your account</Link>
+          <Link href="/delete-account">Delete your account</Link> ·{" "}
+          <Link href="/complaints">Complaints</Link>
         </p>
       </footer>
     </>

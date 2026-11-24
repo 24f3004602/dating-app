@@ -39,7 +39,7 @@ emails a day for free. The work that grows with members is human:
 | work | why it can't wait | founder hours per month at 1,000 active members (**estimate**) |
 | --- | --- | --- |
 | Photo review | no photo is shown until a moderator approves it | about 4 (300 new members a month × 3.5 photos × 12 seconds) |
-| Reports, including Live calls | IT Rules 2021: grievances acknowledged within 24 hours and resolved within 15 days; intimate or morphed images removed within 24 hours of a complaint, so someone checks every day | 2-6 (2-5 reports per 100 active members, 7 minutes each) |
+| Reports, including Live calls | IT Rules 2021, as amended on 10 February 2026 (D155): complaints acknowledged within 24 hours and resolved within 7 days; removal requests within 36 hours; intimate, morphed or impersonating images removed within 2 hours of a complaint, so complaints must reach someone at once, day or night | 2-6 (2-5 reports per 100 active members, 7 minutes each) |
 | Plus payments | each UPI reference is checked against the bank by an admin | about 1 (50 passes, 1.5 minutes each) |
 | Support email | sign-in trouble, deletion by email, refunds | about 2 |
 | Instagram and founding members | the only marketing channel | 20-25 (3-4 Reels a week) |
@@ -115,7 +115,7 @@ beyond its free limit), marketing ₹15,000-50,000.
 ## 5. The team
 
 **Now (stage 1): no hires.** You run it with the AI assistant, as you built it:
-- **You:** product owner; the published grievance officer (acknowledge within 24 hours, resolve within 15 days); the first moderator and support; approving Plus payments (an admin's job in the console); Instagram and founding members; the go for every release.
+- **You:** product owner; the published grievance officer (acknowledge within 24 hours, resolve within 7 days; intimate or impersonating images within 2 hours; D155); the first moderator and support; approving Plus payments (an admin's job in the console); Instagram and founding members; the go for every release.
 - **The AI assistant:** features, fixes, tests, releases and documents, under your review.
 - **Outsourced, per job:** a lawyer (the review, later the DPDP rules from May 2027, any police request); a chartered accountant once there is revenue or a company.
 
@@ -202,8 +202,8 @@ Possible, because everything that runs the app is already free (the friend's ser
 Cloudflare, the call relay's free tier, GitHub, Drive backups, uptime checks, Instagram, UPI with
 no fees) and the domain is paid until November 2027. The one unavoidable fee is Google's US$25,
 for Play or for verifying a developer whose app is installed outside Play. Free ways out to members:
-- **The web app** (app.kinaara.online): everything, Live calls and UPI included, in any phone's browser, with no store and no Google fee, for good. Not yet installable to the home screen: a web app manifest (free) would add that.
-- **The Android APK from the website:** free until Google's developer verification reaches India (global rollout from January 2027; first countries live 30 September 2026). After that, an app from an unverified developer installs only after a 24-hour wait; the free "limited distribution" account covers 20-50 devices; full verification is the same US$25 with an ID. It also needs a download page (GitHub Releases is free for this public repository), and members update by hand.
+- **The web app** (app.kinaara.online): everything, Live calls and UPI included, in any phone's browser, with no store and no Google fee, for good. Installable to the home screen since stage 28b (D153).
+- **The Android APK from the website:** free until Google's developer verification reaches India (global rollout from January 2027; first countries live 30 September 2026). After that, an app from an unverified developer installs only after a 24-hour wait; the free "limited distribution" account covers 20-50 devices; full verification is the same US$25 with an ID. Its download page is `kinaara.online/android` (stage 28c, D154; the file on GitHub Releases, free for this public repository), and members update by hand.
 - **Indus Appstore** (PhonePe): free registration and listing and no commission in 2026 (third-party reports; its terms allow fees after notice). Smaller reach than Play; the 2027 verification likely applies to its installs too.
 
 Given up at ₹0: Play's reach, trust and automatic updates; ads (AdMob needs the app public on a
@@ -217,10 +217,10 @@ January 2027.
 
 | risk | what it costs | the plan |
 | --- | --- | --- |
-| You are the only operator: illness, exams, burnout | everything stops; grievance deadlines are missed | the first moderator and the developer retainer before the public launch; written runbooks (`deploy.md`) |
+| You are the only operator: illness, exams, burnout | everything stops; grievance deadlines are missed (the 2-hour one first) | the first moderator and the developer retainer before the public launch; written runbooks (`deploy.md`) |
 | The friend's server fails or the friendship changes | downtime | the backups and a VPS in a day (₹1,116-2,232 a month); the Docker setup moves as it is |
 | Gmail blocks sending for a day | nobody can sign up or reset a password | switch to SES at 300 emails a day, before it happens |
-| A serious safety incident (Live, harassment, a minor) | members' safety, the Play listing, legal exposure | daily report checks, the 24-hour removals, a lawyer on call, the safety guide; never skip photo review |
+| A serious safety incident (Live, harassment, a minor) | members' safety, the Play listing, legal exposure | daily report checks, the 2-hour removals (an instant alert, stage 28e), a lawyer on call, the safety guide; never skip photo review |
 | The law changes (DPDP from 13 May 2027) | rework, fines | the lawyer's review now, a privacy check-up before May 2027 |
 | The AI assistant becomes unavailable or costlier | slower fixes | the developer retainer knows the code; tests and docs keep it learnable |
 

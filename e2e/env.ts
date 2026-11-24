@@ -26,6 +26,9 @@ export const E2E_GOOGLE_CLIENT_ID = "123456789012-e2estandin.apps.googleusercont
 // The website's contact (D150): a production website won't start without one. example.com is
 // reserved (RFC 2606); nothing is ever sent to it.
 export const E2E_CONTACT_EMAIL = "e2e-contact@example.com";
+// The operator, named as the grievance officer on the complaints page (D155): a production
+// website won't start without one either.
+export const E2E_OPERATOR_NAME = "E2E Operator";
 
 function dotenv(path: string): Record<string, string> {
   if (!existsSync(path)) return {};

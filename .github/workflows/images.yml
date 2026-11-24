@@ -108,7 +108,8 @@ jobs:
           cat guard.log
           test "$guard" = 1
           grep -q 'APP_URL' guard.log
-          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e APP_URL=http://127.0.0.1:8081 -e SITE_URL=http://127.0.0.1:3000 -e CONTACT_EMAIL=contact@example.com -e PORT=3000 datingapp-web:ci
+          grep -q 'OPERATOR_NAME' guard.log
+          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e APP_URL=http://127.0.0.1:8081 -e SITE_URL=http://127.0.0.1:3000 -e CONTACT_EMAIL=contact@example.com -e "OPERATOR_NAME=CI Operator" -e PORT=3000 datingapp-web:ci
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/ > /dev/null && break; sleep 1; done
           curl -s -D headers.txt -o /dev/null http://127.0.0.1:3000/
           grep -qi "content-security-policy: default-src 'self'; script-src 'self' 'nonce-" headers.txt
@@ -119,6 +120,12 @@ jobs:
           grep -q '<h1>Delete your account</h1>' deletion.html
           grep -q 'href="http://127.0.0.1:8081/sign-in"' deletion.html
           grep -q 'href="mailto:contact@example.com"' deletion.html
+          # The complaints page (D155, IT Rules 3(2)): the grievance officer's name, the contact, the appeal.
+          curl -sf http://127.0.0.1:3000/complaints > complaints.html
+          grep -q '<h1>Complaints and the grievance officer</h1>' complaints.html
+          grep -q 'CI Operator' complaints.html
+          grep -q 'href="mailto:contact@example.com"' complaints.html
+          grep -q 'href="https://gac.gov.in"' complaints.html
 
       - name: Logs on failure
         if: failure()

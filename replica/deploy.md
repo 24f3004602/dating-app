@@ -512,6 +512,14 @@ There is no size threshold: every breach counts. A lawyer reviews the notices. M
 3. **Do it:** the same with `--yes`. As the member's own request does: hidden and signed out at once, matches end (their chats close live), Live calls end, deleted after 7 days (an open report can hold it up to 30 more). A suspended or banned account keeps its status, so it can't sign in to keep the account; a banned one still leaves its email's keyed hash for a year. The audit log records `account.deletion_requested` with `via: operator`.
 4. **Reply** with the date it printed (India date), and that an active member can still keep the account by signing in before then. Delete the email thread after the purge date; keep no copy of the request elsewhere.
 
+**Complaints** (D155; `kinaara.online/complaints` names you as the grievance officer). The IT Rules' limits since 10 February 2026: every complaint acknowledged within 24 hours and resolved within 7 days; a request to remove content the rules forbid, within 36 hours; an image showing the complainant nude or in a sexual act, or impersonating them, removed or blocked within **2 hours**; a court's or government agency's order within 3 hours.
+1. **Every day:** read the contact address and the console's report queue. Keep your phone's notifications on for the contact address: a subject starting "Urgent: image" is the two-hour kind.
+2. **Acknowledge** each email within 24 hours: received, and when they'll hear.
+3. **Act.** An in-app report: open it in the console and take its action (remove the photo, warn, suspend or ban). An emailed complaint about a profile: the console can't look a member up yet (stage 28e), so ask them to report it in the app if they can; otherwise it needs the developer (a database query) until 28e.
+4. **Resolve** within 7 days (36 hours for a removal request): reply with what you decided. If you refused, say they can appeal to the Grievance Appellate Committee at gac.gov.in within 30 days.
+5. **Keep a record:** the email thread and the console's action (the audit log keeps it). Never save an intimate image anywhere.
+6. **Orders from a court or a government agency:** acknowledge them; act within 3 hours where they order a removal; anything else goes to the lawyer (`lawyer-brief.md`, question 8).
+
 ## First week after launch (planned)
 
 - **Daily:**

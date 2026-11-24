@@ -157,6 +157,16 @@ export function LandingView({ lang }: { lang: Lang }) {
             </Link>
             {t.footer.close}
           </p>
+          <p>
+            <Link href="/complaints" hrefLang={docLang}>
+              {t.footer.complaints}
+            </Link>{" "}
+            ·{" "}
+            <Link href="/android" hrefLang={docLang}>
+              {t.footer.android}
+            </Link>
+            {t.footer.note}
+          </p>
         </footer>
       </div>
     </div>

@@ -1,9 +1,11 @@
 """Google Play's build requirements, checked on an APK with the standard library only.
 
-    python3 apk_check.py <app.apk> [--min-target 36]
+    python3 apk_check.py <app.apk> [--min-target 36] [--version-code 17]
 
 - the manifest's minSdkVersion and targetSdkVersion (binary XML, read by Android's attribute
   IDs): Play has required API level 36 for new apps and updates since 31 August 2026;
+- with --version-code, that the APK carries the build's own number (stage 28d): Android refuses
+  to install a lower versionCode over a higher one, and Play takes each number only once;
 - every native library (lib/<abi>/*.so) ready for 16 KB memory pages: stored uncompressed at a
   16 KB zip offset (or compressed); its ELF LOAD segments aligned to at least 16 KB; and no
   writable bytes outside GNU_RELRO in the 16 KB pages a 16 KB linker makes read-only.
@@ -19,12 +21,13 @@ import sys
 import zipfile
 
 PAGE = 0x4000
-ATTR_MIN_SDK, ATTR_TARGET_SDK = 0x0101020C, 0x01010270
+ATTR_MIN_SDK, ATTR_TARGET_SDK, ATTR_VERSION_CODE = 0x0101020C, 0x01010270, 0x0101021B
+NAMES = {ATTR_MIN_SDK: "minSdkVersion", ATTR_TARGET_SDK: "targetSdkVersion", ATTR_VERSION_CODE: "versionCode"}
 PT_LOAD, PT_GNU_RELRO, PF_W = 1, 0x6474E552, 2
 
 
 def manifest_sdks(data: bytes) -> dict[str, int]:
-    """minSdkVersion and targetSdkVersion from a binary AndroidManifest.xml."""
+    """minSdkVersion, targetSdkVersion and versionCode from a binary AndroidManifest.xml."""
     res_ids: list[int] = []
     found: dict[str, int] = {}
     pos = 8  # after the XML chunk's own header
@@ -41,10 +44,8 @@ def manifest_sdks(data: bytes) -> dict[str, int]:
                     "<IIIHBBI", data, pos + 16 + attr_start + i * attr_size
                 )
                 rid = res_ids[name] if name < len(res_ids) else None
-                if dtype == 0x10 and rid == ATTR_MIN_SDK:  # an integer
-                    found["minSdkVersion"] = value
-                elif dtype == 0x10 and rid == ATTR_TARGET_SDK:
-                    found["targetSdkVersion"] = value
+                if dtype == 0x10 and rid in NAMES:  # an integer
+                    found[NAMES[rid]] = value
         pos += csize
     return found
 
@@ -82,14 +83,19 @@ def elf_problems(blob: bytes) -> list[str]:
     return problems
 
 
-def check(path: str, min_target: int | None = None) -> list[str]:
+def check(path: str, min_target: int | None = None, version_code: int | None = None) -> list[str]:
     """Every problem found, one line each; prints what it checked."""
     problems: list[str] = []
     with zipfile.ZipFile(path) as apk, open(path, "rb") as raw:
         sdks = manifest_sdks(apk.read("AndroidManifest.xml"))
-        print(f"manifest: minSdkVersion {sdks.get('minSdkVersion')}, targetSdkVersion {sdks.get('targetSdkVersion')}")
+        print(
+            f"manifest: minSdkVersion {sdks.get('minSdkVersion')}, targetSdkVersion {sdks.get('targetSdkVersion')}, "
+            f"versionCode {sdks.get('versionCode')}"
+        )
         if min_target is not None and sdks.get("targetSdkVersion", 0) < min_target:
             problems.append(f"targetSdkVersion {sdks.get('targetSdkVersion')} is below {min_target}")
+        if version_code is not None and sdks.get("versionCode") != version_code:
+            problems.append(f"versionCode {sdks.get('versionCode')} isn't this build's {version_code}")
         libs = 0
         for info in apk.infolist():
             if not (info.filename.startswith("lib/") and info.filename.endswith(".so")):
@@ -112,8 +118,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("apk")
     parser.add_argument("--min-target", type=int, default=None, help="the lowest targetSdkVersion allowed")
+    parser.add_argument("--version-code", type=int, default=None, help="the versionCode this build must carry")
     args = parser.parse_args(argv)
-    problems = check(args.apk, args.min_target)
+    problems = check(args.apk, args.min_target, args.version_code)
     for problem in problems:
         print(f"PROBLEM {problem}")
     print("ready for Google Play's target SDK and 16 KB page rules" if not problems else f"{len(problems)} problems")

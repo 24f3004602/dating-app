@@ -10,6 +10,9 @@ web build choose a font by file, not by weight or width on a variable font.
 
 <source-dir> holds AnekLatin.ttf and AnekDevanagari.ttf, the variable fonts from
 github.com/EkType/Anek (fonts/*/variable, OFL-1.1), and OFL.txt. Nothing is installed.
+The source is commit 34074c6b406f (the repository's latest, February 2022): on 2026-11-24 the
+committed files rebuilt from it byte for byte (the Devanagari cuts from their own characters,
+which still include letters the page has since dropped, such as ध).
 
 - Files are served from /fonts for a year (next.config.ts): bump VERSION when they change.
 - Latin: the usual Latin ranges (Basic Latin, Latin-1, punctuation, the rupee sign).

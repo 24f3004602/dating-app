@@ -86,5 +86,8 @@ export const en: Messages = {
     joiner: "and the",
     privacy: "privacy notice",
     close: ". Full documents will follow.",
+    complaints: "Complaints and the grievance officer",
+    android: "The Android app",
+    note: "",
   },
 };

@@ -3,7 +3,8 @@
 // their letter lists are the ones the dictionaries make.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
 
@@ -54,10 +55,17 @@ test("WEB-FONT-2: the Devanagari subset covers every Devanagari letter in the si
 test("WEB-FONT-3: the letter lists are what the dictionaries make; the label face holds only the option's name", () => {
   const text = readFileSync(join(web, "scripts/devanagari-text.txt"), "utf8");
   const label = readFileSync(join(web, "scripts/devanagari-label.txt"), "utf8");
-  // Regenerate them and compare: a changed Hindi word needs a font build.
-  execFileSync(process.execPath, [join(web, "scripts/devanagari-text.mjs")], { stdio: "ignore" });
-  assert.equal(readFileSync(join(web, "scripts/devanagari-text.txt"), "utf8"), text, "devanagari-text.txt is stale");
-  assert.equal(readFileSync(join(web, "scripts/devanagari-label.txt"), "utf8"), label, "devanagari-label.txt is stale");
+  // Regenerate them elsewhere and compare: a changed Hindi word needs a font build. (Into a
+  // temporary folder: rewriting the committed lists made a second run pass without one.)
+  const fresh = mkdtempSync(join(tmpdir(), "devanagari-"));
+  try {
+    execFileSync(process.execPath, [join(web, "scripts/devanagari-text.mjs"), fresh], { stdio: "ignore" });
+    const stale = "is stale: run scripts/devanagari-text.mjs, then scripts/build_fonts.py";
+    assert.equal(readFileSync(join(fresh, "devanagari-text.txt"), "utf8"), text, `devanagari-text.txt ${stale}`);
+    assert.equal(readFileSync(join(fresh, "devanagari-label.txt"), "utf8"), label, `devanagari-label.txt ${stale}`);
+  } finally {
+    rmSync(fresh, { recursive: true, force: true });
+  }
   assert.equal(label.trim(), en.other.name);
   assert.ok(statSync(join(web, "public/fonts/anek-devanagari-label-v2.woff2")).size < 4 * 1024, "the label face stays tiny");
 });

@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "roboto",
+        "createdAt": "2026-11-24T16:32:07.156Z",
+        "reason": "agent triage: a fallback name in the staff console's system-ui stack (apps/web/app/globals.css, stage 14b), not a brand face; the landing page sets Anek"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "menlo",
+        "createdAt": "2026-11-24T16:32:07.607Z",
+        "reason": "agent triage: a fallback name in the staff console's ui-monospace stack for recovery codes and secrets (apps/web/app/globals.css, stage 14b), not a brand face"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "anek label",
+        "createdAt": "2026-11-24T16:32:08.067Z",
+        "reason": "agent triage: Anek itself, a 3 KB subset face declared under its own family name so the English page's language option (हिन्दी) loads only its letters (stage 22a, D120); described in apps/web/DESIGN.md Typography"
+      }
+    ]
+  }
+}

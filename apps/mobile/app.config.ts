@@ -68,6 +68,25 @@ export const withReleaseSigning: ConfigPlugin = (config) =>
     return mod;
   });
 
+// Google Play's highest versionCode (developer.android.com/studio/publish/versioning, read 2026-11-24).
+const MAX_VERSION_CODE = 2_100_000_000;
+
+/**
+ * Each Android build's number (stage 28d): ANDROID_VERSION_CODE, the android-apk workflow's run
+ * number. Android refuses to install a lower versionCode over a higher one, and Play needs every
+ * upload's to be higher than the last, so each build gets its own; the version members see becomes
+ * app.json's major.minor and the build, e.g. 0.1.17. Unset (local and web builds), nothing changes.
+ */
+export function buildVersion(version: string, build: string | undefined): { version: string; versionCode?: number } {
+  if (build === undefined || build === "") return { version };
+  const parts = /^(\d+)\.(\d+)\.\d+$/.exec(version);
+  if (!/^[1-9]\d{0,9}$/.test(build) || Number(build) > MAX_VERSION_CODE) {
+    throw new Error(`ANDROID_VERSION_CODE must be a whole number from 1 to ${MAX_VERSION_CODE}.`);
+  }
+  if (!parts) throw new Error(`app.json's version must look like 0.1.0, not "${version}".`);
+  return { version: `${parts[1]}.${parts[2]}.${build}`, versionCode: Number(build) };
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const configured = config as ExpoConfig;
   const base: ExpoConfig = { ...configured, plugins: [...(configured.plugins ?? []), adsPlugin()] };
@@ -89,10 +108,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   if (projectId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(projectId)) {
     throw new Error("EAS_PROJECT_ID must be the project ID from `eas init` (replica/deploy.md).");
   }
+  const { version, versionCode } = buildVersion(base.version ?? "0.1.0", process.env.ANDROID_VERSION_CODE);
   const beta: ExpoConfig = {
     ...base,
     name: `${process.env.BRAND_NAME ?? "Haanji"} (beta)`,
-    android: { ...base.android, package: process.env.ANDROID_PACKAGE ?? "dev.datingapp.beta" },
+    version,
+    android: {
+      ...base.android,
+      package: process.env.ANDROID_PACKAGE ?? "dev.datingapp.beta",
+      ...(versionCode === undefined ? {} : { versionCode }),
+    },
     extra: projectId ? { ...base.extra, eas: { projectId } } : base.extra,
   };
   return process.env.ANDROID_KEYSTORE_PATH ? withReleaseSigning(beta) : beta;

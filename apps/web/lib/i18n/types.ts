@@ -52,5 +52,16 @@ export type Messages = {
   terminus: { title: string; body: string };
   /** The button that pauses the first screen's candlelight loop. */
   pause: string;
-  footer: { lead: (brand: string) => string; terms: string; joiner: string; privacy: string; close: string };
+  footer: {
+    lead: (brand: string) => string;
+    terms: string;
+    joiner: string;
+    privacy: string;
+    close: string;
+    /** Stage 28d: the complaints page (the IT Rules want it reachable from the home page, D155)
+     * and the Android download (D154), both in English; `note` says so where needed. */
+    complaints: string;
+    android: string;
+    note: string;
+  };
 };

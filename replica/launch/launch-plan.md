@@ -22,7 +22,8 @@ the app tour in words and voice. In-app ads are built and off (D137).
    DMARC (blocker 2).
 4. **Photos:** on the server's disk; a private bucket before scale (blocker 4).
 5. **People on duty:** photo review and reports need someone every day. Target: new photos
-   reviewed within 12 hours, reports within 24.
+   reviewed within 12 hours, reports within 24; the IT Rules' limits are on the complaints page
+   (D155), the shortest 2 hours for intimate or impersonating images.
 6. **Google Play:** new personal developer accounts must run a closed test with at least 12
    testers, opted in for 14 days in a row, before production (checked 2026-11-20). The Play build
    must not sell the UPI pass: digital features in a Play app go through Play Billing (or
@@ -208,6 +209,30 @@ measure of success); reports per 100 active members and time to review; Plus pay
 once on; cost per active member by channel.
 
 ## 8. Checklists
+
+**The free launch (D151, stage 28; where we are):**
+- Live: the web app stays signed in and installs to the home screen (28a, 28b); the APK signed
+  with the app's own key, downloaded from `kinaara.online/android` (28c).
+- Built, waiting for the owner's go: each APK numbered by its build (28d, D156); the complaints
+  page naming the grievance officer, linked from the home page (28d, D155; three Hindi lines to
+  review first, `hindi-review.md` rows 68-70).
+- Before inviting the public (engineering): **28e**, the two-hour path the IT Rules have required
+  since 10 February 2026 for intimate or impersonating images: an instant alert to the operator
+  for urgent reports, the reported photo hidden at once until reviewed, and staff able to find a
+  profile and act on an emailed complaint; **28f**, the documents' next version (the Drive backup
+  copies, the deletion page, the web session cookie, the Android download, the complaints page)
+  and the reminder of the rules every three months (rule 3(1)(c)).
+- **The owner's steps, in order:** (1) review the three Hindi lines and give the go for 28d's
+  release; (2) add the Android OAuth client in Google Cloud Console (package `online.kinaara.app`,
+  SHA-1 `28:DE:22:DB:7F:4C:D7:65:F5:DD:9A:08:87:BE:65:57:9C:78:43:99`), then sign in on the new app
+  to check Sign in with Google; (3) set up UptimeRobot's free monitors (`deploy.md`); (4) on the
+  laptop, closing the lid does nothing while charging, and Windows Update's active hours cover the
+  evenings; (5) Gmail on your phone notifies you of mail to the contact address, so a complaint
+  reaches you inside the 2-hour limit until 28e's alert exists; (6) the Instagram bio links to
+  `kinaara.online/android` and the web app; (7) the founding members: invite them yourself, and
+  check reports every day.
+- Later, with money: Google Play (US$25, before Google's developer verification reaches India in
+  2027), the lawyer's review, the Mumbai server.
 
 **Before any paid promotion:** the Mumbai server with backups and monitoring; the lawyer's review;
 the email provider; the moderation rota; Google's certification (Search); Meta's permission

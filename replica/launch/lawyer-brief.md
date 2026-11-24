@@ -79,7 +79,13 @@ No data processing agreements are signed yet; Gmail is a personal account, and D
 
 **Platform rules (IT Act and the Intermediary Guidelines 2021):**
 6. Is Kinaara an intermediary, and what must we publish and do: a grievance officer, response
-   times for complaints, removal of intimate images shared without consent, records?
+   times for complaints, removal of intimate images shared without consent, records? Since
+   G.S.R. 120(E) (10 February 2026) the limits are 7 days to resolve, 36 hours for removal
+   requests, 2 hours for intimate or impersonating images, 3 hours for orders, and a reminder of
+   the rules every three months (D155; `kinaara.online/complaints` states them). Is an email
+   address enough as the officer's contact, or must we publish a postal address? Does rule 3(3)
+   (synthetically generated information) reach a dating app with no AI features, where members
+   could upload AI-made photos?
 7. Live calls with strangers: what duties do we have, and is our approach (video hidden until
    chosen, report ends the call, staff review, no recording by us) reasonable?
 8. Requests from the police: what process should we follow and document?

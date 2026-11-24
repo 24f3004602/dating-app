@@ -7,6 +7,7 @@ import {
   CONSOLE_PORT,
   CONSOLE_URL,
   E2E_CONTACT_EMAIL,
+  E2E_OPERATOR_NAME,
   E2E_PRIVACY_VERSION,
   WEB_PORT,
   WEB_URL,
@@ -54,11 +55,13 @@ export default defineConfig({
       url: CONSOLE_URL,
       // APP_URL: the landing page's buttons open the member app (D133), here its web build.
       // CONTACT_EMAIL: a production website needs one (D150); a reserved, undeliverable domain.
+      // OPERATOR_NAME: and the grievance officer's name (D155).
       env: {
         ...process.env,
         API_URL,
         APP_URL: WEB_URL,
         CONTACT_EMAIL: E2E_CONTACT_EMAIL,
+        OPERATOR_NAME: E2E_OPERATOR_NAME,
         PRIVACY_VERSION: E2E_PRIVACY_VERSION,
       } as Record<string, string>,
       reuseExistingServer: false,

@@ -2,8 +2,11 @@
 // scripts/build_fonts.py builds: devanagari-text.txt holds every Hindi string on the
 // Hindi page plus the working name in Devanagari; devanagari-label.txt holds only the
 // language option's name, which the English page shows. Run from apps/web:
-//   node scripts/devanagari-text.mjs
+//   node scripts/devanagari-text.mjs [output folder, default: this one]
+// (WEB-FONT-3 writes into a temporary folder and compares, so a test run never changes these.)
 import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { en } from "../lib/i18n/en.ts";
 import { hi } from "../lib/i18n/hi.ts";
@@ -19,6 +22,7 @@ const walk = (value) => {
 walk(hi);
 strings.add(NAME);
 const lines = [...strings].filter((s) => /[ऀ-ॿ]/.test(s));
-writeFileSync(new URL("./devanagari-text.txt", import.meta.url), `${lines.join("\n")}\n`);
-writeFileSync(new URL("./devanagari-label.txt", import.meta.url), `${en.other.name}\n`);
+const out = process.argv[2] ? pathToFileURL(`${resolve(process.argv[2])}/`) : new URL("./", import.meta.url);
+writeFileSync(new URL("devanagari-text.txt", out), `${lines.join("\n")}\n`);
+writeFileSync(new URL("devanagari-label.txt", out), `${en.other.name}\n`);
 console.log(`devanagari-text.txt: ${lines.length} lines; devanagari-label.txt: ${en.other.name}`);

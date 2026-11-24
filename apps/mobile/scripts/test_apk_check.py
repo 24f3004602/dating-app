@@ -30,11 +30,15 @@ def elf(segments: list[tuple[int, int, int, int, int]]) -> bytes:
     return bytes(header) + table
 
 
-def manifest(min_sdk: int, target_sdk: int) -> bytes:
-    """A binary AndroidManifest.xml holding just <uses-sdk> with its two attributes."""
-    res_map = struct.pack("<HHI", 0x0180, 8, 16) + struct.pack("<II", ac.ATTR_MIN_SDK, ac.ATTR_TARGET_SDK)
-    attrs = b"".join(struct.pack("<IIIHBBI", 0xFFFFFFFF, i, 0xFFFFFFFF, 8, 0, 0x10, v) for i, v in enumerate((min_sdk, target_sdk)))
-    ext = struct.pack("<IIHHHHHH", 0xFFFFFFFF, 0, 20, 20, 2, 0, 0, 0)
+def manifest(min_sdk: int, target_sdk: int, version_code: int | None = None) -> bytes:
+    """A binary AndroidManifest.xml holding one element with the SDK levels (and a versionCode)."""
+    values = [(ac.ATTR_MIN_SDK, min_sdk), (ac.ATTR_TARGET_SDK, target_sdk)]
+    if version_code is not None:
+        values.append((ac.ATTR_VERSION_CODE, version_code))
+    ids = [rid for rid, _ in values]
+    res_map = struct.pack("<HHI", 0x0180, 8, 8 + 4 * len(ids)) + struct.pack(f"<{len(ids)}I", *ids)
+    attrs = b"".join(struct.pack("<IIIHBBI", 0xFFFFFFFF, i, 0xFFFFFFFF, 8, 0, 0x10, v) for i, (_, v) in enumerate(values))
+    ext = struct.pack("<IIHHHHHH", 0xFFFFFFFF, 0, 20, 20, len(values), 0, 0, 0)
     node = struct.pack("<HHIII", 0x0102, 16, 16 + len(ext) + len(attrs), 1, 0xFFFFFFFF) + ext + attrs
     body = res_map + node
     return struct.pack("<HHI", 0x0003, 8, 8 + len(body)) + body
@@ -69,12 +73,12 @@ class ElfTests(unittest.TestCase):
 
 
 class ApkTests(unittest.TestCase):
-    def apk(self, target_sdk: int, stored_lib: bool) -> str:
+    def apk(self, target_sdk: int, stored_lib: bool, version_code: int | None = None) -> str:
         fd, path = tempfile.mkstemp(suffix=".apk")
         os.close(fd)
         self.addCleanup(os.remove, path)
         with zipfile.ZipFile(path, "w") as z:
-            z.writestr("AndroidManifest.xml", manifest(24, target_sdk))
+            z.writestr("AndroidManifest.xml", manifest(24, target_sdk, version_code))
             kind = zipfile.ZIP_STORED if stored_lib else zipfile.ZIP_DEFLATED
             z.writestr(zipfile.ZipInfo("lib/arm64-v8a/libgood.so"), GOOD_LIB, compress_type=kind)
         return path
@@ -89,6 +93,19 @@ class ApkTests(unittest.TestCase):
         self.assertEqual(ac.manifest_sdks(manifest(24, 36)), {"minSdkVersion": 24, "targetSdkVersion": 36})
         self.assertEqual(self.run_check(self.apk(36, stored_lib=False), 36), [])
         self.assertEqual(self.run_check(self.apk(35, stored_lib=False), 36), ["targetSdkVersion 35 is below 36"])
+
+    def test_version_code(self) -> None:
+        """APK-VER-3 (stage 28d): the APK carries the build's own number."""
+        self.assertEqual(ac.manifest_sdks(manifest(24, 36, 17)), {"minSdkVersion": 24, "targetSdkVersion": 36, "versionCode": 17})
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(ac.check(self.apk(36, stored_lib=False, version_code=17), 36, 17), [])
+        self.assertIn("versionCode 17", out.getvalue())
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(ac.check(self.apk(36, stored_lib=False, version_code=1), 36, 17), ["versionCode 1 isn't this build's 17"])
+            self.assertEqual(ac.check(self.apk(36, stored_lib=False), 36, 17), ["versionCode None isn't this build's 17"])
+            self.assertEqual(ac.main([self.apk(36, stored_lib=False, version_code=1), "--version-code", "17"]), 1)
+            # Without --version-code nothing is asked of it (as before).
+            self.assertEqual(ac.check(self.apk(36, stored_lib=False, version_code=1), 36), [])
 
     def test_zip_alignment_of_stored_libraries(self) -> None:
         problems = self.run_check(self.apk(36, stored_lib=True), None)
