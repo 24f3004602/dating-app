@@ -287,6 +287,13 @@ The privacy notice promises all this within 30 days of the end.
 - **Documents:** the notice hasn't had legal review.
 - **Email:** Gmail's sending limits apply.
 - **Staff sign-in limits:** the console's server doesn't pass the visitor's IP to the API, so per-IP limits on staff sign-in count all staff together. That's stricter, not weaker, but an attack on the console could lock staff out for a while.
+### The Android app's release key (D154)
+
+- **Where it is:** GitHub, the `android-release` environment (only `main` may use it): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`kinaara`); the repository variable `ANDROID_CERT_SHA256` is the certificate's public fingerprint, which every build checks. An encrypted copy (the keystore and a README with the password) is in Google Drive, `Kinaara keys/android-release-key-20261124.tar.gpg`.
+- **If GitHub loses it:** open the Drive copy with the backup key from the password manager (`gpg --import` the key, then `gpg --decrypt` the file and `tar -xf`), then set the three secrets again (`gh secret set ... --env android-release`). Lose both and installed apps can never be updated: never delete the Drive copy.
+- **A new APK:** run `android-apk` from `main` (Actions, Run workflow); tick `publish` to make it the latest release, which `kinaara.online/android` links to. The build stops if the APK isn't signed with this key.
+- **Google sign-in on Android:** Google Cloud Console, APIs and Services, Credentials, an Android OAuth client with package `online.kinaara.app` and SHA-1 `28:DE:22:DB:7F:4C:D7:65:F5:DD:9A:08:87:BE:65:57:9C:78:43:99`.
+
 ### In-app ads (D137): switching them on
 
 Built and off. Ads exist only in Android builds made with `ads` set to `test` or `live` in the

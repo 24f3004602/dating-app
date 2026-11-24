@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { type ConfigPlugin, withAppBuildGradle } from "expo/config-plugins";
 
 /**
  * Build variants on top of app.json (D096). The beta build for testers' Android
@@ -30,6 +31,43 @@ function adsPlugin(): [string, Record<string, unknown>] {
   return ["react-native-google-mobile-ads", { androidAppId: appId, iosAppId: TEST_ADMOB_APP.ios, delayAppMeasurementInit: true }];
 }
 
+/**
+ * The app's own release key (stage 28c, D154). Expo's template signs release builds with the
+ * debug keystore every React Native project shares, so anyone could sign an "update" Android
+ * would accept. When ANDROID_KEYSTORE_PATH is set (the android-apk workflow, from the
+ * android-release environment's secrets), release builds are signed with the app's key instead;
+ * the workflow then checks the APK's certificate. Each anchor is checked: a changed template
+ * fails the build rather than quietly signing with the debug key.
+ */
+export function signWithReleaseKey(gradle: string): string {
+  const signing = /signingConfigs \{\n(\s+)debug \{/;
+  const releaseType = /(buildTypes \{[\s\S]*?release \{[\s\S]*?)signingConfig signingConfigs\.debug/;
+  if (!signing.test(gradle) || !releaseType.test(gradle)) {
+    throw new Error("Release signing: the template's signingConfigs or release build type has moved.");
+  }
+  return gradle
+    .replace(
+      signing,
+      [
+        "signingConfigs {",
+        "$1release {",
+        '$1    storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))',
+        '$1    storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")',
+        '$1    keyAlias System.getenv("ANDROID_KEY_ALIAS")',
+        '$1    keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")',
+        "$1}",
+        "$1debug {",
+      ].join("\n"),
+    )
+    .replace(releaseType, "$1signingConfig signingConfigs.release");
+}
+
+export const withReleaseSigning: ConfigPlugin = (config) =>
+  withAppBuildGradle(config, (mod) => {
+    mod.modResults.contents = signWithReleaseKey(mod.modResults.contents);
+    return mod;
+  });
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const configured = config as ExpoConfig;
   const base: ExpoConfig = { ...configured, plugins: [...(configured.plugins ?? []), adsPlugin()] };
@@ -51,10 +89,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   if (projectId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(projectId)) {
     throw new Error("EAS_PROJECT_ID must be the project ID from `eas init` (replica/deploy.md).");
   }
-  return {
+  const beta: ExpoConfig = {
     ...base,
     name: `${process.env.BRAND_NAME ?? "Haanji"} (beta)`,
     android: { ...base.android, package: process.env.ANDROID_PACKAGE ?? "dev.datingapp.beta" },
     extra: projectId ? { ...base.extra, eas: { projectId } } : base.extra,
   };
+  return process.env.ANDROID_KEYSTORE_PATH ? withReleaseSigning(beta) : beta;
 };

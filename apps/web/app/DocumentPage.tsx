@@ -49,6 +49,7 @@ export function DocumentPage({
         <p className="caption">
           <Link href="/terms">Terms for testers</Link> ·{" "}
           <Link href="/privacy">Privacy notice</Link> ·{" "}
+          <Link href="/android">Android app</Link> ·{" "}
           <Link href="/delete-account">Delete your account</Link>
         </p>
       </footer>

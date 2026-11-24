@@ -74,7 +74,8 @@ Independent security review: no. Families policy: not applicable (adults only).
 
 ## 5. The owner's decisions and steps
 
-- **Where the upload key lives:** (a) a GitHub Actions secret, used only by a hand-started
+- **Where the upload key lives: decided (D154, 2026-11-24):** the app's own key in GitHub's `android-release`
+  environment, with an encrypted copy in Drive; it can be Play's upload key. Was: (a) a GitHub Actions secret, used only by a hand-started
   workflow on `main` behind a protected environment, with the key and its passwords also in the
   password manager; or (b) on this laptop, signing by hand (needs Java, and memory is tight).
   Recommended: (a). A lost or leaked upload key can be replaced through Play support; the app

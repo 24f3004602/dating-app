@@ -1,10 +1,10 @@
 name: android-apk
 
-# A native Android build of the member app (stage 23, D126), run by hand: it checks that
-# the app's native modules (react-native-webrtc, for Live on phones) build with this Expo
-# and React Native, and keeps the APK for seven days for a check on a phone. It uses the
-# beta's public settings, is signed with the template's debug key, and is never published:
-# testers' builds go through EAS once the owner's project exists (deploy.md).
+# A native Android build of the member app (stage 23, D126), run by hand. Since stage 28c (D154)
+# it is signed with the app's own release key (the android-release environment's secrets, usable
+# from main only), never the debug keystore every React Native project shares, and the APK's
+# certificate is checked against ANDROID_CERT_SHA256. With "publish", the APK becomes the latest
+# GitHub Release, which the website's Android page links to (the free launch, D151).
 on:
   workflow_dispatch:
     inputs:
@@ -34,6 +34,11 @@ on:
         description: "Live ads only: the full-screen (interstitial) ad unit ID"
         required: false
         default: ""
+      publish:
+        description: "Publish the APK as the latest GitHub Release (the website's download link)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -46,6 +51,8 @@ jobs:
   apk:
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    # The release key's secrets live in this environment, which only main can use (D154).
+    environment: android-release
     env:
       DOMAIN: ${{ inputs.domain }}
       BRAND_NAME: ${{ inputs.brand_name }}
@@ -65,6 +72,14 @@ jobs:
           for id in "$ADMOB_APP_ID" "$ADMOB_BANNER_ID" "$ADMOB_INTERSTITIAL_ID"; do
             [[ -z "$id" || "$id" =~ ^ca-app-pub-[0-9]{16}[~/][0-9]{10}$ ]] || { echo "not an AdMob ID: $id"; exit 1; }
           done
+      - name: The app's own release key (D154)
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          EXPECTED: ${{ vars.ANDROID_CERT_SHA256 }}
+        run: |
+          [ -n "$KEYSTORE" ] && [ -n "$EXPECTED" ] || { echo "the release key isn't set up (deploy.md, The Android app's release key)"; exit 1; }
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
@@ -78,6 +93,8 @@ jobs:
         run: |
           {
             echo "APP_VARIANT=beta"
+            # The app's permanent Android identity (D154): from the domain, whatever the brand becomes.
+            echo "ANDROID_PACKAGE=online.kinaara.app"
             echo "EXPO_PUBLIC_API_URL=https://api.$DOMAIN"
             echo "EXPO_PUBLIC_WEB_URL=https://$DOMAIN"
             echo "EXPO_PUBLIC_TERMS_VERSION=beta-2026-11-20"
@@ -89,18 +106,32 @@ jobs:
             echo "EXPO_PUBLIC_ADMOB_BANNER_ID=$ADMOB_BANNER_ID"
             echo "EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID=$ADMOB_INTERSTITIAL_ID"
           } >> "$GITHUB_ENV"
-      - name: Generate the native project
+      - name: Generate the native project (release signing from the app's key, app.config.ts)
         working-directory: apps/mobile
-        run: npx expo prebuild --platform android --no-install
-      - name: Build the APK (arm64)
+        run: |
+          npx expo prebuild --platform android --no-install
+          grep -q "signingConfig signingConfigs.release" android/app/build.gradle || { echo "release signing wasn't applied"; exit 1; }
+      - name: Build the APK (arm64), signed with the app's key
         working-directory: apps/mobile/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
-      - name: Check WebRTC is inside, and record the APK's hash
+      - name: Check WebRTC is inside, the app's own signature, and record the APK's hash
         working-directory: apps/mobile/android/app/build/outputs/apk/release
+        env:
+          EXPECTED: ${{ vars.ANDROID_CERT_SHA256 }}
         run: |
           ls -l
           unzip -l app-release.apk | grep -E "libjingle_peerconnection_so\.so" || { echo "the WebRTC native library is missing"; exit 1; }
           unzip -p app-release.apk AndroidManifest.xml > /dev/null
+          # Signed with the app's own key (D154): its certificate, as apksigner reads it, is the one we keep.
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$apksigner" verify --print-certs app-release.apk | tee signer.txt
+          got=$(grep -m1 "certificate SHA-256 digest" signer.txt | awk '{print $NF}')
+          want=$(echo "$EXPECTED" | tr -d ':' | tr 'A-F' 'a-f')
+          [ "$got" = "$want" ] || { echo "the APK isn't signed with the app's key: $got"; exit 1; }
+          rm signer.txt
           # Google Play's rules: target API 36 (since 31 August 2026) and native libraries ready
           # for 16 KB memory pages (apk_check.py, its sources inside).
           python3 "$GITHUB_WORKSPACE/apps/mobile/scripts/apk_check.py" app-release.apk --min-target 36
@@ -113,3 +144,38 @@ jobs:
             apps/mobile/android/app/build/outputs/apk/release/app-release.apk.sha256
           retention-days: 7
           if-no-files-found: error
+
+  publish:
+    # The free launch's download (D151, D154): the latest release's kinaara.apk, linked from the website.
+    needs: apk
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      SHA: ${{ github.sha }}
+      RUN: ${{ github.run_id }}
+      CERT: ${{ vars.ANDROID_CERT_SHA256 }}
+    steps:
+      - name: Publish the APK as the latest release
+        run: |
+          gh run download "$RUN" --repo "$REPO" -n app-release-apk -D apk
+          cp apk/app-release.apk kinaara.apk
+          sha256sum kinaara.apk > kinaara.apk.sha256
+          day=$(date -u +%Y%m%d)
+          tag="android-$day-${SHA::7}"
+          {
+            echo "Kinaara for Android, built from ${SHA::7} on $(date -u +'%-d %B %Y')."
+            echo
+            echo "- Download: kinaara.apk below (Android 7.0 or later, 64-bit phones)."
+            echo "- SHA-256 of the file: \`$(cut -d' ' -f1 kinaara.apk.sha256)\`"
+            echo "- Signed with Kinaara's own key; its certificate's SHA-256: \`$CERT\`"
+            echo
+            echo "How to install, and what the app does with your data: https://kinaara.online/android"
+          } > notes.md
+          gh release create "$tag" kinaara.apk kinaara.apk.sha256 --repo "$REPO" --target "$SHA" --latest \
+            --title "Kinaara for Android ($(date -u +'%-d %B %Y'))" --notes-file notes.md
