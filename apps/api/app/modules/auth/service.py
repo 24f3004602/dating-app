@@ -76,8 +76,15 @@ MAX_AGE = 120
 
 # Per-IP limits use the full IP (hashed in Redis); per-email limits apply
 # whether or not the account exists.
-REGISTER_IP = Limit("register_ip", 10, 3600)
 REGISTER_EMAIL = Limit("register_email", 5, 3600)
+
+
+def register_ip_limit(settings: Settings) -> Limit:
+    """Sign-ups per IP address an hour: 10 on every server (settings refuse more); only the
+    end-to-end run, whose browsers all share one address, raises it."""
+    return Limit("register_ip", settings.register_ip_per_hour, 3600)
+
+
 CODE_IP = Limit("code_ip", 20, 3600)
 CODE_COOLDOWN = Limit("code_cooldown", 1, 60)
 CODE_DAILY = Limit("code_daily", 10, 86_400)
@@ -336,7 +343,7 @@ async def register(ctx: AuthContext, session: AsyncSession, data: RegisterIn, ip
             extra={"required": {"terms": s.terms_version, "privacy": s.privacy_version}},
         )
 
-    await ctx.limiter.hit(REGISTER_IP, ip)
+    await ctx.limiter.hit(register_ip_limit(s), ip)
     await ctx.limiter.hit(REGISTER_EMAIL, data.email)
     password_hash = ctx.passwords.hash(data.password)  # on every path, for equal timing
 

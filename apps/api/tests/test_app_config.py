@@ -41,6 +41,8 @@ def test_production_rejects_debug_logging() -> None:
         ({"PUSH_BACKEND": "memory"}, "the memory push backend is for tests only"),
         ({"PAYMENTS_BACKEND": "fake"}, "the fake payments backend is for tests only"),
         ({"CORS_ORIGINS": ["http://console.example.in"]}, "CORS origins must be https in production"),
+        # The end-to-end run's browsers share one address; a server keeps 10 sign-ups an hour per IP.
+        ({"REGISTER_IP_PER_HOUR": 11}, "REGISTER_IP_PER_HOUR above 10 is for the end-to-end run"),
     ],
 )
 def test_production_rejects_test_backends_and_plain_http_origins(extra: dict[str, object], problem: str) -> None:

@@ -85,6 +85,9 @@ class Settings(BaseSettings):
     login_lockout_threshold: int = Field(default=100, ge=10, le=100)
     # Namespace for every Redis key and channel (rate limits and realtime).
     rate_limit_prefix: str = Field(default="rl", pattern=r"^[a-z0-9:_-]{1,40}$")
+    # Sign-ups per IP address an hour. Only the end-to-end run raises it, because all its browsers
+    # share one address; a server never goes above 10 (_production_rules).
+    register_ip_per_hour: int = Field(default=10, ge=1, le=1000)
 
     # Versions of the documents a member accepts at sign-up. "draft-" versions
     # mark documents that have not had legal review; production refuses them.
@@ -314,6 +317,7 @@ class Settings(BaseSettings):
             (self.payments_backend == "fake", "the fake payments backend is for tests only"),
             # Without a relay, each person in a call would see the other's IP address.
             (self.calls_ice == "direct", f"Live calls need the relay in {env} (CALLS_ICE=cloudflare, or off)"),
+            (self.register_ip_per_hour > 10, f"REGISTER_IP_PER_HOUR above 10 is for the end-to-end run, not {env}"),
             (
                 any(not origin.startswith("https://") for origin in self.cors_origins),
                 f"CORS origins must be https in {env}",

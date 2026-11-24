@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import UTC, date, datetime
 
 import pytest
@@ -350,6 +351,26 @@ async def test_verify_for_an_unknown_address_looks_like_a_wrong_code(client: Asy
     )
     assert r.status_code == 400
     assert r.json()["code"] == "verification_failed"
+
+
+async def test_register_is_rate_limited_per_ip_at_10_an_hour(
+    app: FastAPI, client: AsyncClient, clock: FrozenClock
+) -> None:
+    for i in range(10):
+        assert (await register(client, app.state.settings, clock, f"ip{i}@example.com")).status_code == 202
+    r = await register(client, app.state.settings, clock, "ip10@example.com")
+    assert r.status_code == 429
+
+
+async def test_the_end_to_end_runs_sign_up_limit_is_its_setting(
+    app: FastAPI, client: AsyncClient, clock: FrozenClock
+) -> None:
+    """Only the end-to-end run raises it (servers refuse more than 10: test_app_config)."""
+    settings = app.state.auth.settings.model_copy(update={"register_ip_per_hour": 12})
+    app.state.auth = dataclasses.replace(app.state.auth, settings=settings)
+    for i in range(12):
+        assert (await register(client, settings, clock, f"e2e{i}@example.com")).status_code == 202
+    assert (await register(client, settings, clock, "e2e12@example.com")).status_code == 429
 
 
 async def test_register_is_rate_limited_per_address(app: FastAPI, client: AsyncClient, clock: FrozenClock) -> None:

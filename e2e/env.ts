@@ -61,6 +61,9 @@ export function apiEnv(runId: string): Record<string, string> {
     CORS_ORIGINS: JSON.stringify([WEB_URL]),
     PRIVACY_VERSION: E2E_PRIVACY_VERSION,
     RATE_LIMIT_PREFIX: `rl-e2e-${runId}`,
+    // Every spec signs up from 127.0.0.1, so the run passes the 10 sign-ups an hour that each
+    // address gets on a server (refused above 10 there). The tour spec hit it on 2026-11-24.
+    REGISTER_IP_PER_HOUR: "100",
     EMAIL_BACKEND: "console",
     STORAGE_BACKEND: "local",
     MEDIA_DIR: "var/media-e2e",
