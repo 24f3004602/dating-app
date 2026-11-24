@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import func, or_, select, text, update
 
+from app.cli import main as cli
 from app.modules.accounts.models import Consent, ConsentKind, User, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import CodePurpose, OneTimeCode, Session, SessionClient, SignupInvite
@@ -23,6 +24,7 @@ from app.modules.media.models import Photo
 from app.modules.messaging.models import MatchRead, Message
 from app.modules.privacy import retention, service
 from app.modules.privacy.models import DeletedAccount
+from app.modules.privacy.service import OperatorOutcome as Outcome
 from app.modules.profiles.models import Profile, ProfilePrompt
 from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportReason, ReportStatus
 from app.providers.storage import photo_keys
@@ -406,6 +408,118 @@ async def test_reinstating_an_account_waiting_for_deletion_keeps_it_waiting(
         record = await s.get(DeletedAccount, asha.id)
         assert record is not None
         assert (record.was_banned, record.email_digest) == (False, None)
+
+
+# --- a request that came by email (D150) ------------------------------------------------
+
+
+async def by_operator(app: FastAPI, db: Db, email: str, now: datetime, *, apply: bool) -> service.OperatorRequest:
+    async with db() as s:
+        return await service.request_deletion_by_operator(s, app.state.auth.jobs, email, now, apply=apply)
+
+
+async def test_an_emailed_request_does_what_the_members_own_does_after_a_dry_run(
+    app: FastAPI, client: AsyncClient, db: Db, *, clock: FrozenClock, now: datetime, live: LiveServer
+) -> None:
+    asha, ravi, match_id = await pair(app, db, now)
+    email = await email_of(db, asha)
+    week = now + timedelta(days=7)
+
+    dry = await by_operator(app, db, email, now, apply=False)
+    assert (dry.outcome, dry.user_id, dry.status, dry.deleted_after) == (Outcome.would_delete, asha.id, "active", week)
+    assert (await client.get("/v1/me", headers=asha.headers)).status_code == 200  # the dry run changed nothing
+    assert await audited(db, "account.deletion_requested", asha.id) == []
+
+    async with connected(live, client, asha) as asha_ws, connected(live, client, ravi) as ravi_ws:
+        done = await by_operator(app, db, email, now, apply=True)
+        assert (done.outcome, done.deleted_after) == (Outcome.requested, week)
+        await service.announce(app.state.realtime, asha.id, done.closed)  # what the command does next
+        assert await closed_with(asha_ws) == 4401
+        assert await event(ravi_ws) == {"type": "match.closed", "match_id": str(match_id)}
+
+    assert (await client.get("/v1/me", headers=asha.headers)).status_code == 401
+    assert (await client.get(f"/v1/profiles/{asha.id}", headers=ravi.headers)).status_code == 404
+    async with db() as s:
+        user = await s.get(User, asha.id)
+        match = await s.get(Match, match_id)
+        assert user is not None
+        assert match is not None
+        assert (user.status, user.deletion_requested_at, match.closed_reason) == ("deactivated", now, "deleted")
+    [entry] = await audited(db, "account.deletion_requested", asha.id)
+    assert (entry.actor_id, entry.details) == (None, {"via": "operator"})
+
+    again = await by_operator(app, db, email, now + timedelta(days=1), apply=True)
+    assert (again.outcome, again.deleted_after) == (Outcome.already_waiting, week)  # the first date stands
+    clock.advance(days=7, seconds=60)
+    assert await purge(app, db, clock) == 1
+
+
+async def test_a_suspended_member_asking_by_email_stays_suspended_until_the_purge(
+    app: FastAPI, client: AsyncClient, db: Db, *, clock: FrozenClock, now: datetime
+) -> None:
+    asha = await deletable(app, db, await make_member(db, app.state.storage, now, status="suspended"))
+    email = await email_of(db, asha)
+    done = await by_operator(app, db, email, now, apply=True)
+    assert (done.outcome, done.status) == (Outcome.requested, "suspended")
+    # Still no way in, so no way to "keep the account" and step around the suspension.
+    for path in ("/v1/auth/login", "/v1/auth/restore"):
+        r = await client.post(path, json={"email": email, "password": PASSWORD})
+        assert (r.status_code, r.json()["code"]) == (403, "account_suspended"), path
+    async with db() as s:
+        user = await s.get(User, asha.id)
+        assert user is not None
+        assert (user.status, user.deletion_requested_at) == ("suspended", now)
+    clock.advance(days=7, seconds=60)
+    assert await purge(app, db, clock) == 1
+    async with db() as s:
+        record = await s.get(DeletedAccount, asha.id)
+        assert record is not None
+        assert (record.requested_at, record.was_banned, record.email_digest) == (now, False, None)
+
+
+async def test_a_banned_member_asking_by_email_is_purged_after_7_days_and_the_email_still_waits(
+    app: FastAPI, client: AsyncClient, db: Db, *, jobs: JobRunner, clock: FrozenClock, now: datetime
+) -> None:
+    asha = await make_member(db, app.state.storage, now, status="banned")
+    email = await email_of(db, asha)
+    done = await by_operator(app, db, email, now, apply=True)
+    assert (done.outcome, done.status) == (Outcome.requested, "banned")
+    clock.advance(days=7, seconds=60)  # not 90: the member asked
+    assert await purge(app, db, clock) == 1
+    await jobs.run()  # their photo files
+    async with db() as s:
+        record = await s.get(DeletedAccount, asha.id)
+        assert record is not None
+        assert record.was_banned is True
+        assert record.email_digest is not None
+    r = await register(client, app.state.settings, clock, email)
+    assert r.status_code == 202  # the usual answer, and nothing kept or sent
+    assert await count(db, User, User.email_normalized == email) == 0
+    assert await jobs.pending() == []
+
+
+async def test_an_emailed_request_changes_nothing_for_no_account_staff_or_an_unconfirmed_sign_up(
+    app: FastAPI, db: Db, now: datetime
+) -> None:
+    assert (await by_operator(app, db, "nobody@example.com", now, apply=True)).outcome is Outcome.no_account
+    admin = await make_member(db, app.state.storage, now, role="admin", name="Admin")
+    pending = await make_member(db, app.state.storage, now, status="pending")
+    for who, outcome, status in ((admin, Outcome.staff, "active"), (pending, Outcome.unconfirmed, "pending")):
+        done = await by_operator(app, db, await email_of(db, who), now, apply=True)
+        assert done.outcome is outcome
+        async with db() as s:
+            user = await s.get(User, who.id)
+            assert user is not None
+            assert (user.status, user.deletion_requested_at) == (status, None)
+            created = user.created_at
+    # An unconfirmed sign-up can't be used, and the sweep deletes it on its own date.
+    assert done.deleted_after == created + retention.UNVERIFIED_ACCOUNT
+    assert await audited(db, "account.deletion_requested") == []
+
+
+def test_the_delete_account_command_refuses_a_bad_email(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli(["delete-account", "not-an-email"]) == 2
+    assert "not a valid email address" in capsys.readouterr().err
 
 
 # --- the retention sweep -------------------------------------------------------------

@@ -1,5 +1,6 @@
-// WEB-SET-1..2 (D147): a production website without API_URL or APP_URL refuses to start, instead
-// of pointing at 127.0.0.1; development and the build are left alone. (Node strips the types.)
+// WEB-SET-1..2 (D147, D150): a production website without API_URL, APP_URL or CONTACT_EMAIL
+// refuses to start, instead of pointing at 127.0.0.1 or offering no way to reach us;
+// development and the build are left alone. (Node strips the types.)
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -7,14 +8,20 @@ import { test } from "node:test";
 
 import { missingSettings, REQUIRED_IN_PRODUCTION } from "../lib/requiredSettings.ts";
 
-const prod = { NODE_ENV: "production", API_URL: "http://api:8000", APP_URL: "https://app.example.com" };
+const prod = {
+  NODE_ENV: "production",
+  API_URL: "http://api:8000",
+  APP_URL: "https://app.example.com",
+  CONTACT_EMAIL: "contact@example.com",
+};
 
-test("WEB-SET-1: production needs API_URL and APP_URL; blank counts as missing", () => {
-  assert.deepEqual(REQUIRED_IN_PRODUCTION, ["API_URL", "APP_URL"]);
+test("WEB-SET-1: production needs API_URL, APP_URL and CONTACT_EMAIL; blank counts as missing", () => {
+  assert.deepEqual(REQUIRED_IN_PRODUCTION, ["API_URL", "APP_URL", "CONTACT_EMAIL"]);
   assert.deepEqual(missingSettings(prod), []);
   assert.deepEqual(missingSettings({ ...prod, APP_URL: undefined }), ["APP_URL"]);
   assert.deepEqual(missingSettings({ ...prod, API_URL: "  " }), ["API_URL"]);
-  assert.deepEqual(missingSettings({ NODE_ENV: "production" }), ["API_URL", "APP_URL"]);
+  assert.deepEqual(missingSettings({ ...prod, CONTACT_EMAIL: "" }), ["CONTACT_EMAIL"]);
+  assert.deepEqual(missingSettings({ NODE_ENV: "production" }), ["API_URL", "APP_URL", "CONTACT_EMAIL"]);
 });
 
 test("WEB-SET-2: development and next build are never stopped; the server start checks", () => {

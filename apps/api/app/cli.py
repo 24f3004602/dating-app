@@ -1,4 +1,4 @@
-"""Command line: `datingapp-api serve | worker | seed-dev | staff-enrollment | invite | waitlist`."""
+"""Command line: `datingapp-api serve | worker | seed-dev | staff-enrollment | invite | waitlist | delete-account`."""
 
 from __future__ import annotations
 
@@ -215,6 +215,86 @@ def _waitlist_command(_: argparse.Namespace) -> int:
     return 0
 
 
+def _delete_account_command(args: argparse.Namespace) -> int:
+    """A deletion request that came by email (D150), from a member who can't sign in.
+    Only after confirming it came from the account's own address (deploy.md, "A
+    deletion request by email"). Without --yes it only says what it would do."""
+    from redis.asyncio import Redis  # noqa: PLC0415 - command-only imports
+
+    from app.clock import system_clock  # noqa: PLC0415
+    from app.jobs import JobQueue, get_job_app  # noqa: PLC0415
+    from app.modules.auth.schemas import normalize_email  # noqa: PLC0415
+    from app.modules.privacy.service import (  # noqa: PLC0415
+        OperatorOutcome,
+        OperatorRequest,
+        announce,
+        request_deletion_by_operator,
+    )
+    from app.realtime import RealtimeHub  # noqa: PLC0415
+
+    try:
+        email = normalize_email(args.email)
+    except ValueError as exc:
+        print(f"delete-account: {exc}", file=sys.stderr)
+        return 2
+    settings = get_settings()
+
+    async def go() -> OperatorRequest:
+        engine = create_engine(settings)
+        redis = Redis.from_url(
+            settings.redis_url.get_secret_value(),
+            socket_connect_timeout=settings.redis_timeout_s,
+            socket_timeout=settings.redis_timeout_s,
+        )
+        try:
+            async with create_session_factory(engine)() as session:
+                done = await request_deletion_by_operator(
+                    session, JobQueue(get_job_app()), email, system_clock(), apply=args.yes
+                )
+            if done.outcome is OperatorOutcome.requested and done.user_id is not None:
+                # As the member's own request does: their connections close, chats close live.
+                await announce(RealtimeHub(redis, settings.rate_limit_prefix), done.user_id, done.closed)
+            return done
+        finally:
+            await redis.aclose()
+            await engine.dispose()
+
+    done = run_async(go)
+
+    def day(when: datetime | None) -> str:
+        local = when.astimezone(settings.tz) if when else None
+        return f"{local.day} {local:%B %Y}" if local else "?"
+
+    held = (
+        f" {done.open_reports} open report(s) about it can hold the deletion until handled, at most 30 days more."
+        if done.open_reports
+        else ""
+    )
+    status = done.status.value if done.status else "?"
+    messages = {
+        OperatorOutcome.no_account: "no account with that email",
+        OperatorOutcome.staff: f"{done.user_id} is a staff account: an admin closes those, not this command",
+        OperatorOutcome.unconfirmed: (
+            f"{done.user_id} never confirmed its email, so it can't be used; it is deleted"
+            f" automatically after {day(done.deleted_after)} (India date). Nothing changed."
+        ),
+        OperatorOutcome.already_waiting: (
+            f"{done.user_id} is already waiting to be deleted: after {day(done.deleted_after)} (India date).{held}"
+        ),
+        OperatorOutcome.would_delete: (
+            f"{done.user_id} ({status}) would be hidden and signed out now, and deleted after"
+            f" {day(done.deleted_after)} (India date).{held} Nothing changed: add --yes to do it."
+        ),
+        OperatorOutcome.requested: (
+            f"{done.user_id} ({status}) is hidden and signed out, and is deleted after"
+            f" {day(done.deleted_after)} (India date).{held} Reply to their email with that date."
+        ),
+    }
+    failed = done.outcome in (OperatorOutcome.no_account, OperatorOutcome.staff)
+    print(f"delete-account: {messages[done.outcome]}", file=sys.stderr if failed else sys.stdout)
+    return 2 if failed else 0
+
+
 def _worker_command(_: argparse.Namespace) -> int:
     from app.clock import system_clock  # noqa: PLC0415 - worker-only imports
     from app.jobs import WorkerContext, get_job_app, open_worker_pool, set_worker_context  # noqa: PLC0415
@@ -318,6 +398,12 @@ def main(argv: list[str] | None = None) -> int:
     invite.set_defaults(func=_invite_command)
     waitlist = sub.add_parser("waitlist", help="count the waitlist (confirmed and waiting)")
     waitlist.set_defaults(func=_waitlist_command)
+    erase = sub.add_parser(
+        "delete-account", help="a member's deletion request that came by email (confirm it's theirs first)"
+    )
+    erase.add_argument("email")
+    erase.add_argument("--yes", action="store_true", help="do it (without this, only say what would happen)")
+    erase.set_defaults(func=_delete_account_command)
     args = parser.parse_args(argv)
     result: int = args.func(args)
     return result

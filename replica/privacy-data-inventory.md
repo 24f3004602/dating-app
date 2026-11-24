@@ -83,9 +83,14 @@ What deletion does **not** reach, and the app and privacy notice must say so:
 - **Kept on purpose:** reports, moderation actions and the audit trail, under the exceptions above.
 - **Other people's devices:** a match's app may still show a conversation already on screen until it refreshes. The chat closes live, but we can't wipe another phone.
 
-Suspended or banned members can't sign in, so they can't use the request
-flow: until a support tool exists (stage 14 console), erasure requests from
-them go through the grievance contact.
+Members who can't sign in (suspended, banned, or without a working password
+or Google account) ask by email from the account's address. The operator
+checks the request came from that address, then runs `datingapp-api
+delete-account` (D150), which does what the member's own request does; a
+suspended or banned account keeps its status, so it can't sign in to "keep"
+the account, and a sign-up that never confirmed its email is left to the
+sweep. The website's `/delete-account` page (Google Play's rule) gives every
+way, what is deleted, and what is kept and for how long.
 
 ## Store review (stage 12, 2026-11-05)
 
@@ -116,7 +121,7 @@ Residual gaps:
 | speech for the app tour (D136) | only the tour's own fixed words, never anything about the member, while reading aloud is on: the phone's text-to-speech engine (usually Google's, on the phone); in the web app, the browser's voice, which some browsers (Chrome's "Google" voices) make on their maker's servers | **in use with the tour**; it prefers a voice on the device |
 | ads in the Android app: Google AdMob (D137) | for members without Plus whose app shows ads: the phone's advertising ID, IP address, device and app information and ad events (shown, tapped), to show, cap, measure and protect ads; non-personalised requests; nothing from the account (no name, profile, preferences, matches, messages or calls) | **built, off** (no build has ads on yet); named in the privacy notice `beta-2026-11-20`; Google keeps it under its own policies |
 | cloud host, database, object storage | everything above | **beta, first: the owner's own computer** (D097), with the data on its disk (device encryption advised); **then a Lightsail server in Mumbai** (D096). Photos on that disk; everything deleted when the test ends. Launch: to choose, India region. Backups: 30-day rolling |
-| backup storage: Google Drive (home beta, D149) | the daily backup (the database and the photos), encrypted on the computer before it leaves, to a key only the owner holds: Google stores the encrypted files, their names, sizes and dates, and can't read them | **active since 2026-11-24**; 7 days, then up to 30 in Drive's trash; not yet in the tester notice (the next documents version adds it) |
+| backup storage: Google Drive (home beta, D149) | the daily backup (the database and the photos), encrypted on the computer before it leaves, to a key only the owner holds: Google stores the encrypted files, their names, sizes and dates, and can't read them | **active since 2026-11-24**; 7 days, then up to 30 in Drive's trash; named on the website's deletion page (D150); not yet in the tester notice (the next documents version adds it) |
 | network: Cloudflare (home mode only, D097) | all traffic passes through it, encrypted between the phone and Cloudflare, then through the tunnel | **planned for the home beta**. API and photo responses are `no-store` or `private`, so they aren't cached; the app's own code files are. Named in the tester notice. Check Cloudflare's privacy terms and log retention before going live |
 | push delivery: Expo push service, then Apple (APNs) and Google (FCM) | the push token and the discreet text ("You have a new message."), never names, message text or IDs | **not connected** (needs the owner's EAS project and credentials); the adapter is built and tested against a fake server. Expo's own retention of tickets is a day; check its privacy terms before connecting |
 | payments: Razorpay (website) | nothing from us about the member: they enter their payment details in Razorpay's own checkout; we keep only the subscription ID | **not connected** (needs the owner's account and KYC). Razorpay holds payment data under its own terms and RBI rules; check them, and invoicing and GST, before going live (D094) |
@@ -130,6 +135,6 @@ Residual gaps:
 | --- | --- | --- |
 | access | a copy of my data, or a summary of what is held and why | **planned** (D086): this inventory is the summary; requests go to the grievance contact until an export exists, before launch |
 | correction | edit profile; email change later | profile: done; email change: planned |
-| erasure | account deletion from the profile screen (any state) or Privacy; sessions revoked at once; keep the account by signing in within 7 days | **done**: API (12a) and app (12b), web e2e; native device pass pending |
+| erasure | account deletion from the profile screen (any state) or Privacy, in the app or the web app; sessions revoked at once; keep the account by signing in within 7 days; members who can't sign in ask by email and the operator runs the same request (D150); the website's `/delete-account` page explains it all without the app | **done**: API (12a, 27c) and app (12b), web e2e; the website's page (27c; E2E-21 runs in CI); native device pass pending |
 | grievance | in-app and email contact | planned (contact details are owner setup); answer within the DPDP limit of 90 days |
 | consent withdrawal | deleting the account withdraws consent to the terms and privacy notice; nothing else is consent-based yet | done through deletion (D086) |

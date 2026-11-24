@@ -7,7 +7,9 @@ Deletion, in three steps:
    unavailable), every session is revoked, its realtime connections close,
    open matches end (the other person's chat closes live) and it leaves
    everyone's daily set. Signing in during the grace period offers to keep
-   the account; matches that ended stay ended.
+   the account; matches that ended stay ended. A member who can't sign in
+   asks by email, and the operator makes the same request for them
+   (`request_deletion_by_operator`, the `delete-account` command; D150).
 2. **Grace period** (7 days). While the account is the subject of an open
    report, the purge waits, at most 30 more days, so deleting it can't erase
    evidence before moderators look.
@@ -26,9 +28,11 @@ already delivered, and the docs say so.
 
 from __future__ import annotations
 
+import enum
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ColumnElement, and_, delete, exists, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -36,7 +40,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.config import Settings
 from app.errors import ApiError
 from app.jobs import JobQueue
-from app.modules.accounts.models import Consent, User, UserStatus
+from app.modules.accounts.models import Consent, User, UserRole, UserStatus
 from app.modules.audit.models import AuditLog
 from app.modules.audit.service import record
 from app.modules.auth import google as google_auth
@@ -48,7 +52,7 @@ from app.modules.billing import service as billing
 from app.modules.calls.models import Call, CallQueueEntry
 from app.modules.calls.service import end_all_for as end_calls_for
 from app.modules.discovery.models import DailyPick, Match, MatchCloseReason
-from app.modules.matching.service import close_all_open_matches
+from app.modules.matching.service import close_all_open_matches, other_of
 from app.modules.media.service import DELETE_OBJECTS, list_photos
 from app.modules.privacy import retention
 from app.modules.privacy.models import DeletedAccount
@@ -59,6 +63,9 @@ from app.modules.waitlist.models import WaitlistEntry
 from app.providers.google import GoogleSignIn
 from app.providers.storage import photo_keys
 from app.ratelimit import Limit
+
+if TYPE_CHECKING:
+    from app.realtime import RealtimeHub
 
 DELETE_LIMIT = Limit("account_delete", 5, 3600)
 PURGE_BATCH = 100
@@ -90,19 +97,104 @@ async def request_deletion(
         record(session, "account.deletion_password_failed", actor=user.id, target_type="user", target_id=user.id)
         await session.commit()
         raise ApiError(403, "password_incorrect", "That password isn't right.")
+    return await _start_deletion(session, ctx.jobs, user, now, actor=user.id)
 
-    user.status = UserStatus.deactivated
+
+async def _start_deletion(
+    session: AsyncSession, jobs: JobQueue, user: User, now: datetime, *, actor: uuid.UUID | None, **details: str
+) -> DeletionRequested:
+    """Hide the account and start its grace period, for the member's own request or the
+    operator's on their behalf (D150). Commits.
+
+    A suspended or banned account keeps its status: it still can't sign in, so it can't
+    "keep the account" to step around the restriction, and a ban still leaves its keyed
+    email hash at the purge. Reinstating it brings it back to waiting (moderation)."""
+    if user.status not in (UserStatus.suspended, UserStatus.banned):
+        user.status = UserStatus.deactivated
     user.deletion_requested_at = now
     await revoke_all_sessions(session, user.id, now)
-    await billing.cancel_for_deletion(session, ctx.jobs, user.id)  # never charge someone who is leaving
+    await billing.cancel_for_deletion(session, jobs, user.id)  # never charge someone who is leaving
     closed = await close_all_open_matches(session, user.id, MatchCloseReason.deleted, now)
     await end_calls_for(session, user.id, now)  # Live calls end, and the queue forgets them
     await session.execute(
         delete(DailyPick).where(or_(DailyPick.candidate_id == user.id, DailyPick.viewer_id == user.id))
     )
-    record(session, "account.deletion_requested", actor=user.id, target_type="user", target_id=user.id)
+    record(session, "account.deletion_requested", actor=actor, target_type="user", target_id=user.id, **details)
     await session.commit()
     return DeletionRequested(purge_after=now + retention.ACCOUNT_GRACE, closed=closed)
+
+
+# --- 1b. a request that came by email (D150) -------------------------------------------
+
+
+class OperatorOutcome(enum.StrEnum):
+    no_account = "no_account"
+    staff = "staff"  # staff accounts are closed by an admin, not by this path
+    unconfirmed = "unconfirmed"  # never confirmed its email: the sweep deletes it anyway
+    already_waiting = "already_waiting"
+    would_delete = "would_delete"  # the dry run
+    requested = "requested"
+
+
+@dataclass
+class OperatorRequest:
+    outcome: OperatorOutcome
+    user_id: uuid.UUID | None = None
+    status: UserStatus | None = None
+    # When the deletion happens (or would): the end of the grace period, or for an
+    # unconfirmed sign-up the sweep's date. An open report can hold it, at most 30 days.
+    deleted_after: datetime | None = None
+    open_reports: int = 0
+    closed: list[Match] = field(default_factory=list)
+
+
+async def request_deletion_by_operator(
+    session: AsyncSession, jobs: JobQueue, email: str, now: datetime, *, apply: bool
+) -> OperatorRequest:
+    """A member who can't sign in (suspended, banned, or without a working password or
+    Google account) asked by email (D150). The operator confirms the request came from
+    the account's own address first (deploy.md); this then does what the member's own
+    request does, without the password. `email` is normalised; `apply=False` changes
+    nothing. Commits when it applies."""
+    user = (
+        await session.execute(select(User).where(User.email_normalized == email).with_for_update(key_share=True))
+    ).scalar_one_or_none()
+    if user is None:
+        await session.rollback()
+        return OperatorRequest(OperatorOutcome.no_account)
+    held = await _count_open_reports(session, user.id)
+    found = OperatorRequest(OperatorOutcome.would_delete, user.id, user.status, now + retention.ACCOUNT_GRACE, held)
+    if user.role is not UserRole.member:
+        found.outcome, found.deleted_after = OperatorOutcome.staff, None
+    elif user.status is UserStatus.pending:
+        # The grace period would let a sign-in "keep" it without ever confirming the
+        # email; the sweep deletes it on this date instead.
+        found.outcome, found.deleted_after = OperatorOutcome.unconfirmed, user.created_at + retention.UNVERIFIED_ACCOUNT
+    elif user.deletion_requested_at is not None:
+        found.outcome = OperatorOutcome.already_waiting
+        found.deleted_after = user.deletion_requested_at + retention.ACCOUNT_GRACE
+    if found.outcome is not OperatorOutcome.would_delete or not apply:
+        await session.rollback()
+        return found
+    done = await _start_deletion(session, jobs, user, now, actor=None, via="operator")
+    found.outcome, found.deleted_after, found.closed = OperatorOutcome.requested, done.purge_after, done.closed
+    return found
+
+
+async def announce(hub: RealtimeHub, user_id: uuid.UUID, closed: list[Match]) -> None:
+    """After a deletion request commits: the account's realtime connections close
+    (4401) and each match's other person sees the chat close. Best effort, like
+    every realtime hint; the database already holds the truth."""
+    await hub.revoke(user_id)
+    for match in closed:
+        await hub.publish([other_of(match, user_id)], {"type": "match.closed", "match_id": str(match.id)})
+
+
+async def _count_open_reports(session: AsyncSession, user_id: uuid.UUID) -> int:
+    found = await session.execute(
+        select(func.count()).select_from(Report).where(Report.subject_id == user_id, Report.status.in_(ACTIVE_REPORT))
+    )
+    return int(found.scalar_one())
 
 
 # --- 2. which accounts are due ------------------------------------------------------

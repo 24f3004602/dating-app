@@ -23,6 +23,9 @@ export const E2E_PRIVACY_VERSION = "draft-2026-11";
 // Sign in with Google (D134): a stand-in Web client, so the apps show the button and build
 // Google's request. Google itself is never reached: the specs catch that page.
 export const E2E_GOOGLE_CLIENT_ID = "123456789012-e2estandin.apps.googleusercontent.com";
+// The website's contact (D150): a production website won't start without one. example.com is
+// reserved (RFC 2606); nothing is ever sent to it.
+export const E2E_CONTACT_EMAIL = "e2e-contact@example.com";
 
 function dotenv(path: string): Record<string, string> {
   if (!existsSync(path)) return {};

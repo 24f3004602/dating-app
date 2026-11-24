@@ -58,10 +58,12 @@ Independent security review: no. Families policy: not applicable (adults only).
 ## 4. To build before the first upload
 
 1. **A web page for account deletion** (Play: the page must let people ask for deletion without
-   the app, name the app as on Play, and say what is kept and for how long): not on the website
-   yet. Planned: `kinaara.online/delete-account`: delete in the app or in the web app, or write
-   from the account's address; the 7 days to change your mind; what stays (reports under review,
-   consent records, payment records, a banned address's hash).
+   the app, name the app as on Play, and say what is kept and for how long): **built and tested
+   (stage 27c, D150); live after the website's next release.** The form's "Delete account URL":
+   `https://kinaara.online/delete-account`. It names "Kinaara: Serious Dating", puts the way
+   first (in the app; or sign in to the web app, with a button), then those who can't sign in
+   (password reset, Google, or write from the account's address: `datingapp-api delete-account`,
+   deploy.md), what happens, what is deleted, and what is kept and for how long.
 2. **A Play build without the UPI pass:** Play's payments policy covers digital features sold in
    the app; Plus is sold by UPI to the owner (D123), so the Play build mustn't offer or link to it
    until Play Billing (or Play's user choice billing in India) is in. The web app keeps the pass.
@@ -78,8 +80,8 @@ Independent security review: no. Families policy: not applicable (adults only).
   Recommended: (a). A lost or leaked upload key can be replaced through Play support; the app
   signing key stays with Google.
 - **A reviewers' account:** an account Google's reviewers can use, kept out of every member's
-  introductions (discovery paused from the start) so no member sees it as a person. To build
-  with item 1.
+  introductions (discovery paused from the start) so no member sees it as a person. Next, after
+  item 1.
 - **Play Console** (deploy.md, step list given 2026-11-24): the account, the $25 fee, identity
   checks; then 12 or more testers for 14 days of closed testing.
 - **Google sign-in on Android** needs its own OAuth client with the SHA-1 of Play's app signing

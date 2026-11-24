@@ -1,6 +1,16 @@
 import { defineConfig } from "@playwright/test";
 
-import { API_PORT, API_URL, apiEnv, CONSOLE_PORT, CONSOLE_URL, E2E_PRIVACY_VERSION, WEB_PORT, WEB_URL } from "./env";
+import {
+  API_PORT,
+  API_URL,
+  apiEnv,
+  CONSOLE_PORT,
+  CONSOLE_URL,
+  E2E_CONTACT_EMAIL,
+  E2E_PRIVACY_VERSION,
+  WEB_PORT,
+  WEB_URL,
+} from "./env";
 
 const runId = process.env.E2E_RUN_ID ?? Date.now().toString(36);
 process.env.E2E_RUN_ID = runId;
@@ -43,7 +53,14 @@ export default defineConfig({
       cwd: "../apps/web",
       url: CONSOLE_URL,
       // APP_URL: the landing page's buttons open the member app (D133), here its web build.
-      env: { ...process.env, API_URL, APP_URL: WEB_URL, PRIVACY_VERSION: E2E_PRIVACY_VERSION } as Record<string, string>,
+      // CONTACT_EMAIL: a production website needs one (D150); a reserved, undeliverable domain.
+      env: {
+        ...process.env,
+        API_URL,
+        APP_URL: WEB_URL,
+        CONTACT_EMAIL: E2E_CONTACT_EMAIL,
+        PRIVACY_VERSION: E2E_PRIVACY_VERSION,
+      } as Record<string, string>,
       reuseExistingServer: false,
       timeout: 60_000,
     },

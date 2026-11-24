@@ -499,7 +499,11 @@ There is no size threshold: every breach counts. A lawyer reviews the notices. M
 - Restore the latest backup into a scratch environment every quarter, and run the migration check and a smoke test against it.
 - Deleted members' data leaves the backups as they age out (30 days, privacy inventory).
 
-**Erasure requests by email** (suspended or banned members can't sign in): verify the requester controls the account's email, then an admin runs the deletion through a reviewed one-off. A console tool is a later addition.
+**A deletion request by email** (D150; the website's `/delete-account` page offers it to members who can't sign in: suspended, banned, or without a working password or Google account). Answer within 7 days, as the privacy notice promises.
+1. **Check it's theirs.** A From line can be forged, so reply to the account's own address (never to a different Reply-To), saying you'll delete the account if they confirm, and that until then nothing happens. Act only on a reply that arrives from that address. A request from any other address can't be checked: say so, and point to "Forgot your password?" (which needs the same mailbox).
+2. **Look first** (changes nothing): `docker compose exec api datingapp-api delete-account <email>` from `infra/beta`, as for invites and staff enrolment. It says what it found: no account; a staff account (an admin closes those; this command refuses); a sign-up that never confirmed its email (deleted automatically 7 days after it started, so nothing to do; tell them the date); already waiting (tell them the date); or what it would do, and whether an open report can hold it.
+3. **Do it:** the same with `--yes`. As the member's own request does: hidden and signed out at once, matches end (their chats close live), Live calls end, deleted after 7 days (an open report can hold it up to 30 more). A suspended or banned account keeps its status, so it can't sign in to keep the account; a banned one still leaves its email's keyed hash for a year. The audit log records `account.deletion_requested` with `via: operator`.
+4. **Reply** with the date it printed (India date), and that an active member can still keep the account by signing in before then. Delete the email thread after the purge date; keep no copy of the request elsewhere.
 
 ## First week after launch (planned)
 

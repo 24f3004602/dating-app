@@ -5,8 +5,6 @@ from __future__ import annotations
 from fastapi import APIRouter, Request, status
 
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
-from app.modules.discovery.models import Match
-from app.modules.matching.service import other_of
 from app.modules.privacy import service
 from app.modules.privacy.schemas import DeletionIn, DeletionOut
 from app.openapi import problems
@@ -26,8 +24,5 @@ async def request_deletion(
 ) -> DeletionOut:
     done = await service.request_deletion(ctx, db, auth.user.id, body, request.app.state.google)
     hub: RealtimeHub = request.app.state.realtime
-    await hub.revoke(auth.user.id)  # closes every realtime connection of this account (4401)
-    match: Match
-    for match in done.closed:
-        await hub.publish([other_of(match, auth.user.id)], {"type": "match.closed", "match_id": str(match.id)})
+    await service.announce(hub, auth.user.id, done.closed)  # its connections close (4401); chats close live
     return DeletionOut(purge_after=done.purge_after)

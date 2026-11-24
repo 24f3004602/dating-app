@@ -108,12 +108,17 @@ jobs:
           cat guard.log
           test "$guard" = 1
           grep -q 'APP_URL' guard.log
-          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e APP_URL=http://127.0.0.1:8081 -e SITE_URL=http://127.0.0.1:3000 -e PORT=3000 datingapp-web:ci
+          docker run -d --name web --network host -e API_URL=http://127.0.0.1:8000 -e APP_URL=http://127.0.0.1:8081 -e SITE_URL=http://127.0.0.1:3000 -e CONTACT_EMAIL=contact@example.com -e PORT=3000 datingapp-web:ci
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/ > /dev/null && break; sleep 1; done
           curl -s -D headers.txt -o /dev/null http://127.0.0.1:3000/
           grep -qi "content-security-policy: default-src 'self'; script-src 'self' 'nonce-" headers.txt
           grep -qi "x-frame-options: DENY" headers.txt
           test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://127.0.0.1:3000/admin)" = "307 http://127.0.0.1:3000/admin/login"
+          # Google Play's account-deletion page (D150): the way into the web app, and the contact.
+          curl -sf http://127.0.0.1:3000/delete-account > deletion.html
+          grep -q '<h1>Delete your account</h1>' deletion.html
+          grep -q 'href="http://127.0.0.1:8081/sign-in"' deletion.html
+          grep -q 'href="mailto:contact@example.com"' deletion.html
 
       - name: Logs on failure
         if: failure()
