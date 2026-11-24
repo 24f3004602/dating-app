@@ -51,7 +51,7 @@ emails a day for free. The work that grows with members is human:
 | part | now | its limit | upgrade when | then |
 | --- | --- | --- | --- | --- |
 | Domain | kinaara.online at Hostinger, paid | renews ₹3,489 by 5 Nov 2027 | keep | |
-| Server | a friend's self-built machine (moving off the laptop) | its power, internet upload and the friend's goodwill; photos are served from it (1080 and 400 px JPEGs, not cached by Cloudflare) | outages twice a month, memory or CPU above 70%, or around 5,000 daily members | a VPS: Lightsail 4 GB, ₹2,232 a month (2 GB: ₹1,116) |
+| Server | this laptop through the Cloudflare Tunnel, as today (the owner, 2026-11-24); a friend's self-built machine later, the same tunnel moving with it | its power, internet upload and the friend's goodwill; photos are served from it (1080 and 400 px JPEGs, not cached by Cloudflare) | outages twice a month, memory or CPU above 70%, or around 5,000 daily members | a VPS: Lightsail 4 GB, ₹2,232 a month (2 GB: ₹1,116) |
 | Email | the owner's Gmail over SMTP | 500 emails a day, then blocked for 1-24 hours (each sign-up and password reset is an email) | about 300 a day | Amazon SES, ₹9.30 per 1,000 emails |
 | Photos | the server's disk | the disk and the upload speed | the server's upload becomes the bottleneck | Cloudflare R2: free to 10 GB, no download fees |
 | Marketing | Instagram and personal networks | reach | after product-market evidence (section 8) | Google Search ads from ₹15,000 a month |

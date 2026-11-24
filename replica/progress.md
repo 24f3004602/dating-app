@@ -110,4 +110,4 @@ Started 2026-11-24 at the owner's "continue for next task": the launch starts wi
 2. **27e, the Play build without the UPI pass:** a store build profile with `WEB_CHECKOUT` off, and Live's "See Plus" buttons changed for store builds.
 3. **27f, the documents' next version:** the Drive backup copy (D149), the deletion page and the Play build's differences, released with the Play build (a new documents version needs a new app build, D139).
 4. **The signed app bundle**, once the owner chooses where the upload key lives.
-5. **Move the beta to the friend's server** before the public launch, once it meets D151's conditions (India, 4 GB or more, a UPS, a written agreement, disk encryption); then the privacy notice's hosting line (27f).
+5. **Move the beta to the friend's server** when the laptop isn't enough (the owner, 2026-11-24: start with this laptop and the Cloudflare Tunnel, as today), once it meets D151's conditions (India, 4 GB or more, a UPS, a written agreement, disk encryption); then the privacy notice's hosting line (27f).
