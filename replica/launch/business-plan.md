@@ -196,6 +196,23 @@ passes a month. Stage 2 (about ₹80,000 a month) needs about 270 passes a month
 5,400 active members if 5% pay (`pricing.md`: 5-15% of monthly users typically pay in India).
 Ads add a little.
 
+## 8a. A launch for ₹0 (the owner asked, 2026-11-24)
+
+Possible, because everything that runs the app is already free (the friend's server, Gmail,
+Cloudflare, the call relay's free tier, GitHub, Drive backups, uptime checks, Instagram, UPI with
+no fees) and the domain is paid until November 2027. The one unavoidable fee is Google's US$25,
+for Play or for verifying a developer whose app is installed outside Play. Free ways out to members:
+- **The web app** (app.kinaara.online): everything, Live calls and UPI included, in any phone's browser, with no store and no Google fee, for good. Not yet installable to the home screen: a web app manifest (free) would add that.
+- **The Android APK from the website:** free until Google's developer verification reaches India (global rollout from January 2027; first countries live 30 September 2026). After that, an app from an unverified developer installs only after a 24-hour wait; the free "limited distribution" account covers 20-50 devices; full verification is the same US$25 with an ID. It also needs a download page (GitHub Releases is free for this public repository), and members update by hand.
+- **Indus Appstore** (PhonePe): free registration and listing and no commission in 2026 (third-party reports; its terms allow fees after notice). Smaller reach than Play; the 2027 verification likely applies to its installs too.
+
+Given up at ₹0: Play's reach, trust and automatic updates; ads (AdMob needs the app public on a
+supported store); the lawyer's review (a lawyer friend or a law school's legal aid clinic may help
+for free; get one before charging money at scale); the trademark (the IP India search is free);
+and the AI assistant's subscription (Claude's free plan has no Claude Code). **Suggested:** launch
+free on the web app and the APK, and pay the ₹2,325 for Play from the first 8 Plus passes, before
+January 2027.
+
 ## 9. Risks and their contingency
 
 | risk | what it costs | the plan |
@@ -214,4 +231,5 @@ Ads add a little.
 - Funding: Startup India Seed Fund Scheme (seedfund.startupindia.gov.in, FAQ and guidelines; the June 2026 schemes playbook).
 - Legal and company costs: LegalKart, ContractDesk and Consently (privacy policy and terms); Patron Accounting, Complykart and others (company registration and yearly compliance).
 - Services: Gmail's sending limits (support.google.com/mail/answer/22839); Anthropic's plans (claude.com/pricing); the rest as in `launch-plan.md`, section 6.
+- A ₹0 launch: Android Developer Console Help, "Understanding Android developer verification" (support.google.com/android-developer-console/answer/16561738: US$25 for full distribution, no fee for limited distribution to up to 20 devices) and developer.android.com's registration guide; news of the January 2027 global rollout and a 50-device limit (November 2026, third-party); Indus Appstore's terms as reported by PhonePe's 2023-2024 announcements and SwadeshiApps (September 2026).
 - The project's numbers from the repository and `docker stats` on 2026-11-24.
