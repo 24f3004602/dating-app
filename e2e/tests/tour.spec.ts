@@ -129,8 +129,14 @@ test("someone new takes the app tour, read aloud, along the line", async ({ page
   await tour.getByRole("button", { name: "Close the tour" }).click();
   await expect(tour).toHaveCount(0);
 
-  // A reload ends the web session (D058); signing in again on this browser doesn't offer it again.
+  // A reload keeps the web session (D152) and doesn't offer the tour again; nor does signing out
+  // and in again on this browser.
   await page.reload();
+  await expect(page.getByRole("tab", { name: "You" })).toBeVisible();
+  await page.waitForTimeout(1500);
+  await expect(tour).toHaveCount(0);
+  await page.getByRole("tab", { name: "You" }).click();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.getByRole("button", { name: "I already have an account" }).click();
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(PASSWORD);

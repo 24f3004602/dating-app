@@ -4,9 +4,16 @@ Updated: 2026-11-24
 
 Kept short (CLAUDE.md). Each stage's full status and build logs up to 2026-11-24 are in git history (`git log -p -- replica/progress.md`); evidence is in `test-plan.md` (Results), decisions in `decision-log.md`, bugs in `bugs.md`.
 
-## Current phase: stage 27, Google Play (D146)
+## Current phase: stage 28, the free launch (D151, D152)
 
-Started 2026-11-24 at the owner's "continue for next task": the launch starts with Google Play.
+The owner's choice on 2026-11-24 ("free launch"): launch for ₹0 on the web app and the APK from the website, with this laptop and the Cloudflare Tunnel as the server, Gmail and Instagram; Google Play when the ₹2,325 is there (`business-plan.md`, section 8a). Stage 27's Play-only items wait for it.
+
+- **28a, the web app stays signed in (D152): built and tested; not committed yet.** The session is the API's `__Host-session` cookie (HttpOnly, Secure, SameSite=Strict, host-only), asked for by the five requests that open a session; no token in any response body or on the page; changes with the cookie only from the app's origins; cleared at sign-out, deletion and on a dead session; "Keep me signed in on this browser" (on by default) for shared computers. The phone app and staff sessions are unchanged. Checks: API 444 passed (WEB-SESS-1..8 new), ruff, format and strict mypy clean (197 files); app Jest 246 (6 new) and `tsc` clean; the OpenAPI types regenerated; E2E-22 written and E2E-19 updated (both compile; they run in CI); 18 mutations caught (the one that survived first, staff routes reading the cookie, now has its own test).
+- **Next in 28:** 28b, the web app installable to the home screen; 28c, an Android download page on the website (the APK on GitHub Releases); 28d, the launch checklist.
+
+## Stage 27, Google Play (D146): paused at 27c until the Play fee
+
+Started 2026-11-24 at the owner's "continue for next task".
 
 - **27a, Play's build rules: checked, and guarded in CI.** Since 31 August 2026 Play needs target API 36, and apps targeting Android 15+ must support 16 KB memory pages (updates refused without them from 1 February 2027). The last APK (android-apk 45224007936) targets 36 and all 27 native libraries are 16 KB ready, WebRTC's included (`apps/mobile/scripts/apk_check.py`, on every android-apk build; PLAY-1 green in CI, mobile 45314282161).
 - **27b, the Play Console answers: drafted** in `replica/launch/play-console.md` (Data safety from the inventory's real flows, 18+, content rating, ads, app access), with what to confirm on the form's day.

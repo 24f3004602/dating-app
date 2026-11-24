@@ -9,6 +9,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
+import { COOKIE_SESSIONS, keepSignedIn, setKeepSignedIn } from "@/auth/webSession";
 import { BETA_DOCUMENTS, BRAND, BRAND_DEVANAGARI, DOCUMENT_VERSIONS, INVITE_ONLY } from "@/config";
 import { deletionNotice } from "@/screens/account";
 import { GoogleSignInSection } from "@/screens/google";
@@ -17,7 +18,7 @@ import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
 import { color, font, motion, space } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
-import { Body, Button, Enamel, Notice, Screen, TextLink, Title } from "@/ui/primitives";
+import { Body, Button, Caption, Checkbox, Enamel, Notice, Screen, TextLink, Title } from "@/ui/primitives";
 import { RouteMap } from "@/ui/RouteMap";
 import { WelcomeBackdrop } from "@/ui/WelcomeBackdrop";
 import {
@@ -193,10 +194,12 @@ export function VerifyScreen() {
   );
 }
 
-export function SignInScreen() {
+export function SignInScreen({ cookieSessions = COOKIE_SESSIONS }: { cookieSessions?: boolean } = {}) {
   const { api, signIn } = useAuth();
   const router = useRouter();
   const [failure, setFailure] = useState<string | null>(null);
+  // The web app (D152): the session cookie can end when the browser closes, for shared computers.
+  const [staySignedIn, setStaySignedIn] = useState(keepSignedIn);
   // Set when the account is waiting to be deleted (D083): offer to keep it.
   const [scheduled, setScheduled] = useState<{ purgeAfter: string | null } | null>(null);
   const { control, handleSubmit, formState } = useForm<SignInValues>({
@@ -231,6 +234,19 @@ export function SignInScreen() {
         autoCapitalize="none" autoComplete="email" keyboardType="email-address" inputMode="email" />
       <FormField control={control} name="password" label={t.signUp.password} error={formState.errors.password?.message}
         secureTextEntry autoComplete="current-password" autoCapitalize="none" />
+      {cookieSessions ? (
+        <View>
+          <Checkbox
+            label={t.signIn.keep}
+            checked={staySignedIn}
+            onChange={(value) => {
+              setStaySignedIn(value);
+              setKeepSignedIn(value);
+            }}
+          />
+          <Caption>{t.signIn.keepHint}</Caption>
+        </View>
+      ) : null}
       {failure ? <Notice kind="error">{failure}</Notice> : null}
       {scheduled ? (
         <>

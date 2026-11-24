@@ -112,9 +112,11 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
         app.add_middleware(
             CORSMiddleware,
             allow_origins=settings.cors_origins,
-            allow_credentials=False,  # bearer tokens, never cookies, from browsers
+            # The web app's session cookie (D152) needs credentials; the origins are exact
+            # (never '*'), and the cookie's own rules keep other sites out (auth/cookies.py).
+            allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+            allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Session-Cookie"],
             expose_headers=["Retry-After", "X-Request-ID"],
             max_age=600,
         )

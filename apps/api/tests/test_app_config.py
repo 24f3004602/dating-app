@@ -193,10 +193,13 @@ async def test_cors_is_off_by_default_and_exact_when_on(test_db: MigratedDatabas
                 r = await c.options(
                     "/v1/auth/login",
                     headers={"origin": origin, "access-control-request-method": "POST",
-                             "access-control-request-headers": "content-type"},
+                             "access-control-request-headers": "content-type, x-session-cookie"},
                 )  # fmt: skip
                 assert (r.headers.get("access-control-allow-origin") == origin) is allowed, (origins, origin)
-                assert "access-control-allow-credentials" not in r.headers
+                if allowed:
+                    # The web app's session cookie (D152): credentials, for this exact origin only.
+                    assert r.headers.get("access-control-allow-credentials") == "true"
+                    assert "x-session-cookie" in r.headers.get("access-control-allow-headers", "").lower()
         finally:
             await close_app(application)
 

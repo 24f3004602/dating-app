@@ -1,13 +1,25 @@
 import { createApi } from "@/api/client";
 
-type Request_ = { method: string; path: string; body: unknown; headers: Headers; query: URLSearchParams };
+type Request_ = {
+  method: string;
+  path: string;
+  body: unknown;
+  headers: Headers;
+  query: URLSearchParams;
+  credentials: RequestCredentials;
+};
 type Handler = (req: Request_) => { status: number; body?: unknown; headers?: Record<string, string> };
 
 /**
  * The real openapi-fetch client over a fake `fetch`, so tests exercise the
- * same request building, auth header and error parsing as the app.
+ * same request building, auth header and error parsing as the app. `cookies`
+ * makes it the web app's client (D152); `hasSession` is what AuthProvider tells it.
  */
-export function fakeApi(routes: Record<string, Handler>, token: { value: string | null } = { value: null }) {
+export function fakeApi(
+  routes: Record<string, Handler>,
+  token: { value: string | null } = { value: null },
+  { cookies = false, hasSession }: { cookies?: boolean; hasSession?: () => boolean } = {},
+) {
   const calls: Request_[] = [];
   const fetchImpl = (async (input: Request) => {
     const req = input instanceof Request ? input : new Request(input);
@@ -19,7 +31,10 @@ export function fakeApi(routes: Record<string, Handler>, token: { value: string 
     } catch {
       // multipart or plain bodies stay as text
     }
-    const call = { method: req.method, path: url.pathname, body, headers: req.headers, query: url.searchParams };
+    const call = {
+      method: req.method, path: url.pathname, body, headers: req.headers, query: url.searchParams,
+      credentials: req.credentials,
+    };
     calls.push(call);
     const handler = routes[`${req.method} ${url.pathname}`];
     if (!handler) return new Response(JSON.stringify({ code: "not_found", status: 404 }), { status: 404, headers: { "content-type": "application/problem+json" } });
@@ -31,7 +46,9 @@ export function fakeApi(routes: Record<string, Handler>, token: { value: string 
     });
   }) as unknown as typeof fetch;
   const onUnauthorized = jest.fn();
-  const api = createApi({ getToken: () => token.value, onUnauthorized, fetch: fetchImpl, baseUrl: "http://api.test" });
+  const api = createApi({
+    getToken: () => token.value, hasSession, onUnauthorized, fetch: fetchImpl, baseUrl: "http://api.test", cookies,
+  });
   return { api, calls, onUnauthorized, token };
 }
 

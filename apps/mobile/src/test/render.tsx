@@ -8,7 +8,8 @@ import { AuthProvider } from "@/auth/AuthProvider";
 
 const METRICS = { frame: { x: 0, y: 0, width: 412, height: 915 }, insets: { top: 44, right: 0, bottom: 24, left: 0 } };
 
-export async function renderWithApp(ui: ReactElement, api: Api) {
+/** `cookieSessions`: render as the web app, whose session is the API's cookie (D152). */
+export async function renderWithApp(ui: ReactElement, api: Api, { cookieSessions = false } = {}) {
   // gcTime Infinity: no garbage-collection timers left running after a test (they kept Jest alive 5 min).
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } },
@@ -17,7 +18,9 @@ export async function renderWithApp(ui: ReactElement, api: Api) {
   return await render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <QueryClientProvider client={client}>
-        <AuthProvider api={api}>{ui}</AuthProvider>
+        <AuthProvider api={api} cookieSessions={cookieSessions}>
+          {ui}
+        </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>,
   );

@@ -97,7 +97,8 @@ class MeOut(ApiModel):
 
 
 class SessionOut(ApiModel):
-    token: str = Field(repr=False)
+    # Null when the session went into the web app's HttpOnly cookie instead (D152).
+    token: str | None = Field(default=None, repr=False)
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - the RFC 6750 scheme name
     expires_at: datetime
     user: MeOut

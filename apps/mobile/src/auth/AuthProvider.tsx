@@ -3,6 +3,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 
 import { type Api, createApi } from "@/api/client";
 import { clearToken, loadToken, saveToken } from "@/auth/storage";
+import { COOKIE_SESSIONS } from "@/auth/webSession";
 
 export type AuthStatus = "loading" | "signedOut" | "signedIn";
 
@@ -18,7 +19,8 @@ export type DeletionNotice = { purgeAfter: string };
 type AuthValue = {
   status: AuthStatus;
   api: Api;
-  signIn: (token: string) => Promise<void>;
+  /** The session's token, or nothing when the web app's session went into the API's cookie (D152). */
+  signIn: (token?: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   signOutEverywhere: () => Promise<void>;
   pending: PendingSignUp | null;
@@ -32,9 +34,20 @@ type AuthValue = {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
-export function AuthProvider({ children, api: injected }: { children: ReactNode; api?: Api }) {
+export function AuthProvider({
+  children,
+  api: injected,
+  cookieSessions = COOKIE_SESSIONS,
+}: {
+  children: ReactNode;
+  api?: Api;
+  /** The web app: the session is the API's HttpOnly cookie, out of this page's reach (D152). */
+  cookieSessions?: boolean;
+}) {
   const queryClient = useQueryClient();
   const tokenRef = useRef<string | null>(null);
+  // The web app's cookie session: the page can't see the cookie, only whether it worked.
+  const sessionRef = useRef(false);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [pending, setPending] = useState<PendingSignUp | null>(null);
   const [googleSignUp, setGoogleSignUp] = useState<GoogleSignUp | null>(null);
@@ -42,6 +55,7 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
 
   const forget = useCallback(async () => {
     tokenRef.current = null;
+    sessionRef.current = false;
     await clearToken();
     queryClient.clear(); // no cached personal data survives a sign-out
     setStatus("signedOut");
@@ -52,33 +66,57 @@ export function AuthProvider({ children, api: injected }: { children: ReactNode;
       injected ??
       createApi({
         getToken: () => tokenRef.current,
+        hasSession: () => sessionRef.current,
         onUnauthorized: () => {
           void forget();
         },
+        cookies: cookieSessions,
       }),
-    [injected, forget],
+    [injected, forget, cookieSessions],
   );
 
   useEffect(() => {
     let alive = true;
-    void loadToken().then((token) => {
-      if (!alive) return;
-      tokenRef.current = token;
-      setStatus(token ? "signedIn" : "signedOut");
-    });
+    if (cookieSessions) {
+      // Is this browser still signed in? Only the API can tell: it holds the cookie.
+      void api.GET("/v1/me").then(
+        ({ response }) => {
+          if (!alive) return;
+          sessionRef.current = response.ok;
+          setStatus(response.ok ? "signedIn" : "signedOut");
+        },
+        () => {
+          if (alive) setStatus("signedOut"); // offline: sign in again once back
+        },
+      );
+    } else {
+      void loadToken().then((token) => {
+        if (!alive) return;
+        tokenRef.current = token;
+        setStatus(token ? "signedIn" : "signedOut");
+      });
+    }
     return () => {
       alive = false;
     };
-  }, []);
+  }, [api, cookieSessions]);
 
-  const signIn = useCallback(async (token: string) => {
-    tokenRef.current = token;
-    await saveToken(token);
-    setPending(null);
-    setGoogleSignUp(null);
-    setDeletion(null);
-    setStatus("signedIn");
-  }, []);
+  const signIn = useCallback(
+    async (token?: string | null) => {
+      if (token) {
+        tokenRef.current = token;
+        await saveToken(token);
+      } else if (!cookieSessions) {
+        throw new Error("The sign-in answer had no session in it.");
+      }
+      sessionRef.current = true;
+      setPending(null);
+      setGoogleSignUp(null);
+      setDeletion(null);
+      setStatus("signedIn");
+    },
+    [cookieSessions],
+  );
 
   const signOut = useCallback(async () => {
     try {

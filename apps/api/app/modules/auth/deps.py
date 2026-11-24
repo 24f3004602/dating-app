@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_session
 from app.errors import ApiError
 from app.modules.accounts.models import User
-from app.modules.auth import service
+from app.modules.auth import cookies, service
 from app.modules.auth.models import Session, SessionClient
 
 DbSession = Annotated[AsyncSession, Depends(get_session)]
@@ -40,21 +40,35 @@ class Authenticated:
     user: User
 
 
-def _unauthenticated(error: str | None = None) -> ApiError:
+def _unauthenticated(error: str | None = None, *, clear_cookie: bool = False) -> ApiError:
     challenge = f'Bearer error="{error}"' if error else "Bearer"
-    return ApiError(401, "unauthenticated", "Sign in to continue.", headers={"WWW-Authenticate": challenge})
+    headers = {"WWW-Authenticate": challenge}
+    if clear_cookie:
+        headers["Set-Cookie"] = cookies.CLEARED  # a dead session's cookie goes too
+    return ApiError(401, "unauthenticated", "Sign in to continue.", headers=headers)
 
 
 async def _session_of(
     request: Request, ctx: service.AuthContext, db: AsyncSession, client: SessionClient
 ) -> Authenticated:
+    """The bearer token (the phone app, the console's server), or for a member the web app's
+    cookie (D152). With the cookie, anything that changes something must also come from one of
+    the app's own origins: SameSite keeps other sites out, this keeps out same-site pages."""
     header = request.headers.get("authorization", "")
-    scheme, _, token = header.partition(" ")
-    if scheme.lower() != "bearer" or not token.strip():
+    scheme, _, bearer = header.partition(" ")
+    kept = request.cookies.get(cookies.MEMBER_COOKIE) if client is SessionClient.mobile else None
+    if scheme.lower() == "bearer" and bearer.strip():
+        token, via_cookie = bearer.strip(), False
+    elif kept:
+        from_app = request.headers.get("origin") in ctx.settings.cors_origins
+        if request.method not in cookies.SAFE_METHODS and not from_app:
+            raise ApiError(403, "origin_refused", "This request didn't come from the app.")
+        token, via_cookie = kept, True
+    else:
         raise _unauthenticated()
-    found = await service.authenticate(db, ctx.settings, token.strip(), ctx.clock(), client)
+    found = await service.authenticate(db, ctx.settings, token, ctx.clock(), client)
     if found is None:
-        raise _unauthenticated("invalid_token")
+        raise _unauthenticated("invalid_token", clear_cookie=via_cookie)
     return Authenticated(session=found[0], user=found[1])
 
 

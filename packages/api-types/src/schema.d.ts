@@ -1573,6 +1573,11 @@ export interface components {
              */
             terms: string;
         };
+        /**
+         * CookieMode
+         * @enum {string}
+         */
+        CookieMode: "persistent" | "browser";
         /** DeletionIn */
         DeletionIn: {
             google?: components["schemas"]["GoogleProofIn"] | null;
@@ -2665,7 +2670,7 @@ export interface components {
              */
             expires_at: string;
             /** Token */
-            token: string;
+            token?: string | null;
             /**
              * Token Type
              * @default bearer
@@ -4112,7 +4117,10 @@ export interface operations {
     google_sign_in_v1_auth_google_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes */
+                "X-Session-Cookie"?: components["schemas"]["CookieMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4190,7 +4198,10 @@ export interface operations {
     google_complete_v1_auth_google_complete_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes */
+                "X-Session-Cookie"?: components["schemas"]["CookieMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4268,7 +4279,10 @@ export interface operations {
     login_v1_auth_login_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes */
+                "X-Session-Cookie"?: components["schemas"]["CookieMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4656,7 +4670,10 @@ export interface operations {
     restore_v1_auth_restore_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes */
+                "X-Session-Cookie"?: components["schemas"]["CookieMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4725,7 +4742,10 @@ export interface operations {
     verify_email_v1_auth_verify_email_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes */
+                "X-Session-Cookie"?: components["schemas"]["CookieMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };

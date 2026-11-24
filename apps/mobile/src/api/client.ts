@@ -1,6 +1,7 @@
 import type { components, paths } from "@datingapp/api-types";
 import createClient, { type Client } from "openapi-fetch";
 
+import { COOKIE_SESSIONS, cookieModeFor } from "@/auth/webSession";
 import { API_URL } from "@/config";
 
 export type Schemas = components["schemas"];
@@ -37,22 +38,34 @@ export type Api = Client<paths>;
 
 type Options = {
   getToken: () => string | null;
+  /** Whether this app holds a session: the web app's lives in a cookie it can't see (D152). */
+  hasSession?: () => boolean;
   onUnauthorized: () => void;
   fetch?: typeof fetch;
   baseUrl?: string;
+  /** The web app: the session travels in the API's HttpOnly cookie (D152). */
+  cookies?: boolean;
 };
 
-export function createApi({ getToken, onUnauthorized, fetch: fetchImpl, baseUrl }: Options): Api {
-  const client = createClient<paths>({ baseUrl: baseUrl ?? API_URL, fetch: fetchImpl });
+export function createApi({
+  getToken, hasSession, onUnauthorized, fetch: fetchImpl, baseUrl, cookies = COOKIE_SESSIONS,
+}: Options): Api {
+  const client = createClient<paths>({
+    baseUrl: baseUrl ?? API_URL,
+    fetch: fetchImpl,
+    ...(cookies ? { credentials: "include" as const } : {}),
+  });
   client.use({
     onRequest({ request }) {
       const token = getToken();
       if (token) request.headers.set("Authorization", `Bearer ${token}`);
+      const mode = cookieModeFor(request.method, request.url, cookies);
+      if (mode) request.headers.set("X-Session-Cookie", mode);
       return request;
     },
     onResponse({ response }) {
       // A revoked or expired session: forget it so the app returns to sign-in.
-      if (response.status === 401 && getToken()) onUnauthorized();
+      if (response.status === 401 && (getToken() || hasSession?.())) onUnauthorized();
       // Return nothing: the response is unchanged. openapi-fetch requires anything returned
       // here to be `instanceof Response`, which React Native's fetch responses are not, so
       // returning it failed every call on Android (BUG-004).

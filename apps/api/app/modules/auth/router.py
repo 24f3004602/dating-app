@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, Response, status
+from typing import Annotated
 
+from fastapi import APIRouter, Header, Request, Response, status
+
+from app.modules.auth import cookies, service
 from app.modules.auth import google as google_auth
-from app.modules.auth import service
 from app.modules.auth.deps import AuthCtx, ClientIp, CurrentSession, DbSession
 from app.modules.auth.schemas import (
     Accepted,
@@ -32,6 +34,15 @@ def _hub(request: Request) -> RealtimeHub:
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"], responses=problems(422, 429, 503))
 
+# The web app's session cookie (D152): absent, the session comes back as a bearer token.
+SessionCookie = Annotated[
+    cookies.CookieMode | None,
+    Header(
+        alias=cookies.TRANSPORT_HEADER,
+        description="The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+    ),
+]
+
 
 @router.post(
     "/register",
@@ -49,8 +60,18 @@ async def register(body: RegisterIn, ctx: AuthCtx, db: DbSession, ip: ClientIp) 
     responses=problems(400),
     summary="Confirm the email with the code and the sign-up password; opens a session",
 )
-async def verify_email(body: VerifyEmailIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> SessionOut:
-    return await service.verify_email(ctx, db, body, ip, request.headers.get("user-agent"))
+async def verify_email(
+    body: VerifyEmailIn,
+    request: Request,
+    response: Response,
+    *,
+    ctx: AuthCtx,
+    db: DbSession,
+    ip: ClientIp,
+    cookie: SessionCookie = None,
+) -> SessionOut:
+    out = await service.verify_email(ctx, db, body, ip, request.headers.get("user-agent"))
+    return cookies.deliver(out, response, cookie, ctx.clock())
 
 
 @router.post("/resend-code", status_code=status.HTTP_202_ACCEPTED, summary="Send a new sign-up code")
@@ -60,8 +81,18 @@ async def resend_code(body: EmailIn, ctx: AuthCtx, db: DbSession, ip: ClientIp) 
 
 
 @router.post("/login", responses=problems(401, 403), summary="Sign in with email and password")
-async def login(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> SessionOut:
-    return await service.login(ctx, db, body, ip, request.headers.get("user-agent"))
+async def login(
+    body: LoginIn,
+    request: Request,
+    response: Response,
+    *,
+    ctx: AuthCtx,
+    db: DbSession,
+    ip: ClientIp,
+    cookie: SessionCookie = None,
+) -> SessionOut:
+    out = await service.login(ctx, db, body, ip, request.headers.get("user-agent"))
+    return cookies.deliver(out, response, cookie, ctx.clock())
 
 
 @router.post(
@@ -69,8 +100,18 @@ async def login(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip
     responses=problems(401, 403),
     summary="Sign in and keep an account that is waiting to be deleted (otherwise the same as sign-in)",
 )
-async def restore(body: LoginIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp) -> SessionOut:
-    return await service.login(ctx, db, body, ip, request.headers.get("user-agent"), restore=True)
+async def restore(
+    body: LoginIn,
+    request: Request,
+    response: Response,
+    *,
+    ctx: AuthCtx,
+    db: DbSession,
+    ip: ClientIp,
+    cookie: SessionCookie = None,
+) -> SessionOut:
+    out = await service.login(ctx, db, body, ip, request.headers.get("user-agent"), restore=True)
+    return cookies.deliver(out, response, cookie, ctx.clock())
 
 
 def _google(request: Request) -> GoogleSignIn:
@@ -93,11 +134,21 @@ async def google_config(request: Request, ctx: AuthCtx) -> GoogleConfigOut:
     summary="Sign in with Google: the phone's ID token or the web app's code; signed in, or a ticket to finish",
 )
 async def google_sign_in(
-    body: GoogleSignInIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp
+    body: GoogleSignInIn,
+    request: Request,
+    response: Response,
+    *,
+    ctx: AuthCtx,
+    db: DbSession,
+    ip: ClientIp,
+    cookie: SessionCookie = None,
 ) -> GoogleSignInOut:
-    return await google_auth.sign_in(
+    out = await google_auth.sign_in(
         ctx, db, _google(request), body, ip=ip, user_agent=request.headers.get("user-agent")
     )
+    if out.session is None:
+        return out  # someone new: a ticket to finish, no session yet
+    return out.model_copy(update={"session": cookies.deliver(out.session, response, cookie, ctx.clock())})
 
 
 @router.post(
@@ -107,16 +158,24 @@ async def google_sign_in(
     summary="Finish a Google sign-up: date of birth (18+) and the current documents; opens a session",
 )
 async def google_complete(
-    body: GoogleCompleteIn, request: Request, ctx: AuthCtx, db: DbSession, ip: ClientIp
+    body: GoogleCompleteIn,
+    request: Request,
+    response: Response,
+    *,
+    ctx: AuthCtx,
+    db: DbSession,
+    ip: ClientIp,
+    cookie: SessionCookie = None,
 ) -> SessionOut:
-    return await google_auth.complete(ctx, db, body, ip, request.headers.get("user-agent"))
+    out = await google_auth.complete(ctx, db, body, ip, request.headers.get("user-agent"))
+    return cookies.deliver(out, response, cookie, ctx.clock())
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, responses=problems(401), summary="End this session")
 async def logout(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.logout(db, auth.session, ctx.clock())
     await _hub(request).revoke(auth.user.id, auth.session.id)  # closes this session's realtime connections
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return _signed_out(request)
 
 
 @router.post(
@@ -125,7 +184,15 @@ async def logout(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSes
 async def logout_all(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> Response:
     await service.logout_all(db, auth.user.id, ctx.clock())
     await _hub(request).revoke(auth.user.id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return _signed_out(request)
+
+
+def _signed_out(request: Request) -> Response:
+    """204, and the web app's cookie removed if it came with one (D152)."""
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    if cookies.MEMBER_COOKIE in request.cookies:
+        cookies.clear(response)
+    return response
 
 
 @router.post(

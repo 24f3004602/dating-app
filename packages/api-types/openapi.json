@@ -557,6 +557,14 @@
         "title": "ConsentsIn",
         "type": "object"
       },
+      "CookieMode": {
+        "enum": [
+          "persistent",
+          "browser"
+        ],
+        "title": "CookieMode",
+        "type": "string"
+      },
       "DeletionIn": {
         "additionalProperties": false,
         "properties": {
@@ -3373,8 +3381,15 @@
             "type": "string"
           },
           "token": {
-            "title": "Token",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
           },
           "token_type": {
             "const": "bearer",
@@ -3387,7 +3402,6 @@
           }
         },
         "required": [
-          "token",
           "expires_at",
           "user"
         ],
@@ -5545,6 +5559,26 @@
       },
       "post": {
         "operationId": "google_sign_in_v1_auth_google_post",
+        "parameters": [
+          {
+            "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CookieMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+              "title": "X-Session-Cookie"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5636,6 +5670,26 @@
     "/v1/auth/google/complete": {
       "post": {
         "operationId": "google_complete_v1_auth_google_complete_post",
+        "parameters": [
+          {
+            "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CookieMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+              "title": "X-Session-Cookie"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5727,6 +5781,26 @@
     "/v1/auth/login": {
       "post": {
         "operationId": "login_v1_auth_login_post",
+        "parameters": [
+          {
+            "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CookieMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+              "title": "X-Session-Cookie"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6163,6 +6237,26 @@
     "/v1/auth/restore": {
       "post": {
         "operationId": "restore_v1_auth_restore_post",
+        "parameters": [
+          {
+            "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CookieMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+              "title": "X-Session-Cookie"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6244,6 +6338,26 @@
     "/v1/auth/verify-email": {
       "post": {
         "operationId": "verify_email_v1_auth_verify_email_post",
+        "parameters": [
+          {
+            "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+            "in": "header",
+            "name": "X-Session-Cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CookieMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The web app: keep the session in an HttpOnly cookie, until it expires or the browser closes",
+              "title": "X-Session-Cookie"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

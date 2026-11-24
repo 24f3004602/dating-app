@@ -44,6 +44,36 @@ test("a 401 with a session forgets it", async () => {
   expect(onUnauthorized).toHaveBeenCalledTimes(1);
 });
 
+test("WEB-SESS-APP-2: the web app's client sends the cookie, asks for it at sign-in, and never a token", async () => {
+  let signedIn = true;
+  const { api, calls, onUnauthorized } = fakeApi(
+    {
+      "POST /v1/auth/login": () => ({ status: 200, body: { token: null } }),
+      "GET /v1/me": () => problem(401, "unauthenticated"),
+    },
+    { value: null },
+    { cookies: true, hasSession: () => signedIn },
+  );
+  await unwrap(api.POST("/v1/auth/login", { body: { email: "a@b.co", password: "x" } }));
+  expect(calls[0]?.credentials).toBe("include");
+  expect(calls[0]?.headers.get("x-session-cookie")).toBe("persistent");
+  expect(calls[0]?.headers.get("authorization")).toBeNull();
+  await expect(unwrap(api.GET("/v1/me"))).rejects.toMatchObject({ status: 401 });
+  expect(calls[1]?.credentials).toBe("include");
+  expect(calls[1]?.headers.get("x-session-cookie")).toBeNull();
+  expect(onUnauthorized).toHaveBeenCalledTimes(1); // the cookie's session ended: back to sign-in
+  signedIn = false;
+  await expect(unwrap(api.GET("/v1/me"))).rejects.toMatchObject({ status: 401 });
+  expect(onUnauthorized).toHaveBeenCalledTimes(1); // already signed out: nothing to forget
+});
+
+test("the phone app's client sends no cookies and never asks for one", async () => {
+  const { api, calls } = fakeApi({ "POST /v1/auth/login": () => ({ status: 200, body: { token: "t" } }) });
+  await unwrap(api.POST("/v1/auth/login", { body: { email: "a@b.co", password: "x" } }));
+  expect(calls[0]?.credentials).not.toBe("include");
+  expect(calls[0]?.headers.get("x-session-cookie")).toBeNull();
+});
+
 test("network failures are reported as such", async () => {
   const offline = createApi({
     getToken: () => null,

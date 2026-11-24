@@ -82,6 +82,9 @@ export const en = {
     invalid: "The email or password is not correct.",
     notVerified: "Confirm your email first. We can send you a new code.",
     blocked: "This account can't sign in. Contact support.",
+    // The web app only (D152): the session cookie lasts until it expires, or until the browser closes.
+    keep: "Keep me signed in on this browser",
+    keepHint: "Turn this off on a shared computer: you'll be signed out when the browser closes.",
   },
   // Sign in with Google (D134).
   google: {

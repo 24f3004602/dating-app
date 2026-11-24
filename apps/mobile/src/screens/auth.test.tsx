@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Linking } from "react-native";
 
 import { useAuth } from "@/auth/AuthProvider";
+import { setKeepSignedIn } from "@/auth/webSession";
 import { t } from "@/i18n/en";
 import { ResetScreen, SignInScreen, SignUpScreen, VerifyScreen } from "@/screens/auth";
 import { fakeApi, problem } from "@/test/fakeApi";
@@ -145,6 +146,46 @@ test("sign-in success stores the session and opens the profile", async () => {
   await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith("/profile"));
   expect(calls[0]?.body).toEqual({ email: "asha@example.com", password: PASSWORD });
   expect(SecureStore.setItemAsync).toHaveBeenCalledWith("session_token", "signed-in-token", expect.anything());
+});
+
+test("WEB-SESS-APP-4: on the web, sign-in offers 'Keep me signed in' and the cookie holds the session", async () => {
+  const { api, calls } = fakeApi(
+    {
+      "GET /v1/me": () => problem(401, "unauthenticated"),
+      "POST /v1/auth/login": () => ({ status: 200, body: { token: null } }),
+    },
+    { value: null },
+    { cookies: true },
+  );
+  await renderWithApp(<SignInScreen cookieSessions />, api, { cookieSessions: true });
+  expect(screen.getByRole("checkbox", { name: t.signIn.keep, checked: true })).toBeTruthy();
+  expect(screen.getByText(t.signIn.keepHint)).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.email), "asha@example.com");
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.password), PASSWORD);
+  await fireEvent.press(screen.getByRole("button", { name: t.signIn.submit }));
+  await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith("/profile"));
+  const logins = () => calls.filter((c) => c.path === "/v1/auth/login");
+  expect(logins()[0]?.headers.get("x-session-cookie")).toBe("persistent");
+  expect(SecureStore.setItemAsync).not.toHaveBeenCalled(); // no token reaches the page
+
+  // On a shared computer: off, and the cookie ends with the browser.
+  await fireEvent.press(screen.getByRole("checkbox", { name: t.signIn.keep }));
+  expect(screen.getByRole("checkbox", { name: t.signIn.keep, checked: false })).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.signIn.submit }));
+  await waitFor(() => expect(logins()).toHaveLength(2));
+  expect(logins()[1]?.headers.get("x-session-cookie")).toBe("browser");
+  setKeepSignedIn(true);
+});
+
+test("the phone app's sign-in has no such choice, and an answer without a token signs nobody in", async () => {
+  const { api } = fakeApi({ "POST /v1/auth/login": () => ({ status: 200, body: { token: null } }) });
+  await renderWithApp(<SignInScreen />, api);
+  expect(screen.queryByRole("checkbox", { name: t.signIn.keep })).toBeNull();
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.email), "asha@example.com");
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.password), PASSWORD);
+  await fireEvent.press(screen.getByRole("button", { name: t.signIn.submit }));
+  expect(await screen.findByText(t.common.unknownError)).toBeTruthy();
+  expect(mockRouter.replace).not.toHaveBeenCalled();
 });
 
 test("password reset: request, then code and a new password checked locally", async () => {
