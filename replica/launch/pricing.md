@@ -89,7 +89,9 @@ Still to check:
 ## Sanity check (illustrative only)
 
 10,000 monthly users × 5% paying × ₹399 is about ₹2.0 lakh a month gross. That
-is before store fees (roughly 15-30%) and GST, both to be verified. **The model
+is before store fees and GST: Google keeps 15% of auto-renewing subscriptions sold in the Play
+app in India (Play Console Help, "Service fees", read 2026-11-24); Apple's rate is still to be
+verified. The launch's own costs are in `launch-plan.md`, section 6. **The model
 only works at much larger scale.** Density in one city comes first;
 monetization comes after the MVP proves the loop.
 

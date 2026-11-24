@@ -140,13 +140,58 @@ matches rarer for everyone.
   competitors; and testers told before ads start for them (the notice changed on 2026-11-20).
 - Revenue from ads will be small at this size; Plus is the main line.
 
-## 6. Budget (monthly, indicative)
+## 6. What the launch costs (payment chart)
+
+Prices read 2026-11-24 on each provider's own page (sources at the end), at that day's rate of
+US$1 = ₹93.00, rounded. Most providers add 18% GST for Indian buyers. Paid so far: the domain's
+first year (₹99).
+
+**Needed for the launch**
+
+| what | cost | when | notes |
+| --- | --- | --- | --- |
+| Google Play developer account | US$25 (₹2,325), once | now | a card and ID in the owner's legal name, and an Android device, are verified; the fee isn't refunded if the details are invalid |
+| A lawyer's review of the terms and privacy notice | a quote | before the public launch | blocker 3; `lawyer-brief.md` is ready: ask 2 or 3 lawyers |
+| The Mumbai server (Lightsail, 2 GB, D096) | US$12 a month (₹1,116) | when the beta moves off the laptop, before the public launch | 2 vCPUs, 60 GB disk, 1.5 TB transfer a month in Mumbai; the beta's seven containers use about 380 MB; 4 GB is US$24 when needed |
+| Email from our own domain (Amazon SES) | US$0.10 per 1,000 emails (₹9.30); about ₹100-200 a month at launch | before launch volume (blocker 2) | new AWS accounts get up to US$200 of credits for 6 months |
+| The domain `kinaara.online` (Hostinger) | ₹3,489 a year | by 5 Nov 2027 (charged about 27 days before) | registered 2026-11-05; moving it to another registrar costs ₹3,009 |
+
+**Free at launch volumes** (charged only past these limits)
+
+| what | free up to | then |
+| --- | --- | --- |
+| Photo storage (Cloudflare R2, blocker 4) | 10 GB a month | US$0.015 per GB a month; downloads free |
+| Live calls' relay (Cloudflare Realtime) | 1,000 GB a month, about 60,000 one-minute calls | US$0.05 per GB |
+| Cloudflare DNS, Tunnel and Access; UptimeRobot; GitHub (public repository and CI); the encrypted backups in Google Drive (a few MB); AdMob | free plans | |
+| Plus by UPI to the owner's own account (D127) | no fees | |
+
+**Recommended**
+
+| what | cost | when | notes |
+| --- | --- | --- | --- |
+| Registering "Kinaara" as a trademark (IP India, filed online) | ₹4,500 a class for an individual, startup or small enterprise; for example classes 9 (the app) and 45 (dating services): ₹9,000 | after the IP India search and an attorney's opinion (blocker 6) | ₹9,000 a class for other applicants; the attorney's fee is extra (a quote) |
+
+**Marketing: the owner's choice** (monthly, from phase 2)
 
 | tier | what |
 | --- | --- |
 | ₹0 | Instagram organic, personal networks, communities, press |
 | ₹15,000 | plus Google Search at ₹500 a day, once certified |
 | ₹50,000 | plus Search at ₹1,000 a day, Instagram and Facebook ads at about ₹20,000 once Meta permits, and Delhi micro-creators |
+
+**Later, not for this launch**
+
+| what | cost |
+| --- | --- |
+| An iPhone app (Apple Developer Program) | US$99 a year (₹9,207) |
+| Razorpay, if Plus moves to cards or renewing payments on the web | no setup or yearly fee; 2% of each payment, plus 18% GST on that fee |
+| Plus sold inside the Play app (Play Billing) | Google keeps 15% of auto-renewing subscriptions in India; 4% less through user choice billing |
+| SMS sign-up codes (D012) | not planned: DLT registration and an SMS provider first |
+
+**The first year, before GST:** the Play account ₹2,325, the server ₹13,392, email about
+₹1,200-2,200 and the domain's renewal ₹3,489 come to **about ₹21,000, plus the lawyer's quote**.
+With the trademark in two classes, **about ₹30,000**. Marketing comes on top: ₹0, ₹1.8 lakh or
+₹6 lakh a year at the three tiers.
 
 ## 7. Measures, every week
 
@@ -170,7 +215,20 @@ Play Billing.
 
 **Before real in-app ads:** see section 5.
 
-## Sources (read 2026-11-20)
+## Sources (read 2026-11-20; the payment chart's on 2026-11-24)
+
+- The payment chart (section 6), each on the provider's page: Google Play Console Help, "Get
+  started with Play Console" (US$25 once; support.google.com/googleplay/android-developer/answer/6112435);
+  Lightsail pricing (aws.amazon.com/lightsail/pricing; Mumbai bundles get half the transfer);
+  Amazon SES pricing (aws.amazon.com/ses/pricing); Cloudflare R2 pricing
+  (developers.cloudflare.com/r2/pricing); the domain's registry record (rdap.radix.host:
+  registrar Hostinger, expiry 2027-11-05) and Hostinger India's .online price
+  (hostinger.com/in/tld/online-domain); IP India, "Forms & Official Fees" (the First Schedule of
+  the Trade Marks Rules 2017; ipindia.gov.in/pages/trade-marks/learn/forms-and-official-fees);
+  Razorpay's pricing (razorpay.com/pricing); Apple, "Enrollment" (developer.apple.com/support/enrollment);
+  Google Play Console Help, "Service fees" (support.google.com/googleplay/android-developer/answer/112622);
+  the dollar's rate from open.er-api.com (₹93.00, 24 Nov 2026). Cloudflare Realtime's relay price
+  is `pricing.md`'s (read 2026-11-18). The beta's memory use from `docker stats` the same day.
 
 - Google AdMob Help, "App readiness": "All Android apps must be publicly available in a supported
   store in order to link to AdMob" (support.google.com/admob/answer/10564477).
