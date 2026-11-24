@@ -438,7 +438,7 @@ are defined in `recon.md` and routes in `architecture.md`. These are
 | SEC-TXT-2 | web | guard | its expiry | under a year away (180 days from the start of the day, UTC), the same all day, a day later the next day | node --test | pass |
 | SEC-TXT-3 | web | guard | no contact | no file (404, text/plain); no site address, no Canonical line | node --test | pass |
 | SEC-TXT-4 | web | happy | the real stack (beta-stack CI) | the file's lines and type from Next behind Caddy; `app.` and `api.` answer 308 to it | CI | pass (beta-stack 45217966795 on `41fb821`) |
-| NAT-GUIDE-1 | safety | device | the owner's Pixel (the APK) | a Call button opens the dialer with the number filled in, nothing calls by itself; TalkBack reads the headings and the buttons' names | manual | not run |
+| NAT-GUIDE-1 | safety | device | the owner's Pixel (the APK) | a Call button opens the dialer with the number filled in, nothing calls by itself; TalkBack reads the headings and the buttons' names | manual | partial (2026-11-24): the APK from android-apk 45224007936 (SHA-256 as CI's) installed over the last one; the guide opens from Live's lobby on the native app; its sections and Who to call render; Call 14416 opened Google's dialer with "144 16" filled in and no call placed (telecom: none), Back returned to the app; the compressed accessibility tree holds every helpline's number, name, words and named Call button. Not yet: listening with TalkBack (the owner skipped it for now) |
 
 ## Results
 
