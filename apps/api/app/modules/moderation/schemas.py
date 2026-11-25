@@ -4,9 +4,10 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, Field, StringConstraints, model_validator
 
 from app.modules.accounts.models import UserStatus
+from app.modules.auth.schemas import Email
 from app.modules.profiles.schemas import PhotoOut, PromptAnswerOut
 from app.modules.safety.models import ActionKind, ReportReason, ReportStatus
 from app.schemas import ApiModel
@@ -103,6 +104,24 @@ class PendingPhoto(ApiModel):
 class PhotoDecisionIn(ApiModel):
     decision: Literal["approve", "reject"]
     note: Note | None = None
+
+
+class MemberSearchIn(ApiModel):
+    """Find the member an emailed complaint is about (stage 28e-2, D158): by their address, or by the
+    first name and age their profile shows. In the body, never the URL: a search term is personal data."""
+
+    email: Email | None = Field(default=None, repr=False)
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)] | None = Field(
+        default=None, repr=False
+    )
+    age: int | None = Field(default=None, ge=18, le=120)
+
+    @model_validator(mode="after")
+    def _one_way(self) -> MemberSearchIn:
+        by_name = self.name is not None or self.age is not None
+        if (self.email is not None) == by_name or (by_name and (self.name is None or self.age is None)):
+            raise ValueError("search by email, or by first name and age")
+        return self
 
 
 class AccountActionIn(ApiModel):

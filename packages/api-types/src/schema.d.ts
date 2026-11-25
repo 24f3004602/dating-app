@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/members/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Find the member an emailed complaint is about, by address or first name and age (audited) */
+        post: operations["find_members_v1_admin_members_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/photos/pending": {
         parameters: {
             query?: never;
@@ -1991,6 +2008,19 @@ export interface components {
             status: string;
             verification: components["schemas"]["Verification"];
         };
+        /**
+         * MemberSearchIn
+         * @description Find the member an emailed complaint is about (stage 28e-2, D158): by their address, or by the
+         *     first name and age their profile shows. In the body, never the URL: a search term is personal data.
+         */
+        MemberSearchIn: {
+            /** Age */
+            age?: number | null;
+            /** Email */
+            email?: string | null;
+            /** Name */
+            name?: string | null;
+        };
         /** MessageIn */
         MessageIn: {
             /** Body */
@@ -3398,6 +3428,66 @@ export interface operations {
             };
             /** @description A dependency (database, Redis) is unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    find_members_v1_admin_members_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberSearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectDetail"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

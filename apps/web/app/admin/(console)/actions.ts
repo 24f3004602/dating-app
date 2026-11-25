@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { api } from "@/lib/api";
+import { API_PUBLIC_URL } from "@/lib/config";
 import { endStaffSession, requireStaff } from "@/lib/session";
 
 /**
@@ -93,4 +94,57 @@ export async function signOut(): Promise<void> {
   const token = await endStaffSession();
   if (token) await api("/v1/admin/auth/logout", { method: "POST", token });
   redirect("/admin/login");
+}
+
+/** A member found for a complaint that came by email (D158): what a report shows of them, never their address. */
+export type FoundMember = {
+  user_id: string;
+  display_name: string | null;
+  age: number;
+  account_status: string;
+  joined: string;
+  reports_on_subject: number;
+  photos: { id: string; moderation_state: string; src: string }[];
+};
+export type MemberSearch = { results?: FoundMember[]; error?: string };
+type ApiMember = Omit<FoundMember, "photos"> & {
+  photos: { id: string; moderation_state: string; urls: { small: string } }[];
+};
+
+/** Staff: find the member an emailed complaint is about (D158). The search goes in a POST body,
+ * never a URL, and its results come back to this page only. */
+export async function searchMembers(_previous: MemberSearch, form: FormData): Promise<MemberSearch> {
+  const { token } = await requireStaff();
+  const email = text(form, "email");
+  const age = Number.parseInt(text(form, "age"), 10);
+  const body = email ? { email } : { name: text(form, "name"), age: Number.isNaN(age) ? 0 : age };
+  const r = await api<ApiMember[]>("/v1/admin/members/search", { method: "POST", token, body });
+  if (!r.ok) return { error: r.code };
+  return {
+    results: r.data.map((m) => ({
+      ...m,
+      photos: m.photos.map((p) => ({ id: p.id, moderation_state: p.moderation_state, src: `${API_PUBLIC_URL}${p.urls.small}` })),
+    })),
+  };
+}
+
+/** Reject a photo of a member found by search: the IT Rules' two hours (D155) start with the email. */
+export async function rejectFoundPhoto(photoId: string): Promise<void> {
+  const { token } = await requireStaff();
+  const id = checkedId(photoId);
+  const r = await api(`/v1/admin/photos/${id}/decision`, {
+    method: "POST",
+    token,
+    body: { decision: "reject", note: "After a complaint by email (Find a member)." },
+  });
+  redirect(r.ok ? "/admin/members?done=reject" : `/admin/members?error=${r.code}`);
+}
+
+export async function suspendFoundMember(userId: string, form: FormData): Promise<void> {
+  const { token } = await requireStaff();
+  const id = checkedId(userId);
+  const note = text(form, "note");
+  if (!note) redirect("/admin/members?error=note_required");
+  const r = await api(`/v1/admin/users/${id}/actions`, { method: "POST", token, body: { action: "suspend", note } });
+  redirect(r.ok ? "/admin/members?done=suspend" : `/admin/members?error=${r.code}`);
 }

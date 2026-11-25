@@ -19,6 +19,8 @@ const MESSAGES: Record<string, string> = {
   member_gone: "This member deleted their account. Refund the payment from your bank instead.",
   invalid: "Choose a decision, and a reason when rejecting.",
   network_error: "The API can't be reached. Try again shortly.",
+  note_required: "Write a note for other staff: why, in a sentence.",
+  validation_error: "Check what you entered: to find a member, an email address, or a first name and an age of 18 or over.",
 };
 
 export function messageFor(code: string): string {

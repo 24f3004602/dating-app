@@ -16,11 +16,13 @@ from app.modules.moderation.schemas import (
     AccountActionIn,
     ActionOut,
     AuditEntryOut,
+    MemberSearchIn,
     PendingPhoto,
     PhotoDecisionIn,
     QueueItem,
     ReportActionIn,
     ReportDetail,
+    SubjectDetail,
 )
 from app.modules.notifications import service as notify
 from app.modules.safety.models import ActionKind, ReportStatus
@@ -80,6 +82,18 @@ async def act(
     )
     await _announce(request, effects, db)
     return out
+
+
+@router.post(
+    "/members/search",
+    responses=problems(429),
+    summary="Find the member an emailed complaint is about, by address or first name and age (audited)",
+)
+async def find_members(
+    body: MemberSearchIn, request: Request, staff: StaffSession, ctx: AuthCtx, db: DbSession
+) -> list[SubjectDetail]:
+    await ctx.limiter.hit(service.LOOKUP_LIMIT, str(staff.user.id))
+    return await service.find_members(db, ctx.settings, _storage(request), staff.user, body, now=ctx.clock())
 
 
 @router.get("/photos/pending", summary="Photos waiting for review, oldest first (audited)")

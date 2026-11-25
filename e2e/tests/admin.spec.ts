@@ -147,6 +147,18 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   await expect(page.getByRole("heading", { name: "Photo review", level: 1 })).toBeVisible();
   await expect(page.getByText("Reported: hidden until you decide")).toHaveCount(0); // dismissing gave it back
   await checkA11y(page, "console-photos");
+  // A complaint by email (D158): find the member by the first name and age the profile shows.
+  await page.getByRole("link", { name: "Find a member" }).click();
+  await expect(page.getByRole("heading", { name: "Find a member", level: 1 })).toBeVisible();
+  await page.getByLabel("First name").fill("fixture aarav");
+  await page.getByLabel("Age").fill("29");
+  await page.getByRole("button", { name: "Find" }).click();
+  await expect(page.getByRole("status")).toHaveText("1 member found.");
+  await expect(page.getByRole("heading", { name: "Fixture Aarav, 29", level: 2 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reject photo 1 of Fixture Aarav" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Suspend the account of Fixture Aarav" })).toBeVisible();
+  expect(page.url()).toBe(`${CONSOLE_URL}/admin/members`); // what was searched for never reaches the URL
+  await checkA11y(page, "console-members");
   // A Plus pass payment (D127): an admin checks it against the bank and approves it.
   await page.getByRole("link", { name: "Payments" }).click();
   await expect(page.getByRole("heading", { name: "Payments", level: 1 })).toBeVisible();

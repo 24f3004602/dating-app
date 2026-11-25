@@ -50,6 +50,7 @@ from app.modules.moderation import emails
 from app.modules.moderation.schemas import (
     ActionOut,
     AuditEntryOut,
+    MemberSearchIn,
     PendingPhoto,
     QueueItem,
     ReportDetail,
@@ -64,9 +65,14 @@ from app.modules.safety.models import ActionKind, ModerationAction, Report, Repo
 from app.modules.safety.service import HOLD_REASONS, URGENT_REASONS, report_about
 from app.providers.email import EmailSender
 from app.providers.storage import ObjectStorage
+from app.ratelimit import Limit
 
 ACTIVE = (ReportStatus.open, ReportStatus.in_review)
 ADMIN_ONLY = {ActionKind.ban, ActionKind.reinstate}
+# Finding members (D158): enough for a day's complaints, too few to walk the member list.
+LOOKUP_LIMIT = Limit("member_lookups", 60, 3600)
+LOOKUP_RESULTS = 20
+NAME_CANDIDATES = 200
 
 
 @dataclass
@@ -194,6 +200,49 @@ async def _subject_detail(
         photos=[photo_out(p, storage, now) for p in await list_photos(session, user_id)],
         reports_on_subject=int(total or 0),
     )
+
+
+async def find_members(
+    session: AsyncSession,
+    settings: Settings,
+    storage: ObjectStorage,
+    staff: User,
+    search: MemberSearchIn,
+    *,
+    now: datetime,
+) -> list[SubjectDetail]:
+    """The member an emailed complaint is about (stage 28e-2, D158): by their address, or by the
+    first name and age their profile shows. Members only; staff see what a report shows of each.
+    Audited with how they searched and how many were found, never what they searched for."""
+    if search.email is not None:
+        by = "email"
+        found = (
+            await session.execute(
+                select(User.id).where(User.email_normalized == search.email, User.role == UserRole.member)
+            )
+        ).scalars()
+        ids = list(found)
+    elif search.name is not None and search.age is not None:
+        by = "name"
+        today = local_today(settings, now)
+        rows = (
+            await session.execute(
+                select(User.id, User.birthdate)
+                .join(Profile, Profile.user_id == User.id)
+                .where(User.role == UserRole.member, func.lower(Profile.display_name) == search.name.lower())
+                .order_by(User.created_at, User.id)
+                .limit(NAME_CANDIDATES)
+            )
+        ).all()
+        ids = [user_id for user_id, born in rows if age_on(born, today) == search.age]
+    else:  # the schema allows nothing else
+        raise ApiError(422, "invalid_search", "Search by email, or by first name and age.")
+    results = [
+        d for user_id in ids[:LOOKUP_RESULTS] if (d := await _subject_detail(session, settings, storage, user_id, now))
+    ]
+    record(session, "admin.member_lookup", actor=staff.id, by=by, found=len(results))
+    await session.commit()
+    return results
 
 
 async def _history(session: AsyncSession, user_id: uuid.UUID | None) -> list[ActionOut]:
