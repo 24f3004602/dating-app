@@ -9,6 +9,7 @@ export const keys = {
   profile: ["me", "profile"] as const,
   photos: ["me", "photos"] as const,
   areas: ["areas"] as const,
+  photoCheck: ["me", "photo-check"] as const,
   prompts: ["prompts"] as const,
 };
 
@@ -116,7 +117,40 @@ export function useUploadPhoto() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.photos });
       void qc.invalidateQueries({ queryKey: keys.profile });
+      void qc.invalidateQueries({ queryKey: keys.photoCheck }); // a new photo clears the tick (D164)
     },
+  });
+}
+
+/** The blue tick (D164): where my photo check stands. */
+export function usePhotoCheck() {
+  const { api } = useAuth();
+  return useQuery({ queryKey: keys.photoCheck, queryFn: () => unwrap(api.GET("/v1/me/photo-check")) });
+}
+
+export function useGesture() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/v1/me/photo-check/gesture")),
+    onSuccess: (check) => qc.setQueryData(keys.photoCheck, check),
+  });
+}
+
+export function useSendSelfie() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (image: PickedImage) => {
+      const form = await asFormData(image);
+      return unwrap(
+        api.POST("/v1/me/photo-check/selfie", {
+          body: form as unknown as Schemas["PhotoUploadForm"],
+          bodySerializer: (b) => b as unknown as FormData,
+        }),
+      );
+    },
+    onSuccess: (check) => qc.setQueryData(keys.photoCheck, check),
   });
 }
 

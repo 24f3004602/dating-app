@@ -19,16 +19,18 @@ import { FormField } from "@/ui/FormField";
 import { Reveal, staggered } from "@/ui/motion";
 import { Body, Button, Card, ChoiceGroup, Loading, Notice, Photo, Plate, Screen, Stack, Thumb, Title } from "@/ui/primitives";
 import { Rings } from "@/ui/Rings";
+import { VerifiedTick } from "@/ui/VerifiedTick";
 import { z } from "@/validation/z";
 
 function cardLabel(c: DailyCard): string {
-  return fill(t.discover.card, {
+  const label = fill(t.discover.card, {
     name: c.display_name,
     age: c.age,
     intent: t.intent[c.intent],
     area: c.area.name,
     distance: t.distance[c.distance],
   });
+  return c.photo_verified ? `${label} ${t.tick.label}.` : label;
 }
 
 export function DiscoverScreen() {
@@ -84,6 +86,7 @@ export function DiscoverScreen() {
             {c.photos[0] ? <Thumb portrait uri={absoluteUrl(API_URL, c.photos[0].urls.small)} /> : null}
             <Stack>
               <Plate>{`${c.display_name}, ${c.age}`}</Plate>
+              {c.photo_verified ? <VerifiedTick /> : null}
               <Body>{t.intent[c.intent]}</Body>
               <Body muted>{`${c.area.name}, ${t.distance[c.distance]}`}</Body>
             </Stack>
@@ -140,6 +143,7 @@ function PersonView({ person }: { person: Person }) {
     <Screen>
       <View style={styles.facts}>
         <Plate heading>{`${person.display_name}, ${person.age}`}</Plate>
+        {person.photo_verified ? <VerifiedTick /> : null}
         <Body>{t.intent[person.intent]}</Body>
         {person.identities.length > 0 ? <Body>{person.identities.map((i) => t.identity[i]).join(" · ")}</Body> : null}
         <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>

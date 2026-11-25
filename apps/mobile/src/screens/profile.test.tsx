@@ -46,7 +46,7 @@ const photo = (id: string, position: number, state = "pending") => ({
   urls_expire_at: "2026-11-04T12:00:00Z",
 });  // prettier-ignore
 const PROFILE = {
-  user_id: "u1", display_name: "Asha", age: 27, gender: "woman", interested_in: ["man"], identities: [], intent: "long_term",
+  user_id: "u1", display_name: "Asha", age: 27, gender: "woman", interested_in: ["man"], identities: [], photo_verified: false, intent: "long_term",
   bio: null, area: AREAS[0], prompts: [], photos: [photo("p1", 0)], visibility: "everyone", discovery_paused: false,
   readiness: { ready: false, missing: ["approved_photos"], approved_photos: 0, approved_photos_needed: 2 },
 };  // prettier-ignore
@@ -76,6 +76,22 @@ test("profile: readiness and honest labels, never 'age verified'", async () => {
   expect(screen.getByText(/Not visible to others yet/)).toBeTruthy();
   expect(await screen.findByText(`${t.profile.ageDeclared} · ${t.profile.emailVerified} · ${t.profile.identityNotChecked}`)).toBeTruthy();
   expect(screen.queryByText(/age verified/i)).toBeNull();
+});
+
+test("TICK-APP-3b: your own card shows the tick, the labels say what was checked, and You leads to it (D164)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: { ...PROFILE, photo_verified: true } }),
+    "GET /v1/me": () => ({ status: 200, body: ME }),
+  });
+  await renderWithApp(<ProfileScreen />, api);
+  expect(await screen.findByText(t.tick.label)).toBeTruthy();
+  expect(
+    await screen.findByText(`${t.profile.ageDeclared} · ${t.profile.emailVerified} · ${t.tick.label} · ${t.profile.identityNotChecked}`),
+  ).toBeTruthy(); // a selfie was checked, not an ID
+  const row = screen.getByRole("button", { name: t.photoCheck.open });
+  expect(within(row).getByText(t.photoCheck.openVerified)).toBeTruthy();
+  await fireEvent.press(row);
+  expect(mockRouter.push).toHaveBeenLastCalledWith("/photo-check");
 });
 
 test("profile: a failed load offers a retry", async () => {
@@ -353,6 +369,7 @@ test("You is your card over a list of places, not a hub of buttons (MOB-25, stag
   const places = [
     [t.profile.edit, "/profile/edit"],
     [t.profile.photos, "/photos"],
+    [t.photoCheck.open, "/photo-check"],
     [t.preferences.open, "/preferences"],
     [t.profile.privacy, "/privacy"],
     [t.safety.open, "/safety"],

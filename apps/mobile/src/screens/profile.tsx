@@ -31,6 +31,7 @@ import { FormField } from "@/ui/FormField";
 import { MoreButton } from "@/ui/MoreButton";
 import { Body, Button, Caption, CardTitle, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, SwitchRow, TextField, Thumb, Title } from "@/ui/primitives";
 import { Sheet } from "@/ui/Sheet";
+import { VerifiedTick } from "@/ui/VerifiedTick";
 import { GENDERS, IDENTITIES, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
 const genderOptions = GENDERS.map((g) => ({ value: g, label: t.gender[g] }));
@@ -68,7 +69,12 @@ export function ProfileScreen() {
   // The app tour (D136), any time: with the places when there's a profile, on its own before.
   const tourRow = tour ? <ListRow label={t.tour.replay} hint={t.tour.replayHint} onPress={tour.replay} /> : null;
   const labels = me.data
-    ? [t.profile.ageDeclared, me.data.verification.email === "verified" ? t.profile.emailVerified : null, t.profile.identityNotChecked]
+    ? [
+        t.profile.ageDeclared,
+        me.data.verification.email === "verified" ? t.profile.emailVerified : null,
+        p?.photo_verified ? t.tick.label : null, // a selfie our team checked (D164): still not an ID check
+        t.profile.identityNotChecked,
+      ]
     : [];
 
   return (
@@ -93,6 +99,12 @@ export function ProfileScreen() {
             hint={fill(t.profile.photoCount, { n: p.photos.length, max: MAX_PHOTOS })}
             opens
             onPress={() => router.push("/photos")}
+          />
+          <ListRow
+            label={t.photoCheck.open}
+            hint={p.photo_verified ? t.photoCheck.openVerified : t.photoCheck.openHint}
+            opens
+            onPress={() => router.push("/photo-check")}
           />
           <ListRow label={t.preferences.open} opens onPress={() => router.push("/preferences")} />
           <ListRow label={t.profile.privacy} hint={privacyHint(p)} opens onPress={() => router.push("/privacy")} />
@@ -128,6 +140,7 @@ function ProfileSummary({ profile }: { profile: MyProfile }) {
         {cover ? <Thumb portrait uri={absoluteUrl(API_URL, cover.urls.small)} label={t.photos.coverAlt} /> : null}
         <Stack>
           <Plate heading level={2}>{`${profile.display_name}, ${profile.age}`}</Plate>
+          {profile.photo_verified ? <VerifiedTick /> : null}
           <Body>{t.intent[profile.intent]}</Body>
           {profile.identities.length > 0 ? <Body>{profile.identities.map((i) => t.identity[i]).join(" · ")}</Body> : null}
           <Body muted>{`${profile.area.name}, ${profile.area.city}`}</Body>

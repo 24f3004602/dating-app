@@ -19,6 +19,7 @@ colors:
   success: "#1f6b45"
   success-soft: "#e7f3ec"
   focus: "#2453c4"
+  verified: "#1a56c8"
   overlay: "#1c1b19"
   sign: "#1c1b19"
   on-sign: "#ffffff"
@@ -241,6 +242,7 @@ Two saturated line colours carried by graphite and white, with quiet washes for 
 - **Platform Line** (border): dividers only, such as the line under each list row; never a control's edge.
 - **Sign Grey** (on-sign-muted): the pressed dots of More options on the top bar.
 - **Keyboard Blue** (focus): the staff console's keyboard focus ring on the website; the member app doesn't use it since D117.
+- **Tick Blue** (verified, D164): only the blue tick of a member our team photo-verified: a 24-point roundel with a white drawn tick, always followed by the words "Photo verified" in caption type, on the page or a tinted panel and never on a graphite plate (6.5:1 on white, 5.9:1 on surface, the white tick 6.5:1 on it). It sits under the name's plate on Today's cards, a person's profile and your own card.
 
 ### Named Rules
 **The Two Lines Rule.** As lines (rails, chat plates, the map, the rings), teal is always you and marigold always the other person. Never swap them, never add a third line colour.

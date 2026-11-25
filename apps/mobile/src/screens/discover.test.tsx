@@ -17,7 +17,7 @@ const photo = (id: string) => ({
   urls_expire_at: "2026-11-04T12:00:00Z",
 });  // prettier-ignore
 const card = (id: string, name: string, distance: string, rank: number) => ({
-  user_id: id, display_name: name, age: 29, gender: "man", identities: [], intent: "long_term", bio: "Hello.",
+  user_id: id, display_name: name, age: 29, gender: "man", identities: [], photo_verified: false, intent: "long_term", bio: "Hello.",
   area: { id: "delhi.saket", city: "Delhi", name: "Saket" }, prompts: [], photos: [photo(`${id}p`)], distance, rank,
 });  // prettier-ignore
 const TODAY = (cards: unknown[]) => ({
@@ -84,6 +84,26 @@ test("a person's LGBTQ+ labels show only when they added them (PROF-ID-APP-3, D1
   await renderWithApp(<PersonScreen id="u2" />, api);
   expect(await screen.findByText("Kabir, 29")).toBeTruthy();
   for (const label of Object.values(t.identity)) expect(screen.queryByText(new RegExp(`\\b${label}\\b`))).toBeNull();
+});
+
+test("TICK-APP-3: the blue tick beside its words, on a card and a profile, only when verified (D164)", async () => {
+  const aarav = { ...card("u1", "Aarav", "under_5_km", 1), photo_verified: true };
+  const { api } = fakeApi({
+    "GET /v1/discovery/today": () => ({ status: 200, body: TODAY([aarav, card("u2", "Kabir", "15_to_50_km", 2)]) }),
+    "GET /v1/profiles/u1": () => ({ status: 200, body: aarav }),
+    "GET /v1/profiles/u2": () => ({ status: 200, body: card("u2", "Kabir", "15_to_50_km", 2) }),
+  });
+  await renderWithApp(<DiscoverScreen />, api);
+  expect(await screen.findByRole("button", { name: new RegExp(`Aarav, 29.*${t.tick.label}\\.$`) })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: new RegExp(`Kabir.*${t.tick.label}`) })).toBeNull();
+  expect(screen.getAllByText(t.tick.label)).toHaveLength(1);
+  await screen.unmount();
+  await renderWithApp(<PersonScreen id="u1" />, api);
+  expect(await screen.findByText(t.tick.label)).toBeTruthy();
+  await screen.unmount();
+  await renderWithApp(<PersonScreen id="u2" />, api);
+  expect(await screen.findByText("Kabir, 29")).toBeTruthy();
+  expect(screen.queryByText(t.tick.label)).toBeNull();
 });
 
 /** Every text and accessible name on screen, in reading order. */

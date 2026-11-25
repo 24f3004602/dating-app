@@ -37,7 +37,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Choose photos for your profile. Only the photos you pick are uploaded.",
-          "cameraPermission": "Live video calls use your camera, only while you're in Live.",
+          "cameraPermission": "Your camera is used for Live video calls while you're in Live, and for the selfie when you ask for the blue tick.",
           "microphonePermission": "Live video calls use your microphone, only while you're in Live."
         }
       ],
@@ -45,7 +45,7 @@
       [
         "@config-plugins/react-native-webrtc",
         {
-          "cameraPermission": "Live video calls use your camera, only while you're in Live.",
+          "cameraPermission": "Your camera is used for Live video calls while you're in Live, and for the selfie when you ask for the blue tick.",
           "microphonePermission": "Live video calls use your microphone, only while you're in Live."
         }
       ],

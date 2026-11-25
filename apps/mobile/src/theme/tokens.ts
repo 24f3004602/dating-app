@@ -31,6 +31,8 @@ export const color = {
   successSoft: "#e7f3ec",
   /** The keyboard focus ring (web), drawn outside the control over bg or surface. */
   focus: "#2453c4",
+  /** The blue tick of a photo-verified member (D164): beside its words, never on a graphite plate. */
+  verified: "#1a56c8",
   /** The dark layer over the welcome screen's video (stage 19, D099), at `overlay.opacity`. */
   overlay: "#1c1b19",
   /** The brightest the overlay gets (over a white pixel): contrast pairs are checked on it. */
