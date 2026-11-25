@@ -23,7 +23,7 @@ APP_TABLES = {
     "moderation_actions", "deleted_accounts", "staff_mfa", "staff_recovery_codes", "staff_enrollments",
     "push_devices", "notification_prefs", "member_notices", "push_tickets", "subscriptions", "payment_events",
     "signup_invites", "waitlist_entries", "call_members", "call_queue", "calls", "plus_payments",
-    "user_identities",
+    "user_identities", "photo_checks",
 }  # fmt: skip
 JOB_TABLES = {"procrastinate_jobs", "procrastinate_events", "procrastinate_periodic_defers", "procrastinate_workers"}
 HEAD = APP_TABLES | JOB_TABLES | {"alembic_version"}
@@ -91,7 +91,7 @@ def test_runtime_role_grants(scratch: tuple[str, Engine], base_settings: Setting
             "staff_mfa", "staff_recovery_codes", "staff_enrollments",
             "push_devices", "notification_prefs", "member_notices", "push_tickets",
             "subscriptions", "payment_events", "signup_invites", "waitlist_entries",
-            "call_members", "call_queue", "calls", "plus_payments", "user_identities",
+            "call_members", "call_queue", "calls", "plus_payments", "user_identities", "photo_checks",
         )  # fmt: skip
         for table in (*dml_tables, *sorted(JOB_TABLES)):
             for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):

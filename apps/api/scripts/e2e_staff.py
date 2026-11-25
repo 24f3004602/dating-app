@@ -3,10 +3,11 @@
 Creates a labelled e2e admin with the password given on the command line (the
 seeded fixtures use an undeliverable domain and can never sign in), issues it
 a one-time enrolment token, files a labelled report between two seeded fixture
-profiles, and a Plus pass payment from a fixture waiting for an admin (D127).
+profiles, a Plus pass payment from a fixture waiting for an admin (D127), and a
+photo check from another fixture waiting for review (D164).
 The report names the subject's first photo and holds it, as the API does for a
 report of impersonation (D157), so the console shows the hold and its release.
-Prints JSON: {"email", "enrollment_token", "report_id", "payment_utr"}.
+Prints JSON: {"email", "enrollment_token", "report_id", "payment_utr", "check_name"}.
 
 Refuses any database whose name does not end in `_e2e_test`, and production.
 Run after `seed-dev` (the e2e global setup does both).
@@ -15,10 +16,12 @@ Run after `seed-dev` (the e2e global setup does both).
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
 from datetime import date
 
+from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 
@@ -29,11 +32,20 @@ from app.config import get_settings
 from app.db import create_engine, create_session_factory
 from app.fixtures import PROFILES
 from app.modules.accounts.models import User, UserRole, UserStatus
+from app.modules.auth.crypto import derive_key
 from app.modules.auth.passwords import Passwords
 from app.modules.billing.models import PlusPayment, PlusPaymentStatus
 from app.modules.media.models import ModerationState, Photo
+from app.modules.photochecks.models import CheckState, Gesture, PhotoCheck
 from app.modules.safety.models import Report, ReportReason, ReportStatus
 from app.modules.staff.service import issue_enrollment
+from app.providers.storage import create_storage, new_photo_base, photo_keys
+
+
+def _selfie(size: tuple[int, int]) -> bytes:
+    out = io.BytesIO()
+    Image.new("RGB", size, "#2f6b62").save(out, "JPEG", quality=80)
+    return out.getvalue()
 
 
 def main() -> int:
@@ -48,6 +60,7 @@ def main() -> int:
     admin_email = "e2e-admin@example.com"
     payment_utr = "600000000017"  # made up: nothing is paid in the e2e run
     reporter_email, subject_email = PROFILES[3].email, PROFILES[0].email
+    checked = PROFILES[1]
 
     async def go() -> dict[str, str]:
         engine = create_engine(settings)
@@ -65,7 +78,7 @@ def main() -> int:
                 ids = dict(
                     (await session.execute(
                         select(User.email_normalized, User.id).where(
-                            User.email_normalized.in_([admin_email, reporter_email, subject_email])
+                            User.email_normalized.in_([admin_email, reporter_email, subject_email, checked.email])
                         )
                     )).tuples().all()
                 )  # fmt: skip
@@ -87,11 +100,22 @@ def main() -> int:
                         status=PlusPaymentStatus.submitted, utr=payment_utr, submitted_at=now, created_at=now,
                     )
                 )  # fmt: skip
+                storage = create_storage(settings, derive_key(settings.app_secret_key.get_secret_value(), "media-url"))
+                base = new_photo_base()
+                keys = photo_keys(base)
+                await storage.put(keys["large"], _selfie((1080, 1350)), "image/jpeg")
+                await storage.put(keys["small"], _selfie((400, 500)), "image/jpeg")
+                session.add(
+                    PhotoCheck(
+                        user_id=ids[checked.email], gesture=Gesture.thumbs_up, state=CheckState.pending,
+                        storage_key=base, created_at=now, submitted_at=now,
+                    )
+                )  # fmt: skip
                 await session.commit()
                 token, _ = await issue_enrollment(session, settings, None, ids[admin_email], system_clock())
                 return {
                     "email": admin_email, "enrollment_token": token, "report_id": str(report.id),
-                    "payment_utr": payment_utr,
+                    "payment_utr": payment_utr, "check_name": checked.name,
                 }  # fmt: skip
         finally:
             await engine.dispose()

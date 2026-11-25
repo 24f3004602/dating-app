@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   nothing_to_remove: "There's nothing to remove for this report.",
   not_restricted: "That account isn't suspended or banned.",
   not_found: "That doesn't exist, or you can't see it.",
-  already_decided: "This payment has been decided already.",
+  already_decided: "This has been decided already.",
   member_gone: "This member deleted their account. Refund the payment from your bank instead.",
   invalid: "Choose a decision, and a reason when rejecting.",
   network_error: "The API can't be reached. Try again shortly.",

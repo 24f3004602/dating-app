@@ -59,6 +59,24 @@ export async function decidePhoto(photoId: string, form: FormData): Promise<void
   redirect(r.ok ? `/admin/photos?done=${decision}` : `/admin/photos?error=${r.code}`);
 }
 
+const CHECK_REASONS = new Set(["face_mismatch", "gesture_missing", "unclear"]);
+
+/** The blue tick (D164): approve a selfie, or reject it with why. The API deletes the selfie either way. */
+export async function decideCheck(checkId: string, form: FormData): Promise<void> {
+  const { token } = await requireStaff();
+  const id = checkedId(checkId);
+  const decision = text(form, "decision");
+  const reason = text(form, "reason");
+  if (decision !== "approve" && decision !== "reject") redirect("/admin/checks?error=invalid");
+  if (decision === "reject" && !CHECK_REASONS.has(reason)) redirect("/admin/checks?error=invalid");
+  const r = await api(`/v1/admin/photo-checks/${id}/decision`, {
+    method: "POST",
+    token,
+    body: decision === "reject" ? { decision, reason } : { decision },
+  });
+  redirect(r.ok ? `/admin/checks?done=check_${decision}` : `/admin/checks?error=${r.code}`);
+}
+
 const PAYMENT_REASONS = new Set(["not_found", "wrong_amount", "other"]);
 
 /** Admin: a UPI payment found in the bank (approve) or not (reject, with why). D127. */

@@ -12,7 +12,7 @@ import { expect, test } from "@playwright/test";
 import { apiEnv, CONSOLE_URL, WEB_URL } from "../env";
 import { checkA11y, PASSWORD, totp, watchErrors } from "./helpers";
 
-type Fixture = { email: string; enrollment_token: string; report_id: string; payment_utr: string };
+type Fixture = { email: string; enrollment_token: string; report_id: string; payment_utr: string; check_name: string };
 
 function staffFixture(): Fixture {
   const out = execFileSync("uv", ["run", "python", "scripts/e2e_staff.py", "--password", PASSWORD], {
@@ -155,6 +155,17 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   await expect(page.getByRole("heading", { name: "Photo review", level: 1 })).toBeVisible();
   await expect(page.getByText("Reported: hidden until you decide")).toHaveCount(0); // dismissing gave it back
   await checkA11y(page, "console-photos");
+  // The blue tick (D164): a selfie beside the member's photos, approved; the queue empties.
+  await page.getByRole("link", { name: "Photo checks" }).click();
+  await expect(page.getByRole("heading", { name: "Photo checks", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: fixture.check_name, level: 2 })).toBeVisible();
+  await expect(page.getByText("Asked for: A thumbs up.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("img", { name: `Selfie from ${fixture.check_name}` })).toBeVisible();
+  await expect(page.getByRole("img", { name: `Photo 1 of ${fixture.check_name}` })).toBeVisible();
+  await checkA11y(page, "console-checks");
+  await page.getByRole("button", { name: `Approve the photo check of ${fixture.check_name}` }).click();
+  await expect(page.getByRole("status")).toHaveText("Approved: the member has the blue tick. The selfie is deleted.");
+  await expect(page.getByText("No selfies waiting.")).toBeVisible();
   // A complaint by email (D158): find the member by the first name and age the profile shows.
   await page.getByRole("link", { name: "Find a member" }).click();
   await expect(page.getByRole("heading", { name: "Find a member", level: 1 })).toBeVisible();
