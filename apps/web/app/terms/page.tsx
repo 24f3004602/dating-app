@@ -9,7 +9,7 @@ import { BETA_DATE } from "@/lib/documents";
 export const metadata: Metadata = { title: "Terms for testers" };
 
 /**
- * The terms for testers (stage 18, D096; this version stage 28f, D159). What members mustn't post
+ * The terms for testers (stage 18, D096; this version stage 29e-1, D163). What members mustn't post
  * follows India's IT Rules, 2021, rule 3(1)(b), in plain words; what happens when rules are broken
  * follows rule 3(1)(c), which also asks for a reminder at least every three months (the app's
  * reminder notice). Change the text and the version together.
@@ -20,17 +20,13 @@ export default async function Terms() {
     <DocumentPage title="Terms for testers">
       <h2>What changed on {BETA_DATE}</h2>
       <ul>
-        <li>What you mustn&apos;t post, listed in full, as India&apos;s IT Rules ask.</li>
+        <li>{BRAND} is open to adults anywhere in India.</li>
+        <li>LGBTQ+ labels and Live&apos;s LGBTQ+ space: add a label only if it describes you.</li>
         <li>
-          What happens when the rules are broken, including reporting crimes when the law requires
-          it.
+          Targeting people for their sexual orientation or gender identity, and telling others
+          about it without their consent, are named among what you mustn&apos;t do.
         </li>
-        <li>
-          Complaints go to our grievance officer, with a way to appeal: see{" "}
-          <Link href="/complaints">Complaints and the grievance officer</Link>.
-        </li>
-        <li>There are no ads at the moment.</li>
-        <li>You can delete your account in the web app too.</li>
+        <li>Live keeps to the distance you or the other person chose.</li>
       </ul>
 
       <p>
@@ -43,8 +39,9 @@ export default async function Terms() {
         <li>You are 18 or over.</li>
         <li>You have one account.</li>
         <li>
-          Your profile is about you: your own details and photos of you, not of anyone else, and
-          not edited or AI-made images that show someone else.
+          Your profile is about you: your own details (any LGBTQ+ label you add describes you)
+          and photos of you, not of anyone else, and not edited or AI-made images that show
+          someone else.
         </li>
         <li>
           You use {BRAND} for yourself, to meet people: not for a business, an agency or anyone
@@ -68,8 +65,8 @@ export default async function Terms() {
           without their consent;
         </li>
         <li>
-          insults or targets people for their gender, race, caste, religion or community, or stirs
-          up hatred or violence between groups;
+          insults or targets people for their gender, gender identity, sexual orientation, race,
+          caste, religion or community, or stirs up hatred or violence between groups;
         </li>
         <li>
           pretends to be someone else, including with their photos or an edited or AI-made image;
@@ -100,7 +97,11 @@ export default async function Terms() {
           run or promote a matchmaking, marriage or introduction service, including one that
           introduces people from other countries;
         </li>
-        <li>share other testers&apos; details, photos or messages outside the app;</li>
+        <li>
+          share other testers&apos; details, photos or messages outside the app, or tell anyone
+          about someone&apos;s sexual orientation or gender identity without their consent;
+        </li>
+        <li>add an LGBTQ+ label that doesn&apos;t describe you, for example to get into Live&apos;s LGBTQ+ space;</li>
         <li>try to break, overload or get around the app&apos;s protections.</li>
       </ul>
       <p>Block or report anyone who makes you uncomfortable; people read every report.</p>
@@ -132,7 +133,8 @@ export default async function Terms() {
       <h2>Stay safe</h2>
       <p>
         We don&apos;t check identities: profiles show only what we actually checked (an email
-        address and a declared age). If you meet someone, meet in a public place, tell a friend
+        address and a declared age), and LGBTQ+ labels are what members say about themselves. If
+        you meet someone, meet in a public place, tell a friend
         where you&apos;ll be, and get there and back on your own. Never send money to someone you
         met here. Get the Android app only from our <Link href="/android">Android page</Link>:
         copies from anywhere else may not be ours.
@@ -142,7 +144,9 @@ export default async function Terms() {
       <ul>
         <li>
           Live pairs you at random for a short video call with someone whose preferences match
-          yours. The rules the app shows before your first call are part of these terms.
+          yours, both ways, including the distance either of you chose. If your profile has an
+          LGBTQ+ label, you can choose Live&apos;s LGBTQ+ space, where you meet only others who chose
+          it. The rules the app shows before your first call are part of these terms.
         </li>
         <li>
           Keep your clothes on and be kind: no nudity, sexual acts, hate or harassment. Don&apos;t

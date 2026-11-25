@@ -11,7 +11,7 @@ import { BETA_DATE, BETA_HOSTING, OPERATOR } from "@/lib/documents";
 export const metadata: Metadata = { title: "Privacy notice" };
 
 /**
- * The privacy notice (stage 18, D096; this version stage 28f, D159). Every statement matches what
+ * The privacy notice (stage 18, D096; this version stage 29e-1, D163). Every statement matches what
  * the app does today: privacy-data-inventory.md, the retention periods in the API's
  * modules/privacy/retention.py (PRIV-DOC-1 holds the numbers to them), and the live settings
  * (ads and push notifications are switched off). Change the text and the version together.
@@ -23,24 +23,15 @@ export default async function Privacy() {
       <h2>What changed on {BETA_DATE}</h2>
       <ul>
         <li>
-          Our <Link href="/complaints">complaints page</Link> names our grievance officer and how
-          fast we must act.
+          {BRAND} is open across India: your area can be a town anywhere in India, picked from a
+          list, as well as an area in Delhi NCR.
         </li>
         <li>
-          A photo reported as sexual or as pretending to be someone is hidden at once, until our
-          team decides.
+          You can add LGBTQ+ labels to your profile if you want to. They can say something
+          sensitive about you, so below we say exactly who sees them and what they&apos;re used for.
         </li>
-        <li>
-          Our team can find an account from a complaint sent by email. Each search is recorded, but
-          not what was searched for.
-        </li>
-        <li>Encrypted copies of our backups are kept in Google Drive.</li>
-        <li>The web app keeps you signed in with a cookie.</li>
-        <li>The Android app is downloaded from GitHub.</li>
-        <li>
-          Clearer: how long we keep things, what our backups keep after you delete your account,
-          and that ads and push notifications are switched off.
-        </li>
+        <li>Live has an LGBTQ+ space you can choose, and now keeps to the distance you chose.</li>
+        <li>Your introductions put people nearer to you first.</li>
       </ul>
 
       <h2>Who we are</h2>
@@ -64,8 +55,17 @@ export default async function Privacy() {
         </li>
         <li>
           <strong>Your profile</strong>: name, gender, who you&apos;d like to meet, what
-          you&apos;re looking for, your area (picked from a list), your bio, answers to prompts,
-          and your photos.
+          you&apos;re looking for, your area (an area in Delhi NCR or a town anywhere in India,
+          picked from a list), your bio, answers to prompts, and your photos.
+        </li>
+        <li>
+          <strong>LGBTQ+ labels, only if you add them</strong>: up to three of trans, gay,
+          lesbian, bisexual, queer, pansexual, asexual, intersex and questioning. They can say
+          something sensitive about you, such as your sexual orientation or gender identity, so
+          they are entirely your choice: none is set unless you add it, we never ask you to, and
+          we never guess. They show on your profile to anyone who can see it. We don&apos;t use
+          them to choose your introductions; on Live, a label lets you choose the LGBTQ+ space
+          (below). You can remove them at any time.
         </li>
         <li>
           <strong>What you do in the app</strong>: likes (and any comment with them), passes,
@@ -91,7 +91,8 @@ export default async function Privacy() {
       <p>
         We never ask for your phone&apos;s location or contacts, or for your camera roll beyond the
         photos you choose. Live uses your camera and microphone only during its calls. We show
-        others your area and a distance range, never where you are. We don&apos;t sell your data or
+        others your area or town and a distance range, never where you are: distances are
+        measured between the centres of the areas you each picked. We don&apos;t sell your data or
         use your profile or activity for advertising, and we use no analytics. Our website uses no
         cookies, except for our team&apos;s own sign-in to the console.
       </p>
@@ -139,8 +140,19 @@ export default async function Privacy() {
           regret.
         </li>
         <li>
+          <strong>Who you&apos;re paired with</strong>: someone whose preferences fit yours, and
+          yours theirs, in gender, age and, if either of you chose one, distance. Neither of you is
+          shown the other&apos;s area or distance on the call.
+        </li>
+        <li>
+          <strong>The LGBTQ+ space</strong>: if your profile has an LGBTQ+ label, you can choose to
+          meet only others who chose the space. We keep that choice, and it applies only while
+          your profile has a label. Everyone you meet there chose it too, so each of you knows the
+          other did.
+        </li>
+        <li>
           <strong>What we keep</strong>: that you accepted the Live rules, and when; how many of
-          your free calls you&apos;ve used; and for each call, who was paired with whom, when, how
+          your free calls you&apos;ve used; whether you chose the LGBTQ+ space; and for each call, who was paired with whom, when, how
           long it lasted and how it ended, for {span(D.callRecordDays, "day")}, or longer only while a
           report names the call. The technical details the two devices exchange to connect pass through our server
           and are deleted when the call ends. While you wait to be paired, we note that
@@ -212,7 +224,8 @@ export default async function Privacy() {
       <h2>Who can see what</h2>
       <ul>
         <li>
-          <strong>Other testers</strong> see your profile and approved photos when you appear in
+          <strong>Other testers</strong> see your profile, including any LGBTQ+ labels you added,
+          and your approved photos when you appear in
           their introductions, when you like them, or when you match, depending on your privacy
           settings. Only your match sees your messages.
         </li>
@@ -221,7 +234,7 @@ export default async function Privacy() {
           handles reports and complaints. A photo reported as sexual or as pretending to be someone
           is hidden from everyone but you at once, until the team decides; if they find nothing
           wrong, it comes back. Staff see a message only when someone reports it, and the console
-          never shows them your email address. To act on a complaint sent by email, they can find an account by
+          never shows them your email address or your LGBTQ+ labels. To act on a complaint sent by email, they can find an account by
           its email address, or by the name and age its profile shows; each search is recorded,
           but not what was searched for. Staff sign in with a password and a second code, and what
           they open is recorded.

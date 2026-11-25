@@ -8,11 +8,11 @@ import "server-only";
  * the text and the version together, and the API's TERMS_VERSION and
  * PRIVACY_VERSION and the app's EXPO_PUBLIC_*_VERSION with them.
  */
-export const BETA_VERSION = "beta-2026-11-25";
+export const BETA_VERSION = "beta-2026-11-26";
 // The notice version the waitlist form agrees to (D101). Keep it equal to the API's
 // PRIVACY_VERSION; it is only overridden where the API runs another version (e2e).
 export const PRIVACY_VERSION = process.env.PRIVACY_VERSION?.trim() || BETA_VERSION;
-export const BETA_DATE = "25 November 2026";
+export const BETA_DATE = "26 November 2026";
 
 /** Who runs the test, and how to reach them. Set on the server (web .env). */
 export const OPERATOR =

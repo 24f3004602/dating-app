@@ -30,8 +30,8 @@ x-app-env: &app-env
   TRUSTED_PROXIES: '["172.30.0.0/24"]'
   # Waitlist emails link to the website (D101).
   SITE_URL: https://${DOMAIN}
-  TERMS_VERSION: beta-2026-11-25
-  PRIVACY_VERSION: beta-2026-11-25
+  TERMS_VERSION: beta-2026-11-26
+  PRIVACY_VERSION: beta-2026-11-26
   # Sign in with Google (D134): off until the owner's Web OAuth client is in .env.
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}

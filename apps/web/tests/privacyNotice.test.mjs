@@ -1,6 +1,7 @@
 // PRIV-DOC-1..4 (stage 28f, D159): the privacy notice's periods are the code's own, the documents
 // type no period of their own, the terms' three-monthly reminder is the API's, and the documents'
-// version is one version everywhere it is pinned. (Node strips the types from the libs.)
+// version is one version everywhere it is pinned. PRIV-DOC-5 (D163): the LGBTQ+ labels the notice
+// names are the API's and the app's. (Node strips the types from the libs.)
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -89,4 +90,21 @@ test("PRIV-DOC-4: one version of the documents, everywhere it is pinned", () => 
     for (const line of lines) assert.ok(text.includes(line), `${file}: ${line}`);
     assert.equal(text.replaceAll(v, "").match(/beta-\d{4}-\d{2}-\d{2}/), null, `${file}: another version`);
   }
+});
+
+test("PRIV-DOC-5: the notice names every LGBTQ+ label the API accepts, and its limit; the app offers the same (D160, D163)", () => {
+  const models = read("apps/api/app/modules/profiles/models.py");
+  const body = /class Identity\(enum\.StrEnum\):([\s\S]*?)\n\n\n/.exec(models);
+  assert.ok(body, "the API's Identity enum");
+  const labels = [...body[1].matchAll(/^ {4}\w+ = "([a-z]+)"$/gm)].map((m) => m[1]);
+  assert.ok(labels.length >= 5, "labels found");
+  const max = Number(/^MAX_IDENTITIES = (\d+)$/m.exec(models)[1]);
+  const words = ["no", "one", "two", "three", "four", "five", "six"];
+  const notice = read("apps/web/app/privacy/page.tsx").replace(/\s+/g, " ");
+  assert.ok(
+    notice.includes(`up to ${words[max]} of ${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}.`),
+    "the notice lists the labels in the API's order, with the limit",
+  );
+  const app = /export const IDENTITIES = (\[[^\]]*\]) as const;/.exec(read("apps/mobile/src/validation/schemas.ts"));
+  assert.deepEqual(JSON.parse(app[1]), labels);
 });

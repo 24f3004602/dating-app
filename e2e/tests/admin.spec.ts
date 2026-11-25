@@ -59,7 +59,7 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Version beta-2026-11-25/)).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11-26/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
   // D159: each version opens with what changed, and says what is switched off.
   await expect(page.getByRole("heading", { name: /^What changed on \d{1,2} \w+ \d{4}$/, level: 2 })).toBeVisible();
