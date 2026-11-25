@@ -67,6 +67,32 @@ test("sign-up links to the terms and the privacy notice, opened in the browser",
   expect(screen.getByText(t.signUp.birthdateHint)).toBeTruthy();
 });
 
+test("DOC-VER-APP-2: newer documents on the server: the boxes untick, the app says why, and the retry agrees to them", async () => {
+  const current = { terms: "beta-2026-11-25", privacy: "beta-2026-11-25" };
+  let attempt = 0;
+  const { api, calls } = fakeApi({
+    "POST /v1/auth/register": () =>
+      ++attempt === 1 ? problem(422, "consent_required", { required: current }) : { status: 202, body: { status: "accepted" } },
+  });
+  await renderWithApp(<SignUpScreen now={now} />, api);
+  await fillSignUp("1", "1", "1995");
+  await fireEvent.press(screen.getByRole("button", { name: t.signUp.submit }));
+  expect(await screen.findByText(t.signUp.documentsChanged)).toBeTruthy();
+  expect(calls[0]?.body).toMatchObject({ consents: { terms: "draft-2026-11", privacy: "draft-2026-11" } }); // this build's
+  expect(screen.getByRole("checkbox", { name: t.signUp.terms, checked: false })).toBeTruthy();
+  expect(screen.getByRole("checkbox", { name: t.signUp.privacy, checked: false })).toBeTruthy();
+
+  // Without agreeing again, nothing is sent (the explanation stays); after it, the server's versions are.
+  await fireEvent.press(screen.getByRole("button", { name: t.signUp.submit }));
+  expect(screen.getByText(t.signUp.documentsChanged)).toBeTruthy();
+  expect(calls).toHaveLength(1);
+  await fireEvent.press(screen.getByRole("checkbox", { name: t.signUp.terms }));
+  await fireEvent.press(screen.getByRole("checkbox", { name: t.signUp.privacy }));
+  await fireEvent.press(screen.getByRole("button", { name: t.signUp.submit }));
+  await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith("/verify"));
+  expect(calls[1]?.body).toMatchObject({ consents: current });
+});
+
 test("sign-up shows the app's message for a server rejection", async () => {
   const { api } = fakeApi({ "POST /v1/auth/register": () => problem(422, "weak_password", { problems: ["breached"] }) });
   await renderWithApp(<SignUpScreen now={now} />, api);

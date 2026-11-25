@@ -33,6 +33,28 @@ export const DELETION = {
   // security logs' year is the privacy inventory's rule for the log store.
   driveTrashDays: 30,
   securityLogYears: 1,
+  // The privacy notice's other periods (stage 28f, D159; tests/privacyNotice.test.mjs).
+  /** A banned account is deleted this long after the ban. */
+  bannedDays: 90,
+  /** After a match ends, its messages are deleted this long after. */
+  closedChatDays: 30,
+  /** Live call records (who, when, how long, how it ended). */
+  callRecordDays: 90,
+  /** A Live queue entry whose device stopped answering. */
+  queueHours: 1,
+  /** A Plus payment started but never given a reference. */
+  unpaidPaymentDays: 30,
+  /** A session's life (the API's SESSION_TTL_DAYS). */
+  sessionDays: 30,
+  /** The waitlist: an unconfirmed address, after the opening email, and at most. */
+  waitlistLinkDays: 7,
+  waitlistAfterOpeningDays: 30,
+  waitlistMaxYears: 1,
+  /** Not the code's but a promise (D096): when the test ends, everything goes within this. */
+  testEndDays: 30,
 } as const;
 
 export const years = (n: number) => `${n} year${n === 1 ? "" : "s"}`;
+/** "a year" or "2 years", "an hour" or "3 hours": a period as a sentence says it. */
+export const span = (n: number, unit: "day" | "year" | "hour") =>
+  n === 1 ? `${unit === "hour" ? "an" : "a"} ${unit}` : `${n} ${unit}s`;

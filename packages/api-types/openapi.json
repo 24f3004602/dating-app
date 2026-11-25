@@ -1879,13 +1879,29 @@
             "type": "string"
           },
           "kind": {
-            "const": "warning",
+            "enum": [
+              "warning",
+              "new_documents",
+              "rules_reminder"
+            ],
             "title": "Kind",
             "type": "string"
           },
           "read": {
             "title": "Read",
             "type": "boolean"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For new_documents: the version announced (D159)",
+            "title": "Version"
           }
         },
         "required": [

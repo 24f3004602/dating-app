@@ -37,6 +37,24 @@ test("problem documents become typed ApiErrors", async () => {
   expect(invalid.fieldErrors[0].field).toBe("body.email");
 });
 
+test("DOC-VER-APP-1: consent_required carries the server's current versions, if they look like versions", async () => {
+  const body = { email: "a@b.co", password: "x", birthdate: "1990-01-01", consents: { terms: "old", privacy: "old" } };
+  const now = { terms: "beta-2026-11-25", privacy: "beta-2026-11-25" };
+  const cases: [string, unknown, unknown][] = [
+    ["consent_required", now, now],
+    ["consent_required", { terms: "beta-2026-11-25" }, null], // half a pair
+    ["consent_required", { terms: "<b>x</b>", privacy: "beta-2026-11-25" }, null], // not a version
+    ["consent_required", "beta-2026-11-25", null],
+    ["validation_error", now, null], // another code's field means nothing here
+  ];
+  for (const [code, required, expected] of cases) {
+    const { api } = fakeApi({ "POST /v1/auth/register": () => problem(422, code, { required }) });
+    const err = await unwrap(api.POST("/v1/auth/register", { body })).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.requiredVersions).toEqual(expected);
+  }
+});
+
 test("a 401 with a session forgets it", async () => {
   const token = { value: "expired" };
   const { api, onUnauthorized } = fakeApi({ "GET /v1/me": () => problem(401, "unauthenticated") }, token);

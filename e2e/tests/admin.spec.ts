@@ -59,12 +59,20 @@ test("the tester notice pages are linked, readable and accessible", async ({ pag
   await page.goto("/");
   await page.getByRole("link", { name: "privacy notice", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Privacy notice", level: 1 })).toBeVisible();
-  await expect(page.getByText(/Version beta-2026-11-20/)).toBeVisible();
+  await expect(page.getByText(/Version beta-2026-11-25/)).toBeVisible();
   await expect(page.getByText(/never your messages/i)).toBeVisible();
+  // D159: each version opens with what changed, and says what is switched off.
+  await expect(page.getByRole("heading", { name: /^What changed on \d{1,2} \w+ \d{4}$/, level: 2 })).toBeVisible();
+  await expect(page.getByText(/^Switched off for now: push notifications/)).toBeVisible();
   await checkA11y(page, "privacy");
   await page.getByRole("link", { name: "Terms for testers" }).click();
   await expect(page.getByRole("heading", { name: "Terms for testers", level: 1 })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "You are 18 or over." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "When the rules are broken", level: 2 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Complaints and the grievance officer" }).first()).toHaveAttribute(
+    "href",
+    "/complaints",
+  );
   await checkA11y(page, "terms");
   await page.setViewportSize({ width: 320, height: 700 }); // reflow
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);

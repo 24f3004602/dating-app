@@ -13,6 +13,7 @@ import { fill, t } from "@/i18n/en";
 import { timeInIndia } from "@/i18n/time";
 import { color, radius, size, space } from "@/theme/tokens";
 import { DecisionBar } from "@/screens/matching";
+import { UnreadNotices } from "@/screens/notices";
 import { SafetyActions } from "@/screens/safety";
 import { FormField } from "@/ui/FormField";
 import { Reveal, staggered } from "@/ui/motion";
@@ -41,6 +42,7 @@ export function DiscoverScreen() {
       return (
         <Screen>
           <Title>{t.discover.incompleteTitle}</Title>
+          <UnreadNotices />
           <Body>{t.discover.incomplete}</Body>
           <Button label={t.discover.toPhotos} onPress={() => router.push("/photos")} />
         </Screen>
@@ -50,6 +52,7 @@ export function DiscoverScreen() {
       return (
         <Screen>
           <Title>{t.discover.pausedTitle}</Title>
+          <UnreadNotices />
           <Body>{t.discover.paused}</Body>
           <Button label={t.discover.toPrivacy} onPress={() => router.push("/privacy")} />
         </Screen>
@@ -67,6 +70,7 @@ export function DiscoverScreen() {
   return (
     <Screen>
       <Title>{t.discover.title}</Title>
+      <UnreadNotices />
       {cards.length === 0 ? (
         <>
           {/* The day's quiet moment: the rings breathe twice, then rest (stage 19). */}

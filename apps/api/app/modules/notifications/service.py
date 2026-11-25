@@ -21,13 +21,15 @@ import uuid
 from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, exists, func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
 from app.errors import ApiError
 from app.jobs import JobQueue
-from app.modules.accounts.models import User, UserStatus
+from app.modules.accounts.models import Consent, ConsentKind, User, UserRole, UserStatus
+from app.modules.audit.service import record
 from app.modules.auth.models import Session, SessionClient
 from app.modules.notifications.models import (
     MemberNotice,
@@ -116,9 +118,76 @@ async def notices(session: AsyncSession, user_id: uuid.UUID) -> list[NoticeOut]:
         select(MemberNotice).where(MemberNotice.user_id == user_id).order_by(MemberNotice.created_at.desc()).limit(50)
     )
     return [
-        NoticeOut(id=n.id, kind=n.kind.value, created_at=n.created_at, read=n.read_at is not None)
+        NoticeOut(id=n.id, kind=n.kind.value, created_at=n.created_at, read=n.read_at is not None, version=n.version)
         for n in rows.scalars()
     ]
+
+
+# IT Rules, rule 3(1)(c): members are reminded of the rules at least every three months (D159).
+RULES_REMINDER = timedelta(days=90)
+
+
+def announced_version(settings: Settings) -> str:
+    """The documents move together (D139); if they ever don't, the notice names both."""
+    if settings.terms_version == settings.privacy_version:
+        return settings.privacy_version
+    return f"{settings.terms_version}+{settings.privacy_version}"[:32]
+
+
+async def send_document_and_rule_notices(session: AsyncSession, settings: Settings, now: datetime) -> tuple[int, int]:
+    """Daily (D159). First, members who agreed to older documents hear once that there is a new
+    version; then anyone whom the rules haven't reached for 90 days (since joining, the last
+    reminder or the last notice of new documents) gets the reminder. Active members only: not a
+    suspended or banned account, one waiting to be deleted, or staff (who don't use the app).
+    Returns (new-documents notices, reminders); audited as counts."""
+    version = announced_version(settings)
+    members = and_(User.status == UserStatus.active, User.role == UserRole.member, User.deletion_requested_at.is_(None))
+    told = exists().where(
+        MemberNotice.user_id == User.id, MemberNotice.kind == NoticeKind.new_documents, MemberNotice.version == version
+    )
+    agreed_terms = exists().where(
+        Consent.user_id == User.id, Consent.kind == ConsentKind.terms, Consent.version == settings.terms_version
+    )
+    agreed_privacy = exists().where(
+        Consent.user_id == User.id, Consent.kind == ConsentKind.privacy, Consent.version == settings.privacy_version
+    )
+    # Counted through RETURNING: an ORM INSERT ... SELECT reports no row count.
+    new_documents = await session.execute(
+        insert(MemberNotice)
+        .from_select(
+            ["user_id", "kind", "version", "created_at"],
+            select(
+                User.id,
+                literal(NoticeKind.new_documents.value),
+                literal(version),
+                literal(now, MemberNotice.created_at.type),
+            ).where(members, ~told, ~and_(agreed_terms, agreed_privacy)),
+        )
+        .returning(MemberNotice.id)
+    )
+    told_now = len(new_documents.all())
+    last_told = (
+        select(func.max(MemberNotice.created_at))
+        .where(
+            MemberNotice.user_id == User.id,
+            MemberNotice.kind.in_([NoticeKind.rules_reminder, NoticeKind.new_documents]),
+        )
+        .scalar_subquery()
+    )
+    reminders = await session.execute(
+        insert(MemberNotice)
+        .from_select(
+            ["user_id", "kind", "created_at"],
+            select(User.id, literal(NoticeKind.rules_reminder.value), literal(now, MemberNotice.created_at.type)).where(
+                members, func.coalesce(last_told, User.created_at) <= now - RULES_REMINDER
+            ),
+        )
+        .returning(MemberNotice.id)
+    )
+    reminded_now = len(reminders.all())
+    record(session, "notices.documents_and_rules", actor=None, new_documents=told_now, rules_reminders=reminded_now)
+    await session.commit()
+    return told_now, reminded_now
 
 
 async def mark_notice_read(session: AsyncSession, user_id: uuid.UUID, notice_id: uuid.UUID, now: datetime) -> None:

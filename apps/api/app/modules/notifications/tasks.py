@@ -25,6 +25,22 @@ async def send(user_id: str, kind: str) -> None:
         )  # fmt: skip
 
 
+NOTICES_CRON = "30 3 * * *"  # daily, 09:00 in India (UTC here, as procrastinate reads it)
+
+
+@blueprint.periodic(cron=NOTICES_CRON)
+@blueprint.task(
+    name="document_and_rule_notices",
+    retry=procrastinate.RetryStrategy(max_attempts=3, exponential_wait=60),
+    queueing_lock="notify:document_and_rule_notices",
+)
+async def document_and_rule_notices(timestamp: int) -> None:
+    """New versions of the documents, and the rules every three months (D159)."""
+    ctx = worker_context()
+    async with ctx.session_factory() as session:
+        await service.send_document_and_rule_notices(session, ctx.settings, ctx.clock())
+
+
 @blueprint.periodic(cron="*/15 * * * *")
 @blueprint.task(name="check_receipts", retry=RETRY, queueing_lock="notify:check_receipts")
 async def check_receipts(timestamp: int) -> None:

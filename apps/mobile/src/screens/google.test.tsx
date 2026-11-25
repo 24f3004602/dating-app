@@ -124,6 +124,43 @@ test("someone new finishes with a date of birth (18+) and the documents", async 
   });
 });
 
+test("DOC-VER-APP-3: finishing with Google adopts newer documents the same way", async () => {
+  start.mockResolvedValue({ kind: "token", idToken: "id-token-from-google" });
+  const current = { terms: "beta-2026-11-25", privacy: "beta-2026-11-25" };
+  let attempt = 0;
+  const { api, calls } = fakeApi({
+    "GET /v1/auth/google": () => ON,
+    "POST /v1/auth/google": () => ({ status: 200, body: { session: null, ticket: "signed-ticket", email: "asha@gmail.com", name: "Asha" } }),
+    "POST /v1/auth/google/complete": () =>
+      ++attempt === 1 ? problem(422, "consent_required", { required: current }) : { status: 201, body: SESSION },
+  });
+  await renderWithApp(
+    <>
+      <WelcomeScreen />
+      <GoogleFinishScreen now={now} />
+    </>,
+    api,
+  );
+  await fireEvent.press(await screen.findByRole("button", { name: t.google.button }));
+  expect(await screen.findByText(fill(t.google.finishBody, { email: "asha@gmail.com" }))).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.day), "1");
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.month), "1");
+  await fireEvent.changeText(screen.getByLabelText(t.signUp.year), "1995");
+  const agree = async () => {
+    await fireEvent.press(screen.getByRole("checkbox", { name: t.signUp.terms }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: t.signUp.privacy }));
+  };
+  await agree();
+  await fireEvent.press(screen.getByRole("button", { name: t.google.submit }));
+  expect(await screen.findByText(t.signUp.documentsChanged)).toBeTruthy();
+  expect(screen.getByRole("checkbox", { name: t.signUp.terms, checked: false })).toBeTruthy();
+  await agree();
+  await fireEvent.press(screen.getByRole("button", { name: t.google.submit }));
+  await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith("/profile"));
+  const sent = calls.filter((c) => c.path === "/v1/auth/google/complete").map((c) => (c.body as { consents: unknown }).consents);
+  expect(sent).toEqual([{ terms: "draft-2026-11", privacy: "draft-2026-11" }, current]);
+});
+
 test("an account waiting to be deleted is kept with the same Google answer, only when asked", async () => {
   const purgeAfter = inAWeek();
   start.mockResolvedValue({ kind: "token", idToken: "id-token-from-google" });

@@ -10,15 +10,14 @@ import {
   useBlock,
   useBlocks,
   useConversation,
-  useMarkNoticeRead,
   useMyReports,
-  useNotices,
   useReport,
   useUnblock,
   useUnmatch,
 } from "@/api/hooks";
 import { messageFor } from "@/api/messages";
-import { dateInIndia, dayInIndia } from "@/i18n/time";
+import { NoticeList } from "@/screens/notices";
+import { dayInIndia } from "@/i18n/time";
 import { fill, t } from "@/i18n/en";
 import { color, space } from "@/theme/tokens";
 import { Body, Button, Caption, CardTitle, Checkbox, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, TextField, Title } from "@/ui/primitives";
@@ -239,25 +238,6 @@ export function ReportScreen({ subjectId, name, matchId, callId }: { subjectId: 
   );
 }
 
-/** Notices from the team (stage 16): fixed wording per kind, shown whether or not push works. */
-function Notices() {
-  const notices = useNotices();
-  const markRead = useMarkNoticeRead();
-  if (!notices.data || notices.data.length === 0) return null;
-  return (
-    <>
-      <Heading>{t.notices.title}</Heading>
-      {notices.data.map((n) => (
-        <View key={n.id} style={styles.item}>
-          <Notice kind="info">{`${n.read ? "" : `${t.notices.unread}: `}${t.notices[n.kind]} (${dateInIndia(n.created_at)})`}</Notice>
-          {n.read ? null : (
-            <Button label={t.notices.markRead} variant="secondary" busy={markRead.isPending} onPress={() => markRead.mutate(n.id)} />
-          )}
-        </View>
-      ))}
-    </>
-  );
-}
 
 /** Someone you've blocked: who, since when, and Unblock, which asks first (D113): the block stops protecting you. */
 function BlockedRow({ userId, name, blockedAt }: { userId: string; name: string; blockedAt: string }) {
@@ -319,7 +299,7 @@ export function SafetyScreen() {
     <Screen>
       <Title>{t.safety.title}</Title>
       {guide}
-      <Notices />
+      <NoticeList />
       <Heading>{t.safety.blocked}</Heading>
       {blocks.data.length === 0 ? <Body muted>{t.safety.noBlocked}</Body> : <Body muted>{t.safety.unblockHint}</Body>}
       {blocks.data.length > 0 ? (
@@ -347,7 +327,6 @@ export function SafetyScreen() {
 const styles = StyleSheet.create({
   box: { gap: space.sm },
   grow: { flex: 1 },
-  item: { gap: space.sm },
   // People you've blocked (D113): rows with a line under each, like the other lists.
   list: { borderTopWidth: 1, borderTopColor: color.border },
   blocked: { gap: space.sm, padding: space.sm, borderBottomWidth: 1, borderBottomColor: color.border },

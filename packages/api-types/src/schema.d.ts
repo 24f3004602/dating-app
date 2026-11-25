@@ -2127,11 +2127,16 @@ export interface components {
             id: string;
             /**
              * Kind
-             * @constant
+             * @enum {string}
              */
-            kind: "warning";
+            kind: "warning" | "new_documents" | "rules_reminder";
             /** Read */
             read: boolean;
+            /**
+             * Version
+             * @description For new_documents: the version announced (D159)
+             */
+            version?: string | null;
         };
         /** NudgeTermsOut */
         NudgeTermsOut: {

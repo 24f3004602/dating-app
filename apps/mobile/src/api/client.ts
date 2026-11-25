@@ -16,12 +16,20 @@ export class ApiError extends Error {
   readonly retryAfter: number | null;
   /** `deletion_scheduled`: when the account will be deleted (D083). */
   readonly purgeAfter: string | null;
+  /** `consent_required`: the document versions the server asks for now (D159). */
+  readonly requiredVersions: DocumentVersions | null;
 
   constructor(
     status: number,
     code: string,
     detail?: string,
-    extra?: { errors?: FieldError[]; problems?: string[]; retryAfter?: number | null; purgeAfter?: string | null },
+    extra?: {
+      errors?: FieldError[];
+      problems?: string[];
+      retryAfter?: number | null;
+      purgeAfter?: string | null;
+      requiredVersions?: DocumentVersions | null;
+    },
   ) {
     super(detail ?? code);
     this.name = "ApiError";
@@ -31,7 +39,19 @@ export class ApiError extends Error {
     this.problems = extra?.problems ?? [];
     this.retryAfter = extra?.retryAfter ?? null;
     this.purgeAfter = extra?.purgeAfter ?? null;
+    this.requiredVersions = extra?.requiredVersions ?? null;
   }
+}
+
+export type DocumentVersions = { terms: string; privacy: string };
+const VERSION = /^[a-z0-9][a-z0-9.-]{0,31}$/;
+
+/** The versions a `consent_required` problem names, if they look like versions (D159). */
+function documentVersions(value: unknown): DocumentVersions | null {
+  if (!value || typeof value !== "object") return null;
+  const { terms, privacy } = value as { terms?: unknown; privacy?: unknown };
+  if (typeof terms !== "string" || typeof privacy !== "string") return null;
+  return VERSION.test(terms) && VERSION.test(privacy) ? { terms, privacy } : null;
 }
 
 export type Api = Client<paths>;
@@ -83,6 +103,7 @@ function toApiError(response: Response, body: unknown): ApiError {
     errors?: FieldError[];
     problems?: string[];
     purge_after?: string;
+    required?: unknown;
   };
   const retry = Number(response.headers.get("retry-after"));
   return new ApiError(response.status, problem.code ?? "error", problem.detail, {
@@ -90,6 +111,7 @@ function toApiError(response: Response, body: unknown): ApiError {
     problems: problem.problems,
     retryAfter: Number.isFinite(retry) && retry > 0 ? retry : null,
     purgeAfter: typeof problem.purge_after === "string" ? problem.purge_after : null,
+    requiredVersions: problem.code === "consent_required" ? documentVersions(problem.required) : null,
   });
 }
 

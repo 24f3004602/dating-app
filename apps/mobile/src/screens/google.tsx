@@ -15,10 +15,10 @@ import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
 import { googleSupported, startGoogleSignIn, takeGoogleReturn } from "@/auth/googleSignIn";
 import type { GoogleFrom, GoogleReturn } from "@/auth/googleTypes";
-import { BETA_DOCUMENTS, DOCUMENT_VERSIONS } from "@/config";
+import { BETA_DOCUMENTS } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { deletionNotice } from "@/screens/account";
-import { BirthAndConsentFields } from "@/screens/signUpFields";
+import { BirthAndConsentFields, useDocumentVersions } from "@/screens/signUpFields";
 import { space } from "@/theme/tokens";
 import { Reveal } from "@/ui/motion";
 import { Body, Button, Caption, GoogleButton, Notice, Screen, Title } from "@/ui/primitives";
@@ -204,9 +204,13 @@ export function GoogleFinishScreen({ now }: { now?: () => Date }) {
   const router = useRouter();
   const schema = useMemo(() => makeGoogleFinishSchema(now), [now]);
   const [failure, setFailure] = useState<string | null>(null);
-  const { control, handleSubmit, formState } = useForm<GoogleFinishValues>({
+  const { control, handleSubmit, formState, setValue } = useForm<GoogleFinishValues>({
     resolver: zodResolver(schema),
     defaultValues: { day: "", month: "", year: "", terms: false, privacy: false },
+  });
+  const documents = useDocumentVersions(() => {
+    setValue("terms", false);
+    setValue("privacy", false);
   });
 
   if (!googleSignUp) {
@@ -225,13 +229,13 @@ export function GoogleFinishScreen({ now }: { now?: () => Date }) {
     try {
       const session = await unwrap(
         api.POST("/v1/auth/google/complete", {
-          body: { ticket, birthdate: birthdateIso(values), consents: DOCUMENT_VERSIONS },
+          body: { ticket, birthdate: birthdateIso(values), consents: documents.versions },
         }),
       );
       await signIn(session.token);
       router.replace("/profile");
     } catch (err) {
-      setFailure(messageFor(err));
+      setFailure(documents.adopt(err) ? t.signUp.documentsChanged : messageFor(err));
     }
   });
 

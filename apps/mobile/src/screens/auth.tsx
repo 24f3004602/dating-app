@@ -10,10 +10,10 @@ import { ApiError, unwrap } from "@/api/client";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
 import { COOKIE_SESSIONS, keepSignedIn, setKeepSignedIn } from "@/auth/webSession";
-import { BETA_DOCUMENTS, BRAND, BRAND_DEVANAGARI, DOCUMENT_VERSIONS, INVITE_ONLY } from "@/config";
+import { BETA_DOCUMENTS, BRAND, BRAND_DEVANAGARI, INVITE_ONLY } from "@/config";
 import { deletionNotice } from "@/screens/account";
 import { GoogleSignInSection } from "@/screens/google";
-import { BirthAndConsentFields } from "@/screens/signUpFields";
+import { BirthAndConsentFields, useDocumentVersions } from "@/screens/signUpFields";
 import { fill, t } from "@/i18n/en";
 import { FormField } from "@/ui/FormField";
 import { color, font, motion, space } from "@/theme/tokens";
@@ -101,11 +101,15 @@ export function SignUpScreen({ now }: { now?: () => Date }) {
   const router = useRouter();
   const schema = useMemo(() => makeSignUpSchema(now), [now]);
   const [failure, setFailure] = useState<string | null>(null);
-  const { control, handleSubmit, formState } = useForm<SignUpValues>({
+  const { control, handleSubmit, formState, setValue } = useForm<SignUpValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "", day: "", month: "", year: "", terms: false, privacy: false },
   });
   const e = formState.errors;
+  const documents = useDocumentVersions(() => {
+    setValue("terms", false);
+    setValue("privacy", false);
+  });
 
   const submit = handleSubmit(async (values) => {
     setFailure(null);
@@ -113,13 +117,13 @@ export function SignUpScreen({ now }: { now?: () => Date }) {
     try {
       await unwrap(
         api.POST("/v1/auth/register", {
-          body: { email, password: values.password, birthdate: birthdateIso(values), consents: DOCUMENT_VERSIONS },
+          body: { email, password: values.password, birthdate: birthdateIso(values), consents: documents.versions },
         }),
       );
       setPending({ email, password: values.password }); // memory only, for the verify step
       router.push("/verify");
     } catch (err) {
-      setFailure(messageFor(err));
+      setFailure(documents.adopt(err) ? t.signUp.documentsChanged : messageFor(err));
     }
   });
 

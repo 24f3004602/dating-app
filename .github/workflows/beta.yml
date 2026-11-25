@@ -82,7 +82,7 @@ jobs:
           for src in $(grep -o '/_expo/static/js/web/[^"]*\.js' app.html); do c -f "https://app.beta.test$src"; done > bundle.js
           grep -q 'https://api.beta.test' bundle.js
           grep -q 'https://beta.test' bundle.js
-          grep -q 'beta-2026-11-20' bundle.js
+          grep -q 'beta-2026-11-25' bundle.js
           grep -q 'candles-v1' bundle.js   # the welcome loop
 
           # The loop video and its stills: served by the website, cached for a year.
@@ -124,7 +124,7 @@ jobs:
           register() {
             curl -sS --cacert "$RUNNER_TEMP/root.crt" -o /dev/null -w '%{http_code}' -X POST https://api.beta.test/v1/auth/register \
               -H 'content-type: application/json' \
-              -d "{\"email\":\"$1\",\"password\":\"violet harbour lantern seventy\",\"birthdate\":\"1995-01-01\",\"consents\":{\"terms\":\"beta-2026-11-20\",\"privacy\":\"beta-2026-11-20\"}}"
+              -d "{\"email\":\"$1\",\"password\":\"violet harbour lantern seventy\",\"birthdate\":\"1995-01-01\",\"consents\":{\"terms\":\"beta-2026-11-25\",\"privacy\":\"beta-2026-11-25\"}}"
           }
           users() { docker compose exec -T postgres psql -U postgres -d datingapp -tAc "SELECT count(*) FROM users"; }
           # Sign-up is open (D133): anyone 18 or over may start one; the invite tool still works.

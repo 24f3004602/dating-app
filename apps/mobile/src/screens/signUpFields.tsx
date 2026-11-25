@@ -1,14 +1,33 @@
 /** The date of birth and the two documents (D110): every way of joining asks for them (D016, D134). */
+import { useState } from "react";
 import { type Control, Controller, type FieldErrors, type FieldPath, type FieldValues } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 
-import { DOCUMENT_LINKS } from "@/config";
+import { ApiError, type DocumentVersions } from "@/api/client";
+import { DOCUMENT_LINKS, DOCUMENT_VERSIONS } from "@/config";
 import { t } from "@/i18n/en";
 import { space } from "@/theme/tokens";
 import { FormField } from "@/ui/FormField";
 import { Caption, Checkbox, ExternalLink, FieldError, Label, Row } from "@/ui/primitives";
 
 type BirthAndConsents = { day: string; month: string; year: string; terms: boolean; privacy: boolean };
+
+/**
+ * The document versions a sign-up agrees to (D159): this build's, until the server says the
+ * documents have changed since. Then `adopt` takes the server's versions and unticks both boxes
+ * (`untick`), so the person reads the current documents (the links open them) and agrees again.
+ * Without this, an app built before a new version could never create an account.
+ */
+export function useDocumentVersions(untick: () => void): { versions: DocumentVersions; adopt: (err: unknown) => boolean } {
+  const [versions, setVersions] = useState<DocumentVersions>(DOCUMENT_VERSIONS);
+  const adopt = (err: unknown): boolean => {
+    if (!(err instanceof ApiError) || err.code !== "consent_required" || !err.requiredVersions) return false;
+    setVersions(err.requiredVersions);
+    untick();
+    return true;
+  };
+  return { versions, adopt };
+}
 
 export function BirthAndConsentFields<T extends FieldValues>({
   control,

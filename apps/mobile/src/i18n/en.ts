@@ -60,6 +60,9 @@ export const en = {
     readPrivacy: "Read the privacy notice",
     draftNotice: "Draft documents: final versions will follow legal review.",
     betaNotice: "A short notice for this test. Full documents will follow.",
+    // D159: the server has newer documents than this version of the app was made with.
+    documentsChanged:
+      "The terms and privacy notice have changed since this version of the app. Read the current ones, tick both boxes again, and try again.",
     submit: "Create account",
   },
   verify: {
@@ -413,8 +416,13 @@ export const en = {
     title: "Notices from our team",
     none: "No notices.",
     warning: "Our team reviewed a report about your account and found that it broke our community guidelines. Please keep conversations respectful. Repeated reports can lead to a suspension.",
+    // D159: when the terms and privacy notice change, and the rules every three months (IT Rules 3(1)(c)).
+    new_documents: "We've updated our terms and privacy notice. Each one now starts with what changed.",
+    rules_reminder:
+      "A reminder of our rules, as India's IT Rules ask: our terms list what you mustn't post or do. We can remove anything that breaks them and suspend or ban the account responsible, breaking the law can be punished, and we report crimes when the law requires us to.",
     unread: "New",
     markRead: "Mark as read",
+    gotIt: "Got it",
   },
   preferences: {
     title: "Who I'd like to meet",

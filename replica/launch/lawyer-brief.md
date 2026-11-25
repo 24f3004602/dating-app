@@ -101,6 +101,13 @@ No data processing agreements are signed yet; Gmail is a personal account, and D
     certification, which we will apply for)?
 12. The name "Kinaara": guidance on a trademark search and filing.
 13. Is clickwrap acceptance with stored versions enough to bind members to the terms?
+14. A new version of the documents (D159): we tell existing members in the app and let them carry on, and only new
+    members agree to it at sign-up. Is telling enough, or must existing members accept a new version (DPDP)?
+15. Language: rule 3(1)(b) of the IT Rules says the rules, privacy policy and user agreement are given "in English or
+    any language specified in the Eighth Schedule ... in the language of his choice". Our documents are in English,
+    and the Hindi home page says so. Do we need Hindi versions, and for which members?
+16. The Data Protection Board of India: from when can members complain to it, and should the privacy notice name it
+    now? Should the terms name a governing law and courts?
 
 ## 6. What we would like from you
 

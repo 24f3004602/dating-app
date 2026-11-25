@@ -31,6 +31,7 @@ class PrefsBody(ApiModel):
 
 class NoticeOut(ApiModel):
     id: uuid.UUID
-    kind: Literal["warning"]
+    kind: Literal["warning", "new_documents", "rules_reminder"]
     created_at: datetime
     read: bool
+    version: str | None = Field(default=None, description="For new_documents: the version announced (D159)")

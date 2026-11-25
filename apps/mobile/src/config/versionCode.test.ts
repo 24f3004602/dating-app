@@ -8,8 +8,8 @@ const BETA = {
   APP_VARIANT: "beta",
   EXPO_PUBLIC_API_URL: "https://api.kinaara.online",
   EXPO_PUBLIC_WEB_URL: "https://kinaara.online",
-  EXPO_PUBLIC_TERMS_VERSION: "beta-2026-11-20",
-  EXPO_PUBLIC_PRIVACY_VERSION: "beta-2026-11-20",
+  EXPO_PUBLIC_TERMS_VERSION: "beta-2026-11-25",
+  EXPO_PUBLIC_PRIVACY_VERSION: "beta-2026-11-25",
   ANDROID_PACKAGE: "online.kinaara.app",
 };
 const KEYS = [...Object.keys(BETA), "ANDROID_VERSION_CODE", "ANDROID_KEYSTORE_PATH"];
