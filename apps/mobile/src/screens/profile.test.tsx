@@ -34,7 +34,7 @@ const photo = (id: string, position: number, state = "pending") => ({
   urls_expire_at: "2026-11-04T12:00:00Z",
 });  // prettier-ignore
 const PROFILE = {
-  user_id: "u1", display_name: "Asha", age: 27, gender: "woman", interested_in: ["man"], intent: "long_term",
+  user_id: "u1", display_name: "Asha", age: 27, gender: "woman", interested_in: ["man"], identities: [], intent: "long_term",
   bio: null, area: AREAS[0], prompts: [], photos: [photo("p1", 0)], visibility: "everyone", discovery_paused: false,
   readiness: { ready: false, missing: ["approved_photos"], approved_photos: 0, approved_photos_needed: 2 },
 };  // prettier-ignore
@@ -110,9 +110,41 @@ test("edit profile: a complete form saves the API's shape", async () => {
   await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
   await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
   expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
-    display_name: "Asha", gender: "woman", interested_in: ["man"], intent: "long_term", bio: null,
+    display_name: "Asha", gender: "woman", interested_in: ["man"], identities: [], intent: "long_term", bio: null,
     area_id: "delhi.saket", prompts: [{ key: "festival", answer: "Holi, for the colours." }],
   });  // prettier-ignore
+});
+
+test("edit profile: LGBTQ+ labels are optional, at most three, and saved as chosen (PROF-ID-APP-1, D160)", async () => {
+  const { api, calls } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: { ...PROFILE, identities: ["queer"] } }),
+    "GET /v1/areas": () => ({ status: 200, body: AREAS }),
+    "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
+    "PUT /v1/me/profile": () => ({ status: 200, body: PROFILE }),
+  });
+  await renderWithApp(<EditProfileScreen />, api);
+  // The saved label comes back ticked; the hint says who sees them and that matching doesn't change.
+  expect(await screen.findByRole("checkbox", { name: t.identity.queer, checked: true })).toBeTruthy();
+  expect(screen.getByText(t.editProfile.identitiesHint)).toBeTruthy();
+  for (const label of [t.identity.trans, t.identity.bisexual, t.identity.asexual]) {
+    await fireEvent.press(screen.getByRole("checkbox", { name: label }));
+  }
+  await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
+  expect(await screen.findByText("Choose up to three.")).toBeTruthy();
+  expect(calls.filter((c) => c.method === "PUT")).toHaveLength(0);
+  await fireEvent.press(screen.getByRole("checkbox", { name: t.identity.asexual }));
+  await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
+  await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
+  expect((calls.find((c) => c.method === "PUT")?.body as { identities: string[] }).identities).toEqual(["queer", "trans", "bisexual"]);
+});
+
+test("profile: your LGBTQ+ labels show on your card only when you added them (PROF-ID-APP-2)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: { ...PROFILE, identities: ["lesbian", "trans"] } }),
+    "GET /v1/me": () => ({ status: 200, body: ME }),
+  });
+  await renderWithApp(<ProfileScreen />, api);
+  expect(await screen.findByText(`${t.identity.lesbian} · ${t.identity.trans}`)).toBeTruthy();
 });
 
 test("edit profile: the area limit gets a clear message", async () => {

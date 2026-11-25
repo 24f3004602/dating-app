@@ -650,6 +650,14 @@
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
+          "identities": {
+            "description": "Only the labels the member chose to add (D160)",
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
@@ -682,6 +690,7 @@
           "display_name",
           "age",
           "gender",
+          "identities",
           "intent",
           "bio",
           "area",
@@ -1124,6 +1133,22 @@
         ],
         "title": "IceServerOut",
         "type": "object"
+      },
+      "Identity": {
+        "description": "LGBTQ+ labels a member may add to their profile (stage 29a, D160): optional, up to three,\nand shown to whoever can see the profile; nothing is stored unless the member chooses to\nshare it. Matching stays by gender and who a member wants to meet: a trans woman is a woman.",
+        "enum": [
+          "trans",
+          "gay",
+          "lesbian",
+          "bisexual",
+          "queer",
+          "pansexual",
+          "asexual",
+          "intersex",
+          "questioning"
+        ],
+        "title": "Identity",
+        "type": "string"
       },
       "Intent": {
         "description": "What a member is looking for (D050). No casual option at launch.",
@@ -1811,6 +1836,13 @@
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
@@ -1853,6 +1885,7 @@
           "age",
           "gender",
           "interested_in",
+          "identities",
           "intent",
           "bio",
           "area",
@@ -2679,6 +2712,14 @@
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            },
+            "maxItems": 3,
+            "title": "Identities",
+            "type": "array"
+          },
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
@@ -2804,6 +2845,14 @@
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
+          "identities": {
+            "description": "Only the labels the member chose to add (D160)",
+            "items": {
+              "$ref": "#/components/schemas/Identity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
@@ -2832,6 +2881,7 @@
           "display_name",
           "age",
           "gender",
+          "identities",
           "intent",
           "bio",
           "area",

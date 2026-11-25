@@ -36,6 +36,25 @@ class Gender(enum.StrEnum):
     nonbinary = "nonbinary"
 
 
+class Identity(enum.StrEnum):
+    """LGBTQ+ labels a member may add to their profile (stage 29a, D160): optional, up to three,
+    and shown to whoever can see the profile; nothing is stored unless the member chooses to
+    share it. Matching stays by gender and who a member wants to meet: a trans woman is a woman."""
+
+    trans = "trans"
+    gay = "gay"
+    lesbian = "lesbian"
+    bisexual = "bisexual"
+    queer = "queer"
+    pansexual = "pansexual"
+    asexual = "asexual"
+    intersex = "intersex"
+    questioning = "questioning"
+
+
+MAX_IDENTITIES = 3
+
+
 class Intent(enum.StrEnum):
     """What a member is looking for (D050). No casual option at launch."""
 
@@ -72,12 +91,19 @@ class Profile(CreatedAtMixin, Base):
             "cardinality(interested_in) >= 1 AND interested_in <@ ARRAY['woman','man','nonbinary']::varchar[]",
             name="interested_in_valid",
         ),
+        CheckConstraint(
+            "cardinality(identities) <= 3 AND identities <@ ARRAY['trans','gay','lesbian','bisexual','queer',"
+            "'pansexual','asexual','intersex','questioning']::varchar[]",
+            name="identities_valid",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(40))
     gender: Mapped[Gender] = mapped_column(_enum(Gender, "gender"))
     interested_in: Mapped[list[str]] = mapped_column(ARRAY(String(16)))
+    # Optional LGBTQ+ labels, shown on the profile (D160); empty unless the member adds them.
+    identities: Mapped[list[str]] = mapped_column(ARRAY(String(16)), server_default=text("'{}'"))
     intent: Mapped[Intent] = mapped_column(_enum(Intent, "intent"))
     bio: Mapped[str | None] = mapped_column(String(500))
     area_id: Mapped[str] = mapped_column(ForeignKey("areas.id", ondelete="RESTRICT"), index=True)

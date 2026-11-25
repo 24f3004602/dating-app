@@ -144,6 +144,10 @@ export const en = {
     nameHint: "The name people will see. No numbers or contact details.",
     gender: "I am a",
     interestedIn: "I'm interested in",
+    // D160: optional labels, shown on the profile; matching stays by gender and who you'd like to meet.
+    identities: "LGBTQ+ (optional)",
+    identitiesHint:
+      "Up to three. They show on your profile to anyone who can see it; leave them empty if you'd rather not say. Who you're introduced to still depends on who you are and who you'd like to meet.",
     intent: "I'm looking for",
     bio: "About me",
     bioHint: "Up to 500 characters.",
@@ -162,6 +166,17 @@ export const en = {
     areaLimited: "You can change your area once a day. Try again later.",
   },
   gender: { woman: "Woman", man: "Man", nonbinary: "Non-binary" },
+  identity: {
+    trans: "Trans",
+    gay: "Gay",
+    lesbian: "Lesbian",
+    bisexual: "Bisexual",
+    queer: "Queer",
+    pansexual: "Pansexual",
+    asexual: "Asexual",
+    intersex: "Intersex",
+    questioning: "Questioning",
+  },
   intent: {
     marriage: "Marriage",
     long_term: "A long-term relationship",

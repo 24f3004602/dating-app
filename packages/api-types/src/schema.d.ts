@@ -1632,6 +1632,11 @@ export interface components {
              */
             distance: "under_5_km" | "5_to_15_km" | "15_to_50_km" | "over_50_km";
             gender: components["schemas"]["Gender"];
+            /**
+             * Identities
+             * @description Only the labels the member chose to add (D160)
+             */
+            identities: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
             /** Photos */
             photos: components["schemas"]["PhotoOut"][];
@@ -1800,6 +1805,14 @@ export interface components {
             /** Username */
             username?: string | null;
         };
+        /**
+         * Identity
+         * @description LGBTQ+ labels a member may add to their profile (stage 29a, D160): optional, up to three,
+         *     and shown to whoever can see the profile; nothing is stored unless the member chooses to
+         *     share it. Matching stays by gender and who a member wants to meet: a trans woman is a woman.
+         * @enum {string}
+         */
+        Identity: "trans" | "gay" | "lesbian" | "bisexual" | "queer" | "pansexual" | "asexual" | "intersex" | "questioning";
         /**
          * Intent
          * @description What a member is looking for (D050). No casual option at launch.
@@ -2098,6 +2111,8 @@ export interface components {
             /** Display Name */
             display_name: string;
             gender: components["schemas"]["Gender"];
+            /** Identities */
+            identities: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
             /** Interested In */
             interested_in: components["schemas"]["Gender"][];
@@ -2419,6 +2434,8 @@ export interface components {
             /** Display Name */
             display_name: string;
             gender: components["schemas"]["Gender"];
+            /** Identities */
+            identities?: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
             /** Interested In */
             interested_in: components["schemas"]["Gender"][];
@@ -2461,6 +2478,11 @@ export interface components {
             /** Display Name */
             display_name: string;
             gender: components["schemas"]["Gender"];
+            /**
+             * Identities
+             * @description Only the labels the member chose to add (D160)
+             */
+            identities: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
             /** Photos */
             photos: components["schemas"]["PhotoOut"][];

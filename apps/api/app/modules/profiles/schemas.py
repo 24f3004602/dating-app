@@ -11,7 +11,7 @@ from pydantic import AfterValidator, Field, field_validator, model_validator
 
 from app.modules.media.models import ModerationState
 from app.modules.profiles.catalogue import MAX_PROMPTS, PROMPTS
-from app.modules.profiles.models import Gender, Intent, Visibility
+from app.modules.profiles.models import MAX_IDENTITIES, Gender, Identity, Intent, Visibility
 from app.schemas import ApiModel
 from app.text import clean_display_name, clean_text
 
@@ -49,6 +49,8 @@ class ProfileIn(ApiModel):
     display_name: DisplayName
     gender: Gender
     interested_in: list[Gender] = Field(min_length=1, max_length=3)
+    # Optional LGBTQ+ labels (D160): shown on the profile; empty unless the member adds them.
+    identities: list[Identity] = Field(default_factory=list, max_length=MAX_IDENTITIES)
     intent: Intent
     bio: Annotated[str, Field(max_length=700), AfterValidator(_bio)] | None = None
     area_id: str = Field(max_length=48)
@@ -59,6 +61,13 @@ class ProfileIn(ApiModel):
     def _name_length(cls, v: str) -> str:
         if not 1 <= len(v) <= 40:
             raise ValueError("names are 1 to 40 characters")
+        return v
+
+    @field_validator("identities")
+    @classmethod
+    def _each_once(cls, v: list[Identity]) -> list[Identity]:
+        if len(set(v)) != len(v):
+            raise ValueError("each label once")
         return v
 
     @field_validator("bio")
@@ -148,6 +157,7 @@ class MyProfileOut(ApiModel):
     age: int
     gender: Gender
     interested_in: list[Gender]
+    identities: list[Identity]
     intent: Intent
     bio: str | None
     area: AreaOut
@@ -165,6 +175,7 @@ class PublicProfileOut(ApiModel):
     display_name: str
     age: int
     gender: Gender
+    identities: list[Identity] = Field(description="Only the labels the member chose to add (D160)")
     intent: Intent
     bio: str | None
     area: AreaOut

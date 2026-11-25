@@ -107,11 +107,14 @@ export const displayName = z
 
 export const GENDERS = ["woman", "man", "nonbinary"] as const;
 export const INTENTS = ["marriage", "long_term", "figuring_out"] as const;
+// Optional LGBTQ+ labels (D160), as the API lists them.
+export const IDENTITIES = ["trans", "gay", "lesbian", "bisexual", "queer", "pansexual", "asexual", "intersex", "questioning"] as const;
 
 export const profileSchema = z.object({
   displayName,
   gender: z.enum(GENDERS, { error: "Choose one." }),
   interestedIn: z.array(z.enum(GENDERS)).min(1, { error: "Choose at least one." }),
+  identities: z.array(z.enum(IDENTITIES)).max(3, { error: "Choose up to three." }),
   intent: z.enum(INTENTS, { error: "Choose what you're looking for." }),
   bio: z.string().max(500, { error: "Use at most 500 characters." }),
   areaId: z.string().min(1, { error: "Choose your area." }),

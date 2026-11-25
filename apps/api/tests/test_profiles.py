@@ -7,6 +7,9 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from tests.support import FrozenClock, JobRunner, bearer, signup
 
@@ -96,6 +99,11 @@ async def test_create_read_and_replace_a_profile(client: AsyncClient, jobs: JobR
         {"prompts": [{"key": k, "answer": "a"} for k in ("festival", "phrase", "next_trip", "city_corner")]},
         {"prompts": [{"key": "festival", "answer": "x" * 201}]},
         {"is_verified": True},  # unknown fields are rejected
+        # D160: the labels are optional, from the list, each once, at most three.
+        {"identities": ["straight"]},
+        {"identities": ["gay", "gay"]},
+        {"identities": ["trans", "gay", "queer", "bisexual"]},
+        {"identities": "queer"},
     ],
 )
 async def test_invalid_profiles_are_rejected(client: AsyncClient, jobs: JobRunner, change: dict[str, Any]) -> None:
@@ -157,6 +165,39 @@ async def test_others_profiles_are_not_found_unless_the_policy_allows(client: As
     ghost = await client.get(f"/v1/profiles/{uuid.uuid4()}", headers=auth(ravi))
     assert seen.status_code == ghost.status_code == 404
     assert seen.json()["code"] == ghost.json()["code"] == "not_found"
+
+
+async def test_lgbtq_labels_are_optional_and_show_on_the_profile(client: AsyncClient, jobs: JobRunner) -> None:
+    """PROF-ID-1 (D160): none unless added; up to three, in the member's order, on their own and the
+    public profile; removing them clears them."""
+    me = await member(client, jobs, "a@example.com")
+    r = await put(client, me)
+    assert r.status_code == 200, r.text
+    assert r.json()["identities"] == []
+    assert (await client.get(f"/v1/profiles/{me['id']}", headers=auth(me))).json()["identities"] == []
+
+    r = await put(client, me, gender="woman", interested_in=["woman", "nonbinary"], identities=["trans", "queer"])
+    assert r.json()["identities"] == ["trans", "queer"]
+    public = (await client.get(f"/v1/profiles/{me['id']}", headers=auth(me))).json()
+    assert (public["gender"], public["identities"]) == ("woman", ["trans", "queer"])  # a trans woman is a woman
+
+    assert (await put(client, me, identities=[])).json()["identities"] == []
+    assert (await client.get("/v1/me/profile", headers=auth(me))).json()["identities"] == []
+
+
+async def test_the_database_keeps_the_labels_to_the_list(
+    client: AsyncClient, jobs: JobRunner, db: async_sessionmaker[AsyncSession]
+) -> None:
+    """PROF-ID-2 (D160): an unknown label or a fourth one is refused by the database too."""
+    me = await member(client, jobs, "a@example.com")
+    await put(client, me)
+    for bad in ("{straight}", "{trans,gay,queer,bisexual}"):
+        async with db() as s:
+            with pytest.raises(IntegrityError, match="ck_profiles_identities_valid"):
+                await s.execute(
+                    text("UPDATE profiles SET identities = CAST(:v AS varchar[]) WHERE user_id = CAST(:u AS uuid)"),
+                    {"v": bad, "u": me["id"]},
+                )
 
 
 async def test_my_public_preview_hides_private_fields(client: AsyncClient, jobs: JobRunner) -> None:

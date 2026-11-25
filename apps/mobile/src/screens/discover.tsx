@@ -141,6 +141,7 @@ function PersonView({ person }: { person: Person }) {
       <View style={styles.facts}>
         <Plate heading>{`${person.display_name}, ${person.age}`}</Plate>
         <Body>{t.intent[person.intent]}</Body>
+        {person.identities.length > 0 ? <Body>{person.identities.map((i) => t.identity[i]).join(" · ")}</Body> : null}
         <Body muted>{`${person.area.name}, ${person.area.city}`}</Body>
       </View>
       {first ? photo(first, 0) : null}

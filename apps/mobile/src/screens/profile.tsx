@@ -28,11 +28,12 @@ import { color, radius, space } from "@/theme/tokens";
 import { useTour } from "@/tour/TourProvider";
 import { FormField } from "@/ui/FormField";
 import { MoreButton } from "@/ui/MoreButton";
-import { Body, Button, CardTitle, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, SwitchRow, TextField, Thumb, Title } from "@/ui/primitives";
+import { Body, Button, Caption, CardTitle, ChoiceGroup, Heading, ListRow, Loading, Notice, Plate, Row, Screen, Stack, SwitchRow, TextField, Thumb, Title } from "@/ui/primitives";
 import { Sheet } from "@/ui/Sheet";
-import { GENDERS, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
+import { GENDERS, IDENTITIES, INTENTS, type ProfileValues, profileSchema } from "@/validation/schemas";
 
 const genderOptions = GENDERS.map((g) => ({ value: g, label: t.gender[g] }));
+const identityOptions = IDENTITIES.map((i) => ({ value: i, label: t.identity[i] }));
 const intentOptions = INTENTS.map((i) => ({ value: i, label: t.intent[i] }));
 
 function QueryError({ error, retry }: { error: unknown; retry: () => void }) {
@@ -127,6 +128,7 @@ function ProfileSummary({ profile }: { profile: MyProfile }) {
         <Stack>
           <Plate heading level={2}>{`${profile.display_name}, ${profile.age}`}</Plate>
           <Body>{t.intent[profile.intent]}</Body>
+          {profile.identities.length > 0 ? <Body>{profile.identities.map((i) => t.identity[i]).join(" · ")}</Body> : null}
           <Body muted>{`${profile.area.name}, ${profile.area.city}`}</Body>
         </Stack>
       </View>
@@ -144,6 +146,7 @@ function toFormValues(p: MyProfile | null | undefined): ProfileValues {
     displayName: p?.display_name ?? "",
     gender: p?.gender ?? (undefined as unknown as ProfileValues["gender"]),
     interestedIn: p?.interested_in ?? [],
+    identities: p?.identities ?? [],
     intent: p?.intent ?? (undefined as unknown as ProfileValues["intent"]),
     bio: p?.bio ?? "",
     areaId: p?.area.id ?? "",
@@ -194,6 +197,7 @@ export function EditProfileScreen() {
         display_name: v.displayName,
         gender: v.gender,
         interested_in: v.interestedIn,
+        identities: v.identities,
         intent: v.intent,
         bio: v.bio.trim() ? v.bio : null,
         area_id: v.areaId,
@@ -216,6 +220,10 @@ export function EditProfileScreen() {
       <Controller control={form.control} name="interestedIn" render={({ field }) => (
         <ChoiceGroup multiple label={t.editProfile.interestedIn} options={genderOptions} value={field.value} onChange={field.onChange} error={e.interestedIn?.message} />
       )} />
+      <Controller control={form.control} name="identities" render={({ field }) => (
+        <ChoiceGroup multiple label={t.editProfile.identities} options={identityOptions} value={field.value} onChange={field.onChange} error={e.identities?.message} />
+      )} />
+      <Caption>{t.editProfile.identitiesHint}</Caption>
       <Controller control={form.control} name="intent" render={({ field }) => (
         <ChoiceGroup layout="list" label={t.editProfile.intent} options={intentOptions} value={field.value} onChange={field.onChange} error={e.intent?.message} />
       )} />

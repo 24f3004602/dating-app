@@ -1,10 +1,17 @@
 # Progress
 
-Updated: 2026-11-24
+Updated: 2026-11-25
 
 Kept short (CLAUDE.md). Each stage's full status and build logs up to 2026-11-24 are in git history (`git log -p -- replica/progress.md`); evidence is in `test-plan.md` (Results), decisions in `decision-log.md`, bugs in `bugs.md`.
 
-## Current phase: stage 28, the free launch (D151, D152)
+## Current phase: stage 29, all of India and LGBTQ+ members (D160)
+
+The owner's request of 2026-11-25: all of India instead of Delhi NCR; a blue tick for verified members; an existing model to spot nudity in Live calls with strangers (a warning, then the profile held for staff, a confirmed case banned; never in calls between matches); Live pairing by preference; support for the LGBTQ+ community. The owner's choices: the blue tick is a selfie our staff check against the profile's photos; the nudity check may keep up to 3 still frames (only when it fires, admins only, deleted 30 days after the decision); LGBTQ+ and all of India first; the server: later. Plan: 29a LGBTQ+ and all of India, 29b the blue tick, 29c the nudity check in the web app, 29d on Android, 29e the documents' next version. Each release waits for the owner's go, and none of 29 before the privacy notice says what it adds.
+
+- **29a-1, optional LGBTQ+ labels: built and tested; not released.** Up to three labels from a fixed list (trans, gay, lesbian, bisexual, queer, pansexual, asexual, intersex, questioning), none by default, on the edit form with a note on who sees them; shown on your card under You and on your profile to whoever can see it. Matching unchanged (gender and interested in, both ways; a trans woman is a woman); no filtering by label. Migration 0020 (`profiles.identities`, held to the list and to three by the database). Checks: API 469 passed (PROF-ID-1..2), ruff, format and mypy clean, the OpenAPI types regenerated and in sync; app 259 passed and `tsc` clean (PROF-ID-APP-1..3); 6 mutants caught.
+- **Next: 29a-2,** a Live choice for members who added a label, to be paired only with others who added one; then 29a-3, areas across India.
+
+## Stage 28, the free launch (D151, D152): live
 
 The owner's choice on 2026-11-24 ("free launch"): launch for ₹0 on the web app and the APK from the website, with this laptop and the Cloudflare Tunnel as the server, Gmail and Instagram; Google Play when the ₹2,325 is there (`business-plan.md`, section 8a). Stage 27's Play-only items wait for it.
 

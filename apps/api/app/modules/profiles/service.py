@@ -72,6 +72,7 @@ async def upsert_profile(session: AsyncSession, user_id: uuid.UUID, data: Profil
     profile.display_name = data.display_name
     profile.gender = data.gender
     profile.interested_in = [g.value for g in data.interested_in]
+    profile.identities = [i.value for i in data.identities]
     profile.intent = data.intent
     profile.bio = data.bio
     await session.flush()
@@ -119,6 +120,7 @@ async def my_profile(
         age=age_on(user.birthdate, local_today(settings, now)),
         gender=profile.gender,
         interested_in=list(profile.interested_in),
+        identities=list(profile.identities),
         intent=profile.intent,
         bio=profile.bio,
         area=AreaOut(id=area.id, city=area.city, name=area.name),
@@ -153,6 +155,7 @@ async def public_profile(
         display_name=profile.display_name,
         age=age_on(user.birthdate, local_today(settings, now)),
         gender=profile.gender,
+        identities=list(profile.identities),
         intent=profile.intent,
         bio=profile.bio,
         area=AreaOut(id=area.id, city=area.city, name=area.name),

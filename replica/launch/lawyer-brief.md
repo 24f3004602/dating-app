@@ -108,6 +108,10 @@ No data processing agreements are signed yet; Gmail is a personal account, and D
     and the Hindi home page says so. Do we need Hindi versions, and for which members?
 16. The Data Protection Board of India: from when can members complain to it, and should the privacy notice name it
     now? Should the terms name a governing law and courts?
+17. LGBTQ+ labels (D160): members may add up to three labels (trans, gay, lesbian, bisexual, queer and others) to
+    their profile; they are optional, shown to whoever can see the profile, and not used for matching. The SPDI Rules
+    2011 count sexual orientation as sensitive personal data; the DPDP Act has no such category. Is the member's own
+    choice, with the form's note on who sees them, enough consent, and what must the privacy notice say?
 
 ## 6. What we would like from you
 

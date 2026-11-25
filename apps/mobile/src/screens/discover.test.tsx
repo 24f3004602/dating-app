@@ -17,7 +17,7 @@ const photo = (id: string) => ({
   urls_expire_at: "2026-11-04T12:00:00Z",
 });  // prettier-ignore
 const card = (id: string, name: string, distance: string, rank: number) => ({
-  user_id: id, display_name: name, age: 29, gender: "man", intent: "long_term", bio: "Hello.",
+  user_id: id, display_name: name, age: 29, gender: "man", identities: [], intent: "long_term", bio: "Hello.",
   area: { id: "delhi.saket", city: "Delhi", name: "Saket" }, prompts: [], photos: [photo(`${id}p`)], distance, rank,
 });  // prettier-ignore
 const TODAY = (cards: unknown[]) => ({
@@ -71,6 +71,19 @@ test("a person's profile, and a clear state when it is no longer available", asy
   await screen.unmount();
   await renderWithApp(<PersonScreen id="u2" />, api);
   expect(await screen.findByText(t.person.gone)).toBeTruthy();
+});
+
+test("a person's LGBTQ+ labels show only when they added them (PROF-ID-APP-3, D160)", async () => {
+  const { api } = fakeApi({
+    "GET /v1/profiles/u1": () => ({ status: 200, body: { ...card("u1", "Aarav", "under_5_km", 1), identities: ["gay", "queer"] } }),
+    "GET /v1/profiles/u2": () => ({ status: 200, body: card("u2", "Kabir", "under_5_km", 2) }),
+  });
+  await renderWithApp(<PersonScreen id="u1" />, api);
+  expect(await screen.findByText(`${t.identity.gay} · ${t.identity.queer}`)).toBeTruthy();
+  await screen.unmount();
+  await renderWithApp(<PersonScreen id="u2" />, api);
+  expect(await screen.findByText("Kabir, 29")).toBeTruthy();
+  for (const label of Object.values(t.identity)) expect(screen.queryByText(new RegExp(`\\b${label}\\b`))).toBeNull();
 });
 
 /** Every text and accessible name on screen, in reading order. */
