@@ -112,6 +112,9 @@ No data processing agreements are signed yet; Gmail is a personal account, and D
     their profile; they are optional, shown to whoever can see the profile, and not used for matching. The SPDI Rules
     2011 count sexual orientation as sensitive personal data; the DPDP Act has no such category. Is the member's own
     choice, with the form's note on who sees them, enough consent, and what must the privacy notice say?
+18. The blue tick (D164): a member who asks for it sends a selfie, which our staff compare by eye with their
+    photos (no face recognition), and which we delete at the decision. Is that biometric information under the SPDI
+    Rules 2011, or sensitive in another way, and is the member's request at that moment enough consent?
 
 ## 6. What we would like from you
 

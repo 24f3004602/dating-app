@@ -502,6 +502,66 @@
         "title": "ChallengeOut",
         "type": "object"
       },
+      "CheckDecisionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required to reject; none to approve"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "CheckDecisionIn",
+        "type": "object"
+      },
+      "CheckDecisionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CheckState"
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ],
+        "title": "CheckDecisionOut",
+        "type": "object"
+      },
+      "CheckState": {
+        "enum": [
+          "awaiting",
+          "pending",
+          "approved",
+          "rejected",
+          "cancelled",
+          "expired"
+        ],
+        "title": "CheckState",
+        "type": "string"
+      },
       "CheckoutOut": {
         "additionalProperties": false,
         "description": "The subscription to authorise: on Razorpay's own page (`checkout_url`), or in Checkout with the key.",
@@ -661,6 +721,11 @@
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
+          "photo_verified": {
+            "description": "The blue tick: our team compared a selfie with these photos (D164)",
+            "title": "Photo Verified",
+            "type": "boolean"
+          },
           "photos": {
             "items": {
               "$ref": "#/components/schemas/PhotoOut"
@@ -691,6 +756,7 @@
           "age",
           "gender",
           "identities",
+          "photo_verified",
           "intent",
           "bio",
           "area",
@@ -834,6 +900,18 @@
           "nonbinary"
         ],
         "title": "Gender",
+        "type": "string"
+      },
+      "Gesture": {
+        "enum": [
+          "thumbs_up",
+          "two_fingers",
+          "three_fingers",
+          "open_palm",
+          "hand_on_head",
+          "chin_on_hand"
+        ],
+        "title": "Gesture",
         "type": "string"
       },
       "GoogleCompleteIn": {
@@ -1880,6 +1958,11 @@
             "title": "Interested In",
             "type": "array"
           },
+          "photo_verified": {
+            "description": "The blue tick: our team compared a selfie with these photos (D164)",
+            "title": "Photo Verified",
+            "type": "boolean"
+          },
           "photos": {
             "items": {
               "$ref": "#/components/schemas/PhotoOut"
@@ -1913,6 +1996,7 @@
           "gender",
           "interested_in",
           "identities",
+          "photo_verified",
           "intent",
           "bio",
           "area",
@@ -2034,6 +2118,69 @@
         "title": "PasswordResetConfirmIn",
         "type": "object"
       },
+      "PendingCheckOut": {
+        "additionalProperties": false,
+        "description": "A selfie waiting for review, beside every photo of the member's (staff only, audited).",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "gesture": {
+            "$ref": "#/components/schemas/Gesture"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "photos": {
+            "description": "The member's photos in order, pending ones included",
+            "items": {
+              "$ref": "#/components/schemas/PhotoOut"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "selfie": {
+            "$ref": "#/components/schemas/PhotoUrls"
+          },
+          "selfie_expires_at": {
+            "format": "date-time",
+            "title": "Selfie Expires At",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "display_name",
+          "gesture",
+          "submitted_at",
+          "selfie",
+          "selfie_expires_at",
+          "photos"
+        ],
+        "title": "PendingCheckOut",
+        "type": "object"
+      },
       "PendingPhoto": {
         "additionalProperties": false,
         "properties": {
@@ -2105,6 +2252,82 @@
           "photo"
         ],
         "title": "PersonBrief",
+        "type": "object"
+      },
+      "PhotoCheckOut": {
+        "additionalProperties": false,
+        "description": "The blue tick, as its member sees it (D164).",
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the gesture's time runs out, while awaiting",
+            "title": "Expires At"
+          },
+          "gesture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Gesture"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The gesture to make in the selfie, while awaiting"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RejectReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the last check failed, when rejected"
+          },
+          "state": {
+            "description": "none; awaiting (a gesture to make); pending (our team is looking); verified (the tick); rejected (the last check failed); removed (the tick went when a photo was added)",
+            "enum": [
+              "none",
+              "awaiting",
+              "pending",
+              "verified",
+              "rejected",
+              "removed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When our team approved it, while verified",
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "state",
+          "gesture",
+          "expires_at",
+          "reason",
+          "verified_at"
+        ],
+        "title": "PhotoCheckOut",
         "type": "object"
       },
       "PhotoDecisionIn": {
@@ -2885,6 +3108,11 @@
           "intent": {
             "$ref": "#/components/schemas/Intent"
           },
+          "photo_verified": {
+            "description": "The blue tick: our team compared a selfie with these photos (D164)",
+            "title": "Photo Verified",
+            "type": "boolean"
+          },
           "photos": {
             "items": {
               "$ref": "#/components/schemas/PhotoOut"
@@ -2911,6 +3139,7 @@
           "age",
           "gender",
           "identities",
+          "photo_verified",
           "intent",
           "bio",
           "area",
@@ -3154,6 +3383,15 @@
         ],
         "title": "RegisterIn",
         "type": "object"
+      },
+      "RejectReason": {
+        "enum": [
+          "face_mismatch",
+          "gesture_missing",
+          "unclear"
+        ],
+        "title": "RejectReason",
+        "type": "string"
       },
       "ReportActionIn": {
         "additionalProperties": false,
@@ -4841,6 +5079,168 @@
           }
         },
         "summary": "Find the member an emailed complaint is about, by address or first name and age (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/photo-checks/pending": {
+      "get": {
+        "operationId": "pending_v1_admin_photo_checks_pending_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingCheckOut"
+                  },
+                  "title": "Response Pending V1 Admin Photo Checks Pending Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Selfies waiting for review, oldest first, beside each member's photos (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/photo-checks/{check_id}/decision": {
+      "post": {
+        "operationId": "decide_v1_admin_photo_checks__check_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "check_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Check Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckDecisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed (see `code`)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "Approve (the blue tick) or reject a photo check; the selfie is deleted either way",
         "tags": [
           "admin"
         ]
@@ -8648,6 +9048,189 @@
         "summary": "Choose which pushes I get",
         "tags": [
           "notifications"
+        ]
+      }
+    },
+    "/v1/me/photo-check": {
+      "get": {
+        "operationId": "mine_v1_me_photo_check_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          }
+        },
+        "summary": "The blue tick: where my photo check stands",
+        "tags": [
+          "photo checks"
+        ]
+      }
+    },
+    "/v1/me/photo-check/gesture": {
+      "post": {
+        "operationId": "gesture_v1_me_photo_check_gesture_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "The gesture to make in the selfie: the same one for 15 minutes",
+        "tags": [
+          "photo checks"
+        ]
+      }
+    },
+    "/v1/me/photo-check/selfie": {
+      "post": {
+        "operationId": "selfie_v1_me_photo_check_selfie_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoUploadForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Request body too large"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Send the selfie making the gesture (JPEG, PNG or WebP; at most 10 MB)",
+        "tags": [
+          "photo checks"
         ]
       }
     },

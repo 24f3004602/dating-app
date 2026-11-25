@@ -47,6 +47,7 @@ def get_job_app() -> procrastinate.App:
         from app.modules.media.tasks import blueprint as media_tasks  # noqa: PLC0415
         from app.modules.moderation.tasks import blueprint as moderation_tasks  # noqa: PLC0415
         from app.modules.notifications.tasks import blueprint as notify_tasks  # noqa: PLC0415
+        from app.modules.photochecks.tasks import blueprint as photo_check_tasks  # noqa: PLC0415
         from app.modules.privacy.tasks import blueprint as privacy_tasks  # noqa: PLC0415
         from app.modules.waitlist.tasks import blueprint as waitlist_tasks  # noqa: PLC0415
 
@@ -55,6 +56,7 @@ def get_job_app() -> procrastinate.App:
         app.add_tasks_from(media_tasks, namespace="media")
         app.add_tasks_from(moderation_tasks, namespace="moderation")
         app.add_tasks_from(notify_tasks, namespace="notify")
+        app.add_tasks_from(photo_check_tasks, namespace="photochecks")
         app.add_tasks_from(billing_tasks, namespace="billing")
         app.add_tasks_from(privacy_tasks, namespace="privacy")
         app.add_tasks_from(waitlist_tasks, namespace="waitlist")

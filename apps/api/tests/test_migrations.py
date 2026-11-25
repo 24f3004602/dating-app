@@ -67,7 +67,7 @@ def test_upgrade_downgrade_upgrade(scratch: tuple[str, Engine], base_settings: S
     command.upgrade(cfg, "head")
     assert tables(engine) == HEAD
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0022"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0023"
 
 
 def test_migrated_schema_matches_the_models(scratch: tuple[str, Engine], base_settings: Settings) -> None:

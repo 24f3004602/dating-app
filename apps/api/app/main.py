@@ -31,6 +31,8 @@ from app.modules.media.router import router as media_router
 from app.modules.messaging.router import router as messaging_router
 from app.modules.moderation.router import router as moderation_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.photochecks.router import admin_router as photo_checks_admin_router
+from app.modules.photochecks.router import router as photo_checks_router
 from app.modules.privacy.router import router as privacy_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.realtime.router import router as realtime_router
@@ -123,27 +125,35 @@ def create_app(settings: Settings | None = None, *, configure_logs: bool = True)
     app.add_middleware(
         RequestContextMiddleware,
         max_body_bytes=settings.max_request_body_bytes,
-        # Photo uploads may be larger than the general limit.
-        body_limit_overrides={("POST", f"{API_PREFIX}/me/photos"): settings.max_upload_body_bytes},
+        # Photo uploads, and the selfie for the blue tick (D164), may be larger than the general limit.
+        body_limit_overrides={
+            ("POST", f"{API_PREFIX}/me/photos"): settings.max_upload_body_bytes,
+            ("POST", f"{API_PREFIX}/me/photo-check/selfie"): settings.max_upload_body_bytes,
+        },
     )
 
-    app.include_router(health_router)
-    app.include_router(auth_router)
-    app.include_router(accounts_router)
-    app.include_router(profiles_router)
-    app.include_router(media_router)
-    app.include_router(discovery_router)
-    app.include_router(matching_router)
-    app.include_router(messaging_router)
-    app.include_router(realtime_router)
-    app.include_router(safety_router)
-    app.include_router(moderation_router)
-    app.include_router(privacy_router)
-    app.include_router(notifications_router)
-    app.include_router(billing_router)
-    app.include_router(plus_admin_router)
-    app.include_router(calls_router)
-    app.include_router(staff_router)
-    app.include_router(waitlist_router)
+    for router in (
+        health_router,
+        auth_router,
+        accounts_router,
+        profiles_router,
+        media_router,
+        photo_checks_router,
+        discovery_router,
+        matching_router,
+        messaging_router,
+        realtime_router,
+        safety_router,
+        moderation_router,
+        photo_checks_admin_router,
+        privacy_router,
+        notifications_router,
+        billing_router,
+        plus_admin_router,
+        calls_router,
+        staff_router,
+        waitlist_router,
+    ):
+        app.include_router(router)
     install_openapi(app)
     return app

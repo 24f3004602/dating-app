@@ -50,3 +50,6 @@ RESOLVED_REPORT = timedelta(days=730)  # (R) after resolution, the report is del
 
 # Background jobs: finished or failed job rows (IDs and kinds only).
 FINISHED_JOB_HOURS = 30 * 24
+
+# A selfie for the blue tick that nobody decided on (D164); decided ones go at the decision.
+UNDECIDED_SELFIE = timedelta(days=14)

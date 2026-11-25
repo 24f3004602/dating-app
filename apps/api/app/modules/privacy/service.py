@@ -54,6 +54,7 @@ from app.modules.calls.service import end_all_for as end_calls_for
 from app.modules.discovery.models import DailyPick, Match, MatchCloseReason
 from app.modules.matching.service import close_all_open_matches, other_of
 from app.modules.media.service import DELETE_OBJECTS, list_photos
+from app.modules.photochecks import service as photochecks
 from app.modules.privacy import retention
 from app.modules.privacy.models import DeletedAccount
 from app.modules.privacy.schemas import DeletionIn
@@ -270,6 +271,8 @@ async def purge_account(
         )
     )
     keys = [key for photo in await list_photos(session, user.id) for key in photo_keys(photo.storage_key).values()]
+    photos = len(keys) // 2
+    keys += await photochecks.selfie_keys(session, user.id)  # a selfie still waiting (D164)
     if keys:
         # In this transaction: if the purge commits, the files go too (retried by the worker).
         await jobs.defer(session, DELETE_OBJECTS, keys=keys)
@@ -279,7 +282,7 @@ async def purge_account(
     await session.execute(delete(User).where(User.id == user.id))
     record(
         session, "account.purged", actor=None, target_type="user", target_id=user.id,
-        reason="banned" if was_banned else "requested", photos=len(keys) // 2,
+        reason="banned" if was_banned else "requested", photos=photos,
     )  # fmt: skip
     await session.commit()
     return True

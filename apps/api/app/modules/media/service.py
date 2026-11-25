@@ -4,7 +4,8 @@ Order of an upload: decode and re-encode off the event loop, write both
 sizes to private storage, then insert the row. If the insert fails the
 objects are removed again. Deleting a row queues the object deletion in the
 same transaction (`media:delete_objects`), so storage is cleaned even if the
-API stops right after the commit.
+API stops right after the commit. A new photo hasn't been checked, so it clears the blue tick and
+cancels a selfie still waiting for review (D164), in the upload's transaction.
 """
 
 from __future__ import annotations
@@ -13,15 +14,18 @@ import asyncio
 import uuid
 from datetime import datetime
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.errors import ApiError
 from app.jobs import JobQueue
 from app.modules.accounts.models import User
+from app.modules.audit.service import record
 from app.modules.media.images import ImageRejectedError, process_image
 from app.modules.media.models import ModerationState, Photo
+from app.modules.photochecks.models import CheckState, PhotoCheck
+from app.modules.profiles.models import Profile
 from app.modules.profiles.schemas import PhotoOut, PhotoUrls
 from app.providers.storage import ObjectStorage, new_photo_base, photo_keys
 from app.ratelimit import Limit
@@ -39,6 +43,10 @@ _REJECTION_TEXT = {
     "unsupported_image": "Use a JPEG, PNG or WebP photo.",
     "corrupt_image": "That file couldn't be read as a photo.",
 }
+
+
+def rejected_image(exc: ImageRejectedError) -> ApiError:
+    return ApiError(422, exc.code, _REJECTION_TEXT.get(exc.code, "That photo can't be used."))
 
 
 async def _lock_user(session: AsyncSession, user_id: uuid.UUID) -> None:
@@ -66,8 +74,37 @@ def photo_out(photo: Photo, storage: ObjectStorage, now: datetime) -> PhotoOut:
     )
 
 
+async def _withdraw_tick(session: AsyncSession, jobs: JobQueue, user_id: uuid.UUID) -> None:
+    """The blue tick goes, and a selfie waiting for review with it (D164)."""
+    await session.execute(
+        update(Profile)
+        .where(Profile.user_id == user_id, Profile.photo_verified_at.is_not(None))
+        .values(photo_verified_at=None)
+    )
+    waiting = (
+        await session.execute(
+            select(PhotoCheck)
+            .where(PhotoCheck.user_id == user_id, PhotoCheck.state == CheckState.pending)
+            .with_for_update()
+        )
+    ).scalar_one_or_none()
+    if waiting is not None and waiting.storage_key is not None:
+        keys = list(photo_keys(waiting.storage_key).values())
+        waiting.state = CheckState.cancelled
+        waiting.storage_key = None
+        await jobs.defer(session, DELETE_OBJECTS, keys=keys)
+        record(session, "photo_check.cancelled", actor=user_id, target_type="photo_check", target_id=waiting.id)
+
+
 async def upload_photo(
-    session: AsyncSession, settings: Settings, storage: ObjectStorage, user_id: uuid.UUID, *, data: bytes, now: datetime
+    session: AsyncSession,
+    settings: Settings,
+    storage: ObjectStorage,
+    jobs: JobQueue,
+    user_id: uuid.UUID,
+    *,
+    data: bytes,
+    now: datetime,
 ) -> Photo:
     await _lock_user(session, user_id)
     existing = await list_photos(session, user_id)
@@ -82,7 +119,7 @@ async def upload_photo(
             min_side=settings.photo_min_side,
         )
     except ImageRejectedError as exc:
-        raise ApiError(422, exc.code, _REJECTION_TEXT.get(exc.code, "That photo can't be used.")) from exc
+        raise rejected_image(exc) from exc
 
     base = new_photo_base()
     keys = photo_keys(base)
@@ -100,6 +137,7 @@ async def upload_photo(
             created_at=now,
         )
         session.add(photo)
+        await _withdraw_tick(session, jobs, user_id)
         await session.commit()
     except BaseException:
         for key in keys.values():

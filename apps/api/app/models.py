@@ -10,6 +10,7 @@ from app.modules.discovery.models import Block, DailyPick, Interaction, Match, P
 from app.modules.media.models import Photo
 from app.modules.messaging.models import MatchRead, Message
 from app.modules.notifications.models import MemberNotice, NotificationPrefs, PushDevice, PushTicket
+from app.modules.photochecks.models import PhotoCheck
 from app.modules.privacy.models import DeletedAccount
 from app.modules.profiles.models import Area, Profile, ProfilePrompt
 from app.modules.safety.models import ModerationAction, Report
@@ -37,6 +38,7 @@ __all__ = [
     "OneTimeCode",
     "PaymentEvent",
     "Photo",
+    "PhotoCheck",
     "PlusPayment",
     "Preferences",
     "Profile",

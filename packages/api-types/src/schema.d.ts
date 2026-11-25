@@ -157,6 +157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/photo-checks/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Selfies waiting for review, oldest first, beside each member's photos (audited) */
+        get: operations["pending_v1_admin_photo_checks_pending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/photo-checks/{check_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve (the blue tick) or reject a photo check; the selfie is deleted either way */
+        post: operations["decide_v1_admin_photo_checks__check_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/photos/pending": {
         parameters: {
             query?: never;
@@ -961,6 +995,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/photo-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The blue tick: where my photo check stands */
+        get: operations["mine_v1_me_photo_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/photo-check/gesture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The gesture to make in the selfie: the same one for 15 minutes */
+        post: operations["gesture_v1_me_photo_check_gesture_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/photo-check/selfie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send the selfie making the gesture (JPEG, PNG or WebP; at most 10 MB) */
+        post: operations["selfie_v1_me_photo_check_selfie_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/photos": {
         parameters: {
             query?: never;
@@ -1582,6 +1667,30 @@ export interface components {
              */
             next: "verify" | "enroll";
         };
+        /** CheckDecisionIn */
+        CheckDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** @description Required to reject; none to approve */
+            reason?: components["schemas"]["RejectReason"] | null;
+        };
+        /** CheckDecisionOut */
+        CheckDecisionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            state: components["schemas"]["CheckState"];
+        };
+        /**
+         * CheckState
+         * @enum {string}
+         */
+        CheckState: "awaiting" | "pending" | "approved" | "rejected" | "cancelled" | "expired";
         /**
          * CheckoutOut
          * @description The subscription to authorise: on Razorpay's own page (`checkout_url`), or in Checkout with the key.
@@ -1655,6 +1764,11 @@ export interface components {
              */
             identities: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
+            /**
+             * Photo Verified
+             * @description The blue tick: our team compared a selfie with these photos (D164)
+             */
+            photo_verified: boolean;
             /** Photos */
             photos: components["schemas"]["PhotoOut"][];
             /** Prompts */
@@ -1727,6 +1841,11 @@ export interface components {
          * @enum {string}
          */
         Gender: "woman" | "man" | "nonbinary";
+        /**
+         * Gesture
+         * @enum {string}
+         */
+        Gesture: "thumbs_up" | "two_fingers" | "three_fingers" | "open_palm" | "hand_on_head" | "chin_on_hand";
         /** GoogleCompleteIn */
         GoogleCompleteIn: {
             /**
@@ -2151,6 +2270,11 @@ export interface components {
             intent: components["schemas"]["Intent"];
             /** Interested In */
             interested_in: components["schemas"]["Gender"][];
+            /**
+             * Photo Verified
+             * @description The blue tick: our team compared a selfie with these photos (D164)
+             */
+            photo_verified: boolean;
             /** Photos */
             photos: components["schemas"]["PhotoOut"][];
             /** Prompts */
@@ -2215,6 +2339,41 @@ export interface components {
             /** New Password */
             new_password: string;
         };
+        /**
+         * PendingCheckOut
+         * @description A selfie waiting for review, beside every photo of the member's (staff only, audited).
+         */
+        PendingCheckOut: {
+            /** Display Name */
+            display_name: string | null;
+            gesture: components["schemas"]["Gesture"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Photos
+             * @description The member's photos in order, pending ones included
+             */
+            photos: components["schemas"]["PhotoOut"][];
+            selfie: components["schemas"]["PhotoUrls"];
+            /**
+             * Selfie Expires At
+             * Format: date-time
+             */
+            selfie_expires_at: string;
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
         /** PendingPhoto */
         PendingPhoto: {
             /** Display Name */
@@ -2243,6 +2402,32 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /**
+         * PhotoCheckOut
+         * @description The blue tick, as its member sees it (D164).
+         */
+        PhotoCheckOut: {
+            /**
+             * Expires At
+             * @description When the gesture's time runs out, while awaiting
+             */
+            expires_at: string | null;
+            /** @description The gesture to make in the selfie, while awaiting */
+            gesture: components["schemas"]["Gesture"] | null;
+            /** @description Why the last check failed, when rejected */
+            reason: components["schemas"]["RejectReason"] | null;
+            /**
+             * State
+             * @description none; awaiting (a gesture to make); pending (our team is looking); verified (the tick); rejected (the last check failed); removed (the tick went when a photo was added)
+             * @enum {string}
+             */
+            state: "none" | "awaiting" | "pending" | "verified" | "rejected" | "removed";
+            /**
+             * Verified At
+             * @description When our team approved it, while verified
+             */
+            verified_at: string | null;
         };
         /** PhotoDecisionIn */
         PhotoDecisionIn: {
@@ -2519,6 +2704,11 @@ export interface components {
              */
             identities: components["schemas"]["Identity"][];
             intent: components["schemas"]["Intent"];
+            /**
+             * Photo Verified
+             * @description The blue tick: our team compared a selfie with these photos (D164)
+             */
+            photo_verified: boolean;
             /** Photos */
             photos: components["schemas"]["PhotoOut"][];
             /** Prompts */
@@ -2631,6 +2821,11 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * RejectReason
+         * @enum {string}
+         */
+        RejectReason: "face_mismatch" | "gesture_missing" | "unclear";
         /** ReportActionIn */
         ReportActionIn: {
             /**
@@ -3555,6 +3750,126 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    pending_v1_admin_photo_checks_pending_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingCheckOut"][];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    decide_v1_admin_photo_checks__check_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                check_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckDecisionOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not allowed (see `code`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
                 };
             };
         };
@@ -6574,6 +6889,169 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    mine_v1_me_photo_check_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoCheckOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+        };
+    };
+    gesture_v1_me_photo_check_gesture_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoCheckOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    selfie_v1_me_photo_check_selfie_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["PhotoUploadForm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoCheckOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Request body too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

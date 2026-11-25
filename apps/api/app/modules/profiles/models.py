@@ -110,6 +110,8 @@ class Profile(CreatedAtMixin, Base):
     display_name: Mapped[str] = mapped_column(String(40))
     gender: Mapped[Gender] = mapped_column(_enum(Gender, "gender"))
     interested_in: Mapped[list[str]] = mapped_column(ARRAY(String(16)))
+    # The blue tick (D164): set only by our staff approving a photo check; cleared by a new photo.
+    photo_verified_at: Mapped[datetime | None]
     # Optional LGBTQ+ labels, shown on the profile (D160); empty unless the member adds them.
     identities: Mapped[list[str]] = mapped_column(ARRAY(String(16)), server_default=text("'{}'"))
     intent: Mapped[Intent] = mapped_column(_enum(Intent, "intent"))

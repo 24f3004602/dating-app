@@ -158,6 +158,7 @@ class MyProfileOut(ApiModel):
     gender: Gender
     interested_in: list[Gender]
     identities: list[Identity]
+    photo_verified: bool = Field(description="The blue tick: our team compared a selfie with these photos (D164)")
     intent: Intent
     bio: str | None
     area: AreaOut
@@ -176,6 +177,7 @@ class PublicProfileOut(ApiModel):
     age: int
     gender: Gender
     identities: list[Identity] = Field(description="Only the labels the member chose to add (D160)")
+    photo_verified: bool = Field(description="The blue tick: our team compared a selfie with these photos (D164)")
     intent: Intent
     bio: str | None
     area: AreaOut

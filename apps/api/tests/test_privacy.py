@@ -659,5 +659,6 @@ def test_the_privacy_jobs_are_scheduled() -> None:
         "privacy:remove_old_jobs": "15 21 * * *",
         "notify:check_receipts": "*/15 * * * *",  # stage 16
         "notify:document_and_rule_notices": "30 3 * * *",  # stage 28f, D159: 09:00 in India
+        "photochecks:expire": "47 * * * *",  # stage 29b, D164
     }
     assert timedelta(days=7) == retention.ACCOUNT_GRACE

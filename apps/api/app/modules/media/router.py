@@ -41,7 +41,9 @@ async def upload(
 ) -> PhotoOut:
     await ctx.limiter.hit(service.UPLOAD_LIMIT, str(auth.user.id))
     data = await form.file.read(ctx.settings.photo_max_bytes + 1)
-    photo = await service.upload_photo(db, ctx.settings, _storage(request), auth.user.id, data=data, now=ctx.clock())
+    photo = await service.upload_photo(
+        db, ctx.settings, _storage(request), ctx.jobs, auth.user.id, data=data, now=ctx.clock()
+    )
     return service.photo_out(photo, _storage(request), ctx.clock())
 
 

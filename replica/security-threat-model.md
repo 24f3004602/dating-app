@@ -85,3 +85,5 @@ replica-backend's security checklist (D041).
    is needed for reports. We disclose this and never claim otherwise.
 4. **Legal review.** DPDP, the IT Rules 2021 grievance duties, and the
    app-store dating-app rules need a lawyer's review before launch.
+| T44 | A blue tick on someone else's photos (D164): an old or stolen photo sent as the selfie, a gesture re-rolled to match one, a photo swapped in after the check, staff approving their own, a tick set any other way | the gesture is chosen by the server and fixed for 15 minutes; a selfie only while it runs; staff compare it with every photo, pending ones included; a new photo clears the tick and withdraws a waiting selfie, under the same lock as the decision; never one's own check; only the decision's code sets the tick; the label says what was checked | PHOTO-CHECK-1..4 (29b-1) | built; not released |
+| T45 | A selfie leaks or outlives its purpose (D164) | private storage with random keys, links valid for minutes, staff only, every view audited; deleted at the decision, after 14 days undecided, and with the account; no face measured or kept | PHOTO-CHECK-1, PHOTO-CHECK-5 | built; not released |
