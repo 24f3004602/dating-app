@@ -157,6 +157,22 @@ Evidence: `git status` showed the list changed with no edit; the first run 41 of
 Suspected cause: confirmed (the test ran `devanagari-text.mjs`, which wrote into `scripts/`).
 Status: fixed. The script takes an output folder; the test regenerates into a temporary one and compares, so a stale list fails on every run (checked: two runs on the old list both fail and leave it untouched). Harmless this time: the committed subsets (13 Nov) already hold ध, from Hindi lines since removed; rebuilt from their own characters they match byte for byte (the source is now pinned in `build_fonts.py`). Still open: the tests check the list, not the font files.
 
+### BUG-010: the Plus pass screen's test read a line before its query had answered
+
+- Severity: S4 (a test only; the screen is right)
+- Flow / case: PLUS-APP-1 (`apps/mobile/src/screens/plan.test.tsx`)
+- Screen: Plus (the pass)
+- Build: up to `7471042`  Browser / device: GitHub Actions (mobile 45529108937, Jest)
+
+Steps
+1. Run the app's Jest suite on a busy CI runner.
+
+Expected: PLUS-APP-1 passes every time.
+Actual: once in three runs that day it failed: "Unable to find an element with text: One payment by UPI, with no auto-renewal..." (250 of 251 passed; the e2e job was skipped because of it).
+Evidence: the CI log of mobile 45529108937; the same test passed on `1a25f3d` and `64c34d7`, and the commit changed no app code.
+Suspected cause: confirmed. The price heading comes with the plan query; the pass section, with that line, shows a loader until the member's own payment query answers. The test waited for the price, then looked for the line at once.
+Status: fixed. The test waits for the line too (`findByText`); no other test in the file reads the section before waiting for it.
+
 ## To check
 
 - **A dev-only "NAVIGATE … was not handled by any navigator" console error** (2026-11-11, Expo Go 58.0.5 on the owner's Pixel 8 Pro). It appeared once, when an `exp://…/--/discover` link was sent to an app still running a bundle from a dev server that had just been stopped. The app still opened on Today. Not reproduced on a cold start with the same link. Check in a development build: open a deep link (a notification, a reset email) while the app is starting.

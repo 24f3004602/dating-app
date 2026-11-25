@@ -145,7 +145,8 @@ test("PLUS-APP-1: pay by UPI, then send the payment's reference for an admin to 
   });
   await renderWithApp(<SignedIn><PlanScreen canPay /></SignedIn>, api);
   expect(await screen.findByText("₹299 for 30 days")).toBeTruthy();
-  expect(screen.getByText(t.plan.passWhat)).toBeTruthy();
+  // The price comes with the plan; this line waits for the member's own payment query (BUG-010).
+  expect(await screen.findByText(t.plan.passWhat)).toBeTruthy();
   expect(screen.queryByText(fill(t.plan.renews, { period: "month" }))).toBeNull(); // a pass never renews
   await fireEvent.press(screen.getByRole("button", { name: fill(t.plan.pay, { price: "₹299" }) }));
 
