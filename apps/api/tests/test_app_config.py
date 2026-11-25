@@ -59,6 +59,7 @@ BETA = {
     "PRIVACY_VERSION": "beta-2026-11-20",
     "CORS_ORIGINS": ["https://app.example.in"],
     "SITE_URL": "https://example.in",
+    "MODERATION_ALERT_EMAIL": "moderation@example.in",
 }
 
 
@@ -96,6 +97,9 @@ def test_a_beta_server_may_sell_the_upi_pass_with_the_owners_go() -> None:
         ({"CORS_ORIGINS": ["http://app.example.in"]}, "CORS origins must be https in beta"),
         ({"SITE_URL": "http://example.in"}, "SITE_URL must be https in beta"),
         ({"LOG_LEVEL": "DEBUG"}, "DEBUG logging is not allowed in beta"),
+        # D157: urgent reports (the IT Rules' two-hour kind) must reach someone at once.
+        ({"MODERATION_ALERT_EMAIL": None}, "MODERATION_ALERT_EMAIL is required in beta"),
+        ({"MODERATION_ALERT_EMAIL": "  "}, "MODERATION_ALERT_EMAIL is required in beta"),
     ],
 )
 def test_a_beta_server_keeps_every_other_production_rule(change: dict[str, object], problem: str) -> None:

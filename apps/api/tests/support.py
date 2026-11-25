@@ -16,7 +16,9 @@ from app.modules.auth import service
 from app.modules.auth.models import CodePurpose
 from app.modules.billing import service as billing
 from app.modules.media import service as media_service
+from app.modules.moderation import service as moderation
 from app.modules.notifications import service as notify
+from app.modules.safety.service import ALERT_URGENT
 from app.modules.waitlist import service as waitlist
 from app.providers.email import EmailMessage, MemoryEmailSender
 from app.providers.payments import FakePayments
@@ -110,6 +112,8 @@ class JobRunner:
                     await service.send_notice(
                         s, self.settings, self.mail, uuid.UUID(args["user_id"]), service.Notice(args["kind"])
                     )
+                elif name == ALERT_URGENT:
+                    await moderation.alert_urgent(s, self.settings, self.mail, now=self.clock())
                 else:
                     raise AssertionError(f"unexpected job {name}")
             async with self.db() as s:

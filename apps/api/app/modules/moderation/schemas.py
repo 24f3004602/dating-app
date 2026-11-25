@@ -78,6 +78,10 @@ class ReportDetail(ApiModel):
     evidence_text: str | None = Field(description="A copy of the reported message: the only message text staff see")
     message_removed: bool
     photo: PhotoOut | None
+    photo_held: bool = Field(
+        description="The photo is held, hidden from members, until you decide (D157): removing it rejects it, "
+        "dismissing the report gives it back"
+    )
     call_started_at: datetime | None = Field(description="For a report from a Live call, if its record is kept")
     call_seconds: int | None = Field(description="How long that call ran once connected")
     subject: SubjectDetail | None
@@ -93,6 +97,7 @@ class PendingPhoto(ApiModel):
     user_id: uuid.UUID
     display_name: str | None
     photo: PhotoOut
+    held: bool = Field(description="Held after a report of sexual content or impersonation (D157): decide it first")
 
 
 class PhotoDecisionIn(ApiModel):

@@ -16,6 +16,12 @@ Effects: suspending or banning revokes every session (and closes realtime
 connections); a ban also closes the person's open matches. A removed
 message stays stored but shows as removed; a removed photo is rejected
 (hidden from everyone but its owner).
+
+Held photos (stage 28e, D157): a report of sexual content or impersonation
+holds the photo it names (safety.service). Removing the photo rejects it;
+dismissing the report gives it back, unless another open report of that kind
+still holds it; any other action leaves it held, first in the photo queue,
+where approving or rejecting it ends the hold.
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ from app.modules.matching.service import close_all_open_matches
 from app.modules.media.models import ModerationState, Photo
 from app.modules.media.service import list_photos, photo_out
 from app.modules.messaging.models import Message
+from app.modules.moderation import emails
 from app.modules.moderation.schemas import (
     ActionOut,
     AuditEntryOut,
@@ -53,8 +60,9 @@ from app.modules.notifications.models import NoticeKind
 from app.modules.notifications.service import add_notice
 from app.modules.profiles.models import Profile
 from app.modules.profiles.service import prompt_answers
-from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportStatus
-from app.modules.safety.service import report_about
+from app.modules.safety.models import ActionKind, ModerationAction, Report, ReportReason, ReportStatus
+from app.modules.safety.service import HOLD_REASONS, URGENT_REASONS, report_about
+from app.providers.email import EmailSender
 from app.providers.storage import ObjectStorage
 
 ACTIVE = (ReportStatus.open, ReportStatus.in_review)
@@ -111,6 +119,30 @@ async def _guard_report(session: AsyncSession, staff: User, r: Report) -> None:
 async def _open_reports_on(session: AsyncSession, user_id: uuid.UUID) -> int:
     stmt = select(func.count()).select_from(Report).where(Report.subject_id == user_id, Report.status.in_(ACTIVE))
     return int((await session.execute(stmt)).scalar_one())
+
+
+async def _release_hold(session: AsyncSession, photo_id: uuid.UUID, report_id: uuid.UUID, now: datetime) -> bool:
+    """A dismissed report gives back the photo it held (D157), unless another open report of the
+    holding kind still names it. A photo nobody held (a new one waiting for review) never moves."""
+    photo = (await session.execute(select(Photo).where(Photo.id == photo_id).with_for_update())).scalar_one_or_none()
+    if photo is None or photo.held_at is None:
+        return False
+    others = (
+        select(func.count())
+        .select_from(Report)
+        .where(
+            Report.photo_id == photo_id,
+            Report.id != report_id,
+            Report.status.in_(ACTIVE),
+            Report.reason.in_(HOLD_REASONS),
+        )
+    )
+    if int((await session.execute(others)).scalar_one()):
+        return False
+    photo.moderation_state = ModerationState.approved
+    photo.held_at = None
+    photo.reviewed_at = now
+    return True
 
 
 async def queue(session: AsyncSession, staff: User, status: ReportStatus | None, limit: int) -> list[QueueItem]:
@@ -219,6 +251,7 @@ async def report_detail(
         evidence_text=r.evidence_text,
         message_removed=bool(message and message.removed_at),
         photo=photo_out(photo, storage, now) if photo else None,
+        photo_held=bool(photo and photo.held_at),
         call_started_at=call.created_at if call else None,
         call_seconds=round(ran.total_seconds()) if ran is not None else None,
         subject=await _subject_detail(session, settings, storage, r.subject_id, now) if r.subject_id else None,
@@ -267,12 +300,15 @@ async def act_on_report(
                 raise ApiError(409, "nothing_to_remove", "There is no photo to remove.")
             photo.moderation_state = ModerationState.rejected
             photo.reviewed_at = now
+            photo.held_at = None
         elif action in (ActionKind.suspend, ActionKind.ban):
             await _apply_account(session, target, action, now, effects)
         elif action is ActionKind.warn:
             # Delivered in the app whether or not push works (stage 16, D093).
             add_notice(session, target.id, NoticeKind.warning, now)
             effects.noticed.append(target.id)
+    elif r.photo_id is not None and await _release_hold(session, r.photo_id, r.id, now):
+        record(session, "photo.released", actor=staff.id, target_type="photo", target_id=r.photo_id, report=str(r.id))
     row = ModerationAction(
         moderator_id=staff.id,
         target_user_id=r.subject_id,
@@ -317,13 +353,17 @@ async def pending_photos(
             select(Photo, Profile.display_name)
             .outerjoin(Profile, Profile.user_id == Photo.user_id)
             .where(Photo.moderation_state == ModerationState.pending)
-            .order_by(Photo.created_at, Photo.id)
+            # Held photos first (D157): a report's two hours are running.
+            .order_by(Photo.held_at.is_(None), Photo.held_at, Photo.created_at, Photo.id)
             .limit(limit)
         )
     ).all()
     record(session, "admin.photos_viewed", actor=staff.id, count=len(rows))
     await session.commit()
-    return [PendingPhoto(user_id=p.user_id, display_name=name, photo=photo_out(p, storage, now)) for p, name in rows]
+    return [
+        PendingPhoto(user_id=p.user_id, display_name=name, photo=photo_out(p, storage, now), held=p.held_at is not None)
+        for p, name in rows
+    ]
 
 
 async def decide_photo(
@@ -336,6 +376,7 @@ async def decide_photo(
         raise ApiError(409, "own_account", "Staff can't review their own photos.")
     photo.moderation_state = ModerationState.approved if approve else ModerationState.rejected
     photo.reviewed_at = now
+    photo.held_at = None  # a decision ends a hold (D157)
     kind = ActionKind.approve_photo if approve else ActionKind.reject_photo
     row = ModerationAction(
         moderator_id=staff.id, target_user_id=photo.user_id, photo_id=photo.id, action=kind, note=note, created_at=now
@@ -364,3 +405,31 @@ async def audit_entries(session: AsyncSession, staff: User, limit: int) -> list[
         )
         for a in rows
     ]
+
+
+async def alert_urgent(session: AsyncSession, settings: Settings, sender: EmailSender, *, now: datetime) -> int:
+    """Email the operator how many urgent reports nobody has opened yet (D157); 0 sends nothing.
+    A report a moderator has opened is in hand, so it no longer counts."""
+    to = (settings.moderation_alert_email or "").strip()
+    rows = (
+        await session.execute(
+            select(Report.reason, func.count(), func.min(Report.created_at))
+            .where(Report.status == ReportStatus.open, Report.reason.in_(URGENT_REASONS))
+            .group_by(Report.reason)
+        )
+    ).all()
+    counts: dict[ReportReason, int] = {reason: int(n) for reason, n, _ in rows}
+    if not to or not counts:
+        return 0
+    oldest = min(first for _, _, first in rows)
+    message = emails.urgent_reports(
+        to,
+        brand=settings.brand_name,
+        site_url=settings.site_url,
+        counts=counts,
+        oldest=oldest,
+        now=now,
+        tz=settings.app_timezone,
+    )
+    await sender.send(message)
+    return sum(counts.values())

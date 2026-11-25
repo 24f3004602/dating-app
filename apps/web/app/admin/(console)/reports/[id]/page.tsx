@@ -23,6 +23,7 @@ type Detail = {
   evidence_text: string | null;
   message_removed: boolean;
   photo: Photo | null;
+  photo_held: boolean;
   subject: {
     user_id: string;
     display_name: string | null;
@@ -104,6 +105,12 @@ export default async function ReportPage({
         <>
           <h2>The reported photo</h2>
           <img src={photoUrl(r.photo)} alt="The reported photo" width={128} height={128} />
+          {r.photo_held ? (
+            <p className="caption">
+              Hidden from members since this report, for the IT Rules&apos; two hours: <strong>Remove the photo</strong>{" "}
+              rejects it, <strong>Dismiss</strong> gives it back.
+            </p>
+          ) : null}
         </>
       ) : null}
 

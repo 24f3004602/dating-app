@@ -127,8 +127,13 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   // The queue, and the report.
   await expect(page.getByRole("heading", { name: "Reports", level: 1 })).toBeVisible();
   await checkA11y(page, "console-queue");
+  // The report holds the photo it names (D157): first in the photo queue, marked.
+  await page.getByRole("link", { name: "Photos" }).click();
+  await expect(page.getByText("Reported: hidden until you decide")).toHaveCount(1);
+  await page.getByRole("link", { name: "Reports" }).click();
   await page.getByRole("link", { name: "Fake profile" }).first().click();
   await expect(page.getByText("E2E test report between two labelled fixtures.")).toBeVisible();
+  await expect(page.getByText(/^Hidden from members since this report/)).toBeVisible();
   await checkA11y(page, "console-report");
   await page.screenshot({ path: "test-results/console-report.png", fullPage: true }); // for review
   await page.getByLabel("Action").selectOption("dismiss");
@@ -140,6 +145,7 @@ test("staff sign in with a second factor and work the queue", async ({ page, con
   // Photos, the audit log and staff (admin pages).
   await page.getByRole("link", { name: "Photos" }).click();
   await expect(page.getByRole("heading", { name: "Photo review", level: 1 })).toBeVisible();
+  await expect(page.getByText("Reported: hidden until you decide")).toHaveCount(0); // dismissing gave it back
   await checkA11y(page, "console-photos");
   // A Plus pass payment (D127): an admin checks it against the bank and approves it.
   await page.getByRole("link", { name: "Payments" }).click();

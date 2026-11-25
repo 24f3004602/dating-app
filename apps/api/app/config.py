@@ -107,6 +107,9 @@ class Settings(BaseSettings):
     smtp_username: str | None = Field(default=None, max_length=254)
     smtp_password: SecretStr | None = None
     smtp_timeout_s: float = Field(default=15.0, gt=0, le=120)
+    # Who hears at once about an urgent report (stage 28e, D157): a possible minor, sexual
+    # content or impersonation, for the IT Rules' two-hour limit. Required on a server.
+    moderation_alert_email: str | None = Field(default=None, max_length=254)
 
     # Invite-only sign-up (stage 18, D096): only emails on the invite list can
     # create an account. Required in beta. Invites expire after this many days.
@@ -299,6 +302,10 @@ class Settings(BaseSettings):
             (self.log_level == "DEBUG", f"DEBUG logging is not allowed in {env}"),
             (self.password_hash_profile == "test", f"the test password-hash profile is not allowed in {env}"),  # noqa: S105
             (self.email_backend in {"console", "memory"}, f"a real email backend is required in {env}"),
+            (
+                not (self.moderation_alert_email or "").strip(),
+                f"MODERATION_ALERT_EMAIL is required in {env}: urgent reports must reach someone at once",
+            ),
             # The beta may keep photos on the server's own disk; production needs the bucket.
             (
                 self.storage_backend == "memory" or (self.storage_backend == "local" and env == "production"),

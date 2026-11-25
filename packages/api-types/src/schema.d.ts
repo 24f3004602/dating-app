@@ -2134,6 +2134,11 @@ export interface components {
         PendingPhoto: {
             /** Display Name */
             display_name: string | null;
+            /**
+             * Held
+             * @description Held after a report of sexual content or impersonation (D157): decide it first
+             */
+            held: boolean;
             photo: components["schemas"]["PhotoOut"];
             /**
              * User Id
@@ -2583,6 +2588,11 @@ export interface components {
             /** Message Removed */
             message_removed: boolean;
             photo: components["schemas"]["PhotoOut"] | null;
+            /**
+             * Photo Held
+             * @description The photo is held, hidden from members, until you decide (D157): removing it rejects it, dismissing the report gives it back
+             */
+            photo_held: boolean;
             /** Priority */
             priority: number;
             reason: components["schemas"]["ReportReason"];

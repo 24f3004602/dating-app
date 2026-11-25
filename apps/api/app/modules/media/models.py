@@ -33,6 +33,7 @@ class Photo(CreatedAtMixin, Base):
         UniqueConstraint("user_id", "position", deferrable=True, initially="IMMEDIATE"),
         CheckConstraint("position BETWEEN 0 AND 5", name="position_range"),
         CheckConstraint("octet_length(sha256) = 32", name="sha256_length"),
+        CheckConstraint("held_at IS NULL OR moderation_state = 'pending'", name="held_pending"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
@@ -55,3 +56,6 @@ class Photo(CreatedAtMixin, Base):
         server_default=ModerationState.pending.value,
     )
     reviewed_at: Mapped[datetime | None]
+    # Held after a report of sexual content or impersonation (stage 28e, D157): pending again,
+    # so hidden from everyone but its owner, until staff decide. Cleared by every decision.
+    held_at: Mapped[datetime | None]

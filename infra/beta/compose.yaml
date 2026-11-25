@@ -46,6 +46,9 @@ x-app-env: &app-env
   SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
   SMTP_USERNAME: ${SMTP_USERNAME:?set the Gmail address in .env}
   SMTP_PASSWORD: ${SMTP_PASSWORD:?set the Gmail app password in .env}
+  # Urgent reports reach the operator at once (D157; the IT Rules' two hours): the address
+  # the website already names, which the owner reads on the phone.
+  MODERATION_ALERT_EMAIL: ${CONTACT_EMAIL:?set CONTACT_EMAIL in .env}
   STORAGE_BACKEND: local
   PUSH_BACKEND: ${PUSH_BACKEND:-none}
   EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}

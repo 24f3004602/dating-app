@@ -18,6 +18,12 @@ way, matched, met in a Live call, or blocked by the reporter), which keeps
 strangers from mass-reporting arbitrary accounts. A reported message is copied
 into the report: that copy is the only message text staff see. A report from a
 call holds the reported member out of Live until staff decide (D123).
+
+The IT Rules' two hours (rule 3(2)(b); stage 28e, D157): a report of sexual
+content or impersonation that names a photo holds that photo at once, pending
+again so only its owner sees it, until staff decide. Urgent reports (those two
+kinds and a possible minor) queue an alert to the operator: one waits at a time,
+and it counts every urgent report still unopened when it runs.
 """
 
 from __future__ import annotations
@@ -25,17 +31,19 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from procrastinate.exceptions import AlreadyEnqueued
 from sqlalchemy import and_, delete, exists, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import ApiError
+from app.jobs import JobQueue
 from app.modules.accounts.models import User
 from app.modules.audit.service import record
 from app.modules.calls.service import call_between, called_together
 from app.modules.discovery.models import Block, DailyPick, Interaction, Match, MatchCloseReason
 from app.modules.matching.service import close_open_match, ordered, pair_lock_key
-from app.modules.media.models import Photo
+from app.modules.media.models import ModerationState, Photo
 from app.modules.messaging.models import Message
 from app.modules.profiles.models import Profile
 from app.modules.safety.models import Report, ReportReason, ReportStatus
@@ -55,6 +63,22 @@ PRIORITY = {
     ReportReason.fake: 3,
     ReportReason.other: 3,
 }
+
+# The IT Rules' two-hour kind (rule 3(2)(b)): a reported photo is held at once (D157).
+HOLD_REASONS = frozenset({ReportReason.explicit, ReportReason.fake})
+# Reports the operator hears about at once: those, and a possible minor (D157).
+URGENT_REASONS = frozenset({ReportReason.underage, ReportReason.explicit, ReportReason.fake})
+ALERT_URGENT = "moderation:alert_urgent"
+
+
+async def queue_urgent_alert(session: AsyncSession, jobs: JobQueue) -> None:
+    """One alert waits at a time (the task's queueing lock); the one waiting counts this report too.
+    In a savepoint: the lock's refusal is a database error, and must not end the report's transaction."""
+    try:
+        async with session.begin_nested():
+            await jobs.defer(session, ALERT_URGENT)
+    except AlreadyEnqueued:
+        pass
 
 
 async def _block(session: AsyncSession, me: uuid.UUID, target: uuid.UUID, now: datetime) -> Match | None:
@@ -141,7 +165,9 @@ async def _connected(session: AsyncSession, me: uuid.UUID, other: uuid.UUID) -> 
     return bool((await session.execute(select(or_(*checks)))).scalar_one())
 
 
-async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: datetime) -> tuple[ReportOut, Match | None]:
+async def report(
+    session: AsyncSession, me: uuid.UUID, data: ReportIn, now: datetime, *, jobs: JobQueue
+) -> tuple[ReportOut, Match | None]:
     """Returns the report and the match a block closed, if any."""
     if data.subject_id == me:
         raise ApiError(422, "invalid_target", "You can't report yourself.")
@@ -166,8 +192,12 @@ async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: date
         if msg is None:
             raise ApiError(422, "invalid_report_item", "Choose one of their messages to you.")
         evidence = msg.body
+    photo = None
     if data.photo_id is not None:
-        photo = await session.get(Photo, data.photo_id)
+        # Locked, as a moderator's decision on it is: a hold and a decision never cross.
+        photo = (
+            await session.execute(select(Photo).where(Photo.id == data.photo_id).with_for_update())
+        ).scalar_one_or_none()
         if photo is None or photo.user_id != data.subject_id:
             raise ApiError(422, "invalid_report_item", "Choose one of their photos.")
     if data.call_id is not None and not await call_between(session, data.call_id, me, data.subject_id):
@@ -189,6 +219,14 @@ async def report(session: AsyncSession, me: uuid.UUID, data: ReportIn, now: date
     session.add(row)
     await session.flush()
     record(session, "report.created", actor=me, target_type="report", target_id=row.id, reason=data.reason.value)
+    if photo is not None and data.reason in HOLD_REASONS and photo.moderation_state is ModerationState.approved:
+        # Hidden from everyone but its owner until staff decide (D157); signed links already
+        # handed out expire within MEDIA_URL_TTL_S, and every new request checks the state.
+        photo.moderation_state = ModerationState.pending
+        photo.held_at = now
+        record(session, "photo.held", actor=None, target_type="photo", target_id=photo.id, report=str(row.id))
+    if data.reason in URGENT_REASONS:
+        await queue_urgent_alert(session, jobs)
     closed = await _block(session, me, data.subject_id, now) if data.block else None
     await session.commit()
     name = await session.scalar(select(Profile.display_name).where(Profile.user_id == data.subject_id))

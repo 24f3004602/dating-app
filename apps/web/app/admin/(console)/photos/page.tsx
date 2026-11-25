@@ -10,7 +10,13 @@ import { DONE, first } from "../labels";
 
 export const metadata: Metadata = { title: "Photo review" };
 
-type Pending = { user_id: string; display_name: string | null; photo: { id: string; urls: { small: string; large: string } } };
+type Pending = {
+  user_id: string;
+  display_name: string | null;
+  photo: { id: string; urls: { small: string; large: string } };
+  /** Held after a report of sexual content or impersonation (D157): first, and the IT Rules' two hours are running. */
+  held: boolean;
+};
 
 export default async function Photos({ searchParams }: { searchParams: Promise<Record<string, string | string[]>> }) {
   const { token } = await requireStaff();
@@ -22,7 +28,9 @@ export default async function Photos({ searchParams }: { searchParams: Promise<R
     <>
       <h1>Photo review</h1>
       <p className="muted">
-        New photos stay hidden from other members until they&apos;re approved. Oldest first. You can&apos;t review your own.
+        New photos stay hidden from other members until they&apos;re approved. Reported photos first (hidden after a
+        report of sexual content or impersonation: decide within two hours), then the oldest. You can&apos;t review
+        your own.
       </p>
       {done ? (
         <p className="notice success" role="status">
@@ -40,6 +48,7 @@ export default async function Photos({ searchParams }: { searchParams: Promise<R
           {pending.data.map((p) => (
             <li key={p.photo.id}>
               <img src={`${API_PUBLIC_URL}${p.photo.urls.small}`} alt={`Photo from ${p.display_name ?? "a member"}`} width={128} height={128} />
+              {p.held ? <p className="badge highlight">Reported: hidden until you decide</p> : null}
               <form action={decidePhoto.bind(null, p.photo.id)} className="inline-form">
                 <button className="button secondary" type="submit" name="decision" value="approve" aria-label={`Approve the photo from ${p.display_name ?? "a member"}`}>
                   Approve

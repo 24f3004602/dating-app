@@ -1925,6 +1925,11 @@
             ],
             "title": "Display Name"
           },
+          "held": {
+            "description": "Held after a report of sexual content or impersonation (D157): decide it first",
+            "title": "Held",
+            "type": "boolean"
+          },
           "photo": {
             "$ref": "#/components/schemas/PhotoOut"
           },
@@ -1937,7 +1942,8 @@
         "required": [
           "user_id",
           "display_name",
-          "photo"
+          "photo",
+          "held"
         ],
         "title": "PendingPhoto",
         "type": "object"
@@ -3137,6 +3143,11 @@
               }
             ]
           },
+          "photo_held": {
+            "description": "The photo is held, hidden from members, until you decide (D157): removing it rejects it, dismissing the report gives it back",
+            "title": "Photo Held",
+            "type": "boolean"
+          },
           "priority": {
             "title": "Priority",
             "type": "integer"
@@ -3183,6 +3194,7 @@
           "evidence_text",
           "message_removed",
           "photo",
+          "photo_held",
           "call_started_at",
           "call_seconds",
           "subject",

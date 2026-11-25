@@ -4,6 +4,8 @@ Creates a labelled e2e admin with the password given on the command line (the
 seeded fixtures use an undeliverable domain and can never sign in), issues it
 a one-time enrolment token, files a labelled report between two seeded fixture
 profiles, and a Plus pass payment from a fixture waiting for an admin (D127).
+The report names the subject's first photo and holds it, as the API does for a
+report of impersonation (D157), so the console shows the hold and its release.
 Prints JSON: {"email", "enrollment_token", "report_id", "payment_utr"}.
 
 Refuses any database whose name does not end in `_e2e_test`, and production.
@@ -29,6 +31,7 @@ from app.fixtures import PROFILES
 from app.modules.accounts.models import User, UserRole, UserStatus
 from app.modules.auth.passwords import Passwords
 from app.modules.billing.models import PlusPayment, PlusPaymentStatus
+from app.modules.media.models import ModerationState, Photo
 from app.modules.safety.models import Report, ReportReason, ReportStatus
 from app.modules.staff.service import issue_enrollment
 
@@ -66,9 +69,16 @@ def main() -> int:
                         )
                     )).tuples().all()
                 )  # fmt: skip
+                photo = (
+                    await session.execute(
+                        select(Photo).where(Photo.user_id == ids[subject_email]).order_by(Photo.position).limit(1)
+                    )
+                ).scalar_one()
+                photo.moderation_state, photo.held_at = ModerationState.pending, now  # held (D157)
                 report = Report(
                     reporter_id=ids[reporter_email], subject_id=ids[subject_email], reason=ReportReason.fake,
                     details="E2E test report between two labelled fixtures.", status=ReportStatus.open, priority=3,
+                    photo_id=photo.id,
                 )  # fmt: skip
                 session.add(report)
                 session.add(

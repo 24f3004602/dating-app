@@ -71,7 +71,7 @@ async def unmatch(match_id: uuid.UUID, request: Request, auth: CurrentSession, c
 )
 async def report(body: ReportIn, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> ReportOut:
     await ctx.limiter.hit(service.REPORT_LIMIT, str(auth.user.id))
-    out, closed = await service.report(db, auth.user.id, body, ctx.clock())
+    out, closed = await service.report(db, auth.user.id, body, ctx.clock(), jobs=ctx.jobs)
     await publish_closed(request, closed)
     return out
 
