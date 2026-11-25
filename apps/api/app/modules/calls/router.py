@@ -13,7 +13,18 @@ from fastapi import APIRouter, Request, Response, status
 from app.errors import ApiError
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
 from app.modules.calls import service
-from app.modules.calls.schemas import CallOut, EndIn, IceOut, IceServerOut, LiveOut, QueueIn, QueueOut, RulesIn, SdpIn
+from app.modules.calls.schemas import (
+    CallOut,
+    EndIn,
+    IceOut,
+    IceServerOut,
+    LiveOut,
+    LiveSettingsIn,
+    QueueIn,
+    QueueOut,
+    RulesIn,
+    SdpIn,
+)
 from app.openapi import problems
 from app.providers.ice import IceProvider, IceUnavailableError, NoIce
 from app.realtime import RealtimeHub
@@ -44,6 +55,14 @@ async def live(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSessi
 @router.put("/v1/live/rules", responses=problems(409), summary="Accept the Live rules (the version shown)")
 async def accept_rules(body: RulesIn, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession) -> LiveOut:
     await service.accept_rules(db, auth.user.id, body.version, ctx.clock())
+    return await service.live(db, ctx.settings, auth.user, _available(request), ctx.clock())
+
+
+@router.put("/v1/live/settings", responses=problems(409), summary="Live's settings: LGBTQ+ members only (D161)")
+async def live_settings(
+    body: LiveSettingsIn, request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSession
+) -> LiveOut:
+    await service.update_settings(db, auth.user.id, lgbtq_only=body.lgbtq_only)
     return await service.live(db, ctx.settings, auth.user, _available(request), ctx.clock())
 
 

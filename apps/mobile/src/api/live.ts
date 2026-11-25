@@ -32,6 +32,17 @@ export function useAcceptLiveRules() {
   });
 }
 
+/** Live's LGBTQ+ space (D161). The answer is Live at a glance; a refusal refetches it. */
+export function useLiveSettings() {
+  const { api } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (lgbtqOnly: boolean) => unwrap(api.PUT("/v1/live/settings", { body: { lgbtq_only: lgbtqOnly } })),
+    onSuccess: (live) => qc.setQueryData(liveKeys.live, live),
+    onError: () => qc.invalidateQueries({ queryKey: liveKeys.live }),
+  });
+}
+
 export function usePlan() {
   const { api } = useAuth();
   return useQuery({ queryKey: liveKeys.plan, queryFn: () => unwrap(api.GET("/v1/plan")), staleTime: 10 * 60_000 });

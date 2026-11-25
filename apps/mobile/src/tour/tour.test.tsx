@@ -45,6 +45,7 @@ const me = (joinedDaysAgo: number) => ({
 const LIVE = {
   available: true, call: null, free_call_seconds: 60, free_calls: 5, free_calls_left: 5, plan: false,
   plan_call_seconds: 600, ready: "rules", rules_accepted: false, rules_version: "live-1", waiting: false,
+  lgbtq_labels: false, lgbtq_only: false,
 };  // prettier-ignore
 
 function server({ joinedDaysAgo = 0, live = LIVE as object | null } = {}) {

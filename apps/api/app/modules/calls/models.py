@@ -57,6 +57,9 @@ class CallMember(Base):
     rules_version: Mapped[str] = mapped_column(String(16))
     rules_accepted_at: Mapped[datetime]
     free_calls_used: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
+    # In Live's LGBTQ+ space (D161): paired only with others who chose it. It applies while
+    # the member's own profile has an LGBTQ+ label.
+    lgbtq_only: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
 
 
 class CallQueueEntry(Base):

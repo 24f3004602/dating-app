@@ -1453,6 +1453,16 @@
             "title": "Free Calls Left",
             "type": "integer"
           },
+          "lgbtq_labels": {
+            "description": "Your profile has an LGBTQ+ label, so you can choose lgbtq_only (D161)",
+            "title": "Lgbtq Labels",
+            "type": "boolean"
+          },
+          "lgbtq_only": {
+            "description": "In Live's LGBTQ+ space: paired only with members who chose it too (while you have a label)",
+            "title": "Lgbtq Only",
+            "type": "boolean"
+          },
           "plan": {
             "description": "The plan is active: calls aren't counted",
             "title": "Plan",
@@ -1500,9 +1510,26 @@
           "plan",
           "plan_call_seconds",
           "waiting",
-          "call"
+          "call",
+          "lgbtq_labels",
+          "lgbtq_only"
         ],
         "title": "LiveOut",
+        "type": "object"
+      },
+      "LiveSettingsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "lgbtq_only": {
+            "description": "Join Live's LGBTQ+ space: be paired only with others in it (D161)",
+            "title": "Lgbtq Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "lgbtq_only"
+        ],
+        "title": "LiveSettingsIn",
         "type": "object"
       },
       "LoginIn": {
@@ -7744,6 +7771,77 @@
           }
         },
         "summary": "Accept the Live rules (the version shown)",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/v1/live/settings": {
+      "put": {
+        "operationId": "live_settings_v1_live_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not signed in, or bad credentials"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Error"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            },
+            "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
+          }
+        },
+        "summary": "Live's settings: LGBTQ+ members only (D161)",
         "tags": [
           "live"
         ]

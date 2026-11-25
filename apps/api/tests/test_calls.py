@@ -27,6 +27,7 @@ from app.modules.calls.sdp import InvalidSdpError, clean_sdp
 from app.modules.calls.service import RULES_VERSION
 from app.modules.discovery.models import Block, Match, Preferences
 from app.modules.privacy import service as privacy
+from app.modules.profiles.models import Profile
 from app.providers.ice import CloudflareIce, DirectIce, IceServer, IceUnavailableError, NoIce
 from tests.chat import Db
 from tests.conftest import committed_app, scratch_database
@@ -281,7 +282,7 @@ async def test_live_screen_and_what_stands_in_the_way(app: FastAPI, client: Asyn
     assert body | {"call": None} == {
         "available": True, "ready": "rules", "rules_version": RULES_VERSION, "rules_accepted": False,
         "free_calls": 5, "free_calls_left": 5, "free_call_seconds": 60, "plan": False, "plan_call_seconds": 600,
-        "waiting": False, "call": None,
+        "waiting": False, "call": None, "lgbtq_labels": False, "lgbtq_only": False,
     }  # fmt: skip
     assert (await join(client, newcomer)).json()["code"] == "live_rules"
     stale = await client.put("/v1/live/rules", json={"version": "1999-01"}, headers=newcomer.headers)
@@ -372,6 +373,87 @@ async def test_stale_and_ineligible_waiters_are_skipped(
         await s.commit()
     raj = await man(app, db, clock.now)
     assert (await join(client, raj)).json()["state"] == "waiting"
+
+
+async def set_identities(db: Db, who: Member, labels: list[str]) -> None:
+    async with db() as s:
+        profile = await s.get(Profile, who.id)
+        assert profile is not None
+        profile.identities = labels
+        await s.commit()
+
+
+async def lgbtq_only(client: AsyncClient, who: Member, on: bool) -> httpx.Response:
+    return await client.put("/v1/live/settings", json={"lgbtq_only": on}, headers=who.headers)
+
+
+async def test_lgbtq_only_is_a_choice_for_members_with_a_label(
+    app: FastAPI, client: AsyncClient, db: Db, now: datetime
+) -> None:
+    """LIVE-LGBTQ-1 (D161): after the rules; only with a label on your own profile; it applies
+    while the label is there and comes back with it; turning it off always works."""
+    newcomer = await woman(app, db, now, rules=False, identities=("lesbian",))
+    res = await lgbtq_only(client, newcomer, True)
+    assert (res.status_code, res.json()["code"]) == (409, "live_rules")
+
+    plain = await woman(app, db, now)
+    res = await lgbtq_only(client, plain, True)
+    assert (res.status_code, res.json()["code"]) == (409, "live_labels_required")
+    body = (await client.get("/v1/live", headers=plain.headers)).json()
+    assert (body["lgbtq_labels"], body["lgbtq_only"]) == (False, False)
+    assert (await lgbtq_only(client, plain, False)).status_code == 200
+
+    asha = await woman(app, db, now, interested_in=("woman",), identities=("lesbian",))
+    before = (await client.get("/v1/live", headers=asha.headers)).json()
+    assert (before["lgbtq_labels"], before["lgbtq_only"]) == (True, False)
+    res = await lgbtq_only(client, asha, True)
+    assert res.status_code == 200, res.text
+    assert (res.json()["lgbtq_labels"], res.json()["lgbtq_only"]) == (True, True)
+
+    # Without a label the choice stops applying; with one again, it's back.
+    await set_identities(db, asha, [])
+    assert (await client.get("/v1/live", headers=asha.headers)).json()["lgbtq_only"] is False
+    await set_identities(db, asha, ["queer"])
+    assert (await client.get("/v1/live", headers=asha.headers)).json()["lgbtq_only"] is True
+    assert (await lgbtq_only(client, asha, False)).json()["lgbtq_only"] is False
+
+
+async def test_lgbtq_only_pairs_both_ways(
+    app: FastAPI, client: AsyncClient, db: Db, now: datetime, clock: FrozenClock
+) -> None:
+    """LIVE-LGBTQ-2 (D161): members in the LGBTQ+ space meet only each other; a label alone puts
+    nobody in it, and a choice without a label doesn't apply; everyone else is paired as before
+    (the longest wait first)."""
+
+    async def her(name: str, *labels: str) -> Member:
+        clock.advance(seconds=1)  # one at a time, so "the longest wait" is clear
+        return await woman(app, db, clock.now, interested_in=("woman",), name=name, identities=labels)
+
+    asha = await her("Asha", "lesbian")
+    assert (await lgbtq_only(client, asha, True)).status_code == 200
+    assert (await join(client, asha, "asha-phone")).json()["state"] == "waiting"
+    riya = await her("Riya")  # no label, outside the space: not paired with Asha
+    assert (await join(client, riya, "riya-phone")).json()["state"] == "waiting"
+    assert (await join(client, asha, "asha-phone")).json()["state"] == "waiting"  # nor on Asha's heartbeat
+    zoya = await her("Zoya", "bisexual")  # a label, but she didn't choose the space: paired with Riya
+    res = (await join(client, zoya, "zoya-phone")).json()
+    assert res["state"] == "paired"
+    assert res["call"]["peer"]["display_name"] == "Riya"
+    noor = await her("Noor", "queer")  # she chose it too: paired with Asha
+    assert (await lgbtq_only(client, noor, True)).status_code == 200
+    res = (await join(client, noor, "noor-phone")).json()
+    assert res["state"] == "paired"
+    assert res["call"]["peer"]["display_name"] == "Asha"
+
+    # A choice without a label doesn't apply: Ira took hers off, and is paired as before.
+    tara = await her("Tara")
+    assert (await join(client, tara, "tara-phone")).json()["state"] == "waiting"
+    ira = await her("Ira", "trans")
+    assert (await lgbtq_only(client, ira, True)).status_code == 200
+    await set_identities(db, ira, [])
+    res = (await join(client, ira, "ira-phone")).json()
+    assert res["state"] == "paired"
+    assert res["call"]["peer"]["display_name"] == "Tara"
 
 
 # --- the call's life ----------------------------------------------------------------------
@@ -494,7 +576,7 @@ async def test_the_clock_and_the_allowance(
     assert (await client.get("/v1/live", headers=meera.headers)).json() | {"call": None} == {
         "available": True, "ready": "no_calls_left", "rules_version": RULES_VERSION, "rules_accepted": True,
         "free_calls": 5, "free_calls_left": 0, "free_call_seconds": 60, "plan": False, "plan_call_seconds": 600,
-        "waiting": False, "call": None,
+        "waiting": False, "call": None, "lgbtq_labels": False, "lgbtq_only": False,
     }  # fmt: skip
 
     # With the plan she calls again; with a free caller the call is still a minute,

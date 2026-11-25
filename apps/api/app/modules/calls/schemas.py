@@ -59,10 +59,18 @@ class LiveOut(ApiModel):
     plan_call_seconds: int
     waiting: bool
     call: CallOut | None = Field(description="An open call, on this device or another")
+    lgbtq_labels: bool = Field(description="Your profile has an LGBTQ+ label, so you can choose lgbtq_only (D161)")
+    lgbtq_only: bool = Field(
+        description="In Live's LGBTQ+ space: paired only with members who chose it too (while you have a label)"
+    )
 
 
 class RulesIn(ApiModel):
     version: str = Field(max_length=16)
+
+
+class LiveSettingsIn(ApiModel):
+    lgbtq_only: bool = Field(description="Join Live's LGBTQ+ space: be paired only with others in it (D161)")
 
 
 class QueueIn(ApiModel):

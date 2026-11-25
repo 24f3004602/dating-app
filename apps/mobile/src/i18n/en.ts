@@ -147,7 +147,7 @@ export const en = {
     // D160: optional labels, shown on the profile; matching stays by gender and who you'd like to meet.
     identities: "LGBTQ+ (optional)",
     identitiesHint:
-      "Up to three. They show on your profile to anyone who can see it; leave them empty if you'd rather not say. Who you're introduced to still depends on who you are and who you'd like to meet.",
+      "Up to three. They show on your profile to anyone who can see it; leave them empty if you'd rather not say. Who you're introduced to still depends on who you are and who you'd like to meet. With a label, you can also choose Live's LGBTQ+ space.",
     intent: "I'm looking for",
     bio: "About me",
     bioHint: "Up to 500 characters.",
@@ -514,6 +514,10 @@ export const en = {
     camera: "Turning your camera on…",
     searching: "Looking for someone…",
     searchingHint: "You'll meet the next person whose preferences match yours.",
+    searchingSpaceHint: "You'll meet the next person in the LGBTQ+ space whose preferences match yours. With few people in it, this can take longer.",
+    // D161: a space of its own for members with an LGBTQ+ label who choose it.
+    space: "Meet in the LGBTQ+ space",
+    spaceHint: "You'll be paired only with others who chose it, and everyone in it has an LGBTQ+ label on their profile. Labels are what members say about themselves.",
     connecting: "Connecting to {name}…",
     timeLeft: "{time} left",
     you: "Your camera",
@@ -556,6 +560,7 @@ export const en = {
       network_error: "We couldn't reach the server. Check your connection and try again.",
       live_unavailable: "Live isn't available right now. Please try again later.",
       live_rules: "Please read and accept the Live rules first.",
+      live_labels_required: "Add an LGBTQ+ label to your profile first.",
       live_profile_incomplete: "You need 2 approved photos before you can use Live.",
       live_paused: "Your profile is paused. Resume it in Privacy to use Live.",
       live_on_hold: "Live is paused for you while we review a report. We'll be in touch.",

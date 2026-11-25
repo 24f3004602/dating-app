@@ -14,7 +14,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { ApiError } from "@/api/client";
 import { useDecide } from "@/api/hooks";
-import { liveApi, liveKeys, useAcceptLiveRules, useLive, type LiveOut } from "@/api/live";
+import { liveApi, liveKeys, useAcceptLiveRules, useLive, useLiveSettings, type LiveOut } from "@/api/live";
 import { messageFor } from "@/api/messages";
 import { useAuth } from "@/auth/AuthProvider";
 import { rtcSupported } from "@/calls/rtc";
@@ -24,7 +24,7 @@ import { VideoView } from "@/calls/VideoView";
 import { BRAND } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { color, font, radius, space, type } from "@/theme/tokens";
-import { Body, Button, Caption, Heading, ListRow, Loading, Notice, Plate, Screen, Title } from "@/ui/primitives";
+import { Body, Button, Caption, Heading, ListRow, Loading, Notice, Plate, Screen, SwitchRow, Title } from "@/ui/primitives";
 
 export const planName = () => fill(t.plan.name, { brand: BRAND });
 
@@ -78,6 +78,24 @@ function Allowance({ live }: { live: LiveOut }) {
   return <Body>{fill(t.live.freeNone, { total: live.free_calls })}</Body>;
 }
 
+/**
+ * Live's LGBTQ+ space (D161): members with an LGBTQ+ label on their profile can choose to meet
+ * only others who chose it. Shown only to them, so nobody is nudged to add a label to get in.
+ */
+function LgbtqSpace({ live }: { live: LiveOut }) {
+  const save = useLiveSettings();
+  const on = save.isPending && save.variables !== undefined ? save.variables : live.lgbtq_only;
+  return (
+    <View style={styles.lgbtqSpace}>
+      <SwitchRow label={t.live.space} value={on} onChange={(v) => save.mutate(v)} />
+      <Caption>{t.live.spaceHint}</Caption>
+      {save.error ? (
+        <Notice kind="error">{problemText(save.error instanceof ApiError ? save.error.code : "unknown")}</Notice>
+      ) : null}
+    </View>
+  );
+}
+
 /** Before a call: what Live is, the rules, and Start (or what stands in the way). */
 function Lobby({ live, problem, onStart }: { live: LiveOut; problem: string | null; onStart: () => void }) {
   const router = useRouter();
@@ -121,6 +139,7 @@ function Lobby({ live, problem, onStart }: { live: LiveOut; problem: string | nu
           <Button label={t.live.agree} busy={accept.isPending} onPress={() => accept.mutate(live.rules_version)} />
         </View>
       ) : null}
+      {live.rules_accepted && live.lgbtq_labels && !live.call ? <LgbtqSpace live={live} /> : null}
       {ready === "ok" && !live.call ? (
         <>
           <Button label={t.live.start} onPress={onStart} />
@@ -223,7 +242,9 @@ function Stage({ rtc }: { rtc?: LiveRtc }) {
         ) : null}
       </View>
 
-      {phase === "searching" ? <Caption>{t.live.searchingHint}</Caption> : null}
+      {phase === "searching" ? (
+        <Caption>{live.data?.lgbtq_only ? t.live.searchingSpaceHint : t.live.searchingHint}</Caption>
+      ) : null}
       {phase === "connecting" ? <Body muted>{fill(t.live.connecting, { name })}</Body> : null}
       {state.problem ? <Notice kind="info">{problemText(state.problem)}</Notice> : null}
 
@@ -306,6 +327,7 @@ export function LiveScreen({ rtc }: { rtc?: LiveRtc } = {}) {
 
 const styles = StyleSheet.create({
   rules: { gap: space.md },
+  lgbtqSpace: { gap: space.xs },
   // The guide's row follows text, so its list closes its top with a line.
   guide: { borderTopWidth: 1, borderTopColor: color.border },
   // The call: 3:4, graphite, their video over a marigold rail (their line), yours in a teal frame (yours).

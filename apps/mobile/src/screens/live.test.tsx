@@ -12,7 +12,7 @@ import type { LiveRtc } from "@/calls/session";
 import { BRAND } from "@/config";
 import { fill, t } from "@/i18n/en";
 import { clock, LiveScreen } from "@/screens/live";
-import { fakeApi } from "@/test/fakeApi";
+import { fakeApi, problem } from "@/test/fakeApi";
 import { renderWithApp } from "@/test/render";
 
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
@@ -40,7 +40,7 @@ const live = (over: Record<string, unknown> = {}) => ({
   body: {
     available: true, ready: "ok", rules_version: "2026-11", rules_accepted: true,
     free_calls: 5, free_calls_left: 4, free_call_seconds: 60, plan: false, plan_call_seconds: 600,
-    waiting: false, call: null, ...over,
+    waiting: false, call: null, lgbtq_labels: false, lgbtq_only: false, ...over,
   },
 }); // prettier-ignore
 
@@ -122,6 +122,47 @@ test("LIVE-APP-10: Start turns the camera on and waits; Stop turns it off and le
   await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.path === "/v1/live/queue")).toBe(true));
   expect(rtc.stopped).toEqual(["video"]);
   expect(await screen.findByRole("button", { name: t.live.start })).toBeTruthy();
+});
+
+test("LIVE-LGBTQ-APP-1 (D161): members with a label can choose the LGBTQ+ space, and the server's answer shows", async () => {
+  let inSpace = false;
+  const { api, calls } = fakeApi({
+    "GET /v1/live": () => live({ lgbtq_labels: true, lgbtq_only: inSpace }),
+    "PUT /v1/live/settings": (req) => {
+      inSpace = (req.body as { lgbtq_only: boolean }).lgbtq_only;
+      return live({ lgbtq_labels: true, lgbtq_only: inSpace });
+    },
+    "POST /v1/live/queue": () => ({ status: 200, body: { state: "waiting", call: null, retry_after_s: 4 } }),
+    "DELETE /v1/live/queue": () => ({ status: 204 }),
+  });
+  await renderWithApp(<SignedIn><LiveScreen rtc={fakeRtc()} /></SignedIn>, api);
+  const toggle = await screen.findByRole("switch", { name: t.live.space, checked: false });
+  expect(screen.getByText(t.live.spaceHint)).toBeTruthy();
+  await fireEvent(toggle, "valueChange", true);
+  expect(await screen.findByRole("switch", { name: t.live.space, checked: true })).toBeTruthy();
+  expect(calls.filter((c) => c.method === "PUT").map((c) => c.body)).toEqual([{ lgbtq_only: true }]);
+  // Waiting in the space says so.
+  await fireEvent.press(screen.getByRole("button", { name: t.live.start }));
+  expect(await screen.findByText(t.live.searchingSpaceHint)).toBeTruthy();
+  expect(screen.queryByText(t.live.searchingHint)).toBeNull();
+});
+
+test("LIVE-LGBTQ-APP-2 (D161): without a label there's no switch, and a refusal says why", async () => {
+  const { api } = fakeApi({ "GET /v1/live": () => live() });
+  await renderWithApp(<SignedIn><LiveScreen rtc={fakeRtc()} /></SignedIn>, api);
+  expect(await screen.findByRole("button", { name: t.live.start })).toBeTruthy();
+  expect(screen.queryByRole("switch", { name: t.live.space })).toBeNull();
+  expect(screen.queryByText(t.live.spaceHint)).toBeNull();
+  await screen.unmount();
+
+  // The label was removed on another device: the server refuses, and the screen says why.
+  const { api: stale } = fakeApi({
+    "GET /v1/live": () => live({ lgbtq_labels: true }),
+    "PUT /v1/live/settings": () => problem(409, "live_labels_required"),
+  });
+  await renderWithApp(<SignedIn><LiveScreen rtc={fakeRtc()} /></SignedIn>, stale);
+  await fireEvent(await screen.findByRole("switch", { name: t.live.space }), "valueChange", true);
+  expect(await screen.findByText(t.live.problems.live_labels_required)).toBeTruthy();
 });
 
 test("LIVE-APP-11: a phone build without WebRTC says calls work in the web app", async () => {

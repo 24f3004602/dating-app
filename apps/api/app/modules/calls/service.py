@@ -9,7 +9,8 @@ and nobody ends up in two calls.
    (a free one, or the plan).
 3. The longest-waiting member who is ready too and suits them both ways (gender
    and age preferences, no block either way, not paired with each other in the
-   last `calls_repeat_hours`) is taken from the queue.
+   last `calls_repeat_hours`, and both in Live's LGBTQ+ space or both outside it,
+   D161) is taken from the queue.
 4. Otherwise the member waits in the queue and sends a heartbeat.
 
 The two devices exchange session descriptions through the API, each with all its
@@ -154,6 +155,17 @@ async def _readiness(session: AsyncSession, settings: Settings, user: User, avai
     return Readying(code, member, profile, have)
 
 
+def _labelled(profile: Profile | None) -> bool:
+    """The member's own profile has an LGBTQ+ label (D160)."""
+    return profile is not None and len(profile.identities) > 0
+
+
+def _lgbtq_only(member: CallMember | None, profile: Profile | None) -> bool:
+    """In Live's LGBTQ+ space (D161): the member chose it, and it applies while their own
+    profile has a label."""
+    return member is not None and member.lgbtq_only and _labelled(profile)
+
+
 # --- calls -----------------------------------------------------------------------
 
 
@@ -270,6 +282,8 @@ async def live(session: AsyncSession, settings: Settings, user: User, available:
         plan_call_seconds=settings.calls_plan_seconds,
         waiting=waiting is not None and waiting.seen_at >= now - timedelta(seconds=settings.calls_queue_ttl_s),
         call=await call_out(session, settings, call, user.id, now) if call else None,
+        lgbtq_labels=_labelled(ready.profile),
+        lgbtq_only=_lgbtq_only(ready.member, ready.profile),
     )
 
 
@@ -286,11 +300,22 @@ async def accept_rules(session: AsyncSession, user_id: uuid.UUID, version: str, 
     await session.commit()
 
 
+async def update_settings(session: AsyncSession, user_id: uuid.UUID, *, lgbtq_only: bool) -> None:
+    """Live's own settings (D161): after the current rules; LGBTQ+ members only needs a label."""
+    member = await session.get(CallMember, user_id, with_for_update=True)
+    if member is None or member.rules_version != RULES_VERSION:
+        raise _not_ready("rules")
+    if lgbtq_only and not _labelled(await session.get(Profile, user_id)):
+        raise ApiError(409, "live_labels_required", "Add an LGBTQ+ label to your profile first.")
+    member.lgbtq_only = lgbtq_only
+    await session.commit()
+
+
 # --- the queue -------------------------------------------------------------------
 
 
 async def _partner(
-    session: AsyncSession, settings: Settings, user: User, profile: Profile, now: datetime
+    session: AsyncSession, settings: Settings, user: User, profile: Profile, now: datetime, *, lgbtq_only: bool
 ) -> tuple[CallQueueEntry, Allowance] | None:
     """The longest-waiting member who suits this one both ways and can still call."""
     today = local_today(settings, now)
@@ -307,6 +332,9 @@ async def _partner(
         Call.created_at >= now - timedelta(hours=settings.calls_repeat_hours),
     )
     in_a_call = exists().where(_of(User.id), Call.state.in_(OPEN))
+    # Live's LGBTQ+ space (D161): members who chose it meet only each other, and everyone else
+    # meets everyone else. Nobody is put in it by a label alone, so labels pick nobody out.
+    in_space = and_(CallMember.lgbtq_only.is_(True), func.cardinality(Profile.identities) > 0)
     rows = (
         await session.execute(
             select(CallQueueEntry, CallMember)
@@ -328,6 +356,7 @@ async def _partner(
                 ~met_lately,
                 ~in_a_call,
                 ~_on_hold(User.id),
+                in_space if lgbtq_only else ~in_space,
             )
             .order_by(CallQueueEntry.joined_at, CallQueueEntry.user_id)
             .limit(20)
@@ -362,7 +391,9 @@ async def join(
         await session.commit()
         raise _not_ready(ready.code)
 
-    found = await _partner(session, settings, user, ready.profile, now)
+    found = await _partner(
+        session, settings, user, ready.profile, now, lgbtq_only=_lgbtq_only(ready.member, ready.profile)
+    )
     if found is None:
         await session.execute(
             pg_insert(CallQueueEntry)

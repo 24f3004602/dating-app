@@ -33,6 +33,7 @@ const LIVE = {
   body: {
     available: true, ready: "no_calls_left", rules_version: "2026-11", rules_accepted: true, free_calls: 5,
     free_calls_left: 0, free_call_seconds: 60, plan: false, plan_call_seconds: 600, waiting: false, call: null,
+    lgbtq_labels: false, lgbtq_only: false,
   },
 }; // prettier-ignore
 

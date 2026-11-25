@@ -58,6 +58,7 @@ async def make_member(
     last_active: timedelta | None = timedelta(hours=1),
     profile: bool = True,
     name: str = "Member",
+    identities: tuple[str, ...] = (),
     role: str = "member",
     session_client: str = "mobile",
 ) -> Member:
@@ -91,6 +92,7 @@ async def make_member(
                     user_id=user.id, display_name=name, gender=Gender(gender), interested_in=list(interested_in),
                     intent=Intent(intent), bio=bio, area_id=area_id, area_changed_at=now - timedelta(days=2),
                     visibility=Visibility(visibility), discovery_paused=paused, created_at=now,
+                    identities=list(identities),
                 )
             )  # fmt: skip
             await s.flush()

@@ -772,6 +772,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/live/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Live's settings: LGBTQ+ members only (D161) */
+        put: operations["live_settings_v1_live_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/matches": {
         parameters: {
             query?: never;
@@ -1939,6 +1956,16 @@ export interface components {
             /** Free Calls Left */
             free_calls_left: number;
             /**
+             * Lgbtq Labels
+             * @description Your profile has an LGBTQ+ label, so you can choose lgbtq_only (D161)
+             */
+            lgbtq_labels: boolean;
+            /**
+             * Lgbtq Only
+             * @description In Live's LGBTQ+ space: paired only with members who chose it too (while you have a label)
+             */
+            lgbtq_only: boolean;
+            /**
              * Plan
              * @description The plan is active: calls aren't counted
              */
@@ -1956,6 +1983,14 @@ export interface components {
             rules_version: string;
             /** Waiting */
             waiting: boolean;
+        };
+        /** LiveSettingsIn */
+        LiveSettingsIn: {
+            /**
+             * Lgbtq Only
+             * @description Join Live's LGBTQ+ space: be paired only with others in it (D161)
+             */
+            lgbtq_only: boolean;
         };
         /** LoginIn */
         LoginIn: {
@@ -5820,6 +5855,66 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RulesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveOut"];
+                };
+            };
+            /** @description Not signed in, or bad credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Error */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid request (`validation_error` lists the fields) or a rule failed (see `code`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    live_settings_v1_live_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiveSettingsIn"];
             };
         };
         responses: {
