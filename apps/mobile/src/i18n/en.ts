@@ -153,10 +153,12 @@ export const en = {
     bioHint: "Up to 500 characters.",
     area: "Area",
     areaHint: "You can change your area once a day.",
-    // The area list is filtered as you type (D111).
-    areaSearch: "Find your area",
-    areaSearchHint: "A few letters of the area or its city.",
-    areaNone: "No area matches that. Try the city's name.",
+    // Areas across India (D162): the featured list, then a search from two letters.
+    areaSearch: "Find your town or area",
+    areaSearchHint: "Two letters or more of a town, an area, or its city or state, anywhere in India.",
+    areaNone: "Nothing matches that. Try a nearby town, or the city's name.",
+    // GeoNames' licence (CC BY 4.0) asks for credit and to say the list was changed.
+    areaSource: "Town list adapted from GeoNames (geonames.org), CC BY 4.0.",
     areaChosen: "Your area: {area}",
     prompts: "Prompts (up to 3)",
     addPrompt: "Answer a prompt",
@@ -445,7 +447,7 @@ export const en = {
     ageMin: "Youngest age",
     ageMax: "Oldest age",
     distance: "How far",
-    any: "Any distance",
+    any: "Anywhere in India",
     within: "Within {km} km",
     note: "Changes apply from your next daily set.",
     saved: "Saved. Your next daily set will use these preferences.",

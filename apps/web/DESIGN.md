@@ -180,7 +180,7 @@ Two saturated line colours carried by graphite and white, like a transit map on 
 ### Hierarchy
 - **Display** (760, fluid 2.5 to 5rem, 0.98): the first-screen headline only; balanced wrapping.
 - **Headline** (750, fluid 1.75 to 2.75rem, 1.05): section headings such as "How it works, stop by stop"; the confirm and leave pages use a 2 to 3rem variant at 1.02.
-- **Title** (700, fluid 1.5 to 2rem, 1.1): headings inside graphite panels ("Next stop: Delhi NCR").
+- **Title** (700, fluid 1.5 to 2rem, 1.1): headings inside graphite panels ("Next stop: your city").
 - **Sign** (700, fluid 1.25 to 1.625rem, 1.15): station names on enamel plates.
 - **Wordmark** (700, 1.75rem, uppercase, +0.04em): the brand name in the sign band; on the Hindi page a name set in Devanagari takes its place at the same size.
 - **Lede** (400, fluid 1.125 to 1.375rem, 1.45, max 34ch): the one line under the headline.

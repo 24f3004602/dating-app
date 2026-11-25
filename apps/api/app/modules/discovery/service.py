@@ -191,6 +191,7 @@ async def _build(session: AsyncSession, settings: Settings, v: Viewer, today: da
                 approved_photos=int(approved),
                 last_active_at=user.last_active_at,
                 bucket=rules.bucket(km),
+                band=rules.band(km),
             )
         )
     chosen = rules.rank(

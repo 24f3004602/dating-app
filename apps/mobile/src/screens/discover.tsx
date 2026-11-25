@@ -179,7 +179,7 @@ const ageField = z
   .regex(/^\d{2}$/, { error: t.preferences.ageRange })
   .refine((v) => Number(v) >= 18 && Number(v) <= 99, { error: t.preferences.ageRange });
 const prefsSchema = z
-  .object({ ageMin: ageField, ageMax: ageField, distance: z.enum(["any", "5", "15", "50"]) })
+  .object({ ageMin: ageField, ageMax: ageField, distance: z.enum(["any", "5", "15", "50", "150"]) })
   .refine((v) => Number(v.ageMin) <= Number(v.ageMax), { path: ["ageMax"], error: t.preferences.ageOrder });
 type PrefsValues = z.input<typeof prefsSchema>;
 
@@ -220,7 +220,7 @@ export function PreferencesScreen() {
       await save.mutateAsync({
         age_min: Number(v.ageMin),
         age_max: Number(v.ageMax),
-        max_distance_km: v.distance === "any" ? null : (Number(v.distance) as 5 | 15 | 50),
+        max_distance_km: v.distance === "any" ? null : (Number(v.distance) as 5 | 15 | 50 | 150),
       });
       setSaved(true);
     } catch (err) {
@@ -243,6 +243,7 @@ export function PreferencesScreen() {
             { value: "5", label: fill(t.preferences.within, { km: 5 }) },
             { value: "15", label: fill(t.preferences.within, { km: 15 }) },
             { value: "50", label: fill(t.preferences.within, { km: 50 }) },
+            { value: "150", label: fill(t.preferences.within, { km: 150 }) },
             { value: "any", label: t.preferences.any },
           ]} />
       )} />

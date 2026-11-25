@@ -2545,7 +2545,8 @@
                 "enum": [
                   5,
                   15,
-                  50
+                  50,
+                  150
                 ],
                 "type": "integer"
               },
@@ -2586,7 +2587,8 @@
                 "enum": [
                   5,
                   15,
-                  50
+                  50,
+                  150
                 ],
                 "type": "integer"
               },
@@ -5692,6 +5694,28 @@
     "/v1/areas": {
       "get": {
         "operationId": "areas_v1_areas_get",
+        "parameters": [
+          {
+            "description": "A town, area, city or state; without it, the featured list",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A town, area, city or state; without it, the featured list",
+              "title": "Q"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5726,9 +5750,19 @@
               }
             },
             "description": "Invalid request (`validation_error` lists the fields) or a rule failed (see `code`)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited; see `Retry-After`"
           }
         },
-        "summary": "Areas a member can pick (names only, never coordinates)",
+        "summary": "Areas a member can pick: the featured list, or a search (names only, never coordinates)",
         "tags": [
           "profiles"
         ]

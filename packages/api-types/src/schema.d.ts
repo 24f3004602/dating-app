@@ -334,7 +334,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Areas a member can pick (names only, never coordinates) */
+        /** Areas a member can pick: the featured list, or a search (names only, never coordinates) */
         get: operations["areas_v1_areas_get"];
         put?: never;
         post?: never;
@@ -2402,7 +2402,7 @@ export interface components {
             /** Age Min */
             age_min: number;
             /** Max Distance Km */
-            max_distance_km?: (5 | 15 | 50) | null;
+            max_distance_km?: (5 | 15 | 50 | 150) | null;
         };
         /** PreferencesOut */
         PreferencesOut: {
@@ -2417,7 +2417,7 @@ export interface components {
              */
             applies_from: "next_set";
             /** Max Distance Km */
-            max_distance_km: (5 | 15 | 50) | null;
+            max_distance_km: (5 | 15 | 50 | 150) | null;
         };
         /**
          * PrefsBody
@@ -4193,7 +4193,10 @@ export interface operations {
     };
     areas_v1_areas_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description A town, area, city or state; without it, the featured list */
+                q?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4225,6 +4228,15 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ValidationProblem"];
+                };
+            };
+            /** @description Rate limited; see `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

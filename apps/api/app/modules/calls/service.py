@@ -9,8 +9,8 @@ and nobody ends up in two calls.
    (a free one, or the plan).
 3. The longest-waiting member who is ready too and suits them both ways (gender
    and age preferences, no block either way, not paired with each other in the
-   last `calls_repeat_hours`, and both in Live's LGBTQ+ space or both outside it,
-   D161) is taken from the queue.
+   last `calls_repeat_hours`, within both members' distance (D162), and both in
+   Live's LGBTQ+ space or both outside it, D161) is taken from the queue.
 4. Otherwise the member waits in the queue and sends a heartbeat.
 
 The two devices exchange session descriptions through the API, each with all its
@@ -29,12 +29,13 @@ poll, so a lost hint only slows a call's setup down.
 from __future__ import annotations
 
 import logging
+import math
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from typing import Any
 
-from sqlalchemy import and_, any_, delete, exists, func, or_, select, update
+from sqlalchemy import Float, and_, any_, cast, delete, exists, func, or_, select, true, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
@@ -51,7 +52,7 @@ from app.modules.discovery import rules
 from app.modules.discovery.models import Preferences
 from app.modules.discovery.service import DEFAULT_AGE, approved_photo_count, base_available_to
 from app.modules.media.service import MIN_APPROVED_FOR_DISCOVERY
-from app.modules.profiles.models import Profile
+from app.modules.profiles.models import Area, Profile
 from app.modules.safety.models import Report, ReportStatus
 from app.ratelimit import Limit
 
@@ -164,6 +165,16 @@ def _lgbtq_only(member: CallMember | None, profile: Profile | None) -> bool:
     """In Live's LGBTQ+ space (D161): the member chose it, and it applies while their own
     profile has a label."""
     return member is not None and member.lgbtq_only and _labelled(profile)
+
+
+def _km_from(lat: float, lon: float) -> Any:
+    """The great-circle distance from a point to the joined area's centroid: rules.distance_km in
+    SQL, so the queue is filtered before its first 20 are read."""
+    p1 = math.radians(lat)
+    p2 = func.radians(cast(Area.latitude, Float))
+    dl = func.radians(cast(Area.longitude, Float)) - math.radians(lon)
+    h = func.power(func.sin((p2 - p1) / 2), 2) + math.cos(p1) * func.cos(p2) * func.power(func.sin(dl / 2), 2)
+    return 2 * rules.EARTH_RADIUS_KM * func.asin(func.least(1.0, func.sqrt(h)))
 
 
 # --- calls -----------------------------------------------------------------------
@@ -321,6 +332,11 @@ async def _partner(
     today = local_today(settings, now)
     prefs = await session.get(Preferences, user.id)
     age_min, age_max = (prefs.age_min, prefs.age_max) if prefs else DEFAULT_AGE
+    here = await session.get(Area, profile.area_id)
+    if here is None:  # the foreign key makes this unreachable
+        raise RuntimeError("profile area missing")
+    km = _km_from(float(here.latitude), float(here.longitude))
+    my_max = prefs.max_distance_km if prefs else None
     oldest, youngest = rules.birthdate_bounds(today, age_min, age_max)
     my_age = age_on(user.birthdate, today)
     me = user.id
@@ -340,6 +356,7 @@ async def _partner(
             select(CallQueueEntry, CallMember)
             .join(User, User.id == CallQueueEntry.user_id)
             .join(Profile, Profile.user_id == User.id)
+            .join(Area, Area.id == Profile.area_id)
             .join(CallMember, CallMember.user_id == User.id)
             .outerjoin(Preferences, Preferences.user_id == User.id)
             .where(
@@ -353,6 +370,8 @@ async def _partner(
                 User.birthdate <= youngest,
                 func.coalesce(Preferences.age_min, DEFAULT_AGE[0]) <= my_age,
                 func.coalesce(Preferences.age_max, DEFAULT_AGE[1]) >= my_age,
+                km < my_max if my_max is not None else true(),
+                or_(Preferences.max_distance_km.is_(None), km < Preferences.max_distance_km),
                 ~met_lately,
                 ~in_a_call,
                 ~_on_hold(User.id),

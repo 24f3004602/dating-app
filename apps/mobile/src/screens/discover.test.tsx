@@ -153,4 +153,10 @@ test("preferences: load, validate, save the API's shape", async () => {
   await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
   expect(await screen.findByText(t.preferences.saved)).toBeTruthy();
   await waitFor(() => expect(calls.find((c) => c.method === "PUT")?.body).toEqual({ age_min: 25, age_max: 30, max_distance_km: 15 }));
+
+  // Across India (D162): within 150 km, or anywhere in India.
+  await fireEvent.press(screen.getByRole("radio", { name: "Within 150 km" }));
+  await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
+  await waitFor(() => expect(calls.filter((c) => c.method === "PUT").at(-1)?.body).toEqual({ age_min: 25, age_max: 30, max_distance_km: 150 }));
+  expect(screen.getByRole("radio", { name: "Anywhere in India" })).toBeTruthy();
 });

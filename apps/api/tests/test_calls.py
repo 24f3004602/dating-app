@@ -456,6 +456,37 @@ async def test_lgbtq_only_pairs_both_ways(
     assert res["call"]["peer"]["display_name"] == "Tara"
 
 
+async def test_live_keeps_to_both_members_distance(
+    app: FastAPI, client: AsyncClient, db: Db, now: datetime, clock: FrozenClock
+) -> None:
+    """LIVE-DIST-1 (D162): whoever chose a distance is paired only within it, waiting or joining;
+    without one, anywhere in India."""
+
+    async def at(make: Any, area_id: str, name: str, max_km: int | None = None) -> Member:
+        clock.advance(seconds=1)  # one at a time, so "the longest wait" is clear
+        prefs = (18, 99, max_km) if max_km else None
+        who: Member = await make(app, db, clock.now, area_id=area_id, name=name, prefs=prefs)
+        return who
+
+    meera = await at(woman, "gn.1275339", "Meera", 50)  # Mumbai, within 50 km
+    assert (await join(client, meera, "meera-phone")).json()["state"] == "waiting"
+    kabir = await at(man, "gn.1259229", "Kabir")  # Pune, about 120 km: outside her distance
+    assert (await join(client, kabir, "kabir-phone")).json()["state"] == "waiting"
+    raj = await at(man, "gn.1254661", "Raj")  # Thane, about 17 km
+    res = (await join(client, raj, "raj-phone")).json()
+    assert res["state"] == "paired"
+    assert res["call"]["peer"]["display_name"] == "Meera"
+    asha = await at(woman, "gn.1275004", "Asha")  # Kolkata: neither chose a distance
+    res = (await join(client, asha, "asha-phone")).json()
+    assert res["state"] == "paired"
+    assert res["call"]["peer"]["display_name"] == "Kabir"
+
+    neha = await at(woman, "gn.1275004", "Neha")  # Kolkata
+    assert (await join(client, neha, "neha-phone")).json()["state"] == "waiting"
+    arjun = await at(man, "gn.1275339", "Arjun", 150)  # Mumbai, within 150 km: not Neha
+    assert (await join(client, arjun, "arjun-phone")).json()["state"] == "waiting"
+
+
 # --- the call's life ----------------------------------------------------------------------
 
 

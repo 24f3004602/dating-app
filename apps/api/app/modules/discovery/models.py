@@ -34,7 +34,7 @@ class Preferences(Base):
     __table_args__ = (
         CheckConstraint("age_min BETWEEN 18 AND 99 AND age_max BETWEEN 18 AND 99", name="age_range"),
         CheckConstraint("age_min <= age_max", name="age_order"),
-        CheckConstraint("max_distance_km IS NULL OR max_distance_km IN (5, 15, 50)", name="distance_bucket"),
+        CheckConstraint("max_distance_km IS NULL OR max_distance_km IN (5, 15, 50, 150)", name="distance_bucket"),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)

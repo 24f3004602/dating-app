@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Platform } from "react-native";
 
 import { ApiError, type Schemas, unwrap } from "@/api/client";
@@ -41,6 +41,19 @@ export function useMe() {
 export function useAreas() {
   const { api } = useAuth();
   return useQuery({ queryKey: keys.areas, queryFn: () => unwrap(api.GET("/v1/areas")), staleTime: Infinity });
+}
+
+/** Areas across India (D162): the server's matches once two letters are typed. */
+export function useAreaSearch(query: string) {
+  const { api } = useAuth();
+  const q = query.trim();
+  return useQuery({
+    queryKey: [...keys.areas, q.toLowerCase()],
+    queryFn: () => unwrap(api.GET("/v1/areas", { params: { query: { q } } })),
+    enabled: q.length >= 2,
+    staleTime: 10 * 60_000,
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function usePrompts() {

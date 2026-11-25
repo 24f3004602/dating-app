@@ -10,6 +10,7 @@ import {
   absoluteUrl,
   type MyProfile,
   useAreas,
+  useAreaSearch,
   useDeletePhoto,
   useMe,
   useMyProfile,
@@ -162,6 +163,10 @@ export function EditProfileScreen() {
   const save = useSaveProfile();
   const [failure, setFailure] = useState<string | null>(null);
   const [areaQuery, setAreaQuery] = useState("");
+  const [picked, setPicked] = useState<{ id: string; city: string; name: string } | null>(null);
+  const areaNeedle = areaQuery.trim();
+  const searching = areaNeedle.length >= 2;
+  const found = useAreaSearch(searching ? areaNeedle : "");
   const form = useForm<ProfileValues>({ resolver: zodResolver(profileSchema), defaultValues: toFormValues(null) });
   const promptFields = useFieldArray({ control: form.control, name: "prompts" });
   const { reset } = form;
@@ -184,11 +189,11 @@ export function EditProfileScreen() {
   const chosenKeys = form.watch("prompts").map((p) => p.key);
   const unused = (prompts.data ?? []).filter((p) => !chosenKeys.includes(p.key));
   const promptText = new Map((prompts.data ?? []).map((p) => [p.key, p.text]));
-  // The area list filtered by a few typed letters of the area or its city (D111); empty shows all.
-  const areaNeedle = areaQuery.trim().toLowerCase();
-  const shownAreas = (areas.data ?? []).filter((a) => !areaNeedle || `${a.name} ${a.city}`.toLowerCase().includes(areaNeedle));
-  // The chosen area stays in view whatever the filter shows (impeccable's finish review, D116).
-  const chosenArea = (areas.data ?? []).find((a) => a.id === form.watch("areaId"));
+  // Across India (D162): the featured list until two letters are typed, then the server's matches.
+  const shownAreas = searching ? (found.data ?? []) : (areas.data ?? []);
+  // The chosen area stays in view whatever the list shows (impeccable's finish review, D116).
+  const areaId = form.watch("areaId");
+  const chosenArea = [picked, ...shownAreas, ...(areas.data ?? []), profile.data?.area].find((a) => a?.id === areaId);
 
   const submit = form.handleSubmit(async (v) => {
     setFailure(null);
@@ -236,10 +241,18 @@ export function EditProfileScreen() {
           onChangeText={setAreaQuery} autoCorrect={false} autoCapitalize="none" returnKeyType="search" />
       </View>
       <Controller control={form.control} name="areaId" render={({ field }) => (
-        <ChoiceGroup label={t.editProfile.area} value={field.value} onChange={field.onChange} error={e.areaId?.message}
+        <ChoiceGroup label={t.editProfile.area} value={field.value} error={e.areaId?.message}
+          onChange={(id) => {
+            field.onChange(id);
+            setPicked(shownAreas.find((a) => a.id === id) ?? null);
+          }}
           options={shownAreas.map((a) => ({ value: a.id, label: `${a.name}, ${a.city}` }))} />
       )} />
-      {shownAreas.length === 0 ? <Body muted>{t.editProfile.areaNone}</Body> : null}
+      {searching && found.isSuccess && !found.isPlaceholderData && shownAreas.length === 0 ? (
+        <Body muted>{t.editProfile.areaNone}</Body>
+      ) : null}
+      {searching && found.isError ? <Notice kind="error">{messageFor(found.error)}</Notice> : null}
+      <Caption>{t.editProfile.areaSource}</Caption>
       <Heading>{t.editProfile.prompts}</Heading>
       {promptFields.fields.map((f, index) => (
         <View key={f.id} style={styles.prompt}>

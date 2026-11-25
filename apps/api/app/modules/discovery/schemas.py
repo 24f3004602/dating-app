@@ -13,8 +13,8 @@ from app.schemas import ApiModel
 class PreferencesIn(ApiModel):
     age_min: int = Field(ge=18, le=99)
     age_max: int = Field(ge=18, le=99)
-    # None means any distance; otherwise one of the bucket limits.
-    max_distance_km: Literal[5, 15, 50] | None = None
+    # None means any distance; otherwise one of the bucket limits, or 150 km across India (D162).
+    max_distance_km: Literal[5, 15, 50, 150] | None = None
 
     @model_validator(mode="after")
     def _order(self) -> PreferencesIn:
@@ -26,7 +26,7 @@ class PreferencesIn(ApiModel):
 class PreferencesOut(ApiModel):
     age_min: int
     age_max: int
-    max_distance_km: Literal[5, 15, 50] | None
+    max_distance_km: Literal[5, 15, 50, 150] | None
     applies_from: Literal["next_set"] = "next_set"
 
 

@@ -34,7 +34,7 @@ test("English has no Hindi but the way to it; the Hindi page is all Hindi, its b
   await expect(page.getByRole("heading", { name: "रोज़ दस लाइक, सबके लिए" })).toBeVisible();
 
   // The way into the app, in Hindi; the app is in English, and the links and the note say so.
-  const panel = page.getByRole("region", { name: "अगला स्टेशन: दिल्ली एनसीआर" });
+  const panel = page.getByRole("region", { name: "अगला स्टेशन: आपका शहर" });
   const create = panel.getByRole("link", { name: "अकाउंट बनाएँ" });
   await expect(create).toHaveAttribute("hreflang", "en");
   await expect(create).toHaveAttribute("href", /\/sign-up$/);

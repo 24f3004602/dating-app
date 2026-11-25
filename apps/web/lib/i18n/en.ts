@@ -24,7 +24,7 @@ export const en: Messages = {
     theirsLong: "Theirs: what they're looking for",
     bothWays: "Fit both ways",
   },
-  join: { heading: "Next stop: Delhi NCR", endHeading: "Start your line" },
+  join: { heading: "Next stop: your city", endHeading: "Start your line" },
   start: {
     create: "Create an account",
     signIn: "Sign in",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import case, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
@@ -26,8 +26,12 @@ from app.modules.profiles.schemas import (
     Readiness,
 )
 from app.providers.storage import ObjectStorage
+from app.ratelimit import Limit
 
 AREA_CHANGE_INTERVAL = timedelta(hours=24)
+AREA_RESULTS = 20
+# Searching as you type: far above real use, it stops anyone walking the list for nothing.
+AREA_SEARCH_LIMIT = Limit("area_search", 600, 3600)
 
 
 async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool = False) -> Profile | None:
@@ -37,8 +41,44 @@ async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool =
     return (await session.execute(stmt)).scalar_one_or_none()
 
 
-async def list_areas(session: AsyncSession) -> list[Area]:
-    rows = await session.execute(select(Area).where(Area.active.is_(True)).order_by(Area.city, Area.name))
+async def featured_areas(session: AsyncSession) -> list[Area]:
+    """The list before anyone searches (D162): Delhi NCR's areas, capitals and big cities."""
+    rows = await session.execute(
+        select(Area).where(Area.active.is_(True), Area.featured.is_(True)).order_by(Area.city, Area.name)
+    )
+    return list(rows.scalars())
+
+
+def _like(text: str) -> str:
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+async def search_areas(session: AsyncSession, query: str) -> list[Area]:
+    """Areas whose name, or a word in it, starts with the query, or whose city or state does, or
+    an old name (D162). In order: the exact name, names that start with it, old names, words in a
+    name, then cities and states; within each, the featured and then the larger places first."""
+    needle = " ".join(query.lower().split())
+    if not needle:
+        return []
+    name = func.lower(Area.name)
+    starts = name.like(f"{_like(needle)}%", escape="\\")
+    word = name.like(f"% {_like(needle)}%", escape="\\")
+    alias = or_(
+        Area.aliases.like(f"{_like(needle)}%", escape="\\"), Area.aliases.like(f"% {_like(needle)}%", escape="\\")
+    )
+    place = func.lower(Area.city).like(f"{_like(needle)}%", escape="\\")
+    rows = await session.execute(
+        select(Area)
+        .where(Area.active.is_(True), or_(starts, word, alias, place))
+        .order_by(
+            case((name == needle, 0), (starts, 1), (alias, 2), (word, 3), else_=4),
+            Area.featured.desc(),
+            Area.population.desc().nulls_last(),
+            Area.city,
+            Area.name,
+        )
+        .limit(AREA_RESULTS)
+    )
     return list(rows.scalars())
 
 

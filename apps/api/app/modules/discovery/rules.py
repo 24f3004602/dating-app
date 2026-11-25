@@ -23,6 +23,8 @@ BUCKET_LIMITS: tuple[tuple[float, DistanceBucket], ...] = (
     (50, "15_to_50_km"),
 )
 EARTH_RADIUS_KM = 6371.0
+# Across India, nearer people come first (D162): within 150 km, then within 500 km, then the rest.
+NEAR_BANDS_KM: tuple[float, ...] = (150.0, 500.0)
 
 # Who can be introduced to whom by intent (symmetric; D065). Marriage-minded
 # members meet marriage or long-term; "figuring out" does not meet marriage.
@@ -60,6 +62,11 @@ def bucket(km: float) -> DistanceBucket:
     return "over_50_km"
 
 
+def band(km: float) -> int:
+    """0 within 150 km, 1 within 500 km, 2 beyond: the ranking's first key."""
+    return sum(km >= limit for limit in NEAR_BANDS_KM)
+
+
 def within(km: float, max_km: int | None) -> bool:
     return max_km is None or km < max_km
 
@@ -85,6 +92,7 @@ class CandidateFacts:
     approved_photos: int
     last_active_at: datetime | None
     bucket: DistanceBucket
+    band: int = 0
 
 
 def score(viewer_intent: Intent, viewer_prompts: frozenset[str], c: CandidateFacts, now: datetime) -> int:
@@ -114,5 +122,5 @@ def rank(
 ) -> list[CandidateFacts]:
     return sorted(
         candidates,
-        key=lambda c: (-score(viewer_intent, viewer_prompts, c, now), tie_break(viewer_id, c.user_id, day)),
+        key=lambda c: (c.band, -score(viewer_intent, viewer_prompts, c, now), tie_break(viewer_id, c.user_id, day)),
     )[:size]

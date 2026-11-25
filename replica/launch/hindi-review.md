@@ -99,6 +99,7 @@ Write a better version in the last column, or "OK". Leave it empty if unsure.
 | 68 | शिकायतें और शिकायत अधिकारी | Complaints and the grievance officer | the footer's second line: the link to the complaints page (stage 28d, D155; the IT Rules want it reachable from the home page). शिकायत अधिकारी: the grievance officer | OK (reviewed 2026-11-25) |
 | 69 | एंड्रॉयड ऐप | The Android app | the footer's second line: the link to the download page (D154). Or "Android ऐप", in Latin letters? | OK (reviewed 2026-11-25) |
 | 70 |  (दोनों पेज अंग्रेज़ी में) | (nothing in English) | after those two links: both pages are in English, as row 67 says of the documents | OK (reviewed 2026-11-25) |
+| 71 | अगला स्टेशन: आपका शहर | Next stop: your city | the heading over the first join form, replacing row 13's "Delhi NCR" now that Kinaara is open across India (stage 29a, D162) | waiting for the owner's review |
 
 **Afterwards (engineering):** corrections go into `apps/web/lib/i18n/hi.ts`; then
 `node scripts/devanagari-text.mjs` and `scripts/build_fonts.py` (the Devanagari fonts

@@ -60,8 +60,9 @@ test("LANG-4: the 16 lines the owner reviewed (2026-11-13) are used word for wor
   assert.equal(hi.terminus.title, "फिर, बातचीत");
   assert.deepEqual(
     [hi.map.yourLineLong, hi.map.theirsLong, hi.map.yourLine, hi.map.theirs, hi.map.bothWays, hi.join.heading],
-    ["आपकी लाइन: आप क्या चाहते हैं", "उनकी लाइन: वे क्या चाहते हैं", "आपकी लाइन", "उनकी", "दोनों तरफ़ से", "अगला स्टेशन: दिल्ली एनसीआर"],
-  ); // "वेटलिस्ट की ओर" (towards the waitlist) gave way to sign-up when it opened (D133)
+    ["आपकी लाइन: आप क्या चाहते हैं", "उनकी लाइन: वे क्या चाहते हैं", "आपकी लाइन", "उनकी", "दोनों तरफ़ से", "अगला स्टेशन: आपका शहर"],
+  ); // "वेटलिस्ट की ओर" (towards the waitlist) gave way to sign-up when it opened (D133); the heading's
+  // "दिल्ली एनसीआर" became "आपका शहर" across India (D162, hindi-review.md row 71: the owner reviews it before release)
   assert.ok(hi.route.towards);
 });
 

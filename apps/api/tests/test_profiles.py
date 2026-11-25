@@ -50,6 +50,57 @@ async def test_areas_and_prompts_are_listed_without_coordinates(client: AsyncCli
     assert {p["key"] for p in prompts} >= {"comfort_food", "next_trip"}
 
 
+async def test_the_featured_areas_come_before_any_search(client: AsyncClient, jobs: JobRunner) -> None:
+    """AREAS-1 (D162): without a search, Delhi NCR's areas and India's capitals and big cities, not every town."""
+    me = await member(client, jobs, "a@example.com")
+    areas = (await client.get("/v1/areas", headers=auth(me))).json()
+    shown = {f"{a['name']}, {a['city']}" for a in areas}
+    assert {"Saket, Delhi", "Sector 18, Noida", "Mumbai, Maharashtra", "Guwahati, Assam", "Panjim, Goa"} <= shown
+    assert "Udaipur (Jhunjhunu), Rajasthan" not in shown
+    assert 60 <= len(areas) <= 100  # a list to scroll, not all of India
+
+
+async def test_searching_areas_across_india(client: AsyncClient, jobs: JobRunner) -> None:
+    """AREAS-2 (D162): by name, a word in it, the state or an old name; the exact name first; at
+    most 20; wildcards are only letters; never coordinates."""
+    me = await member(client, jobs, "a@example.com")
+
+    async def search(q: str) -> list[str]:
+        r = await client.get("/v1/areas", params={"q": q}, headers=auth(me))
+        assert r.status_code == 200, r.text
+        assert all(set(a) == {"id", "city", "name"} for a in r.json())
+        return [f"{a['name']}, {a['city']}" for a in r.json()]
+
+    assert (await search("pune"))[0] == "Pune, Maharashtra"
+    assert (await search("  PUNE "))[0] == "Pune, Maharashtra"
+    mumbai = await search("mumbai")
+    assert mumbai[0] == "Mumbai, Maharashtra"
+    assert "Navi Mumbai, Maharashtra" in mumbai  # a word in the name
+    assert await search("bombay") == ["Mumbai, Maharashtra"]  # an old name
+    assert await search("panaji") == ["Panjim, Goa"]
+    assert "Cyber City, Gurugram" in await search("gurgaon")
+    udaipur = await search("udaipur")
+    assert udaipur.index("Udaipur, Rajasthan") < udaipur.index("Udaipur (Jhunjhunu), Rajasthan")
+    assert "Udaipur, Tripura" in udaipur
+    goa = await search("goa")  # names that start with it, then the state's towns
+    assert goa.index("Goalpara, Assam") < goa.index("Panjim, Goa")
+    assert "Saket, Delhi" in await search("saket")
+    assert len(await search("ma")) == 20
+    assert await search("%%") == []
+    assert await search("__") == []
+    assert await search("zzzz") == []
+    for bad in ("p", "x" * 41):
+        assert (await client.get("/v1/areas", params={"q": bad}, headers=auth(me))).status_code == 422
+
+
+async def test_a_town_anywhere_in_india_can_be_your_area(client: AsyncClient, jobs: JobRunner) -> None:
+    """AREAS-3 (D162): any listed town, featured or not, shown with its state."""
+    me = await member(client, jobs, "a@example.com")
+    r = await put(client, me, area_id="gn.1253985")
+    assert r.status_code == 200, r.text
+    assert r.json()["area"] == {"id": "gn.1253985", "city": "Rajasthan", "name": "Udaipur (Jhunjhunu)"}
+
+
 async def test_create_read_and_replace_a_profile(client: AsyncClient, jobs: JobRunner) -> None:
     me = await member(client, jobs, "a@example.com")
     missing = await client.get("/v1/me/profile", headers=auth(me))

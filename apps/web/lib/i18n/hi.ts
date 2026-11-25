@@ -27,7 +27,7 @@ export const hi: Messages = {
     theirsLong: "उनकी लाइन: वे क्या चाहते हैं",
     bothWays: "दोनों तरफ़ से",
   },
-  join: { heading: "अगला स्टेशन: दिल्ली एनसीआर", endHeading: "अपनी लाइन शुरू करें" },
+  join: { heading: "अगला स्टेशन: आपका शहर", endHeading: "अपनी लाइन शुरू करें" },
   start: {
     create: "अकाउंट बनाएँ",
     signIn: "साइन इन करें",

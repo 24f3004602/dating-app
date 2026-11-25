@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     Enum,
     ForeignKey,
+    Integer,
     Numeric,
     SmallInteger,
     String,
@@ -70,7 +71,8 @@ class Visibility(enum.StrEnum):
 
 
 class Area(Base):
-    """Seeded public geography. Coordinates never leave the server (D020)."""
+    """Seeded public geography: Delhi NCR's areas (migration 0004) and towns across India from
+    GeoNames (D162). Coordinates never leave the server (D020)."""
 
     __tablename__ = "areas"
 
@@ -80,6 +82,12 @@ class Area(Base):
     latitude: Mapped[Decimal] = mapped_column(Numeric(7, 4))
     longitude: Mapped[Decimal] = mapped_column(Numeric(7, 4))
     active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    # For ordering search results; unknown for Delhi NCR's own areas.
+    population: Mapped[int | None] = mapped_column(Integer)
+    # In the list shown before anyone searches (and to apps that can't search yet).
+    featured: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    # Other names people search for, lowercase words: "bombay" for Mumbai.
+    aliases: Mapped[str] = mapped_column(String(120), server_default=text("''"))
 
 
 class Profile(CreatedAtMixin, Base):

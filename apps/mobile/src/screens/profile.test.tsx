@@ -24,6 +24,18 @@ const AREAS = [
   { id: "delhi.saket", city: "Delhi", name: "Saket" },
   { id: "noida.sector-18", city: "Noida", name: "Sector 18" },
 ];
+// Towns the fake server finds only when searched for (D162).
+const TOWNS = [
+  { id: "gn.1259229", city: "Maharashtra", name: "Pune" },
+  { id: "gn.1253985", city: "Rajasthan", name: "Udaipur (Jhunjhunu)" },
+];
+/** GET /v1/areas: the featured list, or the matches for `q` (names, cities and states that start with it). */
+function areasApi(req: { query: URLSearchParams }) {
+  const q = req.query.get("q");
+  if (q === null) return { status: 200, body: AREAS };
+  const needle = q.trim().toLowerCase();
+  return { status: 200, body: [...AREAS, ...TOWNS].filter((a) => a.name.toLowerCase().startsWith(needle) || a.city.toLowerCase().startsWith(needle)) };
+}
 const PROMPTS = [
   { key: "festival", text: "The festival I look forward to all year" },
   { key: "next_trip", text: "The next trip on my list" },
@@ -160,38 +172,68 @@ test("edit profile: the area limit gets a clear message", async () => {
   expect(await screen.findByText(t.editProfile.areaLimited)).toBeTruthy();
 });
 
-test("edit profile: the area list narrows as you type, and says when nothing matches (MOB-29)", async () => {
-  const { api } = fakeApi({
+test("edit profile: the featured areas, then a search across India from two letters, and a clear word when nothing matches (MOB-29, AREA-APP-1)", async () => {
+  const { api, calls } = fakeApi({
     "GET /v1/me/profile": () => problem(404, "profile_not_found"),
-    "GET /v1/areas": () => ({ status: 200, body: AREAS }),
+    "GET /v1/areas": areasApi,
     "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
   });
   await renderWithApp(<EditProfileScreen />, api);
   expect(await screen.findByRole("radio", { name: "Saket, Delhi" })).toBeTruthy();
   expect(screen.getByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
+  expect(screen.queryByRole("radio", { name: "Pune, Maharashtra" })).toBeNull(); // only when searched for
+  expect(screen.getByText(t.editProfile.areaSource)).toBeTruthy(); // GeoNames' credit
   const find = screen.getByLabelText(t.editProfile.areaSearch);
-  await fireEvent.changeText(find, "noi"); // a city, in any case
+  await fireEvent.changeText(find, "p"); // one letter: still the featured list, nothing asked
+  expect(screen.getByRole("radio", { name: "Saket, Delhi" })).toBeTruthy();
+  expect(calls.some((c) => c.query.has("q"))).toBe(false);
+  await fireEvent.changeText(find, "PUN"); // any case
+  expect(await screen.findByRole("radio", { name: "Pune, Maharashtra" })).toBeTruthy();
   expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull();
-  expect(screen.getByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
+  expect(calls.filter((c) => c.query.has("q")).map((c) => c.query.get("q"))).toEqual(["PUN"]);
+  await fireEvent.changeText(find, "noi"); // a city
+  expect(await screen.findByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
   await fireEvent.changeText(find, "zzz");
-  expect(screen.queryAllByRole("radio", { name: /, (Delhi|Noida)$/ })).toHaveLength(0); // no area chips left; the other chip groups keep theirs
-  expect(screen.getByText(t.editProfile.areaNone)).toBeTruthy();
+  expect(await screen.findByText(t.editProfile.areaNone)).toBeTruthy();
+  expect(screen.queryAllByRole("radio", { name: /, (Delhi|Noida|Maharashtra)$/ })).toHaveLength(0); // the other chip groups keep theirs
   await fireEvent.changeText(find, "");
-  expect(screen.getAllByRole("radio", { name: /, (Delhi|Noida)$/ })).toHaveLength(2); // every area again
+  expect(screen.getAllByRole("radio", { name: /, (Delhi|Noida)$/ })).toHaveLength(2); // the featured list again
   expect(screen.queryByText(t.editProfile.areaNone)).toBeNull();
+});
+
+test("edit profile: a town found by searching is chosen, stays in view and is saved (AREA-APP-2, D162)", async () => {
+  const { api, calls } = fakeApi({
+    "GET /v1/me/profile": () => ({ status: 200, body: { ...PROFILE, area: TOWNS[1] } }),
+    "GET /v1/areas": areasApi,
+    "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
+    "PUT /v1/me/profile": () => ({ status: 200, body: PROFILE }),
+  });
+  await renderWithApp(<EditProfileScreen />, api);
+  // A saved town that isn't featured still shows as yours.
+  expect(await screen.findByText(fill(t.editProfile.areaChosen, { area: "Udaipur (Jhunjhunu), Rajasthan" }))).toBeTruthy();
+  const find = screen.getByLabelText(t.editProfile.areaSearch);
+  await fireEvent.changeText(find, "pune");
+  await fireEvent.press(await screen.findByRole("radio", { name: "Pune, Maharashtra" }));
+  await fireEvent.changeText(find, ""); // back to the featured list, without Pune
+  expect(screen.queryByRole("radio", { name: "Pune, Maharashtra" })).toBeNull();
+  expect(screen.getByText(fill(t.editProfile.areaChosen, { area: "Pune, Maharashtra" }))).toBeTruthy();
+  await fireEvent.press(screen.getByRole("button", { name: t.common.save }));
+  await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
+  expect((calls.find((c) => c.method === "PUT")?.body as { area_id: string }).area_id).toBe("gn.1259229");
 });
 
 test("edit profile: the chosen area stays in view while the filter hides it (MOB-36)", async () => {
   const { api } = fakeApi({
     "GET /v1/me/profile": () => ({ status: 200, body: PROFILE }),
-    "GET /v1/areas": () => ({ status: 200, body: AREAS }),
+    "GET /v1/areas": areasApi,
     "GET /v1/prompts": () => ({ status: 200, body: PROMPTS }),
   });
   await renderWithApp(<EditProfileScreen />, api);
   const chosen = fill(t.editProfile.areaChosen, { area: "Saket, Delhi" });
   expect(await screen.findByText(chosen)).toBeTruthy();
   await fireEvent.changeText(screen.getByLabelText(t.editProfile.areaSearch), "noi");
-  expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull(); // filtered out of the chips
+  expect(await screen.findByRole("radio", { name: "Sector 18, Noida" })).toBeTruthy();
+  expect(screen.queryByRole("radio", { name: "Saket, Delhi" })).toBeNull(); // not among the matches
   expect(screen.getByText(chosen)).toBeTruthy(); // and still in view
   // It heads the area's own group, close to the search, not the end of About me (the review's verdict pass).
   let group = screen.getByText(chosen).parent;

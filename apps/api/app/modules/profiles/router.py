@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from app.errors import ApiError
 from app.modules.auth.deps import AuthCtx, CurrentSession, DbSession
@@ -31,9 +32,26 @@ async def _mine(request: Request, auth: CurrentSession, ctx: AuthCtx, db: DbSess
     return out
 
 
-@router.get("/areas", summary="Areas a member can pick (names only, never coordinates)")
-async def areas(auth: CurrentSession, db: DbSession) -> list[AreaOut]:
-    return [AreaOut(id=a.id, city=a.city, name=a.name) for a in await service.list_areas(db)]
+@router.get(
+    "/areas",
+    responses=problems(429),
+    summary="Areas a member can pick: the featured list, or a search (names only, never coordinates)",
+)
+async def areas(
+    auth: CurrentSession,
+    ctx: AuthCtx,
+    db: DbSession,
+    q: Annotated[
+        str | None,
+        Query(min_length=2, max_length=40, description="A town, area, city or state; without it, the featured list"),
+    ] = None,
+) -> list[AreaOut]:
+    if q is None:
+        found = await service.featured_areas(db)
+    else:
+        await ctx.limiter.hit(service.AREA_SEARCH_LIMIT, str(auth.user.id))
+        found = await service.search_areas(db, q)
+    return [AreaOut(id=a.id, city=a.city, name=a.name) for a in found]
 
 
 @router.get("/prompts", summary="The prompt catalogue")

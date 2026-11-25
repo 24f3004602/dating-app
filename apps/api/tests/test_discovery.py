@@ -243,6 +243,10 @@ async def test_preferences_defaults_validation_and_storage(
     )
     assert r.status_code == 200
     assert r.json()["max_distance_km"] == 15
+    r = await client.put(  # D162: within 150 km, across India
+        "/v1/me/preferences", json={"age_min": 25, "age_max": 35, "max_distance_km": 150}, headers=v.headers
+    )
+    assert r.json()["max_distance_km"] == 150
     bad_bodies: list[dict[str, Any]] = [
         {"age_min": 30, "age_max": 25},
         {"age_min": 17, "age_max": 30},
@@ -251,6 +255,20 @@ async def test_preferences_defaults_validation_and_storage(
     ]
     for bad in bad_bodies:
         assert (await client.put("/v1/me/preferences", json=bad, headers=v.headers)).status_code == 422, bad
+
+
+async def test_nearer_people_come_first_across_india(app: FastAPI, client: AsyncClient, db: Db, now: datetime) -> None:
+    """DSC-BAND-1 (D162): within 150 km first, then within 500 km, then the rest of India, whatever
+    else they score; "within 150 km" keeps only the first."""
+    v = await viewer(app, db, now, area_id="delhi.saket", prompts=("festival", "next_trip"))
+    best = {"prompts": ("festival", "next_trip", "phrase"), "bio": "Hello.", "photos": ("approved",) * 4}
+    far = await candidate(app, db, now, area_id="gn.1275339", **best)  # Mumbai, about 1,150 km
+    middle = await candidate(app, db, now, area_id="gn.1269515", **best)  # Jaipur, about 240 km
+    near = await candidate(app, db, now, area_id="gn.1263214", last_active=timedelta(days=30))  # Meerut, 70 km
+    assert await today_ids(client, v) == [str(near.id), str(middle.id), str(far.id)]
+
+    other = await viewer(app, db, now, area_id="delhi.saket", prefs=(18, 99, 150))
+    assert await today_ids(client, other) == [str(near.id)]
 
 
 async def test_old_picks_are_deleted_after_seven_days(
