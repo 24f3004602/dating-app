@@ -18,7 +18,9 @@ The owner's request of 2026-11-25: all of India instead of Delhi NCR; a blue tic
 - **29b-2, the console's Photo checks (D164): built; e2e in CI.** A page in the console's nav for moderators and admins: each selfie beside the member's photos (each with its own alt text, unreviewed ones marked), the gesture asked for, Approve, or Reject with a reason; the e2e fixture adds a selfie waiting for review, and the admin spec approves it (E2E-26).
 - **29b-2 in CI:** green on `e9c8bd2` (api 483 passed; mobile: app 262, website 48, e2e 27/27 with E2E-26).
 - **29b-3, the blue tick in the app (D165): built and tested; not released.** You's row to its own screen (a gesture, the front camera, each state in plain words); the tick, a new blue with its words, under the name on cards, profiles and your own card; your labels add "Photo verified" beside "Identity not checked". Checks: contrast 39 pairs; website 48; app 270 and `tsc`; 7 mutants caught.
-- **Next: 29e-2,** the documents for the blue tick (selfies), before any release of 29b; then 29c, the nudity check on Live.
+- **29e-2, the blue tick in the documents (D166): written and tested.** The unreleased `beta-2026-11-26` now covers the selfie (camera, gesture, compared by eye, deleted at the decision or after 14 days, the record kept with the account) and the terms' rules for it. Website 48.
+- **Release of 29a and 29b** (the owner's go): Hindi row 71 reviewed first; API (migrations 0020-0023), website, web app and a new APK together, the documents dated for the release day.
+- **Next: 29c,** the nudity check in Live calls with strangers (web app).
 
 ## Stage 28, the free launch (D151, D152): live
 

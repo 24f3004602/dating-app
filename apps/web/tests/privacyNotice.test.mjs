@@ -33,6 +33,7 @@ test("PRIV-DOC-1: the notice's other periods are the API's own", () => {
   assert.equal(DELETION.unpaidPaymentDays, days.UNPAID_PLUS_PAYMENT);
   assert.equal(DELETION.waitlistLinkDays, days.WAITLIST_UNSENT);
   assert.equal(DELETION.waitlistAfterOpeningDays, days.WAITLIST_AFTER_OPENING);
+  assert.equal(DELETION.undecidedSelfieDays, days.UNDECIDED_SELFIE); // D164
   assert.equal(DELETION.waitlistMaxYears * 365, days.WAITLIST_MAX);
   // A session's life: the API's default, which the beta doesn't change.
   assert.match(read("apps/api/app/config.py"), new RegExp(`session_ttl_days: int = Field\\(default=${DELETION.sessionDays},`));
@@ -50,7 +51,7 @@ test("PRIV-DOC-2: the privacy notice types no period of its own; each comes from
     "graceDays", "reportHoldDays", "recordYears", "reporterLinkDays", "reportYears", "auditYears", "paymentYears",
     "unconfirmedDays", "backupDays", "driveTrashDays", "securityLogYears", "bannedDays", "closedChatDays",
     "callRecordDays", "queueHours", "unpaidPaymentDays", "sessionDays", "waitlistLinkDays",
-    "waitlistAfterOpeningDays", "waitlistMaxYears", "testEndDays",
+    "waitlistAfterOpeningDays", "waitlistMaxYears", "testEndDays", "undecidedSelfieDays",
   ]) {
     assert.match(page, new RegExp(`\\{(span\\()?D\\.${key}\\b`), key);
   }

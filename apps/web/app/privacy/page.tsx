@@ -32,6 +32,10 @@ export default async function Privacy() {
         </li>
         <li>Live has an LGBTQ+ space you can choose, and now keeps to the distance you chose.</li>
         <li>Your introductions put people nearer to you first.</li>
+        <li>
+          You can ask for a blue tick: our team compares a selfie of you with your photos, and the
+          selfie is deleted once they&apos;ve decided.
+        </li>
       </ul>
 
       <h2>Who we are</h2>
@@ -68,6 +72,14 @@ export default async function Privacy() {
           (below). You can remove them at any time.
         </li>
         <li>
+          <strong>A selfie, only if you ask for the blue tick</strong>: you take it with your camera,
+          making a gesture we choose, so we know it&apos;s new. Our team compares it by eye with your
+          photos (nothing measures your face) and approves or rejects it. We delete the selfie as soon
+          as they decide, or after {span(D.undecidedSelfieDays, "day")} if they haven&apos;t. We keep
+          the decision (when, the gesture, the reason if it failed, and who decided) while your
+          account exists. The tick shows on your profile until you add a photo.
+        </li>
+        <li>
           <strong>What you do in the app</strong>: likes (and any comment with them), passes,
           matches, your messages, blocks and reports, so the app works and stays safe.
         </li>
@@ -90,7 +102,8 @@ export default async function Privacy() {
       </ul>
       <p>
         We never ask for your phone&apos;s location or contacts, or for your camera roll beyond the
-        photos you choose. Live uses your camera and microphone only during its calls. We show
+        photos you choose. Live uses your camera and microphone only during its calls, and the
+        blue tick&apos;s selfie uses your camera only when you take it. We show
         others your area or town and a distance range, never where you are: distances are
         measured between the centres of the areas you each picked. We don&apos;t sell your data or
         use your profile or activity for advertising, and we use no analytics. Our website uses no
@@ -234,7 +247,8 @@ export default async function Privacy() {
           handles reports and complaints. A photo reported as sexual or as pretending to be someone
           is hidden from everyone but you at once, until the team decides; if they find nothing
           wrong, it comes back. Staff see a message only when someone reports it, and the console
-          never shows them your email address or your LGBTQ+ labels. To act on a complaint sent by email, they can find an account by
+          never shows them your email address or your LGBTQ+ labels. They see a selfie only when you
+          ask for the blue tick, beside your photos, until they decide. To act on a complaint sent by email, they can find an account by
           its email address, or by the name and age its profile shows; each search is recorded,
           but not what was searched for. Staff sign in with a password and a second code, and what
           they open is recorded.

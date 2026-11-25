@@ -50,6 +50,8 @@ export const DELETION = {
   waitlistLinkDays: 7,
   waitlistAfterOpeningDays: 30,
   waitlistMaxYears: 1,
+  /** A selfie for the blue tick nobody decided on (D164); a decided one goes at the decision. */
+  undecidedSelfieDays: 14,
   /** Not the code's but a promise (D096): when the test ends, everything goes within this. */
   testEndDays: 30,
 } as const;

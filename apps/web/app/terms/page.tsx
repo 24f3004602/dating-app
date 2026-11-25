@@ -27,6 +27,7 @@ export default async function Terms() {
           about it without their consent, are named among what you mustn&apos;t do.
         </li>
         <li>Live keeps to the distance you or the other person chose.</li>
+        <li>The blue tick: what it means, and that the selfie for it must be you, taken now.</li>
       </ul>
 
       <p>
@@ -102,6 +103,7 @@ export default async function Terms() {
           about someone&apos;s sexual orientation or gender identity without their consent;
         </li>
         <li>add an LGBTQ+ label that doesn&apos;t describe you, for example to get into Live&apos;s LGBTQ+ space;</li>
+        <li>send a selfie of anyone but you, or an old one, to get a blue tick;</li>
         <li>try to break, overload or get around the app&apos;s protections.</li>
       </ul>
       <p>Block or report anyone who makes you uncomfortable; people read every report.</p>
@@ -133,8 +135,8 @@ export default async function Terms() {
       <h2>Stay safe</h2>
       <p>
         We don&apos;t check identities: profiles show only what we actually checked (an email
-        address and a declared age), and LGBTQ+ labels are what members say about themselves. If
-        you meet someone, meet in a public place, tell a friend
+        address, a declared age and, for a blue tick, a selfie our team compared with the photos;
+        never an ID), and LGBTQ+ labels are what members say about themselves. If you meet someone, meet in a public place, tell a friend
         where you&apos;ll be, and get there and back on your own. Never send money to someone you
         met here. Get the Android app only from our <Link href="/android">Android page</Link>:
         copies from anywhere else may not be ours.
