@@ -96,9 +96,9 @@ Write a better version in the last column, or "OK". Leave it empty if unsure.
 | 66 | Kinaara अभी एक अस्थायी नाम है। टेस्ट के लिए: | Kinaara is a working name. For the test: | the footer (D133; "invite-only" removed) | OK (reviewed 2026-11-19) |
 | 67 | , दोनों अंग्रेज़ी में। पूरे दस्तावेज़ बाद में आएँगे। | . Full documents will follow. | the footer (D133; "before any public launch" removed) | OK (reviewed 2026-11-19) |
 | 58 | , दोनों अंग्रेज़ी में। किसी भी सार्वजनिक लॉन्च से पहले पूरे दस्तावेज़ आएँगे। | . Full documents will follow before any public launch. | the footer | OK (reviewed 2026-11-19) |
-| 68 | शिकायतें और शिकायत अधिकारी | Complaints and the grievance officer | the footer's second line: the link to the complaints page (stage 28d, D155; the IT Rules want it reachable from the home page). शिकायत अधिकारी: the grievance officer | **New** (2026-11-24) |
-| 69 | एंड्रॉयड ऐप | The Android app | the footer's second line: the link to the download page (D154). Or "Android ऐप", in Latin letters? | **New** (2026-11-24) |
-| 70 |  (दोनों पेज अंग्रेज़ी में) | (nothing in English) | after those two links: both pages are in English, as row 67 says of the documents | **New** (2026-11-24) |
+| 68 | शिकायतें और शिकायत अधिकारी | Complaints and the grievance officer | the footer's second line: the link to the complaints page (stage 28d, D155; the IT Rules want it reachable from the home page). शिकायत अधिकारी: the grievance officer | OK (reviewed 2026-11-25) |
+| 69 | एंड्रॉयड ऐप | The Android app | the footer's second line: the link to the download page (D154). Or "Android ऐप", in Latin letters? | OK (reviewed 2026-11-25) |
+| 70 |  (दोनों पेज अंग्रेज़ी में) | (nothing in English) | after those two links: both pages are in English, as row 67 says of the documents | OK (reviewed 2026-11-25) |
 
 **Afterwards (engineering):** corrections go into `apps/web/lib/i18n/hi.ts`; then
 `node scripts/devanagari-text.mjs` and `scripts/build_fonts.py` (the Devanagari fonts
@@ -108,4 +108,4 @@ the `beta-images` workflow and the owner's go (`deploy.md`).
 **History:** 2026-11-13, the first sheet (16 lines beside the English, stage 20d):
 the owner, a native Hindi speaker, kept all 16. On 2026-11-19 the owner kept every new line too (42 lines, rows 1-7, 14-29, 32, 33, 36, 38, 40, 42, 44, 46, 48, 50, 52-60), answering "All OK, publish them" with the list in front of them; the Hindi page goes live with the next release. On 2026-11-19, when sign-up opened (D133), seven lines changed or arrived (rows 61-67); rows 14-27 (the waitlist form) and 34 (towards the waitlist) are no longer on the page. The same day the owner asked for no
 Hindi beside the English and a language option instead (D120); this sheet replaces it. On 2026-11-24 (stage 28d)
-three lines arrived (rows 68-70), to review before the next website release.
+three lines arrived (rows 68-70), to review before the next website release. The owner kept all three on 2026-11-25 ("hindi ok"), with the go to release.
